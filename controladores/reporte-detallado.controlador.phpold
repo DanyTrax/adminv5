@@ -1,0 +1,84 @@
+<?php
+
+class ControladorReportes {
+
+    /*=============================================
+    OBTENER DATOS PARA LA TABLA DE REPORTE DETALLADO
+    =============================================*/
+    static public function ctrObtenerVentasServerSide($params, $fechaInicial, $fechaFinal) {
+        
+        $respuesta = ModeloReportes::mdlObtenerVentasServerSide($params, $fechaInicial, $fechaFinal);
+        
+        $data = [];
+        $contador = intval($params['start']) + 1;
+        
+        foreach ($respuesta as $row) {
+            $data[] = [
+                "contador"             => $contador++,
+                "fecha_venta"          => $row['fecha_venta'],
+                "codigo_factura"       => $row['codigo_factura'], // Usamos el alias de la consulta SQL
+                "vendedor"             => $row['nombre_vendedor'],
+                "cliente"              => $row['nombre_cliente'],
+                "producto_descripcion" => $row['producto_descripcion'],
+                "producto_cantidad"    => $row['producto_cantidad'],
+                "producto_total"       => $row['producto_total'],
+                "medio_pago"           => $row['medio_pago']
+            ];
+        }
+        return $data;
+    }
+
+    /*=============================================
+    CONTAR REGISTROS FILTRADOS
+    =============================================*/
+    static public function ctrContarVentasFiltradas($params, $fechaInicial, $fechaFinal) {
+        return ModeloReportes::mdlContarVentasFiltradas($params, $fechaInicial, $fechaFinal);
+    }
+
+    /*=============================================
+    CONTAR TOTAL DE REGISTROS
+    =============================================*/
+    static public function ctrContarTotalVentas($fechaInicial, $fechaFinal) {
+        return ModeloReportes::mdlContarTotalVentas($fechaInicial, $fechaFinal);
+    }
+}
+class ControladorReporteDetallado {
+
+    /*=============================================
+    OBTENER PRODUCTOS POR RANGO DE FECHAS
+    =============================================*/
+    static public function ctrObtenerProductosPorFecha($fechaInicial, $fechaFinal) {
+
+        $db = Conexion::conectar();
+
+        $sql = "
+            SELECT 
+                vp.id AS contador,
+                v.fecha_venta,
+                v.codigo AS codigo_factura,
+                u.nombre AS vendedor,
+                c.nombre AS cliente,
+                vp.descripcion AS producto_descripcion,
+                vp.cantidad AS producto_cantidad,
+                vp.total AS producto_total,
+                v.medio_pago
+            FROM venta_productos vp
+            JOIN ventas v ON vp.id_venta = v.codigo
+            JOIN usuarios u ON v.id_vendedor = u.id
+            JOIN clientes c ON v.id_cliente = c.id
+        ";
+
+        if ($fechaInicial && $fechaFinal) {
+            $sql .= " WHERE DATE(v.fecha_venta) BETWEEN :fechaInicial AND :fechaFinal";
+            $stmt = $db->prepare($sql);
+            $stmt->bindParam(":fechaInicial", $fechaInicial, PDO::PARAM_STR);
+            $stmt->bindParam(":fechaFinal", $fechaFinal, PDO::PARAM_STR);
+        } else {
+            $stmt = $db->prepare($sql);
+        }
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+}
