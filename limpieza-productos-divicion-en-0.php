@@ -139,3 +139,33 @@ class LimpiezaProductos {
             } else {
                 echo "<p style='color: green;'>✅ Todos los productos están correctamente configurados</p>";
             }
+            
+        } catch (Exception $e) {
+            echo "<p style='color: red;'>Error al verificar estado: " . $e->getMessage() . "</p>";
+        }
+    }
+}
+
+/*=============================================
+EJECUTAR LIMPIEZA
+=============================================*/
+
+echo "<!DOCTYPE html>";
+echo "<html><head><title>Limpieza Productos Catálogo Maestro</title></head><body>";
+echo "<h1>🧹 Limpieza de Productos NO Divisibles</h1>";
+
+// Verificar estado inicial
+echo "<h2>Estado ANTES de la limpieza:</h2>";
+LimpiezaProductos::verificarEstado();
+
+// Ejecutar limpieza
+LimpiezaProductos::limpiarProductosNoDivisibles();
+
+// Verificar estado final
+echo "<h2>Estado DESPUÉS de la limpieza:</h2>";
+LimpiezaProductos::verificarEstado();
+
+echo "<br><a href='catalogo-maestro' style='padding: 10px; background: #3c8dbc; color: white; text-decoration: none; border-radius: 4px;'>🔙 Volver al Catálogo Maestro</a>";
+echo "</body></html>";
+
+?>
