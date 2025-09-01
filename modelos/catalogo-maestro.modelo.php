@@ -344,7 +344,7 @@ public static function mdlBuscarProductosHijos($termino) {
     }
     
 /*=============================================
-EDITAR PRODUCTO MAESTRO - ACTUALIZAR TODOS LOS CAMPOS
+EDITAR PRODUCTO MAESTRO - VERSIÓN SIMPLIFICADA
 =============================================*/
 
 public static function mdlEditarProductoMaestro($datos) {
@@ -372,21 +372,23 @@ public static function mdlEditarProductoMaestro($datos) {
         $stmt->bindParam(":imagen", $datos["imagen"], PDO::PARAM_STR);
         $stmt->bindParam(":es_divisible", $datos["es_divisible"], PDO::PARAM_INT);
         
-        // ✅ ESTOS CAMPOS SE ACTUALIZARÁN CON LOS VALORES ENVIADOS (INCLUSO SI ESTÁN VACÍOS)
+        // ✅ BIND SIMPLE - PERMITE CADENAS VACÍAS
         $stmt->bindParam(":codigo_hijo_mitad", $datos["codigo_hijo_mitad"], PDO::PARAM_STR);
         $stmt->bindParam(":codigo_hijo_tercio", $datos["codigo_hijo_tercio"], PDO::PARAM_STR);
         $stmt->bindParam(":codigo_hijo_cuarto", $datos["codigo_hijo_cuarto"], PDO::PARAM_STR);
         
-        // Debug SQL
-        error_log("=== EJECUTANDO UPDATE ===");
-        error_log("UPDATE con valores:");
-        error_log("- mitad: '" . $datos["codigo_hijo_mitad"] . "'");
-        error_log("- tercio: '" . $datos["codigo_hijo_tercio"] . "'");
-        error_log("- cuarto: '" . $datos["codigo_hijo_cuarto"] . "'");
+        // Debug para verificar
+        error_log("=== MODELO DEBUG ===");
+        error_log("ID: " . $datos["id"]);
+        error_log("Mitad: '" . $datos["codigo_hijo_mitad"] . "'");
+        error_log("Tercio: '" . $datos["codigo_hijo_tercio"] . "'");
+        error_log("Cuarto: '" . $datos["codigo_hijo_cuarto"] . "'");
         
         if($stmt->execute()) {
             return "ok";
         } else {
+            $errorInfo = $stmt->errorInfo();
+            error_log("Error SQL: " . implode(" - ", $errorInfo));
             return "error";
         }
         
