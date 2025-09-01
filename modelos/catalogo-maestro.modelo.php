@@ -813,5 +813,4 @@ public static function mdlRegistrarCambio($accion, $codigo_producto, $usuario, $
     $stmt = null;
 }
 }
-
 ?>
