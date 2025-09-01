@@ -248,89 +248,199 @@ public static function mdlBuscarProductosHijos($termino) {
     }
 }
     
-    /*=============================================
-    SINCRONIZAR A PRODUCTOS LOCALES
-    =============================================*/
-    static public function mdlSincronizarAProductosLocales() {
-        $dbCentral = self::conectarCentral();
-        $dbLocal = Conexion::conectar();
+/*=============================================
+SINCRONIZAR A PRODUCTOS LOCALES CON DIVISIONES
+=============================================*/
+static public function mdlSincronizarAProductosLocales() {
+    $dbCentral = self::conectarCentral();
+    $dbLocal = Conexion::conectar();
+    
+    $dbLocal->beginTransaction();
+    
+    try {
+        // Obtener todos los productos del catálogo maestro
+        $stmtCentral = $dbCentral->prepare("
+            SELECT cm.*, c.categoria 
+            FROM catalogo_maestro cm 
+            LEFT JOIN categorias c ON cm.id_categoria = c.id 
+            WHERE cm.activo = 1
+        ");
+        $stmtCentral->execute();
+        $productosMaestros = $stmtCentral->fetchAll(PDO::FETCH_ASSOC);
         
-        $dbLocal->beginTransaction();
+        $sincronizados = 0;
+        $actualizados = 0;
         
-        try {
-            // Obtener todos los productos del catálogo maestro
-            $stmtCentral = $dbCentral->prepare("
-                SELECT cm.*, c.categoria 
-                FROM catalogo_maestro cm 
-                LEFT JOIN categorias c ON cm.id_categoria = c.id 
-                WHERE cm.activo = 1
-            ");
-            $stmtCentral->execute();
-            $productosMaestros = $stmtCentral->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($productosMaestros as $productoMaestro) {
             
-            $sincronizados = 0;
-            $actualizados = 0;
+            // Preparar datos base
+            $datosBase = [
+                'descripcion' => $productoMaestro['descripcion'],
+                'precio_venta' => $productoMaestro['precio_venta'],
+                'id_categoria' => $productoMaestro['id_categoria'],
+                'imagen' => $productoMaestro['imagen'],
+                'es_divisible' => $productoMaestro['es_hijo'] // ✅ MAPEO CORRECTO
+            ];
             
-            foreach ($productosMaestros as $productoMaestro) {
-                // Verificar si existe en productos locales
-                $stmtExiste = $dbLocal->prepare("SELECT id, stock FROM productos WHERE codigo_maestro = :codigo_maestro");
-                $stmtExiste->bindParam(":codigo_maestro", $productoMaestro['codigo'], PDO::PARAM_STR);
-                $stmtExiste->execute();
-                $productoLocal = $stmtExiste->fetch();
+            // Inicializar datos de división
+            $datosDivision = [
+                'nombre_mitad' => null,
+                'precio_mitad' => null,
+                'nombre_tercio' => null,
+                'precio_tercio' => null,
+                'nombre_cuarto' => null,
+                'precio_cuarto' => null
+            ];
+            
+            // Si es divisible (es_hijo = 1), buscar información de productos hijos
+            if ($productoMaestro['es_hijo'] == 1) {
                 
-                if ($productoLocal) {
-                    // Actualizar producto existente (solo datos maestros, NO stock)
-                    $stmtUpdate = $dbLocal->prepare("
-                        UPDATE productos SET 
-                        descripcion = :descripcion,
-                        precio_venta = :precio_venta,
-                        id_categoria = :id_categoria,
-                        imagen = :imagen
-                        WHERE codigo_maestro = :codigo_maestro
-                    ");
-                    $stmtUpdate->bindParam(":descripcion", $productoMaestro['descripcion'], PDO::PARAM_STR);
-                    $stmtUpdate->bindParam(":precio_venta", $productoMaestro['precio_venta'], PDO::PARAM_STR);
-                    $stmtUpdate->bindParam(":id_categoria", $productoMaestro['id_categoria'], PDO::PARAM_INT);
-                    $stmtUpdate->bindParam(":imagen", $productoMaestro['imagen'], PDO::PARAM_STR);
-                    $stmtUpdate->bindParam(":codigo_maestro", $productoMaestro['codigo'], PDO::PARAM_STR);
-                    $stmtUpdate->execute();
-                    $actualizados++;
-                } else {
-                    // Crear nuevo producto local con stock 0
-                    $stmtInsert = $dbLocal->prepare("
-                        INSERT INTO productos (codigo, codigo_maestro, descripcion, id_categoria, stock, precio_venta, ventas, imagen) 
-                        VALUES (:codigo, :codigo_maestro, :descripcion, :id_categoria, 0, :precio_venta, 0, :imagen)
-                    ");
-                    $stmtInsert->bindParam(":codigo", $productoMaestro['codigo'], PDO::PARAM_STR);
-                    $stmtInsert->bindParam(":codigo_maestro", $productoMaestro['codigo'], PDO::PARAM_STR);
-                    $stmtInsert->bindParam(":descripcion", $productoMaestro['descripcion'], PDO::PARAM_STR);
-                    $stmtInsert->bindParam(":id_categoria", $productoMaestro['id_categoria'], PDO::PARAM_INT);
-                    $stmtInsert->bindParam(":precio_venta", $productoMaestro['precio_venta'], PDO::PARAM_STR);
-                    $stmtInsert->bindParam(":imagen", $productoMaestro['imagen'], PDO::PARAM_STR);
-                    $stmtInsert->execute();
-                    
-                    $idProductoLocal = $dbLocal->lastInsertId();
-                    
-                    // Registrar sincronización
-                    $stmtSync = $dbLocal->prepare("
-                        INSERT INTO sincronizacion_maestro (codigo_maestro, id_producto_local) 
-                        VALUES (:codigo_maestro, :id_producto_local)
-                    ");
-                    $stmtSync->bindParam(":codigo_maestro", $productoMaestro['codigo'], PDO::PARAM_STR);
-                    $stmtSync->bindParam(":id_producto_local", $idProductoLocal, PDO::PARAM_INT);
-                    $stmtSync->execute();
-                    $sincronizados++;
+                // Buscar información para MITAD
+                if (!empty($productoMaestro['codigo_hijo_mitad'])) {
+                    $datosMitad = self::buscarInformacionHijo($productoMaestro['codigo_hijo_mitad']);
+                    if ($datosMitad) {
+                        $datosDivision['nombre_mitad'] = $datosMitad['descripcion'];
+                        $datosDivision['precio_mitad'] = $datosMitad['precio_venta'];
+                    }
+                }
+                
+                // Buscar información para TERCIO
+                if (!empty($productoMaestro['codigo_hijo_tercio'])) {
+                    $datosTercio = self::buscarInformacionHijo($productoMaestro['codigo_hijo_tercio']);
+                    if ($datosTercio) {
+                        $datosDivision['nombre_tercio'] = $datosTercio['descripcion'];
+                        $datosDivision['precio_tercio'] = $datosTercio['precio_venta'];
+                    }
+                }
+                
+                // Buscar información para CUARTO
+                if (!empty($productoMaestro['codigo_hijo_cuarto'])) {
+                    $datosCuarto = self::buscarInformacionHijo($productoMaestro['codigo_hijo_cuarto']);
+                    if ($datosCuarto) {
+                        $datosDivision['nombre_cuarto'] = $datosCuarto['descripcion'];
+                        $datosDivision['precio_cuarto'] = $datosCuarto['precio_venta'];
+                    }
                 }
             }
             
-            $dbLocal->commit();
-            return ["sincronizados" => $sincronizados, "actualizados" => $actualizados];
+            // Combinar datos base con datos de división
+            $datosCompletos = array_merge($datosBase, $datosDivision);
             
-        } catch (Exception $e) {
-            $dbLocal->rollBack();
-            return "error: " . $e->getMessage();
+            // Verificar si existe en productos locales
+            $stmtExiste = $dbLocal->prepare("SELECT id, stock FROM productos WHERE codigo_maestro = :codigo_maestro");
+            $stmtExiste->bindParam(":codigo_maestro", $productoMaestro['codigo'], PDO::PARAM_STR);
+            $stmtExiste->execute();
+            $productoLocal = $stmtExiste->fetch();
+            
+            if ($productoLocal) {
+                
+                // ✅ ACTUALIZAR producto existente (preservando stock)
+                $stmtUpdate = $dbLocal->prepare("
+                    UPDATE productos SET 
+                    descripcion = :descripcion,
+                    precio_venta = :precio_venta,
+                    id_categoria = :id_categoria,
+                    imagen = :imagen,
+                    es_divisible = :es_divisible,
+                    nombre_mitad = :nombre_mitad,
+                    precio_mitad = :precio_mitad,
+                    nombre_tercio = :nombre_tercio,
+                    precio_tercio = :precio_tercio,
+                    nombre_cuarto = :nombre_cuarto,
+                    precio_cuarto = :precio_cuarto
+                    WHERE codigo_maestro = :codigo_maestro
+                ");
+                
+                foreach ($datosCompletos as $campo => $valor) {
+                    $stmtUpdate->bindValue(":$campo", $valor);
+                }
+                $stmtUpdate->bindParam(":codigo_maestro", $productoMaestro['codigo'], PDO::PARAM_STR);
+                $stmtUpdate->execute();
+                $actualizados++;
+                
+            } else {
+                
+                // ✅ CREAR nuevo producto local con stock 0
+                $stmtInsert = $dbLocal->prepare("
+                    INSERT INTO productos (
+                        codigo, codigo_maestro, descripcion, id_categoria, 
+                        stock, precio_venta, ventas, imagen, es_divisible,
+                        nombre_mitad, precio_mitad, nombre_tercio, precio_tercio,
+                        nombre_cuarto, precio_cuarto
+                    ) VALUES (
+                        :codigo, :codigo_maestro, :descripcion, :id_categoria,
+                        0, :precio_venta, 0, :imagen, :es_divisible,
+                        :nombre_mitad, :precio_mitad, :nombre_tercio, :precio_tercio,
+                        :nombre_cuarto, :precio_cuarto
+                    )
+                ");
+                
+                $stmtInsert->bindParam(":codigo", $productoMaestro['codigo'], PDO::PARAM_STR);
+                $stmtInsert->bindParam(":codigo_maestro", $productoMaestro['codigo'], PDO::PARAM_STR);
+                
+                foreach ($datosCompletos as $campo => $valor) {
+                    $stmtInsert->bindValue(":$campo", $valor);
+                }
+                
+                $stmtInsert->execute();
+                $sincronizados++;
+            }
         }
+        
+        $dbLocal->commit();
+        
+        return [
+            'success' => true,
+            'message' => "Sincronización completada. Productos nuevos: $sincronizados, Actualizados: $actualizados",
+            'sincronizados' => $sincronizados,
+            'actualizados' => $actualizados
+        ];
+        
+    } catch (Exception $e) {
+        
+        $dbLocal->rollBack();
+        error_log("Error en sincronización: " . $e->getMessage());
+        
+        return [
+            'success' => false,
+            'message' => 'Error en la sincronización: ' . $e->getMessage(),
+            'error' => $e->getMessage()
+        ];
     }
+}
+
+/*=============================================
+BUSCAR INFORMACIÓN DE PRODUCTO HIJO (MÉTODO AUXILIAR)
+=============================================*/
+private static function buscarInformacionHijo($codigoHijo) {
+    
+    if (empty($codigoHijo)) {
+        return null;
+    }
+    
+    try {
+        
+        $stmt = self::conectarCentral()->prepare("
+            SELECT descripcion, precio_venta 
+            FROM catalogo_maestro 
+            WHERE codigo = :codigo AND activo = 1
+        ");
+        
+        $stmt->bindParam(":codigo", $codigoHijo, PDO::PARAM_STR);
+        $stmt->execute();
+        
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+        
+    } catch (Exception $e) {
+        
+        error_log("Error al buscar información del hijo '$codigoHijo': " . $e->getMessage());
+        return null;
+        
+    } finally {
+        
+        $stmt = null;
+    }
+}
     
     /*=============================================
     OBTENER CATEGORÍAS CENTRALES
