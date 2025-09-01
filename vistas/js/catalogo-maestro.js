@@ -1426,6 +1426,81 @@ function verificarElementosHTML() {
     console.log("=== FIN VERIFICACIÓN ===");
 }
 
+/*=============================================
+DEBUG Y LIMPIEZA ANTES DE ENVIAR FORMULARIO
+=============================================*/
+
+$(document).on("submit", "form", function(e) {
+    
+    // Solo para el formulario de editar producto maestro
+    if($(this).find("#idProductoMaestro").length > 0) {
+        
+        console.log("=== PROCESANDO FORMULARIO EDITAR ===");
+        
+        var esDivisible = $("#editarEsDivisibleMaestro").prop("checked");
+        console.log("Es divisible:", esDivisible);
+        
+        if(!esDivisible) {
+            
+            // Si NO es divisible, limpiar todos los campos
+            $("#editarCodigoHijoMitad").val("");
+            $("#editarCodigoHijoTercio").val("");
+            $("#editarCodigoHijoCuarto").val("");
+            
+            console.log("Limpiando todos los campos de división");
+            
+        } else {
+            
+            // Si ES divisible, verificar campos individualmente
+            var buscarMitad = $("#buscarEditarHijoMitad").val();
+            var buscarTercio = $("#buscarEditarHijoTercio").val();
+            var buscarCuarto = $("#buscarEditarHijoCuarto").val();
+            
+            console.log("Valores en campos de búsqueda:");
+            console.log("- Mitad: '" + buscarMitad + "'");
+            console.log("- Tercio: '" + buscarTercio + "'");
+            console.log("- Cuarto: '" + buscarCuarto + "'");
+            
+            // ✅ SI EL CAMPO DE BÚSQUEDA ESTÁ VACÍO, LIMPIAR EL HIDDEN
+            if(!buscarMitad || buscarMitad.trim() === "") {
+                $("#editarCodigoHijoMitad").val("");
+                console.log("🧹 Campo mitad limpiado");
+            }
+            
+            if(!buscarTercio || buscarTercio.trim() === "") {
+                $("#editarCodigoHijoTercio").val("");
+                console.log("🧹 Campo tercio limpiado");
+            }
+            
+            if(!buscarCuarto || buscarCuarto.trim() === "") {
+                $("#editarCodigoHijoCuarto").val("");
+                console.log("🧹 Campo cuarto limpiado");
+            }
+        }
+        
+        console.log("Valores finales en campos hidden:");
+        console.log("- Mitad hidden: '" + $("#editarCodigoHijoMitad").val() + "'");
+        console.log("- Tercio hidden: '" + $("#editarCodigoHijoTercio").val() + "'");
+        console.log("- Cuarto hidden: '" + $("#editarCodigoHijoCuarto").val() + "'");
+        
+        // ✅ FORZAR QUE LOS CAMPOS VACÍOS SE ENVÍEN
+        if($("#editarCodigoHijoMitad").val() === "") {
+            $("#editarCodigoHijoMitad").val("EMPTY_FIELD");
+        }
+        if($("#editarCodigoHijoTercio").val() === "") {
+            $("#editarCodigoHijoTercio").val("EMPTY_FIELD");
+        }
+        if($("#editarCodigoHijoCuarto").val() === "") {
+            $("#editarCodigoHijoCuarto").val("EMPTY_FIELD");
+        }
+        
+        console.log("Valores finales para envío:");
+        console.log("- Mitad: '" + $("#editarCodigoHijoMitad").val() + "'");
+        console.log("- Tercio: '" + $("#editarCodigoHijoTercio").val() + "'");
+        console.log("- Cuarto: '" + $("#editarCodigoHijoCuarto").val() + "'");
+    }
+});
+
 // Ejecutar verificación cuando se carge la página
 $(document).ready(function(){
     setTimeout(verificarElementosHTML, 2000); // Ejecutar después de 2 segundos

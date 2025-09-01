@@ -110,9 +110,9 @@ public function ctrEditarProductoMaestro() {
             $ruta = $_POST["imagenActualMaestro"];
         }
         
-        // ✅ MANEJAR DIVISIÓN CON LIMPIEZA DE CAMPOS BORRADOS
+        // ✅ MANEJAR DIVISIÓN CON DETECCIÓN DE CAMPOS BORRADOS
         $esDivisible = isset($_POST["editarEsDivisibleMaestro"]) ? 1 : 0;
-        
+
         if($esDivisible == 0) {
             // Si NO es divisible, limpiar TODOS los campos
             $codigoHijoMitad = "";
@@ -126,18 +126,19 @@ public function ctrEditarProductoMaestro() {
             $codigoHijoTercio = isset($_POST["editarCodigoHijoTercio"]) ? trim($_POST["editarCodigoHijoTercio"]) : "";
             $codigoHijoCuarto = isset($_POST["editarCodigoHijoCuarto"]) ? trim($_POST["editarCodigoHijoCuarto"]) : "";
             
-            // Convertir strings vacíos a cadena vacía definitivamente
-            $codigoHijoMitad = ($codigoHijoMitad === "") ? "" : $codigoHijoMitad;
-            $codigoHijoTercio = ($codigoHijoTercio === "") ? "" : $codigoHijoTercio;
-            $codigoHijoCuarto = ($codigoHijoCuarto === "") ? "" : $codigoHijoCuarto;
+            // ✅ CONVERTIR MARCADORES DE CAMPO VACÍO A CADENA VACÍA
+            if($codigoHijoMitad === "EMPTY_FIELD") $codigoHijoMitad = "";
+            if($codigoHijoTercio === "EMPTY_FIELD") $codigoHijoTercio = "";
+            if($codigoHijoCuarto === "EMPTY_FIELD") $codigoHijoCuarto = "";
         }
-        
-        // Debug para verificar qué se está guardando
+
+        // Debug mejorado
         error_log("=== GUARDANDO PRODUCTO ===");
+        error_log("ID: " . $_POST["idProductoMaestro"]);
         error_log("Es divisible: " . $esDivisible);
-        error_log("Código mitad: '" . $codigoHijoMitad . "'");
-        error_log("Código tercio: '" . $codigoHijoTercio . "'");
-        error_log("Código cuarto: '" . $codigoHijoCuarto . "'");
+        error_log("Código mitad: '" . $codigoHijoMitad . "' (length: " . strlen($codigoHijoMitad) . ")");
+        error_log("Código tercio: '" . $codigoHijoTercio . "' (length: " . strlen($codigoHijoTercio) . ")");
+        error_log("Código cuarto: '" . $codigoHijoCuarto . "' (length: " . strlen($codigoHijoCuarto) . ")");
         
         // Preparar datos
         $datos = array(
