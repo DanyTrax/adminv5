@@ -284,12 +284,12 @@ static public function mdlSincronizarAProductosLocales() {
             
             // Inicializar datos de división
             $datosDivision = [
-                'nombre_mitad' => null,
-                'precio_mitad' => null,
-                'nombre_tercio' => null,
-                'precio_tercio' => null,
-                'nombre_cuarto' => null,
-                'precio_cuarto' => null
+                'nombre_mitad' => '',
+                'precio_mitad' => '',
+                'nombre_tercio' => '',
+                'precio_tercio' => '',
+                'nombre_cuarto' => '',
+                'precio_cuarto' => ''
             ];
             
             // Si es divisible (es_hijo = 1), buscar información de productos hijos
