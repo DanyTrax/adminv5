@@ -68,7 +68,7 @@ public function ctrCrearProductoMaestro() {
             "codigo_hijo_cuarto" => $_POST["codigoHijoCuarto"] ?? ""
         );
         
-        $respuesta = ModeloCatalogoMaestro::mdlIngresarProductoMaestro($datos);
+        $respuesta = ModeloCatalogoMaestro::mdlCrearProductoMaestro($datos);
         
         if($respuesta == "ok") {
             
