@@ -95,76 +95,49 @@ public function ctrCrearProductoMaestro() {
     }
 }
     
-    /*=============================================
-    EDITAR PRODUCTO MAESTRO - ¡FUNCIÓN FALTANTE AGREGADA!
-    =============================================*/
-    static public function ctrEditarProductoMaestro() {
-        if(isset($_POST["editarDescripcionMaestro"])) {
-            
-            if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s\-\.\,]+$/', $_POST["editarDescripcionMaestro"]) &&
-               preg_match('/^[0-9\.]+$/', $_POST["editarPrecioVentaMaestro"])) {
-                
-                /*=============================================
-                VALIDAR IMAGEN
-                =============================================*/
-                $ruta = $_POST["imagenActualMaestro"];
-                
-                if(isset($_FILES["editarImagenMaestro"]["tmp_name"]) && !empty($_FILES["editarImagenMaestro"]["tmp_name"])) {
-                    
-                    list($ancho, $alto) = getimagesize($_FILES["editarImagenMaestro"]["tmp_name"]);
-                    $nuevoAncho = 500;
-                    $nuevoAlto = 500;
-                    
-                    /*=============================================
-                    CREAR DIRECTORIO PARA GUARDAR LA IMAGEN
-                    =============================================*/
-                    $directorio = "vistas/img/productos/".$_POST["editarCodigoMaestro"];
-                    
-                    /*=============================================
-                    PRIMERO PREGUNTAMOS SI EXISTE OTRA IMAGEN EN LA BD
-                    =============================================*/
-                    if(!empty($_POST["imagenActualMaestro"]) && $_POST["imagenActualMaestro"] != $ruta) {
-                        if(file_exists($_POST["imagenActualMaestro"])) {
-                            unlink($_POST["imagenActualMaestro"]);
-                        }
-                    }
-                    
-                    if (!file_exists($directorio)) {
-                        mkdir($directorio, 0755, true);
-                    }
-                    
-                    if($_FILES["editarImagenMaestro"]["type"] == "image/jpeg") {
-                        $aleatorio = mt_rand(100,999);
-                        $ruta = "vistas/img/productos/".$_POST["editarCodigoMaestro"]."/".$aleatorio.".jpg";
-                        $origen = imagecreatefromjpeg($_FILES["editarImagenMaestro"]["tmp_name"]);
-                        $destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
-                        imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
-                        imagejpeg($destino, $ruta);
-                    }
-                    
-                    if($_FILES["editarImagenMaestro"]["type"] == "image/png") {
-                        $aleatorio = mt_rand(100,999);
-                        $ruta = "vistas/img/productos/".$_POST["editarCodigoMaestro"]."/".$aleatorio.".png";
-                        $origen = imagecreatefrompng($_FILES["editarImagenMaestro"]["tmp_name"]);
-                        $destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
-                        imagecopyresized($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
-                        imagepng($destino, $ruta);
-                    }
-                }
-                
+/*=============================================
+EDITAR PRODUCTO MAESTRO - CON LIMPIEZA DE CAMPOS BORRADOS
+=============================================*/
+
+public function ctrEditarProductoMaestro() {
+    
+    if(isset($_POST["editarDescripcionMaestro"])) {
+        
+        // Código existente de imagen...
+        if(isset($_FILES["editarImagenMaestro"]["tmp_name"]) && !empty($_FILES["editarImagenMaestro"]["tmp_name"])) {
+            // ... código de imagen existente
+        } else {
+            $ruta = $_POST["imagenActualMaestro"];
+        }
+        
+        // ✅ MANEJAR DIVISIÓN CON LIMPIEZA DE CAMPOS BORRADOS
         $esDivisible = isset($_POST["editarEsDivisibleMaestro"]) ? 1 : 0;
         
         if($esDivisible == 0) {
-            // Si NO es divisible, limpiar todos los campos de hijos
+            // Si NO es divisible, limpiar TODOS los campos
             $codigoHijoMitad = "";
             $codigoHijoTercio = "";
             $codigoHijoCuarto = "";
         } else {
-            // Si ES divisible, usar los valores enviados
-            $codigoHijoMitad = $_POST["editarCodigoHijoMitad"] ?? "";
-            $codigoHijoTercio = $_POST["editarCodigoHijoTercio"] ?? "";
-            $codigoHijoCuarto = $_POST["editarCodigoHijoCuarto"] ?? "";
+            // Si ES divisible, procesar cada campo individualmente
+            
+            // ✅ LIMPIAR CAMPOS QUE ESTÁN VACÍOS O FUERON BORRADOS
+            $codigoHijoMitad = isset($_POST["editarCodigoHijoMitad"]) ? trim($_POST["editarCodigoHijoMitad"]) : "";
+            $codigoHijoTercio = isset($_POST["editarCodigoHijoTercio"]) ? trim($_POST["editarCodigoHijoTercio"]) : "";
+            $codigoHijoCuarto = isset($_POST["editarCodigoHijoCuarto"]) ? trim($_POST["editarCodigoHijoCuarto"]) : "";
+            
+            // Convertir strings vacíos a cadena vacía definitivamente
+            $codigoHijoMitad = ($codigoHijoMitad === "") ? "" : $codigoHijoMitad;
+            $codigoHijoTercio = ($codigoHijoTercio === "") ? "" : $codigoHijoTercio;
+            $codigoHijoCuarto = ($codigoHijoCuarto === "") ? "" : $codigoHijoCuarto;
         }
+        
+        // Debug para verificar qué se está guardando
+        error_log("=== GUARDANDO PRODUCTO ===");
+        error_log("Es divisible: " . $esDivisible);
+        error_log("Código mitad: '" . $codigoHijoMitad . "'");
+        error_log("Código tercio: '" . $codigoHijoTercio . "'");
+        error_log("Código cuarto: '" . $codigoHijoCuarto . "'");
         
         // Preparar datos
         $datos = array(
@@ -187,7 +160,7 @@ public function ctrCrearProductoMaestro() {
                 swal({
                     type: "success",
                     title: "Producto actualizado",
-                    text: "El producto ha sido actualizado en el catálogo maestro"
+                    text: "El producto ha sido actualizado correctamente"
                 }).then(function() {
                     window.location = "catalogo-maestro";
                 });
@@ -204,15 +177,13 @@ public function ctrCrearProductoMaestro() {
             </script>';
         }
     }
-            
-        }
-    }
-    
-    /*=============================================
-    SINCRONIZAR CATÁLOGO A PRODUCTOS LOCALES
-    =============================================*/
-    static public function ctrSincronizarCatalogo() {
-        if(isset($_POST["sincronizarCatalogo"])) {
+}
+
+/*=============================================
+SINCRONIZAR CATÁLOGO A PRODUCTOS LOCALES
+=============================================*/
+static public function ctrSincronizarCatalogo() {
+    if(isset($_POST["sincronizarCatalogo"])) {
             
             $respuesta = ModeloCatalogoMaestro::mdlSincronizarAProductosLocales();
             

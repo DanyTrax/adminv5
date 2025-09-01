@@ -344,7 +344,7 @@ public static function mdlBuscarProductosHijos($termino) {
     }
     
 /*=============================================
-EDITAR PRODUCTO MAESTRO - CON LIMPIEZA DE HIJOS
+EDITAR PRODUCTO MAESTRO - ACTUALIZAR TODOS LOS CAMPOS
 =============================================*/
 
 public static function mdlEditarProductoMaestro($datos) {
@@ -371,9 +371,18 @@ public static function mdlEditarProductoMaestro($datos) {
         $stmt->bindParam(":precio_venta", $datos["precio_venta"], PDO::PARAM_STR);
         $stmt->bindParam(":imagen", $datos["imagen"], PDO::PARAM_STR);
         $stmt->bindParam(":es_divisible", $datos["es_divisible"], PDO::PARAM_INT);
+        
+        // ✅ ESTOS CAMPOS SE ACTUALIZARÁN CON LOS VALORES ENVIADOS (INCLUSO SI ESTÁN VACÍOS)
         $stmt->bindParam(":codigo_hijo_mitad", $datos["codigo_hijo_mitad"], PDO::PARAM_STR);
         $stmt->bindParam(":codigo_hijo_tercio", $datos["codigo_hijo_tercio"], PDO::PARAM_STR);
         $stmt->bindParam(":codigo_hijo_cuarto", $datos["codigo_hijo_cuarto"], PDO::PARAM_STR);
+        
+        // Debug SQL
+        error_log("=== EJECUTANDO UPDATE ===");
+        error_log("UPDATE con valores:");
+        error_log("- mitad: '" . $datos["codigo_hijo_mitad"] . "'");
+        error_log("- tercio: '" . $datos["codigo_hijo_tercio"] . "'");
+        error_log("- cuarto: '" . $datos["codigo_hijo_cuarto"] . "'");
         
         if($stmt->execute()) {
             return "ok";
@@ -384,7 +393,7 @@ public static function mdlEditarProductoMaestro($datos) {
     } catch (Exception $e) {
         
         error_log("Error al editar producto maestro: " . $e->getMessage());
-        return "error";
+        return "error: " . $e->getMessage();
         
     } finally {
         

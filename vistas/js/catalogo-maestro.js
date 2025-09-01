@@ -445,6 +445,65 @@ $(document).ready(function(){
 });
 
 /*=============================================
+PROCESAR CAMPOS DE DIVISIÓN ANTES DE ENVIAR
+=============================================*/
+
+$(document).on("submit", "form", function(e) {
+    
+    // Solo para el formulario de editar producto maestro
+    if($(this).find("#idProductoMaestro").length > 0) {
+        
+        console.log("=== PROCESANDO FORMULARIO EDITAR ===");
+        
+        var esDivisible = $("#editarEsDivisibleMaestro").prop("checked");
+        console.log("Es divisible:", esDivisible);
+        
+        if(!esDivisible) {
+            
+            // Si NO es divisible, limpiar todos los campos
+            $("#editarCodigoHijoMitad").val("");
+            $("#editarCodigoHijoTercio").val("");
+            $("#editarCodigoHijoCuarto").val("");
+            
+            console.log("Limpiando todos los campos de división");
+            
+        } else {
+            
+            // Si ES divisible, procesar campos individualmente
+            var mitad = $("#editarCodigoHijoMitad").val();
+            var tercio = $("#editarCodigoHijoTercio").val();
+            var cuarto = $("#editarCodigoHijoCuarto").val();
+            
+            console.log("Valores antes de procesar:");
+            console.log("- Mitad: '" + mitad + "'");
+            console.log("- Tercio: '" + tercio + "'");
+            console.log("- Cuarto: '" + cuarto + "'");
+            
+            // ✅ ASEGURAR QUE LOS CAMPOS VACÍOS SE ENVÍEN COMO CADENA VACÍA
+            if(!mitad || mitad.trim() === "") {
+                $("#editarCodigoHijoMitad").val("");
+                console.log("Campo mitad limpiado");
+            }
+            
+            if(!tercio || tercio.trim() === "") {
+                $("#editarCodigoHijoTercio").val("");
+                console.log("Campo tercio limpiado");
+            }
+            
+            if(!cuarto || cuarto.trim() === "") {
+                $("#editarCodigoHijoCuarto").val("");
+                console.log("Campo cuarto limpiado");
+            }
+        }
+        
+        console.log("Valores finales a enviar:");
+        console.log("- Mitad: '" + $("#editarCodigoHijoMitad").val() + "'");
+        console.log("- Tercio: '" + $("#editarCodigoHijoTercio").val() + "'");
+        console.log("- Cuarto: '" + $("#editarCodigoHijoCuarto").val() + "'");
+    }
+});
+
+/*=============================================
 EDITAR PRODUCTO MAESTRO - CORREGIDO LIMPIEZA
 =============================================*/
 
