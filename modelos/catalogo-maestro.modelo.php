@@ -249,7 +249,7 @@ public static function mdlBuscarProductosHijos($termino) {
 }
     
 /*=============================================
-SINCRONIZAR A PRODUCTOS LOCALES CON DIVISIONES
+SINCRONIZAR A PRODUCTOS LOCALES CON DIVISIONES - CORREGIDO
 =============================================*/
 static public function mdlSincronizarAProductosLocales() {
     $dbCentral = self::conectarCentral();
@@ -273,16 +273,16 @@ static public function mdlSincronizarAProductosLocales() {
         
         foreach ($productosMaestros as $productoMaestro) {
             
-            // Preparar datos base
+            // ✅ DATOS BASE CORRECTOS
             $datosBase = [
                 'descripcion' => $productoMaestro['descripcion'],
                 'precio_venta' => $productoMaestro['precio_venta'],
                 'id_categoria' => $productoMaestro['id_categoria'],
                 'imagen' => $productoMaestro['imagen'],
-                'es_divisible' => $productoMaestro['es_hijo'] // ✅ MAPEO CORRECTO
+                'es_divisible' => $productoMaestro['es_divisible'] // ✅ CORRECCIÓN 1
             ];
             
-            // Inicializar datos de división
+            // ✅ INICIALIZAR SIEMPRE COMO VACÍO (para limpiar divisiones eliminadas)
             $datosDivision = [
                 'nombre_mitad' => '',
                 'precio_mitad' => '',
@@ -292,13 +292,13 @@ static public function mdlSincronizarAProductosLocales() {
                 'precio_cuarto' => ''
             ];
             
-            // Si es divisible (es_hijo = 1), buscar información de productos hijos
-            if ($productoMaestro['es_hijo'] == 1) {
+            // ✅ LÓGICA CORREGIDA: Si es_divisible = 1, buscar información de productos hijos
+            if ($productoMaestro['es_divisible'] == 1) { // ✅ CORRECCIÓN 2
                 
                 // Buscar información para MITAD
                 if (!empty($productoMaestro['codigo_hijo_mitad'])) {
                     $datosMitad = self::buscarInformacionHijo($productoMaestro['codigo_hijo_mitad']);
-                    if ($datosMitad) {
+                    if ($datosMitad && $datosMitad['descripcion'] !== '') {
                         $datosDivision['nombre_mitad'] = $datosMitad['descripcion'];
                         $datosDivision['precio_mitad'] = $datosMitad['precio_venta'];
                     }
@@ -307,7 +307,7 @@ static public function mdlSincronizarAProductosLocales() {
                 // Buscar información para TERCIO
                 if (!empty($productoMaestro['codigo_hijo_tercio'])) {
                     $datosTercio = self::buscarInformacionHijo($productoMaestro['codigo_hijo_tercio']);
-                    if ($datosTercio) {
+                    if ($datosTercio && $datosTercio['descripcion'] !== '') {
                         $datosDivision['nombre_tercio'] = $datosTercio['descripcion'];
                         $datosDivision['precio_tercio'] = $datosTercio['precio_venta'];
                     }
@@ -316,12 +316,13 @@ static public function mdlSincronizarAProductosLocales() {
                 // Buscar información para CUARTO
                 if (!empty($productoMaestro['codigo_hijo_cuarto'])) {
                     $datosCuarto = self::buscarInformacionHijo($productoMaestro['codigo_hijo_cuarto']);
-                    if ($datosCuarto) {
+                    if ($datosCuarto && $datosCuarto['descripcion'] !== '') {
                         $datosDivision['nombre_cuarto'] = $datosCuarto['descripcion'];
                         $datosDivision['precio_cuarto'] = $datosCuarto['precio_venta'];
                     }
                 }
             }
+            // ✅ Si es_divisible = 0, los datos de división quedan vacíos (como se inicializaron)
             
             // Combinar datos base con datos de división
             $datosCompletos = array_merge($datosBase, $datosDivision);
@@ -410,12 +411,15 @@ static public function mdlSincronizarAProductosLocales() {
 }
 
 /*=============================================
-BUSCAR INFORMACIÓN DE PRODUCTO HIJO (MÉTODO AUXILIAR)
+BUSCAR INFORMACIÓN DE PRODUCTO HIJO - CORREGIDO
 =============================================*/
 private static function buscarInformacionHijo($codigoHijo) {
     
     if (empty($codigoHijo)) {
-        return null;
+        return [
+            'descripcion' => '',
+            'precio_venta' => ''
+        ];
     }
     
     try {
@@ -429,12 +433,24 @@ private static function buscarInformacionHijo($codigoHijo) {
         $stmt->bindParam(":codigo", $codigoHijo, PDO::PARAM_STR);
         $stmt->execute();
         
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($resultado) {
+            return $resultado;
+        } else {
+            return [
+                'descripcion' => '',
+                'precio_venta' => ''
+            ];
+        }
         
     } catch (Exception $e) {
         
         error_log("Error al buscar información del hijo '$codigoHijo': " . $e->getMessage());
-        return null;
+        return [
+            'descripcion' => '',
+            'precio_venta' => ''
+        ];
         
     } finally {
         
