@@ -56,7 +56,7 @@
            <th>Categoría</th>
            <th>Precio Venta</th>
            <th>Divisible</th>
-           <th>Hijos Configurados</th>
+           <th>Divididos Configurados</th>
            <th>Última Actualización</th>
            <th>Acciones</th>
 
@@ -120,19 +120,19 @@
                     $hijosConfigurados = 0;
                     $hijosTexto = '';
 
-                    if(!empty($value["descripcion_mitad"])){
-                      $hijosConfigurados++;
-                      $hijosTexto .= '<small class="label label-info">1/2</small> ';
+                    if(!empty($value["codigo_hijo_mitad"]) && trim($value["codigo_hijo_mitad"]) != ""){
+                    $hijosConfigurados++;
+                    $hijosTexto .= '<small class="label label-info">1/2</small> ';
                     }
 
-                    if(!empty($value["descripcion_tercio"])){
-                      $hijosConfigurados++;
-                      $hijosTexto .= '<small class="label label-warning">1/3</small> ';
+                    if(!empty($value["codigo_hijo_tercio"]) && trim($value["codigo_hijo_tercio"]) != ""){
+                    $hijosConfigurados++;
+                    $hijosTexto .= '<small class="label label-warning">1/3</small> ';
                     }
 
-                    if(!empty($value["descripcion_cuarto"])){
-                      $hijosConfigurados++;
-                      $hijosTexto .= '<small class="label label-success">1/4</small> ';
+                    if(!empty($value["codigo_hijo_cuarto"]) && trim($value["codigo_hijo_cuarto"]) != ""){
+                    $hijosConfigurados++;
+                    $hijosTexto .= '<small class="label label-success">1/4</small> ';
                     }
 
                     if($hijosConfigurados > 0){
