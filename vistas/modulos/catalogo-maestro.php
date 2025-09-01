@@ -545,7 +545,7 @@ MODAL EDITAR PRODUCTO MAESTRO
                     <div class="input-group">
                         <span class="input-group-addon" style="background-color: #f39c12; color: white;"><i class="fa fa-pie-chart"></i></span>
                         <input type="text" id="buscarEditarHijoMitad" class="form-control" placeholder="Buscar producto para mitad (1/2)..." style="font-weight: 500;">
-                        <input type="hidden" id="editarCodigoHijoMitad" name="editarCodigoHijoMitad">
+                        <input type="hidden" id="editarCodigoHijoMitad" name="editarCodigoHijoMitad" value="">
                     </div>
                     <div id="editarResultadosMitad" class="list-group" style="display: none; position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>
                 </div>
@@ -555,7 +555,7 @@ MODAL EDITAR PRODUCTO MAESTRO
                     <div class="input-group">
                         <span class="input-group-addon" style="background-color: #00a65a; color: white;"><i class="fa fa-pie-chart"></i></span>
                         <input type="text" id="buscarEditarHijoTercio" class="form-control" placeholder="Buscar producto para tercio (1/3)..." style="font-weight: 500;">
-                        <input type="hidden" id="editarCodigoHijoTercio" name="editarCodigoHijoTercio">
+                        <input type="hidden" id="editarCodigoHijoTercio" name="editarCodigoHijoTercio" value="">
                     </div>
                     <div id="editarResultadosTercio" class="list-group" style="display: none; position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>
                 </div>
@@ -565,7 +565,7 @@ MODAL EDITAR PRODUCTO MAESTRO
                     <div class="input-group">
                         <span class="input-group-addon" style="background-color: #dd4b39; color: white;"><i class="fa fa-pie-chart"></i></span>
                         <input type="text" id="buscarEditarHijoCuarto" class="form-control" placeholder="Buscar producto para cuarto (1/4)..." style="font-weight: 500;">
-                        <input type="hidden" id="editarCodigoHijoCuarto" name="editarCodigoHijoCuarto">
+                        <input type="hidden" id="editarCodigoHijoCuarto" name="editarCodigoHijoCuarto" value="">
                     </div>
                     <div id="editarResultadosCuarto" class="list-group" style="display: none; position: absolute; z-index: 1000; width: 100%; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>
                 </div>
