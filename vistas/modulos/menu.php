@@ -47,6 +47,33 @@
 
                 </li>';
             }
+            if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial") {
+
+                echo '<li>
+
+                    <a href="catalogo-maestro">
+
+                        <i class="fa fa-database"></i>
+                        <span>Catálogo Maestro</span>
+
+                    </a>
+
+                </li>';
+            }
+                       // El enlace a Productos ahora también lo ve el Vendedor
+            if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor") {
+                
+                echo '<li>
+
+                    <a href="productos">
+
+                        <i class="fa fa-product-hunt"></i>
+                        <span>Productos</span>
+
+                    </a>
+
+                </li>';
+            }
             
             // El enlace a Transferencias ahora también lo ve el Vendedor
             if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor" || $_SESSION["perfil"] == "Transportador") {
@@ -98,22 +125,6 @@
                   </ul>
                 </li>';
             }            
-
-            // El enlace a Productos ahora también lo ve el Vendedor
-            if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor") {
-                
-                echo '<li>
-
-                    <a href="productos">
-
-                        <i class="fa fa-product-hunt"></i>
-                        <span>Productos</span>
-
-                    </a>
-
-                </li>';
-            }
-
 
             if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor" || $_SESSION["perfil"] == "Contador") {
 

@@ -108,6 +108,7 @@ $url = $protocol . $host . $script_name;
         "inicio" => ["Administrador"],
         "usuarios" => ["Administrador"],
         "categorias" => ["Administrador", "Especial"],
+        "catalogo-maestro" => ["Administrador", "Especial"],
         "transferencias" => ["Administrador", "Vendedor", "Transportador", "Especial"],
         "crear-transferencia" => ["Administrador", "Vendedor", "Especial"],
         "cargues-pendientes" => ["Administrador", "Transportador", "Especial"],
@@ -176,6 +177,7 @@ $url = $protocol . $host . $script_name;
   <script src="<?php echo $url; ?>vistas/js/cargues-pendientes.js"></script>
   <script src="<?php echo $url; ?>vistas/js/almacen-transito.js"></script>
   <script src="<?php echo $url; ?>vistas/js/recepciones.js"></script>
+  <script src="<?php echo $url; ?>vistas/js/catalogo-maestro.js"></script>
 </html>
 </body>
 

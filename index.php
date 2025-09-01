@@ -14,6 +14,7 @@ require_once "controladores/ventas.controlador.php";
 require_once "controladores/cotizaciones.controlador.php";
 require_once "controladores/contabilidad.controlador.php";
 require_once "controladores/medios-pago.controlador.php";
+require_once "controladores/catalogo-maestro.controlador.php";
 
 require_once "modelos/usuarios.modelo.php";
 require_once "modelos/categorias.modelo.php";
@@ -24,6 +25,7 @@ require_once "extensiones/vendor/autoload.php";
 require_once "modelos/cotizaciones.modelo.php";
 require_once "modelos/contabilidad.modelo.php";
 require_once "modelos/medios-pago.modelo.php";
+require_once "modelos/catalogo-maestro.modelo.php";
 
 require_once "src/MedioPago.php";
 require_once "src/FormaPago.php";
