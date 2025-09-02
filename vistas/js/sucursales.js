@@ -169,47 +169,55 @@ $(document).ready(function() {
         });
     });
 
-    /*=============================================
-    AUTOCOMPLETAR API URL DESDE URL BASE
-    =============================================*/
-    $("#btnAutocompletarApi").click(function() {
-        var urlBase = $("input[name='nuevaUrlBase']").val().trim();
-        
-        if (urlBase === '') {
-            swal({
-                type: "warning",
-                title: "Advertencia",
-                text: "Primero debe ingresar la URL Base"
-            });
-            return;
-        }
+/*=============================================
+AUTOCOMPLETAR API URL DESDE URL BASE
+=============================================*/
+$(document).on('click', '#btnAutocompletarApi', function() {
+    var urlBase = $("input[name='nuevaUrlBase']").val().trim();
+    
+    if (urlBase === '') {
+        swal({
+            type: "warning",
+            title: "Advertencia",
+            text: "Primero debe ingresar la URL Base"
+        });
+        return;
+    }
 
-        // Asegurar que termine con /
-        if (!urlBase.endsWith('/')) {
-            urlBase += '/';
-        }
+    // Asegurar que termine con /
+    if (!urlBase.endsWith('/')) {
+        urlBase += '/';
+    }
 
-        var apiUrl = urlBase + 'api-transferencias/';
-        $("input[name='nuevaApiUrl']").val(apiUrl);
+    var apiUrl = urlBase + 'api-transferencias/';
+    $("input[name='nuevaApiUrl']").val(apiUrl);
+    
+    swal({
+        type: "success",
+        title: "¡Completado!",
+        text: "API URL generada automáticamente",
+        timer: 1500,
+        showConfirmButton: false
     });
+});
 
-    /*=============================================
-    PROBAR CONEXIÓN AL CREAR SUCURSAL
-    =============================================*/
-    $("#btnProbarConexionNueva").click(function() {
-        var apiUrl = $("input[name='nuevaApiUrl']").val().trim();
-        
-        if (apiUrl === '') {
-            swal({
-                type: "warning",
-                title: "Advertencia",
-                text: "Debe ingresar la API URL primero"
-            });
-            return;
-        }
+/*=============================================
+PROBAR CONEXIÓN AL CREAR SUCURSAL
+=============================================*/
+$(document).on('click', '#btnProbarConexionNueva', function() {
+    var apiUrl = $("input[name='nuevaApiUrl']").val().trim();
+    
+    if (apiUrl === '') {
+        swal({
+            type: "warning",
+            title: "Advertencia",
+            text: "Debe ingresar la API URL primero"
+        });
+        return;
+    }
 
-        probarConexion(apiUrl, 'Nueva Sucursal');
-    });
+    probarConexion(apiUrl, 'Nueva Sucursal');
+});
 
     /*=============================================
     FUNCIÓN PARA PROBAR CONEXIÓN
@@ -423,25 +431,82 @@ $(document).ready(function() {
         });
     });
 
-    /*=============================================
-    SINCRONIZAR TODAS LAS SUCURSALES
-    =============================================*/
-    $("#btnSincronizarTodas").click(function() {
-        swal({
-            title: '¿Sincronizar con todas las sucursales activas?',
-            text: "Esto actualizará el catálogo de productos en todas las sucursales conectadas",
-            type: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#d33',
-            cancelButtonText: 'Cancelar',
-            confirmButtonText: '¡Sí, sincronizar!'
-        }).then(function(result) {
-            if (result.value) {
-                ejecutarSincronizacionCompleta();
-            }
-        });
+/*=============================================
+SINCRONIZAR CATÁLOGO CON TODAS LAS SUCURSALES
+=============================================*/
+$("#btnSincronizarTodas").click(function() {
+    swal({
+        title: '¿Sincronizar catálogo con todas las sucursales activas?',
+        text: "Esto actualizará el catálogo maestro de productos en todas las sucursales conectadas",
+        type: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#d33',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: '¡Sí, sincronizar catálogo!'
+    }).then(function(result) {
+        if (result.value) {
+            ejecutarSincronizacionCatalogo();
+        }
     });
+});
+
+/*=============================================
+FUNCIÓN PARA EJECUTAR SINCRONIZACIÓN DE CATÁLOGO
+=============================================*/
+function ejecutarSincronizacionCatalogo() {
+    // Mostrar loading
+    swal({
+        title: 'Sincronizando catálogo...',
+        text: 'Actualizando catálogo maestro en todas las sucursales. Esto puede tomar varios minutos.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
+        onOpen: function() {
+            swal.showLoading();
+        }
+    });
+
+    $.ajax({
+        url: "ajax/sucursales.ajax.php",
+        method: "POST",
+        data: {"accion": "sincronizar_catalogo_maestro"}, // ← CAMBIO AQUÍ
+        dataType: "json",
+        timeout: 300000, // 5 minutos timeout
+        success: function(respuesta) {
+            if (respuesta.success) {
+                swal({
+                    type: "success",
+                    title: "¡Catálogo sincronizado!",
+                    text: respuesta.message_detallado || respuesta.message,
+                    confirmButtonText: "Cerrar"
+                }).then(function() {
+                    cargarEstadisticas();
+                    tablaSucursales.ajax.reload(null, false);
+                });
+            } else {
+                swal({
+                    type: "error",
+                    title: "Error en sincronización",
+                    text: respuesta.message,
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            var mensaje = "Error de comunicación";
+            if (status === 'timeout') {
+                mensaje = "La sincronización está tomando más tiempo del esperado. Puede continuar en segundo plano.";
+            }
+            swal({
+                type: "warning",
+                title: "Atención",
+                text: mensaje,
+                confirmButtonText: "Cerrar"
+            });
+        }
+    });
+}
 
     /*=============================================
     FUNCIÓN PARA EJECUTAR SINCRONIZACIÓN COMPLETA

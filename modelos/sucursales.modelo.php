@@ -5,18 +5,26 @@ require_once "conexion.php";
 class ModeloSucursales {
 
     /*=============================================
-    OBTENER TODAS LAS SUCURSALES
+    OBTENER TODAS LAS SUCURSALES (INCLUYENDO ACTUAL)
     =============================================*/
-    static public function mdlObtenerSucursales($soloActivas = false) {
+    static public function mdlObtenerSucursales($soloActivas = false, $incluirActual = true) {
         
         try {
             
             // Construir URL de la API
             $apiUrl = API_URL . "obtener_sucursales.php";
+            $params = [];
+            
             if ($soloActivas) {
-                $apiUrl .= "?solo_activas=1&con_sincronizacion=1";
-            } else {
-                $apiUrl .= "?con_sincronizacion=1";
+                $params[] = "solo_activas=1";
+            }
+            
+            if ($incluirActual) {
+                $params[] = "incluir_actual=1";
+            }
+            
+            if (!empty($params)) {
+                $apiUrl .= "?" . implode("&", $params);
             }
             
             // Crear contexto para la petición

@@ -549,6 +549,67 @@ class AjaxSucursales {
             echo json_encode($respuesta);
         }
     }
+    /*=============================================
+SINCRONIZAR CATÁLOGO MAESTRO CON TODAS LAS SUCURSALES
+=============================================*/
+public function ajaxSincronizarCatalogoMaestro() {
+
+    // Verificar permisos
+    if ($_SESSION["perfil"] != "Administrador") {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Sin permisos para realizar esta acción'
+        ]);
+        return;
+    }
+
+    try {
+
+        // 1. Sincronizar catálogo maestro localmente
+        require_once "../modelos/catalogo-maestro.modelo.php";
+        $resultadoLocal = ModeloCatalogoMaestro::mdlSincronizarAProductosLocales();
+
+        // 2. Sincronizar con otras sucursales
+        $resultadoRemoto = ModeloSucursales::mdlSincronizarCatalogoConSucursales();
+
+        // 3. Construir respuesta consolidada
+        $respuesta = [
+            'success' => true,
+            'message' => 'Catálogo maestro sincronizado correctamente',
+            'detalles' => [
+                'local' => [
+                    'sincronizados' => $resultadoLocal['sincronizados'] ?? 0,
+                    'actualizados' => $resultadoLocal['actualizados'] ?? 0
+                ],
+                'remotas' => [
+                    'procesadas' => $resultadoRemoto['sucursales_procesadas'] ?? 0,
+                    'exitosas' => $resultadoRemoto['sucursales_exitosas'] ?? 0,
+                    'fallidas' => $resultadoRemoto['sucursales_fallidas'] ?? 0
+                ]
+            ]
+        ];
+
+        // Mensaje detallado
+        $respuesta['message_detallado'] = 
+            "CATÁLOGO MAESTRO SINCRONIZADO:\n\n" .
+            "SUCURSAL ACTUAL:\n" .
+            "• Productos nuevos: " . $respuesta['detalles']['local']['sincronizados'] . "\n" .
+            "• Productos actualizados: " . $respuesta['detalles']['local']['actualizados'] . "\n\n" .
+            "OTRAS SUCURSALES:\n" .
+            "• Sucursales procesadas: " . $respuesta['detalles']['remotas']['procesadas'] . "\n" .
+            "• Sincronizaciones exitosas: " . $respuesta['detalles']['remotas']['exitosas'] . "\n" .
+            "• Sincronizaciones fallidas: " . $respuesta['detalles']['remotas']['fallidas'];
+
+        echo json_encode($respuesta);
+
+    } catch (Exception $e) {
+
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error en sincronización de catálogo: ' . $e->getMessage()
+        ]);
+    }
+}
 }
 
 /*=============================================
@@ -625,6 +686,12 @@ if (isset($_POST["accion"]) && $_POST["accion"] == "validar_codigo") {
     $validar->codigo = $_POST["codigo"];
     $validar->idExcluir = $_POST["idExcluir"] ?? null;
     $validar->ajaxValidarCodigo();
+}
+
+// Sincronizar Catálogo Maestro
+if (isset($_POST["accion"]) && $_POST["accion"] == "sincronizar_catalogo_maestro") {
+    $sincronizar = new AjaxSucursales();
+    $sincronizar->ajaxSincronizarCatalogoMaestro();
 }
 
 ?>
