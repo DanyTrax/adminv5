@@ -133,6 +133,7 @@ $url = $protocol . $host . $script_name;
         "crear-cotizacion" => ["Administrador", "Vendedor", "Contador"],
         "editar-cotizacion" => ["Administrador", "Vendedor", "Contador"],
         "medios-pago" => ["Administrador"],
+        "sucursales" => ["Administrador"], 
         "salir" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"]
       ];
 
@@ -177,6 +178,7 @@ $url = $protocol . $host . $script_name;
   <script src="<?php echo $url; ?>vistas/js/cargues-pendientes.js"></script>
   <script src="<?php echo $url; ?>vistas/js/almacen-transito.js"></script>
   <script src="<?php echo $url; ?>vistas/js/recepciones.js"></script>
+  <script src="<?php echo $url; ?>vistas/js/sucursales.js"></script> 
   <script src="<?php echo $url; ?>vistas/js/catalogo-maestro.js"></script>
 </html>
 </body>
