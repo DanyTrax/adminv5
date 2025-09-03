@@ -930,8 +930,30 @@ public static function mdlSincronizarProductoEspecifico($codigoMaestro) {
     $stmtMaestro = null;
     $stmtLocal = null;
 }
+
 /*=============================================
-OBTENER DATOS PROCESADOS PARA SINCRONIZACIÓN MULTI-SUCURSAL (CON DEBUG)
+LOGS DE CAMBIOS EN CATÁLOGO MAESTRO
+=============================================*/
+
+public static function mdlRegistrarCambio($accion, $codigo_producto, $usuario, $detalles = null) {
+    
+    $stmt = self::conectarCentral()->prepare("
+        INSERT INTO logs_catalogo_maestro (accion, codigo_producto, usuario, detalles, fecha)
+        VALUES (:accion, :codigo_producto, :usuario, :detalles, NOW())
+    ");
+    
+    $stmt->bindParam(":accion", $accion, PDO::PARAM_STR);
+    $stmt->bindParam(":codigo_producto", $codigo_producto, PDO::PARAM_STR);
+    $stmt->bindParam(":usuario", $usuario, PDO::PARAM_STR);
+    $stmt->bindParam(":detalles", $detalles, PDO::PARAM_STR);
+    
+    return $stmt->execute();
+    
+    $stmt->close();
+    $stmt = null;
+}
+/*=============================================
+OBTENER DATOS PROCESADOS PARA SINCRONIZACIÓN MULTI-SUCURSAL
 =============================================*/
 static public function mdlObtenerDatosParaSincronizacion() {
     
@@ -1054,28 +1076,6 @@ static public function mdlObtenerDatosParaSincronizacion() {
         error_log("ERROR en mdlObtenerDatosParaSincronizacion: " . $e->getMessage());
         return false;
     }
-}
-
-/*=============================================
-LOGS DE CAMBIOS EN CATÁLOGO MAESTRO
-=============================================*/
-
-public static function mdlRegistrarCambio($accion, $codigo_producto, $usuario, $detalles = null) {
-    
-    $stmt = self::conectarCentral()->prepare("
-        INSERT INTO logs_catalogo_maestro (accion, codigo_producto, usuario, detalles, fecha)
-        VALUES (:accion, :codigo_producto, :usuario, :detalles, NOW())
-    ");
-    
-    $stmt->bindParam(":accion", $accion, PDO::PARAM_STR);
-    $stmt->bindParam(":codigo_producto", $codigo_producto, PDO::PARAM_STR);
-    $stmt->bindParam(":usuario", $usuario, PDO::PARAM_STR);
-    $stmt->bindParam(":detalles", $detalles, PDO::PARAM_STR);
-    
-    return $stmt->execute();
-    
-    $stmt->close();
-    $stmt = null;
 }
 }
 ?>
