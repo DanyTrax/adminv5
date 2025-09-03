@@ -35,8 +35,8 @@
           <i class="fa fa-upload"></i> Importar Excel
         </button>
 
-        <a href="descargar-plantilla-excel.php?plantilla=catalogo-maestro" class="btn btn-warning">
-          <i class="fa fa-download"></i> Descargar Plantilla Excel
+        <a href="descargar-plantilla-excel.php?descargar=csv" class="btn btn-success">
+            <i class="fa fa-download"></i> Descargar Plantilla CSV
         </a>
 
       </div>
