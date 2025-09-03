@@ -4,6 +4,27 @@ require_once "conexion.php";
 
 class ModeloSucursales {
 
+
+    static public function mdlObtenerSucursalesLocal() {
+    try {
+        $stmt = Conexion::conectar()->prepare("SELECT * FROM sucursales");
+        $stmt->execute();
+        $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Simulamos la misma estructura de respuesta que la API
+        return [
+            'success' => true,
+            'data' => $datos
+        ];
+
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => 'Error al leer la base de datos local: ' . $e->getMessage()
+        ];
+    }
+}
+
     /*=============================================
     OBTENER TODAS LAS SUCURSALES (INCLUYENDO ACTUAL)
     =============================================*/
