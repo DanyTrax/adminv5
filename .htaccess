@@ -10,11 +10,9 @@ RewriteCond %{REQUEST_FILENAME} !-d
 # Redirigir todas las demás solicitudes a index.php
 RewriteRule ^(.+)$ index.php?ruta=$1 [QSA,L]
 
-# Headers básicos de cache (sin mod_headers)
+# Cache básico para recursos estáticos
 <IfModule mod_expires.c>
     ExpiresActive On
-    
-    # Cache para recursos estáticos
     ExpiresByType text/css "access plus 1 week"
     ExpiresByType application/javascript "access plus 1 week"
     ExpiresByType image/png "access plus 1 month"
@@ -22,22 +20,17 @@ RewriteRule ^(.+)$ index.php?ruta=$1 [QSA,L]
     ExpiresByType image/jpeg "access plus 1 month"
     ExpiresByType image/gif "access plus 1 month"
     ExpiresByType image/ico "access plus 1 month"
-    ExpiresByType image/icon "access plus 1 month"
-    ExpiresByType text/ico "access plus 1 month"
-    ExpiresByType application/ico "access plus 1 month"
-    
-    # No cache para páginas dinámicas de administración
     ExpiresByType text/html "access plus 0 seconds"
     ExpiresByType application/json "access plus 0 seconds"
 </IfModule>
 
-# Protección para archivos de configuración
+# Protección básica de archivos sensibles
 <FilesMatch "\.(ini|conf|yml|yaml|log)$">
-    Order allow,deny
+    Order deny,allow
     Deny from all
 </FilesMatch>
 
-# Permitir acceso a archivos específicos necesarios
+# Permitir archivos específicos necesarios
 <Files "composer.json">
     Allow from all
 </Files>
@@ -46,38 +39,17 @@ RewriteRule ^(.+)$ index.php?ruta=$1 [QSA,L]
     Allow from all
 </Files>
 
-# Protección especial para conexiones de BD (excepto APIs)
-<FilesMatch "^conexion.*\.php$">
-    <RequireAll>
-        Require all denied
-    </RequireAll>
-</FilesMatch>
-
-# Permitir APIs de transferencias para sincronización entre sucursales
-<LocationMatch "^/api-transferencias/">
-    <FilesMatch "\.php$">
-        <RequireAll>
-            Require all granted
-        </RequireAll>
-    </FilesMatch>
-</LocationMatch>
-
-# Optimización de compresión para sincronización masiva
+# Compresión GZIP para mejor rendimiento
 <IfModule mod_deflate.c>
     AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript
     AddOutputFilterByType DEFLATE application/javascript application/json application/xml
-    
-    # Comprimir respuestas AJAX grandes (útil para sincronización de catálogos)
-    SetEnvIfNoCase Request_URI \
-        \.(?:gif|jpe?g|png|ico)$ no-gzip dont-vary
-    SetEnvIfNoCase Request_URI \
-        \.(?:exe|t?gz|zip|bz2|sit|rar)$ no-gzip dont-vary
 </IfModule>
 
-# Configuración de timeout extendido para sincronización de sucursales
-<IfModule mod_reqtimeout.c>
-    RequestReadTimeout header=300,MinRate=500 body=3600,MinRate=500
-</IfModule>
+# Bloquear acceso a logs y backups
+<FilesMatch "^(error_log|.*\.log|backup.*)$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
 
 # php -- BEGIN cPanel-generated handler, do not edit
 # Set the "ea-php82" package as the default "PHP" programming language.
@@ -116,46 +88,20 @@ RewriteRule ^(.+)$ index.php?ruta=$1 [QSA,L]
 </IfModule>
 # END cPanel-generated php ini directives, do not edit
 
-# Configuración específica para gestión de sucursales
-<IfModule mod_env.c>
-    # Variable de entorno para identificar el sistema multi-sucursal
-    SetEnv ADMIN_VERSION "5.0"
-    SetEnv MULTI_SUCURSAL "enabled"
-</IfModule>
-
-# Bloquear acceso directo a logs y backups
-<FilesMatch "^(error_log|.*\.log|.*backup.*)$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Límites específicos para operaciones de sincronización masiva
-<LocationMatch "^/(ajax|api-transferencias)/">
-    <IfModule php8_module>
-        php_value max_execution_time 3600
-        php_value memory_limit 6144M
-        php_value max_input_vars 5000
-    </IfModule>
-    <IfModule lsapi_module>
-        php_value max_execution_time 3600
-        php_value memory_limit 6144M
-        php_value max_input_vars 5000
-    </IfModule>
-</LocationMatch>
-
-# Seguridad básica sin mod_headers
-<IfModule mod_mime.c>
-    # Prevenir ejecución de scripts en uploads
-    AddType text/plain .php .phtml .php3 .php4 .php5 .php7 .php8
-    
-    # Solo para directorio de uploads si existe
-    <LocationMatch "^/uploads/">
-        AddType text/plain .php .phtml .php3 .php4 .php5 .php7 .php8
-    </LocationMatch>
-</IfModule>
-
-# Restringir métodos HTTP no necesarios
+# Configuración específica para API de transferencias (sin LocationMatch)
 <IfModule mod_rewrite.c>
+    # Permitir CORS para sincronización entre sucursales
+    RewriteCond %{REQUEST_URI} ^/api-transferencias/
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ $1 [R=200,L]
+    
+    # Restringir métodos HTTP no necesarios
     RewriteCond %{REQUEST_METHOD} ^(TRACE|DELETE|TRACK) [NC]
     RewriteRule .* - [F,L]
+</IfModule>
+
+# Variables de entorno para sistema multi-sucursal
+<IfModule mod_env.c>
+    SetEnv ADMIN_VERSION "5.0"
+    SetEnv MULTI_SUCURSAL "enabled"
 </IfModule>
