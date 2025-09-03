@@ -16,7 +16,13 @@ require_once "../controladores/sucursales.controlador.php";
 require_once "../modelos/sucursales.modelo.php";
 
 class AjaxSucursales {
-        /*=============================================
+
+    public $idSucursal;
+    public $apiUrl;
+    public $nuevoEstado;
+    public $codigo;
+
+    /*=============================================
     DATATABLE SUCURSALES
     =============================================*/
     public function ajaxDatatableSucursales() {

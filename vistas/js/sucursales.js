@@ -363,9 +363,6 @@ $(document).on("click", "#btnRegistrarEsta", function() {
     });
 });
 
-/*=============================================
-PROBAR CONEXIÓN CON SUCURSAL
-=============================================*/
 $(document).on("click", ".btnProbarConexion", function() {
     
     var apiUrl = $(this).attr("apiUrl");
@@ -389,11 +386,25 @@ $(document).on("click", ".btnProbarConexion", function() {
             
             if (respuesta.success) {
                 
+                // Parsear respuesta anidada si existe
+                var detalleRespuesta = "";
+                if (respuesta.respuesta) {
+                    try {
+                        var datosAPI = JSON.parse(respuesta.respuesta);
+                        if (datosAPI.version) {
+                            detalleRespuesta = "<br><small>Versión API: " + datosAPI.version + "</small>";
+                        }
+                    } catch(e) {
+                        // Si no se puede parsear, continuar normalmente
+                    }
+                }
+                
                 swal({
                     type: "success",
                     title: "Conexión exitosa",
                     html: "Conectado con <strong>" + nombreSucursal + "</strong><br>" +
-                          "Tiempo de respuesta: " + (respuesta.tiempo_respuesta || 'N/A')
+                          "Tiempo de respuesta: " + (respuesta.tiempo_respuesta || 'N/A') +
+                          detalleRespuesta
                 });
                 
             } else {
@@ -406,11 +417,24 @@ $(document).on("click", ".btnProbarConexion", function() {
                 });
             }
         },
-        error: function() {
+        error: function(xhr, status, error) {
+            
+            var mensaje = "Error de comunicación";
+            
+            if (status === "timeout") {
+                mensaje = "Timeout de conexión (más de 15 segundos)";
+            } else if (xhr.status === 500) {
+                mensaje = "Error interno del servidor destino";
+            } else if (xhr.status === 404) {
+                mensaje = "API no encontrada en la sucursal";
+            }
+            
             swal({
                 type: "error",
                 title: "Error de conexión",
-                text: "Timeout o error de red al conectar con " + nombreSucursal
+                html: "<strong>" + nombreSucursal + "</strong><br>" +
+                      "Estado: " + mensaje + "<br>" +
+                      "Código: " + (xhr.status || 'N/A')
             });
         },
         complete: function() {
