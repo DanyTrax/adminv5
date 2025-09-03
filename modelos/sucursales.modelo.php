@@ -27,7 +27,7 @@ class ModeloSucursales {
 
     /*=============================================
     OBTENER TODAS LAS SUCURSALES (INCLUYENDO ACTUAL)
-    =============================================*/
+    =============================================
     static public function mdlObtenerSucursales($soloActivas = false, $incluirActual = true) {
         
         try {
@@ -84,7 +84,7 @@ class ModeloSucursales {
                 'data' => []
             ];
         }
-    }
+    }*/
 
     /*=============================================
     CREAR NUEVA SUCURSAL
