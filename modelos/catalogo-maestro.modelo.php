@@ -931,13 +931,16 @@ public static function mdlSincronizarProductoEspecifico($codigoMaestro) {
     $stmtLocal = null;
 }
 /*=============================================
-OBTENER DATOS PROCESADOS PARA SINCRONIZACIÓN MULTI-SUCURSAL
+OBTENER DATOS PROCESADOS PARA SINCRONIZACIÓN MULTI-SUCURSAL (CON DEBUG)
 =============================================*/
 static public function mdlObtenerDatosParaSincronizacion() {
     
     try {
         
         $dbCentral = self::conectarCentral();
+        
+        // ✅ DEBUG: Log de conexión
+        error_log("DEBUG: Conectando a BD central para sincronización");
         
         // ✅ REUTILIZAR LA MISMA QUERY QUE USA TU SINCRONIZACIÓN ACTUAL
         $stmtCentral = $dbCentral->prepare("
@@ -950,10 +953,23 @@ static public function mdlObtenerDatosParaSincronizacion() {
         $stmtCentral->execute();
         $productosMaestros = $stmtCentral->fetchAll(PDO::FETCH_ASSOC);
         
+        // ✅ DEBUG: Verificar cuántos productos obtuvimos
+        error_log("DEBUG: Productos obtenidos del catálogo maestro: " . count($productosMaestros));
+        
+        if (empty($productosMaestros)) {
+            error_log("DEBUG: No se encontraron productos en catálogo maestro");
+            return false;
+        }
+        
         $datosParaEnvio = [];
         
         // ✅ PROCESAR CADA PRODUCTO CON LA MISMA LÓGICA EXISTENTE
-        foreach ($productosMaestros as $productoMaestro) {
+        foreach ($productosMaestros as $index => $productoMaestro) {
+            
+            // ✅ DEBUG: Log cada producto procesado
+            if ($index < 5) { // Solo los primeros 5 para no llenar el log
+                error_log("DEBUG: Procesando producto " . ($index + 1) . ": " . $productoMaestro['codigo']);
+            }
             
             // Datos base del producto
             $codigo = $productoMaestro['codigo'];
@@ -1026,10 +1042,16 @@ static public function mdlObtenerDatosParaSincronizacion() {
             ];
         }
         
+        // ✅ DEBUG: Verificar datos finales
+        error_log("DEBUG: Total productos procesados para envío: " . count($datosParaEnvio));
+        if (count($datosParaEnvio) > 0) {
+            error_log("DEBUG: Primer producto preparado: " . json_encode($datosParaEnvio[0]));
+        }
+        
         return $datosParaEnvio;
         
     } catch (Exception $e) {
-        error_log("Error en mdlObtenerDatosParaSincronizacion: " . $e->getMessage());
+        error_log("ERROR en mdlObtenerDatosParaSincronizacion: " . $e->getMessage());
         return false;
     }
 }
