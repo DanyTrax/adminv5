@@ -694,256 +694,198 @@ class AjaxSucursales {
             ]);
         }
     }
-    /*=============================================
-    SINCRONIZAR CATÁLOGO MAESTRO
-    =============================================*/
-    public function ajaxSincronizarCatalogo() {
+/*=============================================
+SINCRONIZAR CATÁLOGO A TODAS LAS SUCURSALES
+=============================================*/
+public function ajaxSincronizarCatalogo() {
 
-        // Verificar permisos
-        if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] != "Administrador") {
-            echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+    // Verificar permisos
+    if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] != "Administrador") {
+        echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+        return;
+    }
+
+    try {
+        
+        // ✅ OBTENER CATÁLOGO MAESTRO PROCESADO CON TU LÓGICA EXISTENTE
+        require_once "../modelos/catalogo-maestro.modelo.php";
+        
+        // Usar el nuevo método que reutiliza tu lógica de productos divisibles
+        $catalogoMaestro = ModeloCatalogoMaestro::mdlObtenerDatosParaSincronizacion();
+        
+        if (!$catalogoMaestro || empty($catalogoMaestro)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No hay productos en el catálogo maestro para sincronizar'
+            ]);
             return;
         }
 
-        try {
-            
-            // Aumentar límites para sincronización masiva
-            ini_set('max_execution_time', 3600); // 1 hora
-            ini_set('memory_limit', '6144M'); // 6GB para tu servidor de 8GB
-            
-            // Obtener sucursales activas
-            $sucursales = ModeloSucursales::mdlObtenerSucursalesCentral(true);
-            
-            if (!$sucursales['success'] || empty($sucursales['data'])) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'No hay sucursales activas registradas para sincronizar'
-                ]);
-                return;
-            }
+        // ✅ OBTENER SUCURSALES ACTIVAS (EXCLUYENDO ESTA)
+        $respuestaSucursales = ModeloSucursales::mdlObtenerSucursales();
+        
+        if (!$respuestaSucursales || !$respuestaSucursales['success'] || empty($respuestaSucursales['data'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No hay sucursales registradas para sincronizar'
+            ]);
+            return;
+        }
 
-            // Obtener catálogo maestro desde BD central
+        $codigoActual = defined('CODIGO_SUCURSAL') ? CODIGO_SUCURSAL : '';
+        $sucursales = array_filter($respuestaSucursales['data'], function($s) use ($codigoActual) {
+            return $s['activo'] && $s['codigo_sucursal'] !== $codigoActual;
+        });
+
+        if (empty($sucursales)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No hay sucursales activas disponibles para sincronizar'
+            ]);
+            return;
+        }
+
+        // ✅ PREPARAR DATOS PARA ENVÍO
+        $datosEnvio = [
+            'accion' => 'sincronizar_catalogo',
+            'catalogo' => $catalogoMaestro,
+            'origen' => [
+                'codigo' => $codigoActual ?: 'CENTRAL',
+                'timestamp' => date('Y-m-d H:i:s'),
+                'total_productos' => count($catalogoMaestro)
+            ]
+        ];
+
+        // ✅ ENVIAR A CADA SUCURSAL ACTIVA
+        $respuestasSincronizacion = [];
+        $tiempoInicio = microtime(true);
+
+        foreach ($sucursales as $sucursal) {
+            
+            $nombreSucursal = $sucursal['nombre'];
+            $apiUrl = rtrim($sucursal['url_api'], '/') . '/sincronizar_catalogo.php';
+            
             try {
-                require_once "../modelos/catalogo-maestro.modelo.php";
-                $catalogoMaestro = ModeloCatalogoMaestro::mdlObtenerCatalogoCompleto();
                 
-                // Validar que hay productos para sincronizar
-                if (!$catalogoMaestro || empty($catalogoMaestro)) {
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'No hay productos en el catálogo maestro para sincronizar'
-                    ]);
-                    return;
-                }
+                $tiempoInicioSucursal = microtime(true);
                 
-            } catch (Exception $e) {
-                // Si no existe el modelo de catálogo maestro, obtener productos básicos
-                try {
-                    require_once "../api-transferencias/conexion-central.php";
-                    $pdo = ConexionCentral::conectar();
-                    
-                    $stmt = $pdo->prepare("SELECT * FROM catalogo_maestro WHERE activo = 1");
-                    $stmt->execute();
-                    $catalogoMaestro = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                    
-                    if (empty($catalogoMaestro)) {
-                        echo json_encode([
-                            'success' => false,
-                            'message' => 'No hay productos activos en el catálogo maestro'
-                        ]);
-                        return;
-                    }
-                    
-                } catch (Exception $e2) {
-                    error_log("Error obteniendo catálogo maestro: " . $e2->getMessage());
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Error al obtener catálogo maestro: ' . $e2->getMessage()
-                    ]);
-                    return;
-                }
-            }
+                // Configurar cURL para envío
+                $ch = curl_init();
+                curl_setopt_array($ch, [
+                    CURLOPT_URL => $apiUrl,
+                    CURLOPT_POST => true,
+                    CURLOPT_POSTFIELDS => json_encode($datosEnvio),
+                    CURLOPT_HTTPHEADER => [
+                        'Content-Type: application/json',
+                        'User-Agent: AdminV5-SyncCatalog/1.0'
+                    ],
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 300, // 5 minutos para sincronización completa
+                    CURLOPT_CONNECTTIMEOUT => 30,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => false,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_MAXREDIRS => 3
+                ]);
 
-            // Inicializar progreso
-            $progreso = [
-                'total_sucursales' => count($sucursales['data']),
-                'procesadas' => 0,
-                'exitosas' => 0,
-                'fallidas' => 0,
-                'detalles' => [],
-                'inicio' => time()
-            ];
-
-            // Código de sucursal actual
-            $codigoActual = defined('CODIGO_SUCURSAL') ? CODIGO_SUCURSAL : 'DESCONOCIDO';
-            
-            // Sincronizar con cada sucursal
-            foreach ($sucursales['data'] as $sucursal) {
+                $respuestaCurl = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $tiempoRespuesta = round((microtime(true) - $tiempoInicioSucursal) * 1000) . 'ms';
                 
-                // No sincronizar consigo mismo
-                if ($sucursal['codigo_sucursal'] === $codigoActual) {
-                    continue;
+                if (curl_errno($ch)) {
+                    throw new Exception('Error cURL: ' . curl_error($ch));
                 }
                 
-                $progreso['procesadas']++;
-                
-                $detalleSync = [
-                    'sucursal' => $sucursal['nombre'],
-                    'codigo' => $sucursal['codigo_sucursal'],
-                    'url_api' => $sucursal['url_api'],
-                    'estado' => 'fallido',
-                    'mensaje' => 'Error desconocido',
-                    'productos_enviados' => count($catalogoMaestro),
-                    'tiempo_respuesta' => 0
-                ];
-                
-                try {
+                curl_close($ch);
+
+                if ($httpCode === 200 && $respuestaCurl) {
                     
-                    $inicioTiempo = microtime(true);
+                    $respuestaJson = json_decode($respuestaCurl, true);
                     
-                    // Preparar datos para envío
-                    $datosEnvio = [
-                        'accion' => 'sincronizar_catalogo',
-                        'catalogo' => $catalogoMaestro,
-                        'origen' => [
-                            'codigo' => $codigoActual,
-                            'nombre' => defined('NOMBRE_SUCURSAL') ? NOMBRE_SUCURSAL : 'Sucursal Origen'
-                        ],
-                        'timestamp' => time(),
-                        'total_productos' => count($catalogoMaestro),
-                        'version' => '5.0'
-                    ];
-                    
-                    // Configurar contexto HTTP para envío robusto
-                    $context = stream_context_create([
-                        'http' => [
-                            'method' => 'POST',
-                            'header' => [
-                                'Content-Type: application/json',
-                                'User-Agent: AdminV5-Sync/1.0',
-                                'Accept: application/json',
-                                'Connection: keep-alive'
-                            ],
-                            'content' => json_encode($datosEnvio),
-                            'timeout' => 120, // 2 minutos por sucursal
-                            'ignore_errors' => true
-                        ]
-                    ]);
-                    
-                    // Intentar sincronización
-                    $urlSync = rtrim($sucursal['url_api'], '/') . '/sincronizar_catalogo.php';
-                    $respuesta = @file_get_contents($urlSync, false, $context);
-                    
-                    $tiempoTranscurrido = round((microtime(true) - $inicioTiempo), 2);
-                    $detalleSync['tiempo_respuesta'] = $tiempoTranscurrido . 's';
-                    
-                    if ($respuesta !== false) {
+                    if ($respuestaJson && $respuestaJson['success']) {
                         
-                        $resultado = json_decode($respuesta, true);
-                        
-                        if ($resultado && isset($resultado['success'])) {
-                            
-                            if ($resultado['success']) {
-                                $detalleSync['estado'] = 'exitoso';
-                                $detalleSync['mensaje'] = $resultado['message'] ?? 'Sincronización completada correctamente';
-                                $progreso['exitosas']++;
-                                
-                                // Actualizar fecha de última sincronización
-                                self::actualizarFechaSincronizacion($sucursal['codigo_sucursal']);
-                                
-                            } else {
-                                $detalleSync['mensaje'] = $resultado['message'] ?? 'Error reportado por la sucursal destino';
-                                $progreso['fallidas']++;
-                            }
-                            
-                        } else {
-                            $detalleSync['mensaje'] = 'Respuesta inválida del servidor destino';
-                            $progreso['fallidas']++;
-                        }
+                        $respuestasSincronizacion[$nombreSucursal] = [
+                            'success' => true,
+                            'message' => $respuestaJson['message'] ?? 'Sincronización exitosa',
+                            'estadisticas' => $respuestaJson['estadisticas'] ?? [],
+                            'tiempo_respuesta' => $tiempoRespuesta
+                        ];
                         
                     } else {
                         
-                        // Analizar error HTTP
-                        $errorInfo = error_get_last();
-                        if ($errorInfo && strpos($errorInfo['message'], 'HTTP') !== false) {
-                            $detalleSync['mensaje'] = 'Error HTTP: Servidor no disponible o URL incorrecta';
-                        } else {
-                            $detalleSync['mensaje'] = 'No se pudo establecer conexión con la sucursal';
-                        }
-                        $progreso['fallidas']++;
+                        $respuestasSincronizacion[$nombreSucursal] = [
+                            'success' => false,
+                            'message' => $respuestaJson['message'] ?? 'Error desconocido en la respuesta'
+                        ];
                     }
                     
-                } catch (Exception $e) {
-                    $detalleSync['mensaje'] = 'Excepción: ' . $e->getMessage();
-                    $progreso['fallidas']++;
+                } else {
+                    
+                    $respuestasSincronizacion[$nombreSucursal] = [
+                        'success' => false,
+                        'message' => "Error HTTP {$httpCode}: " . ($respuestaCurl ? substr($respuestaCurl, 0, 100) : 'Sin respuesta')
+                    ];
                 }
-                
-                $progreso['detalles'][] = $detalleSync;
-                
-                // Pequeña pausa entre sincronizaciones para evitar saturar la red
-                usleep(500000); // 0.5 segundos
-            }
-            
-            // Calcular tiempo total
-            $tiempoTotal = time() - $progreso['inicio'];
-            
-            // Generar mensaje consolidado
-            $mensaje = sprintf(
-                "<strong>SINCRONIZACIÓN COMPLETADA</strong><br><br>" .
-                "📊 <strong>Resumen:</strong><br>" .
-                "• Total de sucursales: %d<br>" .
-                "• Sincronizaciones exitosas: <span class='text-success'>%d</span><br>" .
-                "• Sincronizaciones fallidas: <span class='text-danger'>%d</span><br>" .
-                "• Productos sincronizados: %d<br>" .
-                "• Tiempo total: %s<br><br>" .
-                "📋 <strong>Detalles por sucursal:</strong><br>%s",
-                $progreso['total_sucursales'],
-                $progreso['exitosas'],
-                $progreso['fallidas'],
-                count($catalogoMaestro),
-                gmdate("H:i:s", $tiempoTotal),
-                implode('<br>', array_map(function($detalle) {
-                    $icono = $detalle['estado'] === 'exitoso' ? '✅' : '❌';
-                    return sprintf(
-                        "%s <strong>%s</strong> (%s): %s - Tiempo: %s",
-                        $icono,
-                        $detalle['sucursal'],
-                        $detalle['codigo'],
-                        $detalle['mensaje'],
-                        $detalle['tiempo_respuesta']
-                    );
-                }, $progreso['detalles']))
-            );
-            
-            echo json_encode([
-                'success' => $progreso['fallidas'] === 0, // Solo éxito si no hay fallas
-                'message' => $progreso['fallidas'] === 0 ? 'Sincronización completada exitosamente' : 'Sincronización completada con errores',
-                'mensaje_detallado' => $mensaje,
-                'estadisticas' => [
-                    'total' => $progreso['total_sucursales'],
-                    'exitosas' => $progreso['exitosas'],
-                    'fallidas' => $progreso['fallidas'],
-                    'productos' => count($catalogoMaestro),
-                    'tiempo_total' => $tiempoTotal
-                ],
-                'detalles' => $progreso['detalles']
-            ]);
 
-        } catch (Exception $e) {
-            error_log("Error crítico en ajaxSincronizarCatalogo: " . $e->getMessage());
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error crítico en sincronización: ' . $e->getMessage(),
-                'estadisticas' => [
-                    'total' => 0,
-                    'exitosas' => 0,
-                    'fallidas' => 0,
-                    'productos' => 0,
-                    'tiempo_total' => 0
-                ]
-            ]);
+            } catch (Exception $e) {
+                
+                $respuestasSincronizacion[$nombreSucursal] = [
+                    'success' => false,
+                    'message' => 'Error de conexión: ' . $e->getMessage()
+                ];
+            }
         }
+
+        // ✅ PROCESAR RESPUESTAS DE TODAS LAS SUCURSALES
+        $respuestaCompleta = [
+            'success' => true,
+            'message' => 'Sincronización completada',
+            'sucursales_exitosas' => 0,
+            'sucursales_fallidas' => 0,
+            'total_productos' => count($catalogoMaestro),
+            'tiempo_total' => round((microtime(true) - $tiempoInicio) * 1000) . 'ms',
+            'detalle_sucursales' => [],
+            'errores' => []
+        ];
+
+        foreach ($respuestasSincronizacion as $sucursal => $respuesta) {
+            
+            if ($respuesta && $respuesta['success']) {
+                
+                $respuestaCompleta['sucursales_exitosas']++;
+                $respuestaCompleta['detalle_sucursales'][$sucursal] = [
+                    'status' => 'exitoso',
+                    'productos_procesados' => $respuesta['estadisticas']['productos_procesados'] ?? 0,
+                    'productos_nuevos' => $respuesta['estadisticas']['productos_nuevos'] ?? 0,
+                    'tiempo_respuesta' => $respuesta['tiempo_respuesta'] ?? 'N/A'
+                ];
+                
+            } else {
+                
+                $respuestaCompleta['sucursales_fallidas']++;
+                $respuestaCompleta['errores'][] = [
+                    'sucursal' => $sucursal,
+                    'error' => $respuesta['message'] ?? 'Error desconocido'
+                ];
+            }
+        }
+
+        // ✅ DETERMINAR ÉXITO GENERAL
+        if ($respuestaCompleta['sucursales_fallidas'] > 0) {
+            $respuestaCompleta['success'] = false;
+            $respuestaCompleta['message'] = "Sincronización completada con {$respuestaCompleta['sucursales_fallidas']} errores";
+        }
+
+        echo json_encode($respuestaCompleta);
+
+    } catch (Exception $e) {
+        error_log("Error crítico en ajaxSincronizarCatalogo: " . $e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error crítico del sistema: ' . $e->getMessage()
+        ]);
     }
+}
 
     /*=============================================
     ACTUALIZAR FECHA DE SINCRONIZACIÓN

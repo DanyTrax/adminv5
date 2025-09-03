@@ -930,6 +930,109 @@ public static function mdlSincronizarProductoEspecifico($codigoMaestro) {
     $stmtMaestro = null;
     $stmtLocal = null;
 }
+/*=============================================
+OBTENER DATOS PROCESADOS PARA SINCRONIZACIÓN MULTI-SUCURSAL
+=============================================*/
+static public function mdlObtenerDatosParaSincronizacion() {
+    
+    try {
+        
+        $dbCentral = self::conectarCentral();
+        
+        // ✅ REUTILIZAR LA MISMA QUERY QUE USA TU SINCRONIZACIÓN ACTUAL
+        $stmtCentral = $dbCentral->prepare("
+            SELECT cm.*, c.categoria 
+            FROM catalogo_maestro cm 
+            LEFT JOIN categorias c ON cm.id_categoria = c.id 
+            WHERE cm.activo = 1
+            ORDER BY cm.codigo ASC
+        ");
+        $stmtCentral->execute();
+        $productosMaestros = $stmtCentral->fetchAll(PDO::FETCH_ASSOC);
+        
+        $datosParaEnvio = [];
+        
+        // ✅ PROCESAR CADA PRODUCTO CON LA MISMA LÓGICA EXISTENTE
+        foreach ($productosMaestros as $productoMaestro) {
+            
+            // Datos base del producto
+            $codigo = $productoMaestro['codigo'];
+            $descripcion = $productoMaestro['descripcion'];
+            $precio_venta = $productoMaestro['precio_venta'];
+            $id_categoria = $productoMaestro['id_categoria'];
+            $imagen = $productoMaestro['imagen'] ?? '';
+            $es_divisible = $productoMaestro['es_divisible'] ?? 0;
+            
+            // ✅ LÓGICA IDÉNTICA A TU SINCRONIZACIÓN LOCAL
+            $nombre_mitad = '';
+            $precio_mitad = 0;
+            $nombre_tercio = '';
+            $precio_tercio = 0;
+            $nombre_cuarto = '';
+            $precio_cuarto = 0;
+            
+            // Si es divisible, buscar información de productos hijos
+            if ($es_divisible == 1) {
+                
+                // Buscar información para MITAD
+                if (!empty($productoMaestro['codigo_hijo_mitad'])) {
+                    $infoMitad = self::mdlBuscarInformacionHijo($dbCentral, $productoMaestro['codigo_hijo_mitad']);
+                    if ($infoMitad) {
+                        $nombre_mitad = $infoMitad['descripcion'];
+                        $precio_mitad = $infoMitad['precio_venta'];
+                    }
+                }
+                
+                // Buscar información para TERCIO
+                if (!empty($productoMaestro['codigo_hijo_tercio'])) {
+                    $infoTercio = self::mdlBuscarInformacionHijo($dbCentral, $productoMaestro['codigo_hijo_tercio']);
+                    if ($infoTercio) {
+                        $nombre_tercio = $infoTercio['descripcion'];
+                        $precio_tercio = $infoTercio['precio_venta'];
+                    }
+                }
+                
+                // Buscar información para CUARTO
+                if (!empty($productoMaestro['codigo_hijo_cuarto'])) {
+                    $infoCuarto = self::mdlBuscarInformacionHijo($dbCentral, $productoMaestro['codigo_hijo_cuarto']);
+                    if ($infoCuarto) {
+                        $nombre_cuarto = $infoCuarto['descripcion'];
+                        $precio_cuarto = $infoCuarto['precio_venta'];
+                    }
+                }
+            }
+            
+            // ✅ PREPARAR DATOS YA PROCESADOS PARA ENVÍO
+            $datosParaEnvio[] = [
+                'codigo' => $codigo,
+                'descripcion' => $descripcion,
+                'id_categoria' => $id_categoria,
+                'precio_venta' => $precio_venta,
+                'imagen' => $imagen,
+                'es_divisible' => $es_divisible,
+                'codigo_hijo_mitad' => $productoMaestro['codigo_hijo_mitad'] ?? '',
+                'codigo_hijo_tercio' => $productoMaestro['codigo_hijo_tercio'] ?? '',
+                'codigo_hijo_cuarto' => $productoMaestro['codigo_hijo_cuarto'] ?? '',
+                'es_hijo' => $productoMaestro['es_hijo'] ?? 0,
+                'codigo_padre' => $productoMaestro['codigo_padre'] ?? '',
+                'tipo_division' => $productoMaestro['tipo_division'] ?? null,
+                // ✅ DATOS DE DIVISIÓN PROCESADOS
+                'nombre_mitad' => $nombre_mitad,
+                'precio_mitad' => $precio_mitad,
+                'nombre_tercio' => $nombre_tercio,
+                'precio_tercio' => $precio_tercio,
+                'nombre_cuarto' => $nombre_cuarto,
+                'precio_cuarto' => $precio_cuarto
+            ];
+        }
+        
+        return $datosParaEnvio;
+        
+    } catch (Exception $e) {
+        error_log("Error en mdlObtenerDatosParaSincronizacion: " . $e->getMessage());
+        return false;
+    }
+}
 
 /*=============================================
 LOGS DE CAMBIOS EN CATÁLOGO MAESTRO
