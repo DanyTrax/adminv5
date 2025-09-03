@@ -612,6 +612,99 @@ class ModeloSucursales {
             ];
         }
     }
+        /*=============================================
+    CREAR SUCURSAL LOCAL (MÉTODO FALTANTE)
+    =============================================*/
+    static public function mdlCrearSucursalLocal($tabla, $datos) {
+        try {
+            $stmt = Conexion::conectar()->prepare("INSERT INTO $tabla (
+                codigo_sucursal, nombre, direccion, telefono, email,
+                url_base, url_api, es_principal, activo, registrada_en_central,
+                fecha_registro, fecha_actualizacion
+            ) VALUES (
+                :codigo_sucursal, :nombre, :direccion, :telefono, :email,
+                :url_base, :url_api, :es_principal, 1, 0, NOW(), NOW()
+            )");
+            
+            $stmt->bindParam(":codigo_sucursal", $datos["codigo_sucursal"], PDO::PARAM_STR);
+            $stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
+            $stmt->bindParam(":direccion", $datos["direccion"], PDO::PARAM_STR);
+            $stmt->bindParam(":telefono", $datos["telefono"], PDO::PARAM_STR);
+            $stmt->bindParam(":email", $datos["email"], PDO::PARAM_STR);
+            $stmt->bindParam(":url_base", $datos["url_base"], PDO::PARAM_STR);
+            $stmt->bindParam(":url_api", $datos["url_api"], PDO::PARAM_STR);
+            $stmt->bindParam(":es_principal", $datos["es_principal"], PDO::PARAM_INT);
+            
+            if ($stmt->execute()) {
+                return "ok";
+            } else {
+                return "error";
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlCrearSucursalLocal: " . $e->getMessage());
+            return "error";
+        }
+    }
+
+    /*=============================================
+    ACTUALIZAR ESTADO DE REGISTRO EN CENTRAL
+    =============================================*/
+    static public function mdlActualizarEstadoRegistro($id, $estado) {
+        try {
+            $stmt = Conexion::conectar()->prepare("UPDATE sucursal_local SET 
+                registrada_en_central = :estado,
+                fecha_actualizacion = NOW()
+                WHERE id = :id");
+            
+            $stmt->bindParam(":estado", $estado, PDO::PARAM_INT);
+            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+            
+            return $stmt->execute();
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlActualizarEstadoRegistro: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /*=============================================
+    VERIFICAR SI SUCURSAL ESTÁ REGISTRADA EN CENTRAL
+    =============================================*/
+    static public function mdlVerificarSucursalEnCentral($codigoSucursal) {
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            $pdo = ConexionCentral::conectar();
+            
+            $stmt = $pdo->prepare("SELECT id, activo FROM sucursales WHERE codigo_sucursal = ?");
+            $stmt->execute([$codigoSucursal]);
+            $sucursal = $stmt->fetch();
+            
+            if ($sucursal) {
+                return [
+                    'success' => true,
+                    'registrada' => true,
+                    'activa' => (bool)$sucursal['activo'],
+                    'id_central' => $sucursal['id']
+                ];
+            } else {
+                return [
+                    'success' => true,
+                    'registrada' => false,
+                    'activa' => false,
+                    'id_central' => null
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlVerificarSucursalEnCentral: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error al verificar registro: ' . $e->getMessage(),
+                'registrada' => false
+            ];
+        }
+    }
 }
 
 ?>
