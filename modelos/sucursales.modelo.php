@@ -646,65 +646,6 @@ class ModeloSucursales {
             return "error";
         }
     }
-
-    /*=============================================
-    ACTUALIZAR ESTADO DE REGISTRO EN CENTRAL
-    =============================================*/
-    static public function mdlActualizarEstadoRegistro($id, $estado) {
-        try {
-            $stmt = Conexion::conectar()->prepare("UPDATE sucursal_local SET 
-                registrada_en_central = :estado,
-                fecha_actualizacion = NOW()
-                WHERE id = :id");
-            
-            $stmt->bindParam(":estado", $estado, PDO::PARAM_INT);
-            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
-            
-            return $stmt->execute();
-            
-        } catch (Exception $e) {
-            error_log("Error en mdlActualizarEstadoRegistro: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    /*=============================================
-    VERIFICAR SI SUCURSAL ESTÁ REGISTRADA EN CENTRAL
-    =============================================*/
-    static public function mdlVerificarSucursalEnCentral($codigoSucursal) {
-        try {
-            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
-            $pdo = ConexionCentral::conectar();
-            
-            $stmt = $pdo->prepare("SELECT id, activo FROM sucursales WHERE codigo_sucursal = ?");
-            $stmt->execute([$codigoSucursal]);
-            $sucursal = $stmt->fetch();
-            
-            if ($sucursal) {
-                return [
-                    'success' => true,
-                    'registrada' => true,
-                    'activa' => (bool)$sucursal['activo'],
-                    'id_central' => $sucursal['id']
-                ];
-            } else {
-                return [
-                    'success' => true,
-                    'registrada' => false,
-                    'activa' => false,
-                    'id_central' => null
-                ];
-            }
-            
-        } catch (Exception $e) {
-            error_log("Error en mdlVerificarSucursalEnCentral: " . $e->getMessage());
-            return [
-                'success' => false,
-                'message' => 'Error al verificar registro: ' . $e->getMessage(),
-                'registrada' => false
-            ];
-        }
-    }
 }
 
 ?>
