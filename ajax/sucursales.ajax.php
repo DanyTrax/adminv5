@@ -1,5 +1,8 @@
 <?php
-
+// Verificar que la sesión esté iniciada
+if (!isset($_SESSION)) {
+    session_start();
+}
 require_once "../controladores/sucursales.controlador.php";
 require_once "../modelos/sucursales.modelo.php";
 
@@ -600,11 +603,6 @@ public function ajaxSincronizarCatalogoMaestro() {
 /*=============================================
 PROCESAR PETICIONES AJAX
 =============================================*/
-
-// Verificar que la sesión esté iniciada
-if (!isset($_SESSION)) {
-    session_start();
-}
 
 // DataTable Sucursales
 if (isset($_POST["accion"]) && $_POST["accion"] == "datatable") {
