@@ -8,115 +8,100 @@ class AjaxSucursales {
     /*=============================================
     DATATABLE SUCURSALES
     =============================================*/
-    public function ajaxTablaProductos() {
+public function ajaxTablaProductos() {
 
-        // Verificar permisos
-        if ($_SESSION["perfil"] != "Administrador") {
-            echo json_encode([
-                "draw" => 0,
-                "recordsTotal" => 0,
-                "recordsFiltered" => 0,
-                "data" => []
-            ]);
-            return;
-        }
+    // Verificar permisos
+    if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] != "Administrador") {
+        echo json_encode([
+            "draw" => isset($_POST['draw']) ? intval($_POST['draw']) : 0,
+            "recordsTotal" => 0,
+            "recordsFiltered" => 0,
+            "data" => [],
+            "error" => "Sesión no válida o sin permisos."
+        ]);
+        return;
+    }
 
-        $respuesta = ModeloSucursales::mdlObtenerSucursales();
+    // Llamar al modelo para obtener los datos
+    $respuesta = ModeloSucursales::mdlObtenerSucursales();
 
-        if ($respuesta['success']) {
+    // Construir la respuesta JSON basada en el resultado del modelo
+    if ($respuesta['success']) {
+        
+        // El modelo devolvió datos exitosamente
+        $data = [];
+        foreach ($respuesta['data'] as $sucursal) {
 
-            $data = [];
-
-            foreach ($respuesta['data'] as $sucursal) {
-
-                // Logo
-                if (!empty($sucursal['logo'])) {
-                    $logo = '<img src="vistas/img/sucursales/'.$sucursal['logo'].'" class="img-thumbnail logo-sucursal" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">';
-                } else {
-                    $logo = '<div class="logo-placeholder" style="width: 50px; height: 50px; background: #f4f4f4; border-radius: 8px; display: flex; align-items: center; justify-content: center;"><i class="fa fa-building text-muted" style="font-size: 20px;"></i></div>';
-                }
-
-                // Nombre con indicador de principal
-                $nombre = $sucursal['nombre'];
-                if ($sucursal['es_principal']) {
-                    $nombre .= ' <i class="fa fa-star text-warning" title="Sucursal Principal"></i>';
-                }
-
-                // Estado con toggle
-                $estado = '';
-                if ($sucursal['activa']) {
-                    $estado = '<button class="btn btn-success btn-xs btnCambiarEstado" estadoSucursal="0" idSucursal="'.$sucursal['id'].'">
-                                <i class="fa fa-eye"></i>
-                               </button>';
-                } else {
-                    $estado = '<button class="btn btn-danger btn-xs btnCambiarEstado" estadoSucursal="1" idSucursal="'.$sucursal['id'].'">
-                                <i class="fa fa-eye-slash"></i>
-                               </button>';
-                }
-
-                // Última sincronización
-                $ultimaSync = $sucursal['ultima_sincronizacion_formato'] ?? '<span class="text-muted">Nunca</span>';
-
-                // Botones de acción
-                $acciones = '<div class="btn-group">';
-                
-                // Botón editar
-                $acciones .= '<button class="btn btn-warning btn-xs btnEditarSucursal" idSucursal="'.$sucursal['id'].'" data-toggle="modal" data-target="#modalEditarSucursal">
-                                <i class="fa fa-pencil"></i>
-                              </button>';
-
-                // Botón probar conexión
-                $acciones .= '<button class="btn btn-info btn-xs btnProbarConexion" apiUrl="'.$sucursal['api_url'].'" nombreSucursal="'.$sucursal['nombre'].'">
-                                <i class="fa fa-wifi"></i>
-                              </button>';
-
-                // Botón sincronizar individual
-                if ($sucursal['activa']) {
-                    $acciones .= '<button class="btn btn-primary btn-xs btnSincronizarIndividual" idSucursal="'.$sucursal['id'].'" nombreSucursal="'.$sucursal['nombre'].'">
-                                    <i class="fa fa-refresh"></i>
-                                  </button>';
-                }
-
-                // Botón eliminar (solo si no es principal)
-                if (!$sucursal['es_principal']) {
-                    $acciones .= '<button class="btn btn-danger btn-xs btnEliminarSucursal" idSucursal="'.$sucursal['id'].'" nombreSucursal="'.$sucursal['nombre'].'" logoSucursal="'.$sucursal['logo'].'">
-                                    <i class="fa fa-times"></i>
-                                  </button>';
-                }
-
-                $acciones .= '</div>';
-
-                $data[] = [
-                    "logo" => $logo,
-                    "codigo" => $sucursal['codigo_sucursal'],
-                    "nombre" => $nombre,
-                    "direccion" => $sucursal['direccion'] ?? '<span class="text-muted">No especificada</span>',
-                    "telefono" => $sucursal['telefono'] ?? '<span class="text-muted">No especificado</span>',
-                    "estado" => $estado,
-                    "ultima_sincronizacion" => $ultimaSync,
-                    "acciones" => $acciones
-                ];
+            // Logo
+            if (!empty($sucursal['logo'])) {
+                $logo = '<img src="vistas/img/sucursales/'.$sucursal['logo'].'" class="img-thumbnail logo-sucursal" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">';
+            } else {
+                $logo = '<div class="logo-placeholder" style="width: 50px; height: 50px; background: #f4f4f4; border-radius: 8px; display: flex; align-items: center; justify-content: center;"><i class="fa fa-building text-muted" style="font-size: 20px;"></i></div>';
             }
 
-            $json = [
-                "draw" => 1,
-                "recordsTotal" => count($data),
-                "recordsFiltered" => count($data),
-                "data" => $data
-            ];
+            // Nombre con indicador de principal
+            $nombre = $sucursal['nombre'];
+            if ($sucursal['es_principal']) {
+                $nombre .= ' <i class="fa fa-star text-warning" title="Sucursal Principal"></i>';
+            }
 
-        } else {
+            // Estado con toggle
+            $estado = '';
+            if ($sucursal['activa']) {
+                $estado = '<button class="btn btn-success btn-xs btnCambiarEstado" estadoSucursal="0" idSucursal="'.$sucursal['id'].'"><i class="fa fa-eye"></i></button>';
+            } else {
+                $estado = '<button class="btn btn-danger btn-xs btnCambiarEstado" estadoSucursal="1" idSucursal="'.$sucursal['id'].'"><i class="fa fa-eye-slash"></i></button>';
+            }
 
-            $json = [
-                "draw" => 0,
-                "recordsTotal" => 0,
-                "recordsFiltered" => 0,
-                "data" => []
+            // Última sincronización
+            $ultimaSync = $sucursal['ultima_sincronizacion_formato'] ?? '<span class="text-muted">Nunca</span>';
+
+            // Botones de acción
+            $acciones = '<div class="btn-group">';
+            $acciones .= '<button class="btn btn-warning btn-xs btnEditarSucursal" idSucursal="'.$sucursal['id'].'" data-toggle="modal" data-target="#modalEditarSucursal"><i class="fa fa-pencil"></i></button>';
+            $acciones .= '<button class="btn btn-info btn-xs btnProbarConexion" apiUrl="'.$sucursal['api_url'].'" nombreSucursal="'.$sucursal['nombre'].'"><i class="fa fa-wifi"></i></button>';
+            if ($sucursal['activa']) {
+                $acciones .= '<button class="btn btn-primary btn-xs btnSincronizarIndividual" idSucursal="'.$sucursal['id'].'" nombreSucursal="'.$sucursal['nombre'].'"><i class="fa fa-refresh"></i></button>';
+            }
+            if (!$sucursal['es_principal']) {
+                $acciones .= '<button class="btn btn-danger btn-xs btnEliminarSucursal" idSucursal="'.$sucursal['id'].'" nombreSucursal="'.$sucursal['nombre'].'" logoSucursal="'.$sucursal['logo'].'"><i class="fa fa-times"></i></button>';
+            }
+            $acciones .= '</div>';
+
+            $data[] = [
+                "logo" => $logo,
+                "codigo" => $sucursal['codigo_sucursal'],
+                "nombre" => $nombre,
+                "direccion" => $sucursal['direccion'] ?? '<span class="text-muted">No especificada</span>',
+                "telefono" => $sucursal['telefono'] ?? '<span class="text-muted">No especificado</span>',
+                "estado" => $estado,
+                "ultima_sincronizacion" => $ultimaSync,
+                "acciones" => $acciones
             ];
         }
 
-        echo json_encode($json);
+        $json = [
+            "draw" => isset($_POST['draw']) ? intval($_POST['draw']) : 1,
+            "recordsTotal" => count($data),
+            "recordsFiltered" => count($data),
+            "data" => $data
+        ];
+
+    } else {
+        
+        // El modelo devolvió 'success' => false, construimos una respuesta de error.
+        $json = [
+            "draw" => isset($_POST['draw']) ? intval($_POST['draw']) : 0,
+            "recordsTotal" => 0,
+            "recordsFiltered" => 0,
+            "data" => [],
+            "error" => $respuesta['message'] ?? 'No se pudieron cargar los datos. Verifique la API.'
+        ];
     }
+
+    // Imprimir la respuesta final UNA SOLA VEZ
+    echo json_encode($json);
+}
 
     /*=============================================
     EDITAR SUCURSAL
