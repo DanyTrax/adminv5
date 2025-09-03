@@ -953,7 +953,7 @@ public static function mdlRegistrarCambio($accion, $codigo_producto, $usuario, $
     $stmt = null;
 }
 /*=============================================
-OBTENER DATOS PROCESADOS PARA SINCRONIZACIÓN MULTI-SUCURSAL
+OBTENER DATOS PROCESADOS PARA SINCRONIZACIÓN MULTI-SUCURSAL (IGUAL A LOCAL)
 =============================================*/
 static public function mdlObtenerDatosParaSincronizacion() {
     
@@ -966,7 +966,7 @@ static public function mdlObtenerDatosParaSincronizacion() {
         // ✅ DEBUG: Log de conexión
         error_log("DEBUG: Conectando a BD central usando API (epicosie_central)");
         
-        // ✅ REUTILIZAR LA MISMA QUERY QUE USA TU SINCRONIZACIÓN ACTUAL
+        // ✅ USAR LA MISMA QUERY EXACTA QUE TU SINCRONIZACIÓN LOCAL
         $stmtCentral = $dbCentral->prepare("
             SELECT cm.*, c.categoria 
             FROM catalogo_maestro cm 
@@ -987,7 +987,7 @@ static public function mdlObtenerDatosParaSincronizacion() {
         
         $datosParaEnvio = [];
         
-        // ✅ PROCESAR CADA PRODUCTO CON LA MISMA LÓGICA EXISTENTE
+        // ✅ PROCESAR CADA PRODUCTO CON LA LÓGICA EXACTA DE TU SINCRONIZACIÓN LOCAL
         foreach ($productosMaestros as $index => $productoMaestro) {
             
             // ✅ DEBUG: Log cada producto procesado
@@ -995,7 +995,7 @@ static public function mdlObtenerDatosParaSincronizacion() {
                 error_log("DEBUG: Procesando producto " . ($index + 1) . ": " . $productoMaestro['codigo']);
             }
             
-            // Datos base del producto
+            // ✅ DATOS BASE DEL PRODUCTO (IGUAL QUE LOCAL)
             $codigo = $productoMaestro['codigo'];
             $descripcion = $productoMaestro['descripcion'];
             $precio_venta = $productoMaestro['precio_venta'];
@@ -1003,7 +1003,7 @@ static public function mdlObtenerDatosParaSincronizacion() {
             $imagen = $productoMaestro['imagen'] ?? '';
             $es_divisible = $productoMaestro['es_divisible'] ?? 0;
             
-            // ✅ LÓGICA IDÉNTICA A TU SINCRONIZACIÓN LOCAL
+            // ✅ INICIALIZAR DATOS DE DIVISIÓN COMO VACÍO (IGUAL QUE LOCAL)
             $nombre_mitad = '';
             $precio_mitad = 0;
             $nombre_tercio = '';
@@ -1011,7 +1011,7 @@ static public function mdlObtenerDatosParaSincronizacion() {
             $nombre_cuarto = '';
             $precio_cuarto = 0;
             
-            // Si es divisible, buscar información de productos hijos
+            // ✅ SI ES DIVISIBLE, BUSCAR INFORMACIÓN DE PRODUCTOS HIJOS (LÓGICA EXACTA)
             if ($es_divisible == 1) {
                 
                 // Buscar información para MITAD
@@ -1042,21 +1042,17 @@ static public function mdlObtenerDatosParaSincronizacion() {
                 }
             }
             
-            // ✅ PREPARAR DATOS YA PROCESADOS PARA ENVÍO
+            // ✅ PREPARAR DATOS PARA ENVÍO CON LA ESTRUCTURA EXACTA DE TU TABLA LOCAL
             $datosParaEnvio[] = [
-                'codigo' => $codigo,
-                'descripcion' => $descripcion,
                 'id_categoria' => $id_categoria,
-                'precio_venta' => $precio_venta,
+                'codigo' => $codigo,
+                'codigo_maestro' => $codigo, // Mapeo para codigo_maestro
+                'descripcion' => $descripcion,
                 'imagen' => $imagen,
+                'stock' => 0, // Valor por defecto para stock
+                'precio_venta' => $precio_venta,
+                'ventas' => 0, // Valor por defecto para ventas
                 'es_divisible' => $es_divisible,
-                'codigo_hijo_mitad' => $productoMaestro['codigo_hijo_mitad'] ?? '',
-                'codigo_hijo_tercio' => $productoMaestro['codigo_hijo_tercio'] ?? '',
-                'codigo_hijo_cuarto' => $productoMaestro['codigo_hijo_cuarto'] ?? '',
-                'es_hijo' => $productoMaestro['es_hijo'] ?? 0,
-                'codigo_padre' => $productoMaestro['codigo_padre'] ?? '',
-                'tipo_division' => $productoMaestro['tipo_division'] ?? null,
-                // ✅ DATOS DE DIVISIÓN PROCESADOS
                 'nombre_mitad' => $nombre_mitad,
                 'precio_mitad' => $precio_mitad,
                 'nombre_tercio' => $nombre_tercio,
@@ -1081,7 +1077,7 @@ static public function mdlObtenerDatosParaSincronizacion() {
 }
 
 /*=============================================
-BUSCAR INFORMACIÓN DE PRODUCTO HIJO USANDO CONEXIÓN API
+BUSCAR INFORMACIÓN DE PRODUCTO HIJO USANDO CONEXIÓN API (IGUAL QUE LOCAL)
 =============================================*/
 static private function mdlBuscarInformacionHijoAPI($dbCentral, $codigoHijo) {
     
