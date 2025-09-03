@@ -33,10 +33,12 @@ try {
     $productosActualizados = 0;
     $productosErrores = 0;
     $productosNuevos = 0;
+    $productosEliminados = 0; // ✅ NUEVO CONTADOR
     
     // ✅ DEBUG: Log inicial
     error_log("DEBUG SYNC: Iniciando sincronización de " . count($catalogoProcesado) . " productos desde {$origen}");
     
+    // ✅ PASO 1: ACTUALIZAR/INSERTAR PRODUCTOS DEL CATÁLOGO MAESTRO
     foreach ($catalogoProcesado as $index => $productoLocal) {
         
         try {
@@ -144,10 +146,69 @@ try {
         }
     }
     
+    // ✅ PASO 2: ELIMINAR PRODUCTOS QUE YA NO ESTÁN EN CATÁLOGO MAESTRO
+    try {
+        
+        // Obtener códigos de productos que llegaron en la sincronización
+        $codigosRecibidos = array_column($catalogoProcesado, 'codigo');
+        
+        if (!empty($codigosRecibidos)) {
+            
+            // ✅ IDENTIFICAR PRODUCTOS A ELIMINAR
+            // Solo productos que tienen codigo_maestro (fueron sincronizados anteriormente)
+            // y no están en la lista de códigos recibidos
+            $placeholders = str_repeat('?,', count($codigosRecibidos) - 1) . '?';
+            
+            $stmtIdentificar = $pdo->prepare("
+                SELECT id, codigo, descripcion, stock 
+                FROM productos 
+                WHERE codigo_maestro IS NOT NULL 
+                AND codigo NOT IN ($placeholders)
+            ");
+            $stmtIdentificar->execute($codigosRecibidos);
+            $productosAEliminar = $stmtIdentificar->fetchAll(PDO::FETCH_ASSOC);
+            
+            // ✅ ELIMINAR PRODUCTOS QUE YA NO ESTÁN EN CATÁLOGO MAESTRO
+            if (!empty($productosAEliminar)) {
+                
+                error_log("DEBUG SYNC: Se eliminarán " . count($productosAEliminar) . " productos que no están en catálogo maestro");
+                
+                foreach ($productosAEliminar as $productoEliminar) {
+                    
+                    try {
+                        
+                        // ✅ VERIFICAR SI EL PRODUCTO TIENE STOCK ANTES DE ELIMINAR
+                        if ($productoEliminar['stock'] > 0) {
+                            // Si tiene stock, log de advertencia pero continuar con eliminación
+                            error_log("ADVERTENCIA: Eliminando producto con stock > 0 - Código: {$productoEliminar['codigo']}, Stock: {$productoEliminar['stock']}");
+                        }
+                        
+                        $stmtEliminar = $pdo->prepare("DELETE FROM productos WHERE id = :id");
+                        $resultadoEliminacion = $stmtEliminar->execute([':id' => $productoEliminar['id']]);
+                        
+                        if ($resultadoEliminacion) {
+                            $productosEliminados++;
+                            error_log("DEBUG SYNC: ELIMINADO - Código: {$productoEliminar['codigo']}, Descripción: {$productoEliminar['descripcion']}");
+                        }
+                        
+                    } catch (Exception $e) {
+                        error_log("ERROR eliminando producto {$productoEliminar['codigo']}: " . $e->getMessage());
+                        $productosErrores++;
+                    }
+                }
+            } else {
+                error_log("DEBUG SYNC: No hay productos para eliminar");
+            }
+        }
+        
+    } catch (Exception $e) {
+        error_log("ERROR en proceso de eliminación: " . $e->getMessage());
+    }
+    
     $pdo->commit();
     
-    // ✅ LOG FINAL
-    error_log("DEBUG SYNC: Finalizando - Nuevos: {$productosNuevos}, Actualizados: {$productosActualizados}, Errores: {$productosErrores}");
+    // ✅ LOG FINAL CON ESTADÍSTICAS COMPLETAS
+    error_log("DEBUG SYNC: Finalizando - Nuevos: {$productosNuevos}, Actualizados: {$productosActualizados}, Eliminados: {$productosEliminados}, Errores: {$productosErrores}");
     
     echo json_encode([
         'success' => true,
@@ -155,17 +216,19 @@ try {
         'estadisticas' => [
             'productos_procesados' => $productosActualizados,
             'productos_nuevos' => $productosNuevos,
+            'productos_eliminados' => $productosEliminados, // ✅ NUEVA ESTADÍSTICA
             'productos_errores' => $productosErrores,
             'total_recibidos' => count($catalogoProcesado)
         ],
         'detalles' => [
             'stock_preservado' => true,
             'duplicados_evitados' => true,
-            'division_actualizada' => true
+            'division_actualizada' => true,
+            'eliminacion_automatica' => true // ✅ NUEVA CARACTERÍSTICA
         ],
         'origen' => $origen,
         'timestamp' => date('Y-m-d H:i:s'),
-        'version_api' => '5.1'
+        'version_api' => '5.2'
     ]);
     
 } catch (Exception $e) {
