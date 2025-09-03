@@ -1,6 +1,7 @@
 # Activar el motor de reescritura de URL
 RewriteEngine On
 DirectoryIndex index.php
+
 # Si la URL solicitada no es un archivo existente
 RewriteCond %{REQUEST_FILENAME} !-f
 # Y si la URL solicitada no es un directorio existente
@@ -8,12 +9,75 @@ RewriteCond %{REQUEST_FILENAME} !-d
 
 # Redirigir todas las demás solicitudes a index.php
 RewriteRule ^(.+)$ index.php?ruta=$1 [QSA,L]
+
+# Headers de seguridad y cache optimizados para sucursales
 <IfModule mod_headers.c>
-Header set Cache-Control "max-age=0,no-store"
+    # Cache control para páginas dinámicas
+    Header set Cache-Control "max-age=0,no-store"
+    
+    # Headers de seguridad
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # CORS específico para API de transferencias (sincronización entre sucursales)
+    <LocationMatch "^/api-transferencias/">
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+        Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+        Header set Access-Control-Max-Age "3600"
+    </LocationMatch>
+</IfModule>
+
+# Protección para archivos de configuración
+<FilesMatch "\.(ini|conf|yml|yaml|json|log)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Permitir acceso a archivos específicos necesarios
+<Files "composer.json">
+    Allow from all
+</Files>
+
+<Files ".cpanel.yml">
+    Allow from all
+</Files>
+
+# Protección especial para conexiones de BD
+<Files "conexion*.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Excepción para APIs de sincronización (necesario para comunicación entre sucursales)
+<LocationMatch "^/api-transferencias/">
+    <Files "*.php">
+        Order allow,deny
+        Allow from all
+    </Files>
+</LocationMatch>
+
+# Optimización de compresión para sincronización masiva
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript
+    AddOutputFilterByType DEFLATE application/javascript application/json application/xml
+    
+    # Comprimir respuestas AJAX grandes (útil para sincronización de catálogos)
+    SetEnvIfNoCase Request_URI \
+        \.(?:gif|jpe?g|png|ico)$ no-gzip dont-vary
+    SetEnvIfNoCase Request_URI \
+        \.(?:exe|t?gz|zip|bz2|sit|rar)$ no-gzip dont-vary
+</IfModule>
+
+# Configuración de timeout extendido para sincronización de sucursales
+<IfModule mod_reqtimeout.c>
+    RequestReadTimeout header=300,MinRate=500 body=3600,MinRate=500
 </IfModule>
 
 # php -- BEGIN cPanel-generated handler, do not edit
-# Set the “ea-php82” package as the default “PHP” programming language.
+# Set the "ea-php82" package as the default "PHP" programming language.
 <IfModule mime_module>
   AddHandler application/x-httpd-ea-php82 .php .php8 .phtml
 </IfModule>
@@ -25,11 +89,11 @@ Header set Cache-Control "max-age=0,no-store"
 # For more information, read our documentation (https://go.cpanel.net/EA4ModifyINI)
 <IfModule php8_module>
    php_flag display_errors Off
-   php_value max_execution_time 300
-   php_value max_input_time 600
+   php_value max_execution_time 1300
+   php_value max_input_time 1600
    php_value max_input_vars 1000
-   php_value memory_limit 1128M
-   php_value post_max_size 18M
+   php_value memory_limit 8128M
+   php_value post_max_size 48M
    php_value session.gc_maxlifetime 1440
    php_value session.save_path "/var/cpanel/php/sessions/ea-php82"
    php_value upload_max_filesize 21M
@@ -37,14 +101,55 @@ Header set Cache-Control "max-age=0,no-store"
 </IfModule>
 <IfModule lsapi_module>
    php_flag display_errors Off
-   php_value max_execution_time 300
-   php_value max_input_time 600
+   php_value max_execution_time 1300
+   php_value max_input_time 1600
    php_value max_input_vars 1000
-   php_value memory_limit 1128M
-   php_value post_max_size 18M
+   php_value memory_limit 8128M
+   php_value post_max_size 48M
    php_value session.gc_maxlifetime 1440
    php_value session.save_path "/var/cpanel/php/sessions/ea-php82"
    php_value upload_max_filesize 21M
    php_flag zlib.output_compression Off
 </IfModule>
 # END cPanel-generated php ini directives, do not edit
+
+# Configuración específica para gestión de sucursales
+<IfModule mod_env.c>
+    # Variable de entorno para identificar el sistema multi-sucursal
+    SetEnv ADMIN_VERSION "5.0"
+    SetEnv MULTI_SUCURSAL "enabled"
+</IfModule>
+
+# Bloquear acceso directo a logs y backups
+<FilesMatch "^(error_log|.*\.log|.*backup.*)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Optimización para DataTables grandes (listado de sucursales)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Cache para recursos estáticos
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/ico "access plus 1 month"
+    ExpiresByType image/icon "access plus 1 month"
+    ExpiresByType text/ico "access plus 1 month"
+    ExpiresByType application/ico "access plus 1 month"
+    
+    # No cache para páginas dinámicas de administración
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType application/json "access plus 0 seconds"
+</IfModule>
+
+# Límites específicos para operaciones de sincronización masiva
+<LocationMatch "^/(ajax|api-transferencias)/">
+    php_value max_execution_time 3600
+    php_value memory_limit 6144M
+    php_value max_input_vars 5000
+</LocationMatch>

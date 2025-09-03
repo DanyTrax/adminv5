@@ -7,6 +7,8 @@ class ControladorPlantilla{
 		include "vistas/plantilla.php";
 
 	}	
-
+else if($enlace == "sucursales"){
+    include "vistas/modulos/".$enlace.".php";
+}
 
 }
