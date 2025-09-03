@@ -612,18 +612,25 @@ class ModeloSucursales {
             ];
         }
     }
-        /*=============================================
-    CREAR SUCURSAL LOCAL (MÉTODO FALTANTE)
+    /*=============================================
+    CREAR SUCURSAL LOCAL (VERSIÓN CORREGIDA)
     =============================================*/
     static public function mdlCrearSucursalLocal($tabla, $datos) {
         try {
-            $stmt = Conexion::conectar()->prepare("INSERT INTO $tabla (
+            // Verificar que la tabla sea la correcta
+            if ($tabla !== "sucursal_local") {
+                error_log("Tabla incorrecta en mdlCrearSucursalLocal: " . $tabla);
+                return "error";
+            }
+            
+            $stmt = Conexion::conectar()->prepare("INSERT INTO sucursal_local (
                 codigo_sucursal, nombre, direccion, telefono, email,
                 url_base, url_api, es_principal, activo, registrada_en_central,
                 fecha_registro, fecha_actualizacion
             ) VALUES (
                 :codigo_sucursal, :nombre, :direccion, :telefono, :email,
-                :url_base, :url_api, :es_principal, 1, 0, NOW(), NOW()
+                :url_base, :url_api, :es_principal, :activo, :registrada_en_central,
+                NOW(), NOW()
             )");
             
             $stmt->bindParam(":codigo_sucursal", $datos["codigo_sucursal"], PDO::PARAM_STR);
@@ -634,15 +641,19 @@ class ModeloSucursales {
             $stmt->bindParam(":url_base", $datos["url_base"], PDO::PARAM_STR);
             $stmt->bindParam(":url_api", $datos["url_api"], PDO::PARAM_STR);
             $stmt->bindParam(":es_principal", $datos["es_principal"], PDO::PARAM_INT);
+            $stmt->bindParam(":activo", $datos["activo"], PDO::PARAM_INT);
+            $stmt->bindParam(":registrada_en_central", $datos["registrada_en_central"], PDO::PARAM_INT);
             
             if ($stmt->execute()) {
                 return "ok";
             } else {
+                $errorInfo = $stmt->errorInfo();
+                error_log("Error SQL en mdlCrearSucursalLocal: " . print_r($errorInfo, true));
                 return "error";
             }
             
         } catch (Exception $e) {
-            error_log("Error en mdlCrearSucursalLocal: " . $e->getMessage());
+            error_log("Excepción en mdlCrearSucursalLocal: " . $e->getMessage());
             return "error";
         }
     }

@@ -34,7 +34,8 @@ class ControladorSucursales {
                     "url_base" => $_POST["urlBaseLocal"],
                     "url_api" => $_POST["urlApiLocal"],
                     "es_principal" => isset($_POST["esPrincipal"]) ? 1 : 0,
-                    "activo" => 1
+                    "activo" => 1,
+                    "registrada_en_central" => 0
                 );
 
                 $respuesta = ModeloSucursales::mdlConfigurarSucursalLocal($tabla, $datos);

@@ -657,7 +657,7 @@ class AjaxSucursales {
                 return;
             }
 
-            // Preparar datos para registro
+            // Preparar datos para registro EN BD CENTRAL
             $datos = [
                 'codigo_sucursal' => $datosLocales['codigo_sucursal'],
                 'nombre' => $datosLocales['nombre'],
@@ -666,10 +666,11 @@ class AjaxSucursales {
                 'email' => $datosLocales['email'],
                 'url_base' => $datosLocales['url_base'],
                 'url_api' => $datosLocales['url_api'],
-                'es_principal' => $datosLocales['es_principal']
+                'es_principal' => $datosLocales['es_principal'],
+                'activo' => 1
             ];
 
-            // Registrar en BD central
+            // ✅ USAR EL MÉTODO CORRECTO PARA BD CENTRAL
             $respuesta = ModeloSucursales::mdlCrearSucursalCentral($datos);
             
             if ($respuesta['success']) {
@@ -687,7 +688,7 @@ class AjaxSucursales {
             ]);
         }
     }
-        /*=============================================
+    /*=============================================
     SINCRONIZAR CATÁLOGO MAESTRO
     =============================================*/
     public function ajaxSincronizarCatalogo() {
