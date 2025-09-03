@@ -10,28 +10,29 @@ RewriteCond %{REQUEST_FILENAME} !-d
 # Redirigir todas las demás solicitudes a index.php
 RewriteRule ^(.+)$ index.php?ruta=$1 [QSA,L]
 
-# Headers de seguridad y cache optimizados para sucursales
-<IfModule mod_headers.c>
-    # Cache control para páginas dinámicas
-    Header set Cache-Control "max-age=0,no-store"
+# Headers básicos de cache (sin mod_headers)
+<IfModule mod_expires.c>
+    ExpiresActive On
     
-    # Headers de seguridad
-    Header always set X-Content-Type-Options nosniff
-    Header always set X-Frame-Options DENY
-    Header always set X-XSS-Protection "1; mode=block"
-    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    # Cache para recursos estáticos
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/ico "access plus 1 month"
+    ExpiresByType image/icon "access plus 1 month"
+    ExpiresByType text/ico "access plus 1 month"
+    ExpiresByType application/ico "access plus 1 month"
     
-    # CORS específico para API de transferencias (sincronización entre sucursales)
-    <LocationMatch "^/api-transferencias/">
-        Header set Access-Control-Allow-Origin "*"
-        Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
-        Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
-        Header set Access-Control-Max-Age "3600"
-    </LocationMatch>
+    # No cache para páginas dinámicas de administración
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType application/json "access plus 0 seconds"
 </IfModule>
 
 # Protección para archivos de configuración
-<FilesMatch "\.(ini|conf|yml|yaml|json|log)$">
+<FilesMatch "\.(ini|conf|yml|yaml|log)$">
     Order allow,deny
     Deny from all
 </FilesMatch>
@@ -45,18 +46,20 @@ RewriteRule ^(.+)$ index.php?ruta=$1 [QSA,L]
     Allow from all
 </Files>
 
-# Protección especial para conexiones de BD
-<Files "conexion*.php">
-    Order allow,deny
-    Deny from all
-</Files>
+# Protección especial para conexiones de BD (excepto APIs)
+<FilesMatch "^conexion.*\.php$">
+    <RequireAll>
+        Require all denied
+    </RequireAll>
+</FilesMatch>
 
-# Excepción para APIs de sincronización (necesario para comunicación entre sucursales)
+# Permitir APIs de transferencias para sincronización entre sucursales
 <LocationMatch "^/api-transferencias/">
-    <Files "*.php">
-        Order allow,deny
-        Allow from all
-    </Files>
+    <FilesMatch "\.php$">
+        <RequireAll>
+            Require all granted
+        </RequireAll>
+    </FilesMatch>
 </LocationMatch>
 
 # Optimización de compresión para sincronización masiva
@@ -126,30 +129,33 @@ RewriteRule ^(.+)$ index.php?ruta=$1 [QSA,L]
     Deny from all
 </FilesMatch>
 
-# Optimización para DataTables grandes (listado de sucursales)
-<IfModule mod_expires.c>
-    ExpiresActive On
-    
-    # Cache para recursos estáticos
-    ExpiresByType text/css "access plus 1 week"
-    ExpiresByType application/javascript "access plus 1 week"
-    ExpiresByType image/png "access plus 1 month"
-    ExpiresByType image/jpg "access plus 1 month"
-    ExpiresByType image/jpeg "access plus 1 month"
-    ExpiresByType image/gif "access plus 1 month"
-    ExpiresByType image/ico "access plus 1 month"
-    ExpiresByType image/icon "access plus 1 month"
-    ExpiresByType text/ico "access plus 1 month"
-    ExpiresByType application/ico "access plus 1 month"
-    
-    # No cache para páginas dinámicas de administración
-    ExpiresByType text/html "access plus 0 seconds"
-    ExpiresByType application/json "access plus 0 seconds"
-</IfModule>
-
 # Límites específicos para operaciones de sincronización masiva
 <LocationMatch "^/(ajax|api-transferencias)/">
-    php_value max_execution_time 3600
-    php_value memory_limit 6144M
-    php_value max_input_vars 5000
+    <IfModule php8_module>
+        php_value max_execution_time 3600
+        php_value memory_limit 6144M
+        php_value max_input_vars 5000
+    </IfModule>
+    <IfModule lsapi_module>
+        php_value max_execution_time 3600
+        php_value memory_limit 6144M
+        php_value max_input_vars 5000
+    </IfModule>
 </LocationMatch>
+
+# Seguridad básica sin mod_headers
+<IfModule mod_mime.c>
+    # Prevenir ejecución de scripts en uploads
+    AddType text/plain .php .phtml .php3 .php4 .php5 .php7 .php8
+    
+    # Solo para directorio de uploads si existe
+    <LocationMatch "^/uploads/">
+        AddType text/plain .php .phtml .php3 .php4 .php5 .php7 .php8
+    </LocationMatch>
+</IfModule>
+
+# Restringir métodos HTTP no necesarios
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_METHOD} ^(TRACE|DELETE|TRACK) [NC]
+    RewriteRule .* - [F,L]
+</IfModule>
