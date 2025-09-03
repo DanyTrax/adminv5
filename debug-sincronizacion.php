@@ -42,24 +42,25 @@ try {
         echo "❌ <strong>ERROR:</strong> No se encuentra el archivo modelo<br><br>";
     }
     
-    // ✅ PASO 3: Probar conexión central
-    echo "<h2>3. 🌐 Verificando Conexión Central</h2>";
-    if (method_exists('ModeloCatalogoMaestro', 'conectarCentral')) {
-        try {
-            $dbCentral = ModeloCatalogoMaestro::conectarCentral();
-            echo "✅ <strong>Conexión central exitosa</strong><br>";
-            
-            // Verificar tabla catalogo_maestro
-            $stmt = $dbCentral->prepare("SHOW TABLES LIKE 'catalogo_maestro'");
-            $stmt->execute();
-            if ($stmt->rowCount() > 0) {
-                echo "✅ <strong>Tabla 'catalogo_maestro' existe</strong><br>";
-                
-                // Contar productos
-                $stmt = $dbCentral->prepare("SELECT COUNT(*) as total FROM catalogo_maestro WHERE activo = 1");
-                $stmt->execute();
-                $count = $stmt->fetch();
-                echo "📊 <strong>Total productos activos:</strong> " . $count['total'] . "<br>";
+// ✅ PASO 3: Probar conexión central (LÍNEA ~47)
+echo "<h2>3. 🌐 Verificando Conexión Central (API)</h2>";
+try {
+    require_once "api-transferencias/conexion-central.php";
+    $dbCentral = ConexionCentral::conectar();
+    echo "✅ <strong>Conexión central exitosa (usando API)</strong><br>";
+    echo "✅ <strong>Base de datos:</strong> epicosie_central<br>";
+    
+    // Verificar tabla catalogo_maestro
+    $stmt = $dbCentral->prepare("SHOW TABLES LIKE 'catalogo_maestro'");
+    $stmt->execute();
+    if ($stmt->rowCount() > 0) {
+        echo "✅ <strong>Tabla 'catalogo_maestro' existe</strong><br>";
+        
+        // Contar productos
+        $stmt = $dbCentral->prepare("SELECT COUNT(*) as total FROM catalogo_maestro WHERE activo = 1");
+        $stmt->execute();
+        $count = $stmt->fetch();
+        echo "📊 <strong>Total productos activos:</strong> " . $count['total'] . "<br>";
                 
                 // Mostrar primeros 5 productos
                 $stmt = $dbCentral->prepare("SELECT codigo, descripcion, precio_venta FROM catalogo_maestro WHERE activo = 1 ORDER BY codigo LIMIT 5");

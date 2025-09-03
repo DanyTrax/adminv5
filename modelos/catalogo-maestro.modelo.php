@@ -959,10 +959,12 @@ static public function mdlObtenerDatosParaSincronizacion() {
     
     try {
         
-        $dbCentral = self::conectarCentral();
+        // ✅ USAR LA CONEXIÓN DEL API DIRECTAMENTE
+        require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+        $dbCentral = ConexionCentral::conectar();
         
         // ✅ DEBUG: Log de conexión
-        error_log("DEBUG: Conectando a BD central para sincronización");
+        error_log("DEBUG: Conectando a BD central usando API (epicosie_central)");
         
         // ✅ REUTILIZAR LA MISMA QUERY QUE USA TU SINCRONIZACIÓN ACTUAL
         $stmtCentral = $dbCentral->prepare("
@@ -1014,7 +1016,7 @@ static public function mdlObtenerDatosParaSincronizacion() {
                 
                 // Buscar información para MITAD
                 if (!empty($productoMaestro['codigo_hijo_mitad'])) {
-                    $infoMitad = self::mdlBuscarInformacionHijo($dbCentral, $productoMaestro['codigo_hijo_mitad']);
+                    $infoMitad = self::mdlBuscarInformacionHijoAPI($dbCentral, $productoMaestro['codigo_hijo_mitad']);
                     if ($infoMitad) {
                         $nombre_mitad = $infoMitad['descripcion'];
                         $precio_mitad = $infoMitad['precio_venta'];
@@ -1023,7 +1025,7 @@ static public function mdlObtenerDatosParaSincronizacion() {
                 
                 // Buscar información para TERCIO
                 if (!empty($productoMaestro['codigo_hijo_tercio'])) {
-                    $infoTercio = self::mdlBuscarInformacionHijo($dbCentral, $productoMaestro['codigo_hijo_tercio']);
+                    $infoTercio = self::mdlBuscarInformacionHijoAPI($dbCentral, $productoMaestro['codigo_hijo_tercio']);
                     if ($infoTercio) {
                         $nombre_tercio = $infoTercio['descripcion'];
                         $precio_tercio = $infoTercio['precio_venta'];
@@ -1032,7 +1034,7 @@ static public function mdlObtenerDatosParaSincronizacion() {
                 
                 // Buscar información para CUARTO
                 if (!empty($productoMaestro['codigo_hijo_cuarto'])) {
-                    $infoCuarto = self::mdlBuscarInformacionHijo($dbCentral, $productoMaestro['codigo_hijo_cuarto']);
+                    $infoCuarto = self::mdlBuscarInformacionHijoAPI($dbCentral, $productoMaestro['codigo_hijo_cuarto']);
                     if ($infoCuarto) {
                         $nombre_cuarto = $infoCuarto['descripcion'];
                         $precio_cuarto = $infoCuarto['precio_venta'];
@@ -1075,6 +1077,41 @@ static public function mdlObtenerDatosParaSincronizacion() {
     } catch (Exception $e) {
         error_log("ERROR en mdlObtenerDatosParaSincronizacion: " . $e->getMessage());
         return false;
+    }
+}
+
+/*=============================================
+BUSCAR INFORMACIÓN DE PRODUCTO HIJO USANDO CONEXIÓN API
+=============================================*/
+static private function mdlBuscarInformacionHijoAPI($dbCentral, $codigoHijo) {
+    
+    if (empty($codigoHijo)) {
+        return null;
+    }
+    
+    try {
+        
+        $stmt = $dbCentral->prepare("
+            SELECT descripcion, precio_venta 
+            FROM catalogo_maestro 
+            WHERE codigo = :codigo AND activo = 1
+        ");
+        
+        $stmt->bindParam(":codigo", $codigoHijo, PDO::PARAM_STR);
+        $stmt->execute();
+        
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $resultado ? $resultado : null;
+        
+    } catch (Exception $e) {
+        
+        error_log("Error al buscar información del hijo '$codigoHijo' (API): " . $e->getMessage());
+        return null;
+        
+    } finally {
+        
+        $stmt = null;
     }
 }
 }
