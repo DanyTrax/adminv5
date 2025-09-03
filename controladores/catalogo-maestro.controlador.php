@@ -298,7 +298,7 @@ public function ctrImportarDesdeExcel() {
                 $extension = pathinfo($_FILES["archivoExcel"]["name"], PATHINFO_EXTENSION);
                 $nombreArchivo = $_FILES["archivoExcel"]["name"];
                 
-                error_log("IMPORTACIÓN EXCEL INICIADA - Archivo: " . $nombreArchivo);
+                error_log("IMPORTACIÓN EXCEL - Archivo: " . $nombreArchivo . " - Extensión: " . $extension);
                 
                 if(!in_array(strtolower($extension), ['xls', 'xlsx', 'csv'])) {
                     echo '<script>
@@ -324,31 +324,46 @@ public function ctrImportarDesdeExcel() {
                     return;
                 }
                 
+                error_log("Contenido leído: " . strlen($contenido) . " bytes");
+                error_log("Primeros 200 chars: " . substr($contenido, 0, 200));
+                
                 $productos = [];
                 
-                if(strtolower($extension) === 'csv') {
+                // ✅ DETECTAR FORMATO AUTOMÁTICAMENTE
+                if(strtolower($extension) === 'csv' || strpos($contenido, ',') !== false && strpos($contenido, '<') === false) {
                     
-                    $lineas = str_getcsv($contenido, "\n");
+                    // ✅ FORMATO CSV
+                    error_log("Detectado formato CSV");
+                    
+                    $lineas = explode("\n", $contenido);
                     $encabezados = [];
                     $primeraLinea = true;
                     
                     foreach($lineas as $indice => $linea) {
+                        $linea = trim($linea);
+                        if(empty($linea)) continue;
+                        
                         if($primeraLinea) {
                             $encabezados = str_getcsv($linea, ",");
+                            $encabezados = array_map('trim', $encabezados);
+                            error_log("Encabezados CSV: " . implode(", ", $encabezados));
                             $primeraLinea = false;
                             continue;
                         }
                         
-                        if(!empty(trim($linea))) {
-                            $datos = str_getcsv($linea, ",");
-                            if(count($datos) >= count($encabezados)) {
-                                $producto = array_combine($encabezados, $datos);
-                                $productos[] = $producto;
-                            }
+                        $datos = str_getcsv($linea, ",");
+                        $datos = array_map('trim', $datos);
+                        
+                        if(count($datos) >= count($encabezados) && !empty($datos[0])) {
+                            $producto = array_combine($encabezados, array_slice($datos, 0, count($encabezados)));
+                            $productos[] = $producto;
                         }
                     }
                     
-                } else {
+                } elseif(strpos($contenido, '<table') !== false) {
+                    
+                    // ✅ FORMATO HTML/XLS (Como exporta tu sistema)
+                    error_log("Detectado formato HTML con tabla");
                     
                     preg_match('/<table[^>]*>(.*?)<\/table>/is', $contenido, $matches);
                     
@@ -356,8 +371,8 @@ public function ctrImportarDesdeExcel() {
                         echo '<script>
                             swal({
                                 type: "error",
-                                title: "Formato no reconocido",
-                                text: "No se pudo leer la estructura de la tabla en el archivo"
+                                title: "Formato HTML inválido",
+                                text: "No se encontró tabla válida en el archivo HTML"
                             });
                         </script>';
                         return;
@@ -377,6 +392,7 @@ public function ctrImportarDesdeExcel() {
                             foreach($celdas[1] as $celda) {
                                 $encabezados[] = trim(strip_tags($celda));
                             }
+                            error_log("Encabezados HTML: " . implode(", ", $encabezados));
                             $primeraFila = false;
                             continue;
                         }
@@ -386,28 +402,64 @@ public function ctrImportarDesdeExcel() {
                             $datosLimpios = [];
                             foreach($celdas[1] as $celda) {
                                 $valorLimpio = trim(strip_tags($celda));
-                                if(is_numeric(str_replace(['.', ','], '', $valorLimpio))) {
-                                    $valorLimpio = str_replace(['.', ','], '', $valorLimpio);
-                                }
                                 $datosLimpios[] = $valorLimpio;
                             }
                             
-                            if(count($datosLimpios) >= count($encabezados)) {
-                                $producto = array_combine($encabezados, $datosLimpios);
+                            if(count($datosLimpios) >= count($encabezados) && !empty($datosLimpios[0])) {
+                                $producto = array_combine($encabezados, array_slice($datosLimpios, 0, count($encabezados)));
                                 $productos[] = $producto;
                             }
+                        }
+                    }
+                    
+                } else {
+                    
+                    // ✅ FORMATO TEXTO DELIMITADO POR TABULACIONES (Excel nativo)
+                    error_log("Detectado formato texto delimitado");
+                    
+                    $lineas = explode("\n", $contenido);
+                    $encabezados = [];
+                    $primeraLinea = true;
+                    
+                    foreach($lineas as $indice => $linea) {
+                        $linea = trim($linea);
+                        if(empty($linea)) continue;
+                        
+                        // Detectar delimitador (tab o punto y coma)
+                        $delimitador = "\t";
+                        if(strpos($linea, ";") !== false && substr_count($linea, ";") > substr_count($linea, "\t")) {
+                            $delimitador = ";";
+                        }
+                        
+                        if($primeraLinea) {
+                            $encabezados = explode($delimitador, $linea);
+                            $encabezados = array_map('trim', $encabezados);
+                            error_log("Encabezados TEXTO: " . implode(", ", $encabezados));
+                            $primeraLinea = false;
+                            continue;
+                        }
+                        
+                        $datos = explode($delimitador, $linea);
+                        $datos = array_map('trim', $datos);
+                        
+                        if(count($datos) >= count($encabezados) && !empty($datos[0])) {
+                            $producto = array_combine($encabezados, array_slice($datos, 0, count($encabezados)));
+                            $productos[] = $producto;
                         }
                     }
                 }
                 
                 error_log("Productos extraídos: " . count($productos));
+                if(count($productos) > 0) {
+                    error_log("Primer producto: " . json_encode($productos[0]));
+                }
                 
                 if(empty($productos)) {
                     echo '<script>
                         swal({
                             type: "warning",
-                            title: "Archivo vacío",
-                            text: "No se encontraron productos válidos en el archivo"
+                            title: "Sin datos válidos",
+                            text: "No se encontraron productos válidos. Verifique:\\n\\n1. Que el archivo tenga datos\\n2. Que tenga encabezados correctos\\n3. Revise los logs de error para más detalles"
                         });
                     </script>';
                     return;
@@ -421,42 +473,53 @@ public function ctrImportarDesdeExcel() {
                     
                     try {
                         
-                        if(empty($producto['ID']) || empty($producto['CODIGO'])) {
+                        // ✅ VERIFICAR CAMPOS OBLIGATORIOS (Flexibilidad en nombres)
+                        $id = $producto['ID'] ?? $producto['id'] ?? '';
+                        $codigo = $producto['CODIGO'] ?? $producto['codigo'] ?? '';
+                        
+                        if(empty($id) || empty($codigo)) {
                             $errores[] = "Fila " . ($indice + 2) . ": ID o CODIGO vacío";
                             $productosErrores++;
                             continue;
                         }
                         
                         $datos = array(
-                            "id" => $producto['ID'],
-                            "descripcion" => $producto['DESCRIPCION'] ?? '',
-                            "id_categoria" => $producto['ID_CATEGORIA'] ?? 1,
-                            "precio_venta" => $producto['PRECIO_VENTA'] ?? 0,
+                            "id" => $id,
+                            "descripcion" => $producto['DESCRIPCION'] ?? $producto['descripcion'] ?? '',
+                            "id_categoria" => $producto['ID_CATEGORIA'] ?? $producto['id_categoria'] ?? 1,
+                            "precio_venta" => $producto['PRECIO_VENTA'] ?? $producto['precio_venta'] ?? 0,
                             "imagen" => "vistas/img/productos/default/anonymous.png",
-                            "es_divisible" => (isset($producto['ES_DIVISIBLE']) && strtoupper($producto['ES_DIVISIBLE']) === 'SI') ? 1 : 0,
-                            "codigo_hijo_mitad" => $producto['CODIGO_HIJO_MITAD'] ?? '',
-                            "codigo_hijo_tercio" => $producto['CODIGO_HIJO_TERCIO'] ?? '',
-                            "codigo_hijo_cuarto" => $producto['CODIGO_HIJO_CUARTO'] ?? ''
+                            "es_divisible" => ($producto['ES_DIVISIBLE'] ?? $producto['es_divisible'] ?? '') == 'SI' ? 1 : 0,
+                            "codigo_hijo_mitad" => $producto['CODIGO_HIJO_MITAD'] ?? $producto['codigo_hijo_mitad'] ?? '',
+                            "codigo_hijo_tercio" => $producto['CODIGO_HIJO_TERCIO'] ?? $producto['codigo_hijo_tercio'] ?? '',
+                            "codigo_hijo_cuarto" => $producto['CODIGO_HIJO_CUARTO'] ?? $producto['codigo_hijo_cuarto'] ?? ''
                         );
                         
                         $respuesta = ModeloCatalogoMaestro::mdlEditarProductoMaestro($datos);
                         
                         if($respuesta === "ok") {
                             $productosActualizados++;
+                            if($indice < 3) {
+                                error_log("Producto actualizado: ID=" . $id . ", Código=" . $codigo);
+                            }
                         } else {
-                            $errores[] = "Error actualizando producto ID: " . $producto['ID'];
+                            $errores[] = "Error actualizando producto ID: " . $id;
                             $productosErrores++;
                         }
                         
                     } catch(Exception $e) {
                         $errores[] = "Error en fila " . ($indice + 2) . ": " . $e->getMessage();
                         $productosErrores++;
+                        error_log("Error procesando producto: " . $e->getMessage());
                     }
                 }
                 
                 $mensaje = "Productos actualizados: " . $productosActualizados;
                 if($productosErrores > 0) {
                     $mensaje .= "\\nErrores: " . $productosErrores;
+                    if(count($errores) <= 3) {
+                        $mensaje .= "\\n\\nPrimeros errores:\\n" . implode("\\n", array_slice($errores, 0, 3));
+                    }
                 }
                 
                 if($productosActualizados > 0) {
@@ -485,7 +548,7 @@ public function ctrImportarDesdeExcel() {
                     swal({
                         type: "error",
                         title: "Error crítico",
-                        text: "' . $e->getMessage() . '"
+                        text: "Error del sistema. Revise los logs para más detalles."
                     });
                 </script>';
             }
