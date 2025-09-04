@@ -283,12 +283,12 @@ public function ctrEliminarProductoMaestro() {
     }
     
 /*=============================================
-IMPORTAR DESDE EXCEL - CON VALIDACIÓN EXHAUSTIVA
+IMPORTAR DESDE EXCEL - CON CREACIÓN AUTOMÁTICA
 =============================================*/
 
 public function ctrImportarDesdeExcel() {
     
-    error_log("=== INICIO IMPORTACION CON VALIDACION ===");
+    error_log("=== INICIO IMPORTACION CON GENERACION AUTOMATICA ===");
     
     if(isset($_POST["importarExcel"])) {
         
@@ -296,7 +296,6 @@ public function ctrImportarDesdeExcel() {
             
             $archivo = $_FILES["archivoExcel"]["tmp_name"];
             $nombreArchivo = $_FILES["archivoExcel"]["name"];
-            $extension = strtolower(pathinfo($nombreArchivo, PATHINFO_EXTENSION));
             
             error_log("Archivo: {$nombreArchivo}");
             
@@ -325,7 +324,7 @@ public function ctrImportarDesdeExcel() {
                     $datos = str_getcsv($linea, ',');
                     $datos = array_map('trim', $datos);
                     
-                    if(count($datos) >= count($encabezados) && !empty($datos[0])) {
+                    if(count($datos) >= count($encabezados)) {
                         $producto = array_combine($encabezados, array_slice($datos, 0, count($encabezados)));
                         $productos[] = $producto;
                     }
@@ -338,7 +337,8 @@ public function ctrImportarDesdeExcel() {
                     return;
                 }
                 
-                // ✅ PROCESAR CON VALIDACIÓN EXHAUSTIVA
+                // ✅ PROCESAR PRODUCTOS CON LÓGICA INTELIGENTE
+                $productosCreados = 0;
                 $productosActualizados = 0;
                 $productosErrores = 0;
                 $erroresDetallados = [];
@@ -349,97 +349,118 @@ public function ctrImportarDesdeExcel() {
                         
                         $fila = $indice + 2;
                         
-                        // ✅ VALIDACIÓN 1: CAMPOS OBLIGATORIOS
-                        $id = trim($producto['ID'] ?? '');
-                        $codigo = trim($producto['CODIGO'] ?? '');
+                        // ✅ VALIDACIÓN: CAMPOS OBLIGATORIOS
                         $descripcion = trim($producto['DESCRIPCION'] ?? '');
+                        $id_categoria = trim($producto['ID_CATEGORIA'] ?? '');
+                        $precio_venta = trim($producto['PRECIO_VENTA'] ?? '');
                         
-                        if(empty($id)) {
-                            $erroresDetallados[] = "Fila {$fila}: ID vacío";
-                            $productosErrores++;
-                            continue;
-                        }
-                        
-                        if(empty($codigo)) {
-                            $erroresDetallados[] = "Fila {$fila}: CODIGO vacío";
-                            $productosErrores++;
-                            continue;
-                        }
-                        
+                        // Verificar campos obligatorios
                         if(empty($descripcion)) {
-                            $erroresDetallados[] = "Fila {$fila}: DESCRIPCION vacía";
+                            $erroresDetallados[] = "Fila {$fila}: DESCRIPCION es obligatoria";
                             $productosErrores++;
                             continue;
                         }
                         
-                        // ✅ VALIDACIÓN 2: TIPOS DE DATOS
-                        if(!is_numeric($id) || $id <= 0) {
-                            $erroresDetallados[] = "Fila {$fila}: ID no es un número válido ({$id})";
+                        if(empty($id_categoria) || !is_numeric($id_categoria) || $id_categoria <= 0) {
+                            $erroresDetallados[] = "Fila {$fila}: ID_CATEGORIA debe ser un número válido mayor a 0";
                             $productosErrores++;
                             continue;
                         }
                         
-                        // ✅ VALIDACIÓN 3: LIMPIAR Y CONVERTIR DATOS
-                        $id_categoria = $producto['ID_CATEGORIA'] ?? 1;
-                        if(!is_numeric($id_categoria) || $id_categoria <= 0) {
-                            $id_categoria = 1;
+                        if(empty($precio_venta) || !is_numeric(str_replace([',', '.'], '', $precio_venta))) {
+                            $erroresDetallados[] = "Fila {$fila}: PRECIO_VENTA debe ser un número válido";
+                            $productosErrores++;
+                            continue;
                         }
                         
-                        $precio_venta = $producto['PRECIO_VENTA'] ?? 0;
-                        $precio_venta = preg_replace('/[^0-9.]/', '', $precio_venta);
-                        if(!is_numeric($precio_venta) || $precio_venta < 0) {
-                            $precio_venta = 0;
-                        }
+                        // ✅ LIMPIAR Y PREPARAR DATOS
+                        $precio_venta_limpio = floatval(str_replace([','], '', $precio_venta));
                         
                         $es_divisible_text = trim($producto['ES_DIVISIBLE'] ?? '');
                         $es_divisible = (strtoupper($es_divisible_text) === 'SI') ? 1 : 0;
                         
-                        // ✅ VALIDACIÓN 4: CÓDIGOS HIJOS (OPCIONAL)
+                        // Códigos hijos opcionales
                         $codigo_hijo_mitad = trim($producto['CODIGO_HIJO_MITAD'] ?? '');
                         $codigo_hijo_tercio = trim($producto['CODIGO_HIJO_TERCIO'] ?? '');
                         $codigo_hijo_cuarto = trim($producto['CODIGO_HIJO_CUARTO'] ?? '');
                         
-                        // Si están marcados como "NULL" o similares, convertir a cadena vacía
-                        if(strtoupper($codigo_hijo_mitad) === 'NULL' || $codigo_hijo_mitad === 'null') {
-                            $codigo_hijo_mitad = '';
-                        }
-                        if(strtoupper($codigo_hijo_tercio) === 'NULL' || $codigo_hijo_tercio === 'null') {
-                            $codigo_hijo_tercio = '';
-                        }
-                        if(strtoupper($codigo_hijo_cuarto) === 'NULL' || $codigo_hijo_cuarto === 'null') {
-                            $codigo_hijo_cuarto = '';
-                        }
+                        // Limpiar valores "NULL" o vacíos
+                        if(in_array(strtoupper($codigo_hijo_mitad), ['NULL', '', '0'])) $codigo_hijo_mitad = '';
+                        if(in_array(strtoupper($codigo_hijo_tercio), ['NULL', '', '0'])) $codigo_hijo_tercio = '';
+                        if(in_array(strtoupper($codigo_hijo_cuarto), ['NULL', '', '0'])) $codigo_hijo_cuarto = '';
                         
-                        // ✅ PREPARAR DATOS LIMPIOS PARA EL MODELO
-                        $datosLimpios = array(
-                            "id" => intval($id),
-                            "descripcion" => $descripcion,
-                            "id_categoria" => intval($id_categoria),
-                            "precio_venta" => floatval($precio_venta),
-                            "imagen" => "vistas/img/productos/default/anonymous.png",
-                            "es_divisible" => intval($es_divisible),
-                            "codigo_hijo_mitad" => $codigo_hijo_mitad,
-                            "codigo_hijo_tercio" => $codigo_hijo_tercio,
-                            "codigo_hijo_cuarto" => $codigo_hijo_cuarto
-                        );
+                        // ✅ VERIFICAR SI ES ACTUALIZACIÓN O CREACIÓN
+                        $id_existente = trim($producto['ID'] ?? '');
+                        $codigo_existente = trim($producto['CODIGO'] ?? '');
                         
-                        // ✅ DEBUG: LOG DATOS LIMPIOS PARA PRIMEROS PRODUCTOS
-                        if($indice < 3) {
-                            error_log("Datos limpios fila {$fila}: " . json_encode($datosLimpios));
-                        }
+                        $esActualizacion = false;
                         
-                        // ✅ INTENTAR ACTUALIZACIÓN
-                        $respuesta = ModeloCatalogoMaestro::mdlEditarProductoMaestro($datosLimpios);
-                        
-                        if($respuesta === "ok") {
-                            $productosActualizados++;
-                            if($indice < 5) {
-                                error_log("ÉXITO fila {$fila}: Producto ID {$id} actualizado");
+                        // Si tiene ID válido, intentar actualizar
+                        if(!empty($id_existente) && is_numeric($id_existente) && $id_existente > 0) {
+                            
+                            // Verificar que el ID existe en la base de datos
+                            require_once "api-transferencias/conexion-central.php";
+                            $db = ConexionCentral::conectar();
+                            $stmtVerificar = $db->prepare("SELECT id FROM catalogo_maestro WHERE id = ? AND activo = 1");
+                            $stmtVerificar->execute([$id_existente]);
+                            
+                            if($stmtVerificar->rowCount() > 0) {
+                                $esActualizacion = true;
                             }
+                        }
+                        
+                        if($esActualizacion) {
+                            
+                            // ✅ ACTUALIZAR PRODUCTO EXISTENTE
+                            $datosActualizar = array(
+                                "id" => intval($id_existente),
+                                "descripcion" => $descripcion,
+                                "id_categoria" => intval($id_categoria),
+                                "precio_venta" => $precio_venta_limpio,
+                                "imagen" => "vistas/img/productos/default/anonymous.png",
+                                "es_divisible" => $es_divisible,
+                                "codigo_hijo_mitad" => $codigo_hijo_mitad,
+                                "codigo_hijo_tercio" => $codigo_hijo_tercio,
+                                "codigo_hijo_cuarto" => $codigo_hijo_cuarto
+                            );
+                            
+                            $respuesta = ModeloCatalogoMaestro::mdlEditarProductoMaestro($datosActualizar);
+                            
+                            if($respuesta === "ok") {
+                                $productosActualizados++;
+                                if($indice < 3) {
+                                    error_log("ACTUALIZADO fila {$fila}: ID {$id_existente} - {$descripcion}");
+                                }
+                            } else {
+                                $erroresDetallados[] = "Fila {$fila}: Error actualizando - {$respuesta}";
+                                $productosErrores++;
+                            }
+                            
                         } else {
-                            $erroresDetallados[] = "Fila {$fila}: Error en modelo - {$respuesta}";
-                            $productosErrores++;
-                            error_log("ERROR fila {$fila}: Respuesta modelo = {$respuesta}");
+                            
+                            // ✅ CREAR PRODUCTO NUEVO CON GENERACIÓN AUTOMÁTICA
+                            $datosCrear = array(
+                                "descripcion" => $descripcion,
+                                "id_categoria" => intval($id_categoria),
+                                "precio_venta" => $precio_venta_limpio,
+                                "imagen" => "vistas/img/productos/default/anonymous.png",
+                                "es_divisible" => $es_divisible,
+                                "codigo_hijo_mitad" => $codigo_hijo_mitad,
+                                "codigo_hijo_tercio" => $codigo_hijo_tercio,
+                                "codigo_hijo_cuarto" => $codigo_hijo_cuarto
+                            );
+                            
+                            $respuesta = ModeloCatalogoMaestro::mdlCrearProductoMaestroAutomatico($datosCrear);
+                            
+                            if($respuesta['status'] === "ok") {
+                                $productosCreados++;
+                                if($indice < 3) {
+                                    error_log("CREADO fila {$fila}: Código {$respuesta['codigo']} - {$descripcion}");
+                                }
+                            } else {
+                                $erroresDetallados[] = "Fila {$fila}: Error creando - " . ($respuesta['message'] ?? 'Error desconocido');
+                                $productosErrores++;
+                            }
                         }
                         
                     } catch(Exception $e) {
@@ -450,52 +471,48 @@ public function ctrImportarDesdeExcel() {
                 }
                 
                 // ✅ RESULTADO FINAL
-                error_log("RESULTADO FINAL: Actualizados={$productosActualizados}, Errores={$productosErrores}");
+                error_log("RESULTADO: Creados={$productosCreados}, Actualizados={$productosActualizados}, Errores={$productosErrores}");
                 
-                $mensaje = "Productos actualizados: {$productosActualizados}";
-                $tipoAlerta = "success";
+                $totalProcesados = $productosCreados + $productosActualizados;
+                $mensaje = "Productos procesados: {$totalProcesados}";
                 
-                if($productosErrores > 0) {
-                    $mensaje .= "\\nErrores: {$productosErrores}";
-                    
-                    // Mostrar algunos errores detallados
-                    if(count($erroresDetallados) > 0) {
-                        $primerosErrores = array_slice($erroresDetallados, 0, 5);
-                        $mensaje .= "\\n\\nPrimeros errores:\\n" . implode("\\n", $primerosErrores);
-                        
-                        if(count($erroresDetallados) > 5) {
-                            $mensaje .= "\\n... y " . (count($erroresDetallados) - 5) . " errores más.";
-                        }
-                        
-                        $mensaje .= "\\n\\nRevise los logs para detalles completos.";
-                    }
-                    
-                    if($productosActualizados === 0) {
-                        $tipoAlerta = "error";
-                    } else {
-                        $tipoAlerta = "warning";
-                    }
+                if($productosCreados > 0) {
+                    $mensaje .= "\\n• Nuevos creados: {$productosCreados}";
                 }
                 
                 if($productosActualizados > 0) {
-                    echo '<script>
-                        swal({
-                            type: "' . $tipoAlerta . '",
-                            title: "Importación completada",
-                            text: "' . $mensaje . '"
-                        }).then(function() {
-                            window.location = "catalogo-maestro";
-                        });
-                    </script>';
-                } else {
-                    echo '<script>
-                        swal({
-                            type: "error",
-                            title: "Sin actualizaciones",
-                            text: "' . $mensaje . '"
-                        });
-                    </script>';
+                    $mensaje .= "\\n• Actualizados: {$productosActualizados}";
                 }
+                
+                if($productosErrores > 0) {
+                    $mensaje .= "\\n• Errores: {$productosErrores}";
+                    
+                    if(count($erroresDetallados) > 0) {
+                        $primerosErrores = array_slice($erroresDetallados, 0, 3);
+                        $mensaje .= "\\n\\nPrimeros errores:\\n" . implode("\\n", $primerosErrores);
+                        
+                        if(count($erroresDetallados) > 3) {
+                            $mensaje .= "\\n... y " . (count($erroresDetallados) - 3) . " errores más.";
+                        }
+                    }
+                }
+                
+                $tipoAlerta = "success";
+                if($totalProcesados === 0) {
+                    $tipoAlerta = "error";
+                } else if($productosErrores > 0) {
+                    $tipoAlerta = "warning";
+                }
+                
+                echo '<script>
+                    swal({
+                        type: "' . $tipoAlerta . '",
+                        title: "Importación completada",
+                        text: "' . $mensaje . '"
+                    }).then(function() {
+                        window.location = "catalogo-maestro";
+                    });
+                </script>';
                 
             } catch(Exception $e) {
                 error_log("Error crítico en importación: " . $e->getMessage());

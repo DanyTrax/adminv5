@@ -1110,5 +1110,160 @@ static private function mdlBuscarInformacionHijoAPI($dbCentral, $codigoHijo) {
         $stmt = null;
     }
 }
+/*=============================================
+GENERAR CÓDIGO AUTOMÁTICO PARA PRODUCTO
+=============================================*/
+public static function mdlGenerarCodigoAutomatico() {
+    
+    try {
+        
+        $db = self::conectarCentral();
+        
+        // Buscar el último código que siga el patrón PROD####
+        $stmt = $db->prepare("
+            SELECT codigo 
+            FROM catalogo_maestro 
+            WHERE codigo REGEXP '^PROD[0-9]{4}$' 
+            ORDER BY CAST(SUBSTRING(codigo, 5) AS UNSIGNED) DESC 
+            LIMIT 1
+        ");
+        
+        $stmt->execute();
+        $ultimoCodigo = $stmt->fetch();
+        
+        if($ultimoCodigo) {
+            // Extraer el número del último código
+            $numero = intval(substr($ultimoCodigo['codigo'], 4));
+            $siguienteNumero = $numero + 1;
+        } else {
+            // Si no hay códigos, empezar desde 1
+            $siguienteNumero = 1;
+        }
+        
+        // Generar código con formato PROD0001
+        $nuevoCodigo = 'PROD' . str_pad($siguienteNumero, 4, '0', STR_PAD_LEFT);
+        
+        // Verificar que no exista (por seguridad)
+        $stmtVerificar = $db->prepare("SELECT 1 FROM catalogo_maestro WHERE codigo = ?");
+        $stmtVerificar->execute([$nuevoCodigo]);
+        
+        if($stmtVerificar->rowCount() > 0) {
+            // Si por alguna razón existe, buscar el siguiente disponible
+            return self::mdlGenerarCodigoAutomaticoAlternativo();
+        }
+        
+        return $nuevoCodigo;
+        
+    } catch(Exception $e) {
+        error_log("Error generando código automático: " . $e->getMessage());
+        return 'PROD' . str_pad(rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+    }
+}
+
+/*=============================================
+GENERAR CÓDIGO ALTERNATIVO SI HAY CONFLICTO
+=============================================*/
+private static function mdlGenerarCodigoAutomaticoAlternativo() {
+    
+    $db = self::conectarCentral();
+    
+    // Buscar un número disponible
+    for($i = 1; $i <= 9999; $i++) {
+        $codigo = 'PROD' . str_pad($i, 4, '0', STR_PAD_LEFT);
+        
+        $stmt = $db->prepare("SELECT 1 FROM catalogo_maestro WHERE codigo = ?");
+        $stmt->execute([$codigo]);
+        
+        if($stmt->rowCount() === 0) {
+            return $codigo;
+        }
+    }
+    
+    // Si se agotan los números, usar timestamp
+    return 'PROD' . substr(time(), -4);
+}
+/*=============================================
+CREAR PRODUCTO MAESTRO CON GENERACIÓN AUTOMÁTICA
+=============================================*/
+public static function mdlCrearProductoMaestroAutomatico($datos) {
+    
+    try {
+        
+        $db = self::conectarCentral();
+        $db->beginTransaction();
+        
+        // ✅ GENERAR CÓDIGO AUTOMÁTICO
+        $codigoGenerado = self::mdlGenerarCodigoAutomatico();
+        
+        // ✅ INSERTAR PRODUCTO CON CÓDIGO GENERADO
+        $stmt = $db->prepare("
+            INSERT INTO catalogo_maestro (
+                codigo, descripcion, id_categoria, precio_venta, imagen,
+                es_divisible, codigo_hijo_mitad, codigo_hijo_tercio, codigo_hijo_cuarto,
+                activo, fecha_creacion, fecha_actualizacion
+            ) VALUES (
+                :codigo, :descripcion, :id_categoria, :precio_venta, :imagen,
+                :es_divisible, :codigo_hijo_mitad, :codigo_hijo_tercio, :codigo_hijo_cuarto,
+                1, NOW(), NOW()
+            )
+        ");
+        
+        // Limpiar códigos hijos vacíos
+        $codigo_hijo_mitad = (!empty($datos["codigo_hijo_mitad"]) && $datos["codigo_hijo_mitad"] !== 'NULL') ? $datos["codigo_hijo_mitad"] : null;
+        $codigo_hijo_tercio = (!empty($datos["codigo_hijo_tercio"]) && $datos["codigo_hijo_tercio"] !== 'NULL') ? $datos["codigo_hijo_tercio"] : null;
+        $codigo_hijo_cuarto = (!empty($datos["codigo_hijo_cuarto"]) && $datos["codigo_hijo_cuarto"] !== 'NULL') ? $datos["codigo_hijo_cuarto"] : null;
+        
+        $stmt->bindParam(":codigo", $codigoGenerado, PDO::PARAM_STR);
+        $stmt->bindParam(":descripcion", $datos["descripcion"], PDO::PARAM_STR);
+        $stmt->bindParam(":id_categoria", $datos["id_categoria"], PDO::PARAM_INT);
+        $stmt->bindParam(":precio_venta", $datos["precio_venta"], PDO::PARAM_STR);
+        $stmt->bindParam(":imagen", $datos["imagen"], PDO::PARAM_STR);
+        $stmt->bindParam(":es_divisible", $datos["es_divisible"], PDO::PARAM_INT);
+        $stmt->bindParam(":codigo_hijo_mitad", $codigo_hijo_mitad, PDO::PARAM_STR);
+        $stmt->bindParam(":codigo_hijo_tercio", $codigo_hijo_tercio, PDO::PARAM_STR);
+        $stmt->bindParam(":codigo_hijo_cuarto", $codigo_hijo_cuarto, PDO::PARAM_STR);
+        
+        if($stmt->execute()) {
+            
+            $nuevoId = $db->lastInsertId();
+            
+            // Marcar productos hijos si existen
+            if($codigo_hijo_mitad) {
+                self::mdlMarcarComoHijo($codigo_hijo_mitad, $codigoGenerado, 'mitad');
+            }
+            if($codigo_hijo_tercio) {
+                self::mdlMarcarComoHijo($codigo_hijo_tercio, $codigoGenerado, 'tercio');
+            }
+            if($codigo_hijo_cuarto) {
+                self::mdlMarcarComoHijo($codigo_hijo_cuarto, $codigoGenerado, 'cuarto');
+            }
+            
+            $db->commit();
+            
+            return [
+                'status' => 'ok',
+                'id' => $nuevoId,
+                'codigo' => $codigoGenerado
+            ];
+            
+        } else {
+            $db->rollBack();
+            return [
+                'status' => 'error',
+                'message' => 'Error en la inserción'
+            ];
+        }
+        
+    } catch(Exception $e) {
+        if(isset($db)) {
+            $db->rollBack();
+        }
+        error_log("Error en mdlCrearProductoMaestroAutomatico: " . $e->getMessage());
+        return [
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ];
+    }
+}
 }
 ?>
