@@ -157,7 +157,7 @@ function inicializarDataTables() {
         
         // Callbacks
         "initComplete": function(settings, json) {
-            console.log('DataTable del Catálogo Maestro inicializado correctamente');
+            //console.log('DataTable del Catálogo Maestro inicializado correctamente');
             
             // Aplicar estilos
             $('.dataTables_filter input').addClass('form-control form-control-sm');
@@ -296,20 +296,20 @@ $(document).ready(function(){
     // Configurar eventos para checkbox de agregar
     $(document).on('change', '#esDivisibleMaestro', function(){
         
-        console.log("Checkbox agregar cambiado:", $(this).prop("checked"));
+        //console.log("Checkbox agregar cambiado:", $(this).prop("checked"));
         
         var divisionConfig = $("#divisionConfigMaestro");
         
         if(divisionConfig.length === 0) {
-            console.error("❌ Elemento #divisionConfigMaestro no encontrado");
+            //console.error("❌ Elemento #divisionConfigMaestro no encontrado");
             return;
         }
         
         if($(this).prop("checked")) {
-            console.log("✅ Mostrando configuración de división - agregar");
+            //console.log("✅ Mostrando configuración de división - agregar");
             divisionConfig.slideDown(300);
         } else {
-            console.log("❌ Ocultando configuración de división - agregar");
+            //console.log("❌ Ocultando configuración de división - agregar");
             divisionConfig.slideUp(300);
             
             // Limpiar campos
@@ -327,21 +327,21 @@ $(document).ready(function(){
     
     // Configurar eventos para checkbox de editar
     $(document).on('change', '#editarEsDivisibleMaestro', function(){
-        
-        console.log("Checkbox editar cambiado:", $(this).prop("checked"));
-        
+
+        //console.log("Checkbox editar cambiado:", $(this).prop("checked"));
+
         var divisionConfig = $("#divisionConfigEditarMaestro");
         
         if(divisionConfig.length === 0) {
-            console.error("❌ Elemento #divisionConfigEditarMaestro no encontrado");
+            //console.error("❌ Elemento #divisionConfigEditarMaestro no encontrado");
             return;
         }
         
         if($(this).prop("checked")) {
-            console.log("✅ Mostrando configuración de división - editar");
+            //console.log("✅ Mostrando configuración de división - editar");
             divisionConfig.slideDown(300);
         } else {
-            console.log("❌ Ocultando configuración de división - editar");
+            //console.log("❌ Ocultando configuración de división - editar");
             divisionConfig.slideUp(300);
             
             // Limpiar campos
@@ -452,12 +452,12 @@ $(document).on("submit", "form", function(e) {
     
     // Solo para el formulario de editar producto maestro
     if($(this).find("#idProductoMaestro").length > 0) {
-        
-        console.log("=== PROCESANDO FORMULARIO EDITAR ===");
-        
+
+        //console.log("=== PROCESANDO FORMULARIO EDITAR ===");
+
         var esDivisible = $("#editarEsDivisibleMaestro").prop("checked");
-        console.log("Es divisible:", esDivisible);
-        
+        //console.log("Es divisible:", esDivisible);
+
         if(!esDivisible) {
             
             // Si NO es divisible, limpiar todos los campos
@@ -465,7 +465,7 @@ $(document).on("submit", "form", function(e) {
             $("#editarCodigoHijoTercio").val("");
             $("#editarCodigoHijoCuarto").val("");
             
-            console.log("Limpiando todos los campos de división");
+            //console.log("Limpiando todos los campos de división");
             
         } else {
             
@@ -474,32 +474,31 @@ $(document).on("submit", "form", function(e) {
             var tercio = $("#editarCodigoHijoTercio").val();
             var cuarto = $("#editarCodigoHijoCuarto").val();
             
-            console.log("Valores antes de procesar:");
+            /*console.log("Valores antes de procesar:");
             console.log("- Mitad: '" + mitad + "'");
             console.log("- Tercio: '" + tercio + "'");
             console.log("- Cuarto: '" + cuarto + "'");
-            
+            */
             // ✅ ASEGURAR QUE LOS CAMPOS VACÍOS SE ENVÍEN COMO CADENA VACÍA
             if(!mitad || mitad.trim() === "") {
                 $("#editarCodigoHijoMitad").val("");
-                console.log("Campo mitad limpiado");
+                //console.log("Campo mitad limpiado");
             }
             
             if(!tercio || tercio.trim() === "") {
                 $("#editarCodigoHijoTercio").val("");
-                console.log("Campo tercio limpiado");
+                //console.log("Campo tercio limpiado");
             }
             
             if(!cuarto || cuarto.trim() === "") {
                 $("#editarCodigoHijoCuarto").val("");
-                console.log("Campo cuarto limpiado");
+                //console.log("Campo cuarto limpiado");
             }
         }
-        
-        console.log("Valores finales a enviar:");
-        console.log("- Mitad: '" + $("#editarCodigoHijoMitad").val() + "'");
-        console.log("- Tercio: '" + $("#editarCodigoHijoTercio").val() + "'");
-        console.log("- Cuarto: '" + $("#editarCodigoHijoCuarto").val() + "'");
+        //console.log("Valores finales a enviar:");
+        //console.log("- Mitad: '" + $("#editarCodigoHijoMitad").val() + "'");
+        //console.log("- Tercio: '" + $("#editarCodigoHijoTercio").val() + "'");
+        //console.log("- Cuarto: '" + $("#editarCodigoHijoCuarto").val() + "'");
     }
 });
 
@@ -510,7 +509,7 @@ EDITAR PRODUCTO MAESTRO - CORREGIDO LIMPIEZA
 $(document).on("click", ".btnEditarProductoMaestro", function(){
 
     var idProductoMaestro = $(this).attr("idProductoMaestro");
-    console.log("Editando producto ID:", idProductoMaestro);
+    //console.log("Editando producto ID:", idProductoMaestro);
 
     var datos = new FormData();
     datos.append("idProductoMaestro", idProductoMaestro);
@@ -525,7 +524,7 @@ $(document).on("click", ".btnEditarProductoMaestro", function(){
         dataType: "json",
         success: function(respuesta){
             
-            console.log("Respuesta del servidor:", respuesta);
+            //console.log("Respuesta del servidor:", respuesta);
             
             if(respuesta && typeof respuesta === 'object') {
                 
@@ -546,11 +545,11 @@ $(document).on("click", ".btnEditarProductoMaestro", function(){
                 $("#imagenActualMaestro").val(respuesta["imagen"] || "");
 
                 // ✅ CONFIGURAR DIVISIÓN - LIMPIEZA CORRECTA
-                console.log("Es divisible:", respuesta["es_divisible"]);
+                //console.log("Es divisible:", respuesta["es_divisible"]);
                 
                 if(respuesta["es_divisible"] == "1" || respuesta["es_divisible"] == 1) {
                     
-                    console.log("✅ Producto ES divisible");
+                    //console.log("✅ Producto ES divisible");
                     
                     // Marcar checkbox
                     $("#editarEsDivisibleMaestro").prop("checked", true);
@@ -576,7 +575,7 @@ $(document).on("click", ".btnEditarProductoMaestro", function(){
                     
                 } else {
                     
-                    console.log("❌ Producto NO es divisible - limpiando campos");
+                    //console.log("❌ Producto NO es divisible - limpiando campos");
                     
                     // Desmarcar checkbox
                     $("#editarEsDivisibleMaestro").prop("checked", false);
@@ -626,12 +625,12 @@ FUNCIÓN PARA CARGAR DESCRIPCIÓN DE PRODUCTOS HIJOS
 function cargarDescripcionHijo(tipo, codigo, campoInput) {
     
     if(!codigo || codigo === "" || codigo === null) {
-        console.log("No hay código para tipo:", tipo);
+        //console.log("No hay código para tipo:", tipo);
         $(campoInput).val("");
         return;
     }
     
-    console.log("Cargando descripción para " + tipo + " con código:", codigo);
+    //console.log("Cargando descripción para " + tipo + " con código:", codigo);
     
     var datos = new FormData();
     datos.append("accion", "obtenerDescripcion");
@@ -650,11 +649,11 @@ function cargarDescripcionHijo(tipo, codigo, campoInput) {
             if(respuesta && respuesta.descripcion) {
                 var textoCompleto = respuesta.descripcion + " (" + codigo + ")";
                 $(campoInput).val(textoCompleto);
-                console.log("✅ Descripción cargada para " + tipo + ":", textoCompleto);
+                //console.log("✅ Descripción cargada para " + tipo + ":", textoCompleto);
             } else {
                 // Si no encuentra descripción, solo mostrar el código
                 $(campoInput).val("Código: " + codigo);
-                console.log("⚠️ Solo código para " + tipo + ":", codigo);
+                //console.log("⚠️ Solo código para " + tipo + ":", codigo);
             }
         },
         error: function(xhr, status, error) {
@@ -1066,7 +1065,7 @@ LIMPIAR CAMPOS AL CERRAR MODALES - CORREGIDO
 
 $('#modalAgregarProductoMaestro').on('hidden.bs.modal', function () {
     
-    console.log("Limpiando modal agregar");
+    //console.log("Limpiando modal agregar");
     
     // Resetear formulario
     $(this).find('form')[0].reset();
@@ -1096,12 +1095,12 @@ $('#modalAgregarProductoMaestro').on('hidden.bs.modal', function () {
     $(this).find('.form-control').removeClass('is-invalid is-valid');
     $(this).find('.invalid-feedback').remove();
     
-    console.log("Modal agregar limpiado completamente");
+    //console.log("Modal agregar limpiado completamente");
 });
 
 $('#modalEditarProductoMaestro').on('hidden.bs.modal', function () {
     
-    console.log("Limpiando modal editar");
+    //console.log("Limpiando modal editar");
     
     // Resetear formulario
     $(this).find('form')[0].reset();
@@ -1139,7 +1138,7 @@ $('#modalEditarProductoMaestro').on('hidden.bs.modal', function () {
     $(this).find('.form-control').removeClass('is-invalid is-valid');
     $(this).find('.invalid-feedback').remove();
     
-    console.log("Modal editar limpiado completamente");
+    //console.log("Modal editar limpiado completamente");
 });
 
 /*=============================================
@@ -1185,8 +1184,8 @@ $('#modalEditarProductoMaestro').on('hidden.bs.modal', function () {
     $("#editarPrecioVentaMaestro").val("");
     $("#editarCategoriaMaestro").val("");
     $("#imagenActualMaestro").val("");
-    
-    console.log("Modal editar limpiado completamente");
+
+   //console.log("Modal editar limpiado completamente");
 });
 
 /*=============================================
@@ -1214,8 +1213,8 @@ $('#modalImportarExcel').on('hidden.bs.modal', function () {
     // Resetear progreso si existe
     $(".progress-bar").css('width', '0%').attr('aria-valuenow', 0);
     $(".progress").hide();
-    
-    console.log("Modal importar limpiado completamente");
+
+    //console.log("Modal importar limpiado completamente");
 });
 
 /*=============================================
@@ -1394,7 +1393,7 @@ $(document).ready(function(){
         // Actualizar contador inicial
         actualizarContador();
         
-        console.log('Catálogo Maestro - Sistema completamente inicializado');
+        //console.log('Catálogo Maestro - Sistema completamente inicializado');
         
     }, 1000);
 });
@@ -1436,10 +1435,10 @@ $(document).on("submit", "form", function(e) {
     // Solo para el formulario de editar producto maestro
     if($(this).find("#idProductoMaestro").length > 0) {
         
-        console.log("=== PROCESANDO FORMULARIO EDITAR ===");
+        //console.log("=== PROCESANDO FORMULARIO EDITAR ===");
         
         var esDivisible = $("#editarEsDivisibleMaestro").prop("checked");
-        console.log("Es divisible:", esDivisible);
+        //console.log("Es divisible:", esDivisible);
         
         if(!esDivisible) {
             
@@ -1448,7 +1447,7 @@ $(document).on("submit", "form", function(e) {
             $("#editarCodigoHijoTercio").val("");
             $("#editarCodigoHijoCuarto").val("");
             
-            console.log("Limpiando todos los campos de división");
+            //console.log("Limpiando todos los campos de división");
             
         } else {
             
@@ -1457,33 +1456,34 @@ $(document).on("submit", "form", function(e) {
             var buscarTercio = $("#buscarEditarHijoTercio").val();
             var buscarCuarto = $("#buscarEditarHijoCuarto").val();
             
-            console.log("Valores en campos de búsqueda:");
+            /*console.log("Valores en campos de búsqueda:");
             console.log("- Mitad: '" + buscarMitad + "'");
             console.log("- Tercio: '" + buscarTercio + "'");
             console.log("- Cuarto: '" + buscarCuarto + "'");
+            */
             
             // ✅ SI EL CAMPO DE BÚSQUEDA ESTÁ VACÍO, LIMPIAR EL HIDDEN
             if(!buscarMitad || buscarMitad.trim() === "") {
                 $("#editarCodigoHijoMitad").val("");
-                console.log("🧹 Campo mitad limpiado");
+                //console.log("🧹 Campo mitad limpiado");
             }
             
             if(!buscarTercio || buscarTercio.trim() === "") {
                 $("#editarCodigoHijoTercio").val("");
-                console.log("🧹 Campo tercio limpiado");
+                //console.log("🧹 Campo tercio limpiado");
             }
             
             if(!buscarCuarto || buscarCuarto.trim() === "") {
                 $("#editarCodigoHijoCuarto").val("");
-                console.log("🧹 Campo cuarto limpiado");
+                //console.log("🧹 Campo cuarto limpiado");
             }
         }
-        
+        /*
         console.log("Valores finales en campos hidden:");
         console.log("- Mitad hidden: '" + $("#editarCodigoHijoMitad").val() + "'");
         console.log("- Tercio hidden: '" + $("#editarCodigoHijoTercio").val() + "'");
         console.log("- Cuarto hidden: '" + $("#editarCodigoHijoCuarto").val() + "'");
-        
+        */
         // ✅ FORZAR QUE LOS CAMPOS VACÍOS SE ENVÍEN
         if($("#editarCodigoHijoMitad").val() === "") {
             $("#editarCodigoHijoMitad").val("EMPTY_FIELD");
@@ -1494,11 +1494,12 @@ $(document).on("submit", "form", function(e) {
         if($("#editarCodigoHijoCuarto").val() === "") {
             $("#editarCodigoHijoCuarto").val("EMPTY_FIELD");
         }
-        
+        /*
         console.log("Valores finales para envío:");
         console.log("- Mitad: '" + $("#editarCodigoHijoMitad").val() + "'");
         console.log("- Tercio: '" + $("#editarCodigoHijoTercio").val() + "'");
         console.log("- Cuarto: '" + $("#editarCodigoHijoCuarto").val() + "'");
+        */
     }
 });
 
