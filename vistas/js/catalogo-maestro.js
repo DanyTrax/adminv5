@@ -4,7 +4,7 @@ Sistema de Gestión Centralizada de Productos
 =============================================*/
 
 $(document).ready(function(){
-    console.log('Catálogo Maestro JS - Sistema iniciado');
+    //console.log('Catálogo Maestro JS - Sistema iniciado');
     
     // Inicializar componentes principales
     inicializarDataTables();
@@ -1376,7 +1376,7 @@ INICIALIZACIÓN FINAL
 
 $(document).ready(function(){
     
-    console.log('Catálogo Maestro JS - Cargado completamente');
+    //console.log('Catálogo Maestro JS - Cargado completamente');
     
     // Verificar que todos los componentes estén inicializados
     setTimeout(function() {
@@ -1404,7 +1404,7 @@ DEBUG - VERIFICAR ELEMENTOS HTML
 =============================================*/
 
 function verificarElementosHTML() {
-    
+  /*  
     console.log("=== VERIFICANDO ELEMENTOS HTML ===");
     
     // Elementos del modal agregar
@@ -1424,6 +1424,7 @@ function verificarElementosHTML() {
     console.log("- editarCodigoHijoCuarto:", $("#editarCodigoHijoCuarto").length > 0 ? "✅ EXISTS" : "❌ MISSING");
     
     console.log("=== FIN VERIFICACIÓN ===");
+    */
 }
 
 /*=============================================
@@ -1507,4 +1508,4 @@ $(document).ready(function(){
 });
 
 // Mensaje final para debug
-console.log('Archivo catalogo-maestro.js cargado - Versión: 1.0 - Compatible con danytrax/adminv5');
+//console.log('Archivo catalogo-maestro.js cargado - Versión: 1.0 - Compatible con danytrax/adminv5');

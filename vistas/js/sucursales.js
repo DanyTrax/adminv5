@@ -915,4 +915,4 @@ $("#modalConfigurarLocal, #modalEditarSucursal").on("hidden.bs.modal", function(
     $(this).find(".has-error, .has-success").removeClass("has-error has-success");
 });
 
-console.log("Módulo de Sucursales cargado correctamente - AdminV5");
+//console.log("Módulo de Sucursales cargado correctamente - AdminV5");
