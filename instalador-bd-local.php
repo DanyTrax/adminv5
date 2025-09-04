@@ -640,190 +640,143 @@ $FECHA_INSTALACION = date('Y-m-d H:i:s');
                 flush();
             }
             
-            // ===== PASO 9: CREAR ARCHIVO DE CONEXIÓN =====
-if (empty($errores) && $crear_archivo_conexion) {
-    echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 9/10: Creando archivo de conexión...";</script>';
-    echo '<div class="step"><h3>🔗 Paso 9: Creando Archivo de Conexión</h3>';
-    
-    // ✅ GENERAR CONEXION.PHP PERSONALIZADO PARA LA SUCURSAL
-    $contenido_conexion = '<?php
-/*=============================================
-CONEXIÓN AUTOMÁTICA PARA SUCURSAL: ' . $codigo_sucursal . '
-Generado automáticamente: ' . $FECHA_INSTALACION . '
-danytrax/adminv5 - Multi-Sucursal
-=============================================*/
+        // ===== PASO 9: CREAR/ACTUALIZAR ARCHIVO DE CONEXIÓN =====
+        if (empty($errores) && $crear_archivo_conexion) {
+            echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 9/10: Actualizando modelos/conexion.php...";</script>';
+            echo '<div class="step"><h3>🔗 Paso 9: Alimentando archivo modelos/conexion.php</h3>';
+            
+            try {
+                
+                // ✅ RUTA DEL ARCHIVO A ALIMENTAR
+                $archivo_conexion = "modelos/conexion.php";
+                
+                // ✅ CREAR RESPALDO DEL ARCHIVO ORIGINAL
+                if(file_exists($archivo_conexion)) {
+                    $backup_file = "modelos/conexion-backup-" . date('Y-m-d-H-i-s') . ".php";
+                    if(copy($archivo_conexion, $backup_file)) {
+                        echo '<div class="info">';
+                        echo '📋 <strong>Respaldo creado:</strong> ' . $backup_file;
+                        echo '</div>';
+                    }
+                }
+                
+                // ✅ GENERAR CONTENIDO DEL ARCHIVO CONEXION.PHP ALIMENTADO
+                $contenido_conexion = '<?php
+        /*=============================================
+        CONEXIÓN BASE DE DATOS - SUCURSAL ' . $codigo_sucursal . '
+        Alimentado automáticamente por el instalador
+        Fecha: ' . $FECHA_INSTALACION . '
+        =============================================*/
 
-class Conexion {
-    
-    static public function conectar() {
-        
-        try {
-            
-            $link = new PDO(
-                "mysql:host=' . $bd_host . ';dbname=' . $bd_nombre . ';charset=utf8mb4",
-                "' . $bd_usuario . '",
-                "' . str_replace('"', '\\"', $bd_password) . '",
-                array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)
-            );
-            
-            $link->exec("set names utf8");
-            
-            return $link;
-            
-        } catch(PDOException $e) {
-            
-            error_log("Error de conexión BD [' . $codigo_sucursal . ']: " . $e->getMessage());
-            die("Error de conexión a la base de datos. Contacte al administrador.");
-        }
-    }
-    
-    /*=============================================
-    OBTENER INFORMACIÓN DE LA SUCURSAL
-    =============================================*/
-    static public function obtenerInfoSucursal() {
-        return array(
-            "codigo" => "' . $codigo_sucursal . '",
-            "nombre" => "' . addslashes($nombre_sucursal) . '",
-            "bd_nombre" => "' . $bd_nombre . '",
-            "bd_host" => "' . $bd_host . '",
-            "bd_usuario" => "' . $bd_usuario . '",
-            "fecha_instalacion" => "' . $FECHA_INSTALACION . '",
-            "version_instalador" => "' . $INSTALADOR_VERSION . '",
-            "es_principal" => false
-        );
-    }
-    
-    /*=============================================
-    OBTENER CONFIGURACIÓN DE CONEXIÓN (SIN CONTRASEÑA)
-    =============================================*/
-    static public function obtenerConfigConexion() {
-        return array(
-            "host" => "' . $bd_host . '",
-            "database" => "' . $bd_nombre . '",
-            "usuario" => "' . $bd_usuario . '",
-            "sucursal" => "' . $codigo_sucursal . '"
-        );
-    }
-}
+        class Conexion{
 
-/*=============================================
-VERIFICACIÓN DE INSTALACIÓN
-=============================================*/
-if(!defined("INSTALACION_VERIFICADA")) {
-    define("INSTALACION_VERIFICADA", true);
-    
-    // Verificar que las tablas principales existan
-    try {
-        $conexion_test = Conexion::conectar();
-        
-        $tablas_requeridas = ["usuarios", "productos", "categorias", "ventas", "sucursal_local"];
-        foreach($tablas_requeridas as $tabla) {
-            $stmt = $conexion_test->prepare("SHOW TABLES LIKE ?");
-            $stmt->execute([$tabla]);
-            if($stmt->rowCount() === 0) {
-                die("Error: Tabla \'{$tabla}\' no encontrada. La instalación parece incompleta.");
+            static public function conectar(){
+
+                $link = new PDO("mysql:host=' . $bd_host . ';dbname=' . $bd_nombre . '",
+                                "' . $bd_usuario . '",
+                                "' . str_replace('"', '\\"', $bd_password) . '");
+
+                $link->exec("set names utf8");
+
+                return $link;
+
             }
+
+            /*=============================================
+            INFORMACIÓN DE LA SUCURSAL (OPCIONAL)
+            =============================================*/
+            static public function obtenerInfoSucursal(){
+                return array(
+                    "codigo" => "' . $codigo_sucursal . '",
+                    "nombre" => "' . addslashes($nombre_sucursal) . '",
+                    "bd_nombre" => "' . $bd_nombre . '",
+                    "fecha_instalacion" => "' . $FECHA_INSTALACION . '"
+                );
+            }
+
         }
-        
-    } catch(Exception $e) {
-        error_log("Error de verificación de instalación: " . $e->getMessage());
-    }
-}
-?>';
-    
-    try {
-        // ✅ RESPALDAR CONEXION.PHP ORIGINAL SI EXISTE
-        if(file_exists("modelos/conexion.php")) {
-            $backup_file = "modelos/conexion-backup-" . date('Y-m-d-H-i-s') . ".php";
-            if(copy("modelos/conexion.php", $backup_file)) {
-                echo '<div class="info">';
-                echo '📋 <strong>Respaldo creado:</strong> ' . $backup_file;
+        ?>';
+                
+                // ✅ ESCRIBIR EL ARCHIVO ALIMENTADO
+                if(file_put_contents($archivo_conexion, $contenido_conexion)) {
+                    
+                    echo '<div class="success">';
+                    echo '✅ <strong>Archivo modelos/conexion.php alimentado exitosamente</strong><br>';
+                    echo '• Host: ' . $bd_host . '<br>';
+                    echo '• Base de datos: <strong>' . $bd_nombre . '</strong><br>';
+                    echo '• Usuario: ' . $bd_usuario . '<br>';
+                    echo '• Sucursal: ' . $codigo_sucursal . ' (' . htmlspecialchars($nombre_sucursal) . ')';
+                    echo '</div>';
+                    
+                    // ✅ VERIFICAR QUE EL ARCHIVO SE ESCRIBIÓ CORRECTAMENTE
+                    if(file_exists($archivo_conexion) && filesize($archivo_conexion) > 0) {
+                        echo '<div class="success">';
+                        echo '✅ <strong>Verificación:</strong> Archivo creado correctamente (' . filesize($archivo_conexion) . ' bytes)';
+                        echo '</div>';
+                    } else {
+                        throw new Exception("El archivo se creó pero parece estar vacío o corrupto");
+                    }
+                    
+                } else {
+                    throw new Exception("No se pudo escribir el archivo modelos/conexion.php");
+                }
+                
+                // ✅ TAMBIÉN CREAR UNA COPIA ESPECÍFICA DE LA SUCURSAL
+                $archivo_sucursal = "modelos/conexion-sucursal-{$codigo_sucursal}.php";
+                if(file_put_contents($archivo_sucursal, $contenido_conexion)) {
+                    echo '<div class="info">';
+                    echo '📁 <strong>Copia específica creada:</strong> ' . $archivo_sucursal;
+                    echo '</div>';
+                }
+                
+                // ✅ MOSTRAR EL CÓDIGO GENERADO PARA VERIFICACIÓN
+                echo '<div style="background: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; border-radius: 5px; margin: 15px 0;">';
+                echo '<h4>📋 Contenido generado en modelos/conexion.php:</h4>';
+                echo '<textarea readonly style="width: 100%; height: 200px; font-family: monospace; font-size: 12px; background: white; border: 1px solid #ccc; padding: 10px;">';
+                echo htmlspecialchars($contenido_conexion);
+                echo '</textarea>';
+                echo '</div>';
+                
+                // ✅ PROBAR LA CONEXIÓN INMEDIATAMENTE
+                echo '<h4>🧪 Probando la conexión generada:</h4>';
+                
+                try {
+                    // Cargar el archivo recién creado
+                    require_once $archivo_conexion;
+                    
+                    // Intentar conectar
+                    $conexion_test = Conexion::conectar();
+                    
+                    // Probar consulta
+                    $stmt = $conexion_test->query("SELECT DATABASE() as bd_actual, COUNT(*) as total_usuarios FROM usuarios");
+                    $resultado = $stmt->fetch();
+                    
+                    echo '<div class="success">';
+                    echo '✅ <strong>¡Conexión exitosa!</strong><br>';
+                    echo '• Base de datos conectada: <strong>' . $resultado['bd_actual'] . '</strong><br>';
+                    echo '• Usuarios en la BD: <strong>' . $resultado['total_usuarios'] . '</strong><br>';
+                    echo '<em>El sistema está listo para funcionar</em>';
+                    echo '</div>';
+                    
+                } catch(Exception $e) {
+                    echo '<div class="error">';
+                    echo '❌ <strong>Error probando conexión:</strong><br>' . htmlspecialchars($e->getMessage());
+                    echo '<br><em>Revise los datos de conexión ingresados</em>';
+                    echo '</div>';
+                }
+                
+                $pasos_completados++;
+                
+            } catch (Exception $e) {
+                echo '<div class="error">';
+                echo '❌ <strong>Error alimentando modelos/conexion.php:</strong><br>' . htmlspecialchars($e->getMessage());
                 echo '</div>';
             }
-        }
-        
-        // ✅ ESCRIBIR NUEVO ARCHIVO CONEXION.PHP
-        if(file_put_contents("modelos/conexion.php", $contenido_conexion)) {
-            echo '<div class="success">';
-            echo '✅ <strong>Archivo conexión.php actualizado</strong><br>';
-            echo '• Ubicación: <code>modelos/conexion.php</code><br>';
-            echo '• Sucursal: ' . $codigo_sucursal . '<br>';
-            echo '• Base de datos: ' . $bd_nombre;
+            
             echo '</div>';
-        } else {
-            throw new Exception("No se pudo escribir el archivo conexion.php");
+            echo '<script>document.getElementById("progressBar").style.width = "90%";</script>';
+            flush();
         }
-        
-        // ✅ CREAR TAMBIÉN ARCHIVO ESPECÍFICO DE SUCURSAL
-        $archivo_sucursal = "modelos/conexion-{$codigo_sucursal}.php";
-        if(file_put_contents($archivo_sucursal, $contenido_conexion)) {
-            echo '<div class="success">';
-            echo '✅ <strong>Archivo específico creado:</strong> ' . $archivo_sucursal;
-            echo '</div>';
-        }
-        
-        // ✅ CREAR ARCHIVO DE CONFIGURACIÓN GENERAL
-        $config_general = '<?php
-/*=============================================
-CONFIGURACIÓN GENERAL DE LA SUCURSAL
-Generado: ' . $FECHA_INSTALACION . '
-=============================================*/
-
-// Configuración de la sucursal
-define("CODIGO_SUCURSAL", "' . $codigo_sucursal . '");
-define("NOMBRE_SUCURSAL", "' . addslashes($nombre_sucursal) . '");
-define("BD_LOCAL", "' . $bd_nombre . '");
-define("FECHA_INSTALACION", "' . $FECHA_INSTALACION . '");
-
-// URL base del sistema
-$protocol = isset($_SERVER["HTTPS"]) ? "https" : "http";
-$domain = $_SERVER["HTTP_HOST"] ?? "localhost";
-define("URL_BASE", $protocol . "://" . $domain . "/");
-
-// Configuración de zona horaria
-date_default_timezone_set("America/Bogota");
-
-// Configuración de errores (cambiar en producción)
-ini_set("display_errors", 0);
-error_reporting(E_ALL);
-
-?>';
-        
-        if(file_put_contents("config-sucursal.php", $config_general)) {
-            echo '<div class="success">';
-            echo '✅ <strong>Configuración general creada:</strong> config-sucursal.php';
-            echo '</div>';
-        }
-        
-        // ✅ MOSTRAR CÓDIGO PARA REVISAR
-        echo '<div style="margin: 20px 0;">';
-        echo '<h4>📋 Configuración generada:</h4>';
-        echo '<textarea id="codigoGenerado" rows="8" style="width: 100%; font-family: monospace; font-size: 12px;">';
-        echo htmlspecialchars($contenido_conexion);
-        echo '</textarea>';
-        echo '<br><button onclick="copiarCodigo()" style="margin-top: 10px; padding: 8px 15px; background: #28a745; color: white; border: none; border-radius: 3px;">📋 Copiar código</button>';
-        echo '</div>';
-        
-        $pasos_completados++;
-        
-    } catch (Exception $e) {
-        echo '<div class="error">❌ Error creando archivos: ' . htmlspecialchars($e->getMessage()) . '</div>';
-    }
-    
-    echo '</div>';
-    echo '<script>document.getElementById("progressBar").style.width = "90%";</script>';
-    flush();
-}
-
-// ✅ AGREGAR FUNCIÓN JAVASCRIPT PARA COPIAR
-echo '<script>
-function copiarCodigo() {
-    const textarea = document.getElementById("codigoGenerado");
-    textarea.select();
-    document.execCommand("copy");
-    alert("Código copiado al portapapeles");
-}
-</script>';
             
             // ===== PASO 10: REGISTRAR EN BD CENTRAL (OPCIONAL) =====
             if (empty($errores) && $registrar_en_central && $verificar_central) {
