@@ -497,7 +497,7 @@ function cargarClientes(bdOrigen) {
     });
 }
 
-// ✅ FUNCIÓN PARA MANEJAR SELECCIÓN DE CLIENTES
+// ✅ FUNCIÓN CORREGIDA PARA MANEJAR SELECCIÓN DE CLIENTES
 function manejarSeleccionClientes(radio) {
     const datosField = document.getElementById('clientesImportarData');
     
@@ -509,6 +509,12 @@ function manejarSeleccionClientes(radio) {
             ids: todosIds,
             total: todosIds.length
         });
+        
+        // ✅ FORZAR QUE EL CAMPO SE RECONOZCA COMO LLENO
+        datosField.setAttribute('data-has-data', 'true');
+        
+        console.log('Datos de clientes preparados:', datosField.value); // Debug
+        
     } else if (radio.value === 'solo_con_datos' && window.datosClientesImportar) {
         // En este caso, el filtrado se hará en el backend
         datosField.value = JSON.stringify({
@@ -516,9 +522,13 @@ function manejarSeleccionClientes(radio) {
             ids: [],
             total: 0
         });
+        
+        datosField.setAttribute('data-has-data', 'true');
+        
     } else {
         // No importar
         datosField.value = '';
+        datosField.removeAttribute('data-has-data');
     }
     
     actualizarResumen();
@@ -1282,22 +1292,32 @@ if (empty($errores)) {
             }
             
             // ✅ IMPORTAR CLIENTES SELECCIONADOS
-            if (isset($_POST['clientes_importar_data']) && !empty($_POST['clientes_importar_data'])) {
+            // ✅ VERIFICACIÓN MEJORADA PARA CLIENTES
+            if ((isset($_POST['clientes_importar_data']) && !empty($_POST['clientes_importar_data'])) || 
+                (isset($_POST['importar_clientes']) && $_POST['importar_clientes'] === 'on')) {
                 
                 echo '<div class="info">📥 <strong>Importando clientes...</strong></div>';
                 
                 try {
-                    $datos_clientes = json_decode($_POST['clientes_importar_data'], true);
+                    // Si hay datos JSON específicos, usarlos
+                    if (isset($_POST['clientes_importar_data']) && !empty($_POST['clientes_importar_data'])) {
+                        $datos_clientes = json_decode($_POST['clientes_importar_data'], true);
+                    } else {
+                        // Si solo está marcada la casilla, importar todos por defecto
+                        $datos_clientes = ['opcion' => 'todos'];
+                    }
                     
                     if ($datos_clientes && isset($datos_clientes['opcion'])) {
+                        
+                        echo '<div class="info">🔄 <strong>Opción seleccionada:</strong> ' . $datos_clientes['opcion'] . '</div>';
                         
                         if ($datos_clientes['opcion'] === 'todos') {
                             // ✅ IMPORTAR TODOS LOS CLIENTES
                             $stmt_clientes = $pdo_origen->prepare("
                                 SELECT nombre, documento, email, telefono, direccion, 
-                                       fecha_nacimiento as nacimiento, compras, ultima_compra, fecha
+                                    fecha_nacimiento as nacimiento, compras, ultima_compra, fecha
                                 FROM clientes 
-                                WHERE LENGTH(TRIM(nombre)) > 0
+                                WHERE LENGTH(TRIM(COALESCE(nombre, ''))) > 0
                                 ORDER BY nombre ASC
                             ");
                             $stmt_clientes->execute();
@@ -1306,16 +1326,16 @@ if (empty($errores)) {
                             // ✅ SOLO CLIENTES CON EMAIL O TELÉFONO
                             $stmt_clientes = $pdo_origen->prepare("
                                 SELECT nombre, documento, email, telefono, direccion, 
-                                       fecha_nacimiento as nacimiento, compras, ultima_compra, fecha
+                                    fecha_nacimiento as nacimiento, compras, ultima_compra, fecha
                                 FROM clientes 
-                                WHERE LENGTH(TRIM(nombre)) > 0
-                                AND (LENGTH(TRIM(email)) > 0 OR LENGTH(TRIM(telefono)) > 0)
+                                WHERE LENGTH(TRIM(COALESCE(nombre, ''))) > 0
+                                AND (LENGTH(TRIM(COALESCE(email, ''))) > 0 OR LENGTH(TRIM(COALESCE(telefono, ''))) > 0)
                                 ORDER BY nombre ASC
                             ");
                             $stmt_clientes->execute();
                         } else {
                             // No importar
-                            echo '<div class="info">ℹ️ No se seleccionó importar clientes</div>';
+                            echo '<div class="info">ℹ️ Opción "ninguno" seleccionada</div>';
                             $stmt_clientes = null;
                         }
                         
