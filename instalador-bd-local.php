@@ -178,7 +178,303 @@ $FECHA_INSTALACION = date('Y-m-d H:i:s');
                     </label>
                 </div>
             </div>
-            
+            <!-- Importación desde otras sucursales -->
+            <div class="step">
+                <h3>📊 Importar Datos de Otras Sucursales (Opcional)</h3>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="habilitar_importacion" id="habilitarImportacion" onchange="toggleImportacion()">
+                        Importar clientes y usuarios desde otra sucursal existente
+                    </label>
+                    <small>Selecciona datos de sucursales ya configuradas para copiar a esta nueva instalación</small>
+                </div>
+                
+                <!-- Contenedor de importación (oculto inicialmente) -->
+                <div id="contenedorImportacion" style="display: none; background: #f8f9ff; padding: 20px; border-radius: 8px; margin-top: 15px;">
+                    
+                    <!-- Selección de sucursal origen -->
+                    <div class="form-group">
+                        <label for="sucursal_origen">Sucursal de origen:</label>
+                        <select id="sucursal_origen" name="sucursal_origen" onchange="cargarDatosSucursal()" style="width: 100%; padding: 10px;">
+                            <option value="">Seleccionar sucursal...</option>
+                            <option value="epicosie_pruebas">Sucursal Principal (epicosie_pruebas)</option>
+                            <!-- Las demás sucursales se cargarán dinámicamente -->
+                        </select>
+                        <small>Selecciona la sucursal desde donde quieres importar datos</small>
+                    </div>
+                    
+                    <!-- Importar clientes -->
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="importar_clientes" id="importarClientes" onchange="toggleSeccionClientes()">
+                            Importar clientes desde la sucursal seleccionada
+                        </label>
+                    </div>
+                    
+                    <div id="seccionClientes" style="display: none; background: #fff; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                        <h4>👥 Seleccionar Clientes a Importar</h4>
+                        <div id="listaClientes">
+                            <p><em>Selecciona una sucursal para ver los clientes disponibles</em></p>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <button type="button" onclick="seleccionarTodosClientes()" style="padding: 5px 10px; margin-right: 10px;">Seleccionar Todos</button>
+                            <button type="button" onclick="deseleccionarTodosClientes()" style="padding: 5px 10px;">Deseleccionar Todos</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Importar usuarios -->
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="importar_usuarios" id="importarUsuarios" onchange="toggleSeccionUsuarios()">
+                            Importar usuarios desde la sucursal seleccionada
+                        </label>
+                    </div>
+                    
+                    <div id="seccionUsuarios" style="display: none; background: #fff; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                        <h4>👤 Seleccionar Usuarios a Importar</h4>
+                        <div class="warning" style="margin-bottom: 10px;">
+                            <strong>⚠️ Advertencia:</strong> Los usuarios importados mantendrán sus contraseñas originales. Se recomienda cambiarlas después de la importación.
+                        </div>
+                        <div id="listaUsuarios">
+                            <p><em>Selecciona una sucursal para ver los usuarios disponibles</em></p>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <button type="button" onclick="seleccionarTodosUsuarios()" style="padding: 5px 10px; margin-right: 10px;">Seleccionar Todos</button>
+                            <button type="button" onclick="deseleccionarTodosUsuarios()" style="padding: 5px 10px;">Deseleccionar Todos</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Resumen de importación -->
+                    <div id="resumenImportacion" style="background: #e8f4f8; padding: 15px; border-radius: 5px; margin-top: 15px; display: none;">
+                        <h4>📋 Resumen de Importación</h4>
+                        <div id="contenidoResumen"></div>
+                    </div>
+                    
+                </div>
+            </div>
+
+            <!-- JavaScript para manejar la importación -->
+            <script>
+            function toggleImportacion() {
+                const checkbox = document.getElementById('habilitarImportacion');
+                const contenedor = document.getElementById('contenedorImportacion');
+                
+                if(checkbox.checked) {
+                    contenedor.style.display = 'block';
+                    cargarSucursalesDisponibles();
+                } else {
+                    contenedor.style.display = 'none';
+                    // Limpiar selecciones
+                    document.getElementById('importarClientes').checked = false;
+                    document.getElementById('importarUsuarios').checked = false;
+                    toggleSeccionClientes();
+                    toggleSeccionUsuarios();
+                }
+            }
+
+            function toggleSeccionClientes() {
+                const checkbox = document.getElementById('importarClientes');
+                const seccion = document.getElementById('seccionClientes');
+                
+                seccion.style.display = checkbox.checked ? 'block' : 'none';
+                
+                if(checkbox.checked) {
+                    cargarDatosSucursal();
+                }
+                actualizarResumen();
+            }
+
+            function toggleSeccionUsuarios() {
+                const checkbox = document.getElementById('importarUsuarios');
+                const seccion = document.getElementById('seccionUsuarios');
+                
+                seccion.style.display = checkbox.checked ? 'block' : 'none';
+                
+                if(checkbox.checked) {
+                    cargarDatosSucursal();
+                }
+                actualizarResumen();
+            }
+
+            function cargarSucursalesDisponibles() {
+                // Esta función podría hacer una llamada AJAX para obtener sucursales disponibles
+                // Por ahora, agregar manualmente las conocidas
+                const select = document.getElementById('sucursal_origen');
+                
+                // Agregar opciones dinámicamente si hay más sucursales
+                // En el futuro esto podría venir de una consulta a BD central
+            }
+
+            function cargarDatosSucursal() {
+                const sucursalOrigen = document.getElementById('sucursal_origen').value;
+                const importarClientes = document.getElementById('importarClientes').checked;
+                const importarUsuarios = document.getElementById('importarUsuarios').checked;
+                
+                if(!sucursalOrigen) {
+                    document.getElementById('listaClientes').innerHTML = '<p><em>Selecciona una sucursal para ver los clientes disponibles</em></p>';
+                    document.getElementById('listaUsuarios').innerHTML = '<p><em>Selecciona una sucursal para ver los usuarios disponibles</em></p>';
+                    return;
+                }
+                
+                if(importarClientes) {
+                    cargarClientes(sucursalOrigen);
+                }
+                
+                if(importarUsuarios) {
+                    cargarUsuarios(sucursalOrigen);
+                }
+                
+                actualizarResumen();
+            }
+
+            function cargarClientes(bdOrigen) {
+                const contenedor = document.getElementById('listaClientes');
+                contenedor.innerHTML = '<p>⏳ Cargando clientes...</p>';
+                
+                // Hacer llamada AJAX para obtener clientes
+                fetch('ajax-instalador-datos.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        accion: 'obtener_clientes',
+                        bd_origen: bdOrigen
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success && data.clientes.length > 0) {
+                        let html = '<div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">';
+                        
+                        data.clientes.forEach(cliente => {
+                            html += `
+                                <div style="margin-bottom: 8px;">
+                                    <label style="display: flex; align-items: center;">
+                                        <input type="checkbox" name="clientes_importar[]" value="${cliente.id}" style="margin-right: 10px;">
+                                        <div>
+                                            <strong>${cliente.nombre}</strong><br>
+                                            <small>Doc: ${cliente.documento} | Email: ${cliente.email} | Tel: ${cliente.telefono}</small>
+                                        </div>
+                                    </label>
+                                </div>
+                            `;
+                        });
+                        
+                        html += '</div>';
+                        html += `<p style="margin-top: 10px;"><strong>Total clientes disponibles:</strong> ${data.clientes.length}</p>`;
+                        contenedor.innerHTML = html;
+                    } else {
+                        contenedor.innerHTML = '<p><em>No se encontraron clientes en la sucursal seleccionada</em></p>';
+                    }
+                })
+                .catch(error => {
+                    contenedor.innerHTML = '<p style="color: red;"><em>Error cargando clientes: ' + error.message + '</em></p>';
+                });
+            }
+
+            function cargarUsuarios(bdOrigen) {
+                const contenedor = document.getElementById('listaUsuarios');
+                contenedor.innerHTML = '<p>⏳ Cargando usuarios...</p>';
+                
+                // Hacer llamada AJAX para obtener usuarios
+                fetch('ajax-instalador-datos.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        accion: 'obtener_usuarios',
+                        bd_origen: bdOrigen
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success && data.usuarios.length > 0) {
+                        let html = '<div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">';
+                        
+                        data.usuarios.forEach(usuario => {
+                            const esAdmin = usuario.perfil.toLowerCase() === 'administrador';
+                            const colorPerfil = esAdmin ? '#dc3545' : '#007bff';
+                            
+                            html += `
+                                <div style="margin-bottom: 8px;">
+                                    <label style="display: flex; align-items: center;">
+                                        <input type="checkbox" name="usuarios_importar[]" value="${usuario.id}" style="margin-right: 10px;">
+                                        <div>
+                                            <strong>${usuario.nombre}</strong> <span style="color: ${colorPerfil}; font-weight: bold;">(${usuario.perfil})</span><br>
+                                            <small>Usuario: ${usuario.usuario} | Estado: ${usuario.estado == 1 ? 'Activo' : 'Inactivo'} | Último login: ${usuario.ultimo_login || 'Nunca'}</small>
+                                        </div>
+                                    </label>
+                                </div>
+                            `;
+                        });
+                        
+                        html += '</div>';
+                        html += `<p style="margin-top: 10px;"><strong>Total usuarios disponibles:</strong> ${data.usuarios.length}</p>`;
+                        contenedor.innerHTML = html;
+                    } else {
+                        contenedor.innerHTML = '<p><em>No se encontraron usuarios en la sucursal seleccionada</em></p>';
+                    }
+                })
+                .catch(error => {
+                    contenedor.innerHTML = '<p style="color: red;"><em>Error cargando usuarios: ' + error.message + '</em></p>';
+                });
+            }
+
+            function seleccionarTodosClientes() {
+                const checkboxes = document.querySelectorAll('input[name="clientes_importar[]"]');
+                checkboxes.forEach(cb => cb.checked = true);
+                actualizarResumen();
+            }
+
+            function deseleccionarTodosClientes() {
+                const checkboxes = document.querySelectorAll('input[name="clientes_importar[]"]');
+                checkboxes.forEach(cb => cb.checked = false);
+                actualizarResumen();
+            }
+
+            function seleccionarTodosUsuarios() {
+                const checkboxes = document.querySelectorAll('input[name="usuarios_importar[]"]');
+                checkboxes.forEach(cb => cb.checked = true);
+                actualizarResumen();
+            }
+
+            function deseleccionarTodosUsuarios() {
+                const checkboxes = document.querySelectorAll('input[name="usuarios_importar[]"]');
+                checkboxes.forEach(cb => cb.checked = false);
+                actualizarResumen();
+            }
+
+            function actualizarResumen() {
+                const clientesSeleccionados = document.querySelectorAll('input[name="clientes_importar[]"]:checked').length;
+                const usuariosSeleccionados = document.querySelectorAll('input[name="usuarios_importar[]"]:checked').length;
+                const sucursalOrigen = document.getElementById('sucursal_origen').value;
+                
+                const resumen = document.getElementById('resumenImportacion');
+                const contenido = document.getElementById('contenidoResumen');
+                
+                if(clientesSeleccionados > 0 || usuariosSeleccionados > 0) {
+                    let html = `<strong>📊 Datos a importar desde:</strong> ${sucursalOrigen}<br>`;
+                    
+                    if(clientesSeleccionados > 0) {
+                        html += `• <strong>${clientesSeleccionados}</strong> cliente(s) seleccionado(s)<br>`;
+                    }
+                    
+                    if(usuariosSeleccionados > 0) {
+                        html += `• <strong>${usuariosSeleccionados}</strong> usuario(s) seleccionado(s)<br>`;
+                    }
+                    
+                    html += '<br><em>Estos datos se importarán después de crear la estructura básica de la sucursal.</em>';
+                    
+                    contenido.innerHTML = html;
+                    resumen.style.display = 'block';
+                } else {
+                    resumen.style.display = 'none';
+                }
+            }
+            </script>
             <div style="text-align: center; margin-top: 30px;">
                 <button type="submit" class="btn" onclick="return confirmarInstalacion()">
                     🚀 Iniciar Instalación
@@ -553,40 +849,113 @@ $FECHA_INSTALACION = date('Y-m-d H:i:s');
                 echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 7/10: Creando usuario admin...";</script>';
                 echo '<div class="step"><h3>👤 Paso 7: Creando Usuario Administrador</h3>';
                 
-                                try {
-                    $usuario_admin = 'admin_' . strtolower($codigo_sucursal);
+                try {
+                    // ✅ GENERAR USUARIO SIN CARACTERES ESPECIALES
+                    $usuario_admin = 'admin' . strtolower($codigo_sucursal);  // Sin guión bajo
                     $password_admin = 'admin123';
+                    
+                    // ✅ GENERAR HASH DE CONTRASEÑA USANDO EL MISMO MÉTODO DEL SISTEMA
                     $password_hash = crypt($password_admin, '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
                     
-                    $stmt = $pdo_nueva->prepare("
-                        INSERT INTO usuarios 
-                        (nombre, usuario, password, perfil, foto, estado, ultimo_login, empresa, telefono, direccion) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ");
-                    $stmt->execute([
-                        'Administrador ' . $nombre_sucursal,
-                        $usuario_admin,
-                        $password_hash,
-                        'Administrador',
-                        'vistas/img/usuarios/default/anonymous.png',
-                        1,
-                        $FECHA_INSTALACION,
-                        $nombre_sucursal,
-                        '',
-                        ''
-                    ]);
+                    // ✅ VERIFICAR QUE EL HASH SE GENERÓ CORRECTAMENTE
+                    if (strlen($password_hash) < 30) {
+                        throw new Exception("Error generando hash de contraseña - muy corto");
+                    }
                     
-                    echo '<div class="success">';
-                    echo '✅ <strong>Usuario administrador creado:</strong><br>';
-                    echo '• Usuario: <code>' . $usuario_admin . '</code><br>';
-                    echo '• Contraseña: <code>' . $password_admin . '</code><br>';
-                    echo '<em>⚠️ Cambiar contraseña después del primer login</em>';
-                    echo '</div>';
+                    // ✅ VERIFICAR SI EL USUARIO YA EXISTE
+                    $stmtVerificar = $pdo_nueva->prepare("SELECT id FROM usuarios WHERE usuario = ?");
+                    $stmtVerificar->execute([$usuario_admin]);
                     
-                    $pasos_completados++;
+                    if ($stmtVerificar->rowCount() > 0) {
+                        echo '<div class="warning">';
+                        echo '⚠️ <strong>Usuario ya existe:</strong> ' . $usuario_admin . ' - Actualizando contraseña...';
+                        echo '</div>';
+                        
+                        // Actualizar usuario existente
+                        $stmt = $pdo_nueva->prepare("
+                            UPDATE usuarios SET 
+                                password = ?, 
+                                estado = 1, 
+                                ultimo_login = ? 
+                            WHERE usuario = ?
+                        ");
+                        $resultado = $stmt->execute([$password_hash, $FECHA_INSTALACION, $usuario_admin]);
+                        
+                    } else {
+                        // ✅ CREAR NUEVO USUARIO
+                        $stmt = $pdo_nueva->prepare("
+                            INSERT INTO usuarios 
+                            (nombre, usuario, password, perfil, foto, estado, ultimo_login, empresa, telefono, direccion) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ");
+                        $resultado = $stmt->execute([
+                            'Administrador ' . $nombre_sucursal,
+                            $usuario_admin,
+                            $password_hash,
+                            'Administrador',
+                            'vistas/img/usuarios/default/anonymous.png',
+                            1,
+                            $FECHA_INSTALACION,
+                            $nombre_sucursal,
+                            '',
+                            ''
+                        ]);
+                    }
+                    
+                    if ($resultado) {
+                        echo '<div class="success">';
+                        echo '✅ <strong>Usuario administrador configurado:</strong><br>';
+                        echo '• Usuario: <code style="background: #e9ecef; padding: 2px 6px; border-radius: 3px;">' . $usuario_admin . '</code><br>';
+                        echo '• Contraseña: <code style="background: #e9ecef; padding: 2px 6px; border-radius: 3px;">' . $password_admin . '</code><br>';
+                        echo '• Hash generado: <code style="font-size: 11px;">' . substr($password_hash, 0, 40) . '...</code><br>';
+                        echo '<em>⚠️ Cambiar contraseña después del primer login</em>';
+                        echo '</div>';
+                        
+                        // ✅ PROBAR INMEDIATAMENTE EL LOGIN
+                        echo '<h4>🧪 Verificando credenciales generadas:</h4>';
+                        
+                        // Buscar el usuario recién creado
+                        $stmtPrueba = $pdo_nueva->prepare("SELECT id, usuario, password, estado FROM usuarios WHERE usuario = ?");
+                        $stmtPrueba->execute([$usuario_admin]);
+                        $usuarioPrueba = $stmtPrueba->fetch();
+                        
+                        if ($usuarioPrueba) {
+                            
+                            // Probar que el hash coincida
+                            $hashPrueba = crypt($password_admin, '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+                            
+                            if ($usuarioPrueba['password'] === $hashPrueba) {
+                                echo '<div class="success">';
+                                echo '✅ <strong>Verificación exitosa:</strong> El login debería funcionar correctamente<br>';
+                                echo '• Usuario encontrado: ID ' . $usuarioPrueba['id'] . '<br>';
+                                echo '• Estado: ' . ($usuarioPrueba['estado'] == 1 ? 'ACTIVO' : 'INACTIVO') . '<br>';
+                                echo '• Hash coincide: SÍ';
+                                echo '</div>';
+                            } else {
+                                echo '<div class="warning">';
+                                echo '⚠️ <strong>Advertencia:</strong> Los hashes no coinciden exactamente<br>';
+                                echo '• Hash en BD: ' . substr($usuarioPrueba['password'], 0, 30) . '...<br>';
+                                echo '• Hash prueba: ' . substr($hashPrueba, 0, 30) . '...<br>';
+                                echo '<em>Puede requerir verificación manual</em>';
+                                echo '</div>';
+                            }
+                            
+                        } else {
+                            echo '<div class="error">';
+                            echo '❌ <strong>Error:</strong> No se encontró el usuario recién creado';
+                            echo '</div>';
+                        }
+                        
+                        $pasos_completados++;
+                        
+                    } else {
+                        throw new Exception("No se pudo crear/actualizar el usuario administrador");
+                    }
                     
                 } catch (Exception $e) {
-                    echo '<div class="error">❌ Error creando usuario: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                    echo '<div class="error">';
+                    echo '❌ <strong>Error creando usuario:</strong><br>' . htmlspecialchars($e->getMessage());
+                    echo '</div>';
                 }
                 
                 echo '</div>';
@@ -637,6 +1006,142 @@ $FECHA_INSTALACION = date('Y-m-d H:i:s');
                 
                 echo '</div>';
                 echo '<script>document.getElementById("progressBar").style.width = "80%";</script>';
+                flush();
+            }
+
+            // ===== PASO 8.5: IMPORTAR DATOS DE OTRA SUCURSAL =====
+            if (empty($errores) && isset($_POST['habilitar_importacion'])) {
+                echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 8.5/10: Importando datos de otra sucursal...";</script>';
+                echo '<div class="step"><h3>📊 Paso 8.5: Importando Datos Seleccionados</h3>';
+                
+                $sucursal_origen = $_POST['sucursal_origen'] ?? '';
+                $importar_clientes = isset($_POST['importar_clientes']);
+                $importar_usuarios = isset($_POST['importar_usuarios']);
+                
+                if (!empty($sucursal_origen) && ($importar_clientes || $importar_usuarios)) {
+                    
+                    try {
+                        // Conectar a BD origen
+                        $pdo_origen = new PDO(
+                            "mysql:host=localhost;dbname={$sucursal_origen};charset=utf8mb4",
+                            "epicosie_ricaurte", 
+                            "m5Wwg)~M{i~*kFr{",
+                            array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)
+                        );
+                        
+                        $clientes_importados = 0;
+                        $usuarios_importados = 0;
+                        
+                        // Importar clientes seleccionados
+                        if ($importar_clientes && isset($_POST['clientes_importar']) && is_array($_POST['clientes_importar'])) {
+                            
+                            foreach ($_POST['clientes_importar'] as $cliente_id) {
+                                
+                                try {
+                                    // Obtener cliente de BD origen
+                                    $stmt_origen = $pdo_origen->prepare("SELECT * FROM clientes WHERE id = ?");
+                                    $stmt_origen->execute([$cliente_id]);
+                                    $cliente = $stmt_origen->fetch(PDO::FETCH_ASSOC);
+                                    
+                                    if ($cliente) {
+                                        // Verificar si ya existe en BD destino
+                                        $stmt_existe = $pdo_nueva->prepare("SELECT id FROM clientes WHERE documento = ?");
+                                        $stmt_existe->execute([$cliente['documento']]);
+                                        
+                                        if ($stmt_existe->rowCount() === 0) {
+                                            // Insertar en BD nueva (sin ID para que se auto-genere)
+                                            $stmt_insertar = $pdo_nueva->prepare("
+                                                INSERT INTO clientes (nombre, documento, email, telefono, direccion, fecha_nacimiento, compras, ultima_compra, fecha) 
+                                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                            ");
+                                            
+                                            $stmt_insertar->execute([
+                                                $cliente['nombre'],
+                                                $cliente['documento'],
+                                                $cliente['email'],
+                                                $cliente['telefono'], 
+                                                $cliente['direccion'],
+                                                $cliente['fecha_nacimiento'],
+                                                $cliente['compras'],
+                                                $cliente['ultima_compra'],
+                                                $cliente['fecha']
+                                            ]);
+                                            
+                                            $clientes_importados++;
+                                        }
+                                    }
+                                    
+                                } catch (Exception $e) {
+                                    error_log("Error importando cliente {$cliente_id}: " . $e->getMessage());
+                                }
+                            }
+                        }
+                        
+                        // Importar usuarios seleccionados
+                        if ($importar_usuarios && isset($_POST['usuarios_importar']) && is_array($_POST['usuarios_importar'])) {
+                            
+                            foreach ($_POST['usuarios_importar'] as $usuario_id) {
+                                
+                                try {
+                                    // Obtener usuario de BD origen
+                                    $stmt_origen = $pdo_origen->prepare("SELECT * FROM usuarios WHERE id = ?");
+                                    $stmt_origen->execute([$usuario_id]);
+                                    $usuario = $stmt_origen->fetch(PDO::FETCH_ASSOC);
+                                    
+                                    if ($usuario) {
+                                        // Verificar si ya existe en BD destino
+                                        $stmt_existe = $pdo_nueva->prepare("SELECT id FROM usuarios WHERE usuario = ?");
+                                        $stmt_existe->execute([$usuario['usuario']]);
+                                        
+                                        if ($stmt_existe->rowCount() === 0) {
+                                            // Insertar en BD nueva (sin ID para que se auto-genere)
+                                            $stmt_insertar = $pdo_nueva->prepare("
+                                                INSERT INTO usuarios (nombre, usuario, password, perfil, foto, estado, ultimo_login, fecha, empresa, telefono, direccion) 
+                                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                            ");
+                                            
+                                            $stmt_insertar->execute([
+                                                $usuario['nombre'],
+                                                $usuario['usuario'],
+                                                $usuario['password'], // Mantener password original
+                                                $usuario['perfil'],
+                                                $usuario['foto'],
+                                                $usuario['estado'],
+                                                $usuario['ultimo_login'],
+                                                $usuario['fecha'],
+                                                $usuario['empresa'],
+                                                $usuario['telefono'],
+                                                $usuario['direccion']
+                                            ]);
+                                            
+                                            $usuarios_importados++;
+                                        }
+                                    }
+                                    
+                                } catch (Exception $e) {
+                                    error_log("Error importando usuario {$usuario_id}: " . $e->getMessage());
+                                }
+                            }
+                        }
+                        
+                        echo '<div class="success">';
+                        echo '✅ <strong>Importación completada:</strong><br>';
+                        echo "• Clientes importados: <strong>{$clientes_importados}</strong><br>";
+                        echo "• Usuarios importados: <strong>{$usuarios_importados}</strong><br>";
+                        echo "• Origen: <strong>{$sucursal_origen}</strong>";
+                        echo '</div>';
+                        
+                        $pasos_completados++;
+                        
+                    } catch (Exception $e) {
+                        echo '<div class="error">❌ Error en importación: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                    }
+                    
+                } else {
+                    echo '<div class="info">ℹ️ Importación omitida - no se seleccionaron datos para importar</div>';
+                }
+                
+                echo '</div>';
                 flush();
             }
             
