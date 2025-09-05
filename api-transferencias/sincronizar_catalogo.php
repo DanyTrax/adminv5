@@ -23,20 +23,58 @@ try {
     require_once "../modelos/conexion.php";
     $pdo = Conexion::conectar();
     
+    // ✅ VERIFICAR ESTADO DE LA SUCURSAL LOCAL ANTES DE PROCESAR
+    $stmtSucursal = $pdo->prepare("
+        SELECT activo, codigo_sucursal, nombre, fecha_actualizacion 
+        FROM sucursal_local 
+        WHERE activo = 1 
+        LIMIT 1
+    ");
+    $stmtSucursal->execute();
+    $sucursalInfo = $stmtSucursal->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$sucursalInfo) {
+        error_log("SYNC SKIP: Sucursal inactiva o no configurada - no se procesará sincronización");
+        echo json_encode([
+            'success' => false,
+            'message' => 'Sucursal inactiva - sincronización omitida',
+            'codigo_sucursal' => 'DESCONOCIDA',
+            'estado' => 'inactiva',
+            'timestamp' => date('Y-m-d H:i:s'),
+            'razon' => 'La sucursal está desactivada en sucursal_local'
+        ]);
+        exit;
+    }
+    
+    // ✅ VERIFICAR QUE LLEGUEN DATOS VÁLIDOS DEL CATÁLOGO
+    if (!isset($datos['catalogo']) || !is_array($datos['catalogo']) || empty($datos['catalogo'])) {
+        error_log("SYNC SKIP: No hay datos de catálogo para procesar - Sucursal: {$sucursalInfo['codigo_sucursal']}");
+        echo json_encode([
+            'success' => false,
+            'message' => 'No hay datos de catálogo para sincronizar',
+            'codigo_sucursal' => $sucursalInfo['codigo_sucursal'],
+            'estado' => 'sin_datos',
+            'timestamp' => date('Y-m-d H:i:s'),
+            'razon' => 'El catálogo recibido está vacío'
+        ]);
+        exit;
+    }
+    
+    // ✅ LOG DE INICIO DE SINCRONIZACIÓN REAL
+    $origen = $datos['origen']['codigo'] ?? 'CENTRAL';
+    $fechaInicioSync = date('Y-m-d H:i:s');
+    error_log("SYNC START: Iniciando sincronización REAL - Sucursal: {$sucursalInfo['codigo_sucursal']}, Productos: " . count($datos['catalogo']) . ", Origen: {$origen}");
+    
     $pdo->beginTransaction();
     
     // Procesar catálogo YA PROCESADO desde central
     $catalogoProcesado = $datos['catalogo'];
-    $origen = $datos['origen']['codigo'] ?? 'CENTRAL';
     
     // Estadísticas de proceso
     $productosActualizados = 0;
     $productosErrores = 0;
     $productosNuevos = 0;
-    $productosEliminados = 0; // ✅ NUEVO CONTADOR
-    
-    // ✅ DEBUG: Log inicial
-    error_log("DEBUG SYNC: Iniciando sincronización de " . count($catalogoProcesado) . " productos desde {$origen}");
+    $productosEliminados = 0;
     
     // ✅ PASO 1: ACTUALIZAR/INSERTAR PRODUCTOS DEL CATÁLOGO MAESTRO
     foreach ($catalogoProcesado as $index => $productoLocal) {
@@ -94,7 +132,7 @@ try {
                 
                 // ✅ DEBUG para productos actualizados
                 if ($index < 3) {
-                    error_log("DEBUG SYNC: ACTUALIZADO - Código: {$productoLocal['codigo']}, Stock preservado: {$productoExistente['stock']}, Ventas: {$productoExistente['ventas']}");
+                    error_log("SYNC UPDATE: Código: {$productoLocal['codigo']}, Stock preservado: {$productoExistente['stock']}, Ventas: {$productoExistente['ventas']}");
                 }
                 
             } else {
@@ -136,7 +174,7 @@ try {
                 
                 // ✅ DEBUG para productos nuevos
                 if ($index < 3) {
-                    error_log("DEBUG SYNC: NUEVO - Código: {$productoLocal['codigo']}, Descripción: {$productoLocal['descripcion']}");
+                    error_log("SYNC NEW: Código: {$productoLocal['codigo']}, Descripción: {$productoLocal['descripcion']}");
                 }
             }
             
@@ -155,8 +193,6 @@ try {
         if (!empty($codigosRecibidos)) {
             
             // ✅ IDENTIFICAR PRODUCTOS A ELIMINAR
-            // Solo productos que tienen codigo_maestro (fueron sincronizados anteriormente)
-            // y no están en la lista de códigos recibidos
             $placeholders = str_repeat('?,', count($codigosRecibidos) - 1) . '?';
             
             $stmtIdentificar = $pdo->prepare("
@@ -171,16 +207,14 @@ try {
             // ✅ ELIMINAR PRODUCTOS QUE YA NO ESTÁN EN CATÁLOGO MAESTRO
             if (!empty($productosAEliminar)) {
                 
-                error_log("DEBUG SYNC: Se eliminarán " . count($productosAEliminar) . " productos que no están en catálogo maestro");
+                error_log("SYNC DELETE: Se eliminarán " . count($productosAEliminar) . " productos");
                 
                 foreach ($productosAEliminar as $productoEliminar) {
                     
                     try {
                         
-                        // ✅ VERIFICAR SI EL PRODUCTO TIENE STOCK ANTES DE ELIMINAR
                         if ($productoEliminar['stock'] > 0) {
-                            // Si tiene stock, log de advertencia pero continuar con eliminación
-                            error_log("ADVERTENCIA: Eliminando producto con stock > 0 - Código: {$productoEliminar['codigo']}, Stock: {$productoEliminar['stock']}");
+                            error_log("WARNING: Eliminando producto con stock > 0 - Código: {$productoEliminar['codigo']}, Stock: {$productoEliminar['stock']}");
                         }
                         
                         $stmtEliminar = $pdo->prepare("DELETE FROM productos WHERE id = :id");
@@ -188,7 +222,6 @@ try {
                         
                         if ($resultadoEliminacion) {
                             $productosEliminados++;
-                            error_log("DEBUG SYNC: ELIMINADO - Código: {$productoEliminar['codigo']}, Descripción: {$productoEliminar['descripcion']}");
                         }
                         
                     } catch (Exception $e) {
@@ -196,8 +229,6 @@ try {
                         $productosErrores++;
                     }
                 }
-            } else {
-                error_log("DEBUG SYNC: No hay productos para eliminar");
             }
         }
         
@@ -205,30 +236,57 @@ try {
         error_log("ERROR en proceso de eliminación: " . $e->getMessage());
     }
     
+    // ✅ ACTUALIZAR FECHA DE ÚLTIMA SINCRONIZACIÓN SOLO SI SE PROCESÓ ALGO
+    $totalProcesados = $productosNuevos + $productosActualizados + $productosEliminados;
+    
+    if ($totalProcesados > 0) {
+        try {
+            $stmtUpdateSucursal = $pdo->prepare("
+                UPDATE sucursal_local 
+                SET fecha_actualizacion = ? 
+                WHERE codigo_sucursal = ?
+            ");
+            $stmtUpdateSucursal->execute([$fechaInicioSync, $sucursalInfo['codigo_sucursal']]);
+            error_log("SYNC SUCCESS: Fecha actualizada a {$fechaInicioSync} para sucursal {$sucursalInfo['codigo_sucursal']}");
+        } catch (Exception $e) {
+            error_log("ERROR actualizando fecha sucursal: " . $e->getMessage());
+        }
+    } else {
+        error_log("SYNC NO_CHANGES: No se actualizó fecha - no hubo cambios en sucursal {$sucursalInfo['codigo_sucursal']}");
+    }
+    
     $pdo->commit();
     
     // ✅ LOG FINAL CON ESTADÍSTICAS COMPLETAS
-    error_log("DEBUG SYNC: Finalizando - Nuevos: {$productosNuevos}, Actualizados: {$productosActualizados}, Eliminados: {$productosEliminados}, Errores: {$productosErrores}");
+    error_log("SYNC COMPLETE: Sucursal {$sucursalInfo['codigo_sucursal']} - Nuevos: {$productosNuevos}, Actualizados: {$productosActualizados}, Eliminados: {$productosEliminados}, Errores: {$productosErrores}");
     
     echo json_encode([
         'success' => true,
         'message' => "Catálogo sincronizado desde {$origen}",
+        'sucursal' => [
+            'codigo' => $sucursalInfo['codigo_sucursal'],
+            'nombre' => $sucursalInfo['nombre'],
+            'estado' => 'activa',
+            'fecha_actualizacion' => $totalProcesados > 0 ? $fechaInicioSync : $sucursalInfo['fecha_actualizacion']
+        ],
         'estadisticas' => [
             'productos_procesados' => $productosActualizados,
             'productos_nuevos' => $productosNuevos,
-            'productos_eliminados' => $productosEliminados, // ✅ NUEVA ESTADÍSTICA
+            'productos_eliminados' => $productosEliminados,
             'productos_errores' => $productosErrores,
-            'total_recibidos' => count($catalogoProcesado)
+            'total_recibidos' => count($catalogoProcesado),
+            'total_cambios' => $totalProcesados
         ],
         'detalles' => [
             'stock_preservado' => true,
             'duplicados_evitados' => true,
             'division_actualizada' => true,
-            'eliminacion_automatica' => true // ✅ NUEVA CARACTERÍSTICA
+            'eliminacion_automatica' => true,
+            'fecha_actualizada' => $totalProcesados > 0
         ],
         'origen' => $origen,
-        'timestamp' => date('Y-m-d H:i:s'),
-        'version_api' => '5.2'
+        'timestamp' => $fechaInicioSync,
+        'version_api' => '5.3'
     ]);
     
 } catch (Exception $e) {
