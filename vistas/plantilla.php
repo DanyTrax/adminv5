@@ -111,14 +111,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
     // ✅ LOG SOLO SI HAY PROBLEMAS
     if (nombreUsuario === '' || nombreSucursal === '') {
         console.warn('Advertencia: Variables de usuario vacías');
-    }
-    
-    console.log('Variables inicializadas:', {
-        usuario: nombreUsuario,
-        sucursal: nombreSucursal,
-        perfil: perfilUsuario,
-        sesion: sesionActiva
-    });
+    };
 </script>
 
 </head>
