@@ -1,57 +1,37 @@
 <?php
-/*=============================================
-INSTALADOR PRINCIPAL DE BD LOCAL
-danytrax/adminv5 - Sistema Seguro
-=============================================*/
 // Verificación de autenticación simple
 session_start();
 
-if
-require_once 'config-instalacion.php';
-
-// 🔒 VERIFICAR AUTENTICACIÓN ANTES DE CONTINUAR
-if (!verificarAutenticacion()) {
-    logInstalacion("Intento de acceso sin autenticación al instalador");
+if (!isset($_SESSION['instalacion_logueado']) || $_SESSION['instalacion_logueado'] !== true) {
     header('Location: index.php');
     exit;
 }
 
-// Log del acceso autorizado
-logInstalacion("Acceso autorizado al instalador principal");
+// Verificar tiempo de sesión
+if (!isset($_SESSION['instalacion_tiempo']) || (time() - $_SESSION['instalacion_tiempo']) > 3600) {
+    session_destroy();
+    header('Location: index.php');
+    exit;
+}
 
-// Configuración de errores para el instalador
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// Actualizar tiempo de actividad
+$_SESSION['instalacion_tiempo'] = time();
 
-$INSTALADOR_VERSION = "2.0";
-$FECHA_INSTALACION = date('Y-m-d H:i:s');
-
-// Agregar botón de logout
+// Botón de logout
 echo '
 <style>
 .logout-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #dc3545;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    text-decoration: none;
-    font-size: 12px;
-    z-index: 1000;
+    position: fixed; top: 20px; right: 20px; background: #dc3545; color: white;
+    padding: 8px 15px; border: none; border-radius: 5px; text-decoration: none;
+    font-size: 12px; z-index: 1000; cursor: pointer;
 }
-.logout-btn:hover {
-    background: #c82333;
-}
+.logout-btn:hover { background: #c82333; color: white; }
 </style>
-<a href="logout.php" class="logout-btn" onclick="return confirm(\'¿Cerrar sesión de instalación?\')">
+<a href="logout.php" class="logout-btn" onclick="return confirm(\'¿Cerrar sesión?\')">
     🔓 Cerrar Sesión
-</a>
-';
+</a>';
+
+// CONTINÚA CON EL RESTO DEL INSTALADOR...
 
 // ===================================================================
 // INSTALADOR DE BASE DE DATOS LOCAL PARA SUCURSALES
