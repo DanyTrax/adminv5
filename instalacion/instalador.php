@@ -1223,336 +1223,498 @@ function actualizarResumen() {
             }
 
             // ===== PASO 8.5: IMPORTAR DATOS DE OTRA SUCURSAL =====
-            if (empty($errores) && isset($_POST['habilitar_importacion'])) {
-                echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 8.5/10: Importando datos de otra sucursal...";</script>';
+            if (empty($errores)) {
+                echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 8.5/10: Importando datos seleccionados...";</script>';
                 echo '<div class="step"><h3>📊 Paso 8.5: Importando Datos Seleccionados</h3>';
                 
-                $sucursal_origen = $_POST['sucursal_origen'] ?? '';
-                $importar_clientes = isset($_POST['importar_clientes']);
-                $importar_usuarios = isset($_POST['importar_usuarios']);
+                $clientes_importados = 0;
+                $usuarios_importados = 0;
+                $bd_origen_datos = '';
                 
-                if (!empty($sucursal_origen) && ($importar_clientes || $importar_usuarios)) {
-                    
-                    try {
-                        // Conectar a BD origen
-                        $pdo_origen = new PDO(
-                            "mysql:host=localhost;dbname={$sucursal_origen};charset=utf8mb4",
-                            "epicosie_ricaurte", 
-                            "m5Wwg)~M{i~*kFr{",
-                            array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)
-                        );
+                try {
+                    // ✅ OBTENER DATOS DEL FORMULARIO
+                    if (isset($_POST['sucursal_origen']) && !empty($_POST['sucursal_origen'])) {
+                        $bd_origen_datos = $_POST['sucursal_origen'];
                         
-                        $clientes_importados = 0;
-                        $usuarios_importados = 0;
-                        
-                        // Importar clientes seleccionados
-                        if ($importar_clientes && isset($_POST['clientes_importar']) && is_array($_POST['clientes_importar'])) {
-                            
-                            foreach ($_POST['clientes_importar'] as $cliente_id) {
-                                
-                                try {
-                                    // Obtener cliente de BD origen
-                                    $stmt_origen = $pdo_origen->prepare("SELECT * FROM clientes WHERE id = ?");
-                                    $stmt_origen->execute([$cliente_id]);
-                                    $cliente = $stmt_origen->fetch(PDO::FETCH_ASSOC);
-                                    
-                                    if ($cliente) {
-                                        // Verificar si ya existe en BD destino
-                                        $stmt_existe = $pdo_nueva->prepare("SELECT id FROM clientes WHERE documento = ?");
-                                        $stmt_existe->execute([$cliente['documento']]);
-                                        
-                                        if ($stmt_existe->rowCount() === 0) {
-                                            // Insertar en BD nueva (sin ID para que se auto-genere)
-                                            $stmt_insertar = $pdo_nueva->prepare("
-                                                INSERT INTO clientes (nombre, documento, email, telefono, direccion, fecha_nacimiento, compras, ultima_compra, fecha) 
-                                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                            ");
-                                            
-                                            $stmt_insertar->execute([
-                                                $cliente['nombre'],
-                                                $cliente['documento'],
-                                                $cliente['email'],
-                                                $cliente['telefono'], 
-                                                $cliente['direccion'],
-                                                $cliente['fecha_nacimiento'],
-                                                $cliente['compras'],
-                                                $cliente['ultima_compra'],
-                                                $cliente['fecha']
-                                            ]);
-                                            
-                                            $clientes_importados++;
-                                        }
-                                    }
-                                    
-                                } catch (Exception $e) {
-                                    error_log("Error importando cliente {$cliente_id}: " . $e->getMessage());
-                                }
-                            }
-                        }
-                        
-                        // Importar usuarios seleccionados
-                        if ($importar_usuarios && isset($_POST['usuarios_importar']) && is_array($_POST['usuarios_importar'])) {
-                            
-                            foreach ($_POST['usuarios_importar'] as $usuario_id) {
-                                
-                                try {
-                                    // Obtener usuario de BD origen
-                                    $stmt_origen = $pdo_origen->prepare("SELECT * FROM usuarios WHERE id = ?");
-                                    $stmt_origen->execute([$usuario_id]);
-                                    $usuario = $stmt_origen->fetch(PDO::FETCH_ASSOC);
-                                    
-                                    if ($usuario) {
-                                        // Verificar si ya existe en BD destino
-                                        $stmt_existe = $pdo_nueva->prepare("SELECT id FROM usuarios WHERE usuario = ?");
-                                        $stmt_existe->execute([$usuario['usuario']]);
-                                        
-                                        if ($stmt_existe->rowCount() === 0) {
-                                            // Insertar en BD nueva (sin ID para que se auto-genere)
-                                            $stmt_insertar = $pdo_nueva->prepare("
-                                                INSERT INTO usuarios (nombre, usuario, password, perfil, foto, estado, ultimo_login, fecha, empresa, telefono, direccion) 
-                                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                            ");
-                                            
-                                            $stmt_insertar->execute([
-                                                $usuario['nombre'],
-                                                $usuario['usuario'],
-                                                $usuario['password'], // Mantener password original
-                                                $usuario['perfil'],
-                                                $usuario['foto'],
-                                                $usuario['estado'],
-                                                $usuario['ultimo_login'],
-                                                $usuario['fecha'],
-                                                $usuario['empresa'],
-                                                $usuario['telefono'],
-                                                $usuario['direccion']
-                                            ]);
-                                            
-                                            $usuarios_importados++;
-                                        }
-                                    }
-                                    
-                                } catch (Exception $e) {
-                                    error_log("Error importando usuario {$usuario_id}: " . $e->getMessage());
-                                }
-                            }
-                        }
-                        
-                        echo '<div class="success">';
-                        echo '✅ <strong>Importación completada:</strong><br>';
-                        echo "• Clientes importados: <strong>{$clientes_importados}</strong><br>";
-                        echo "• Usuarios importados: <strong>{$usuarios_importados}</strong><br>";
-                        echo "• Origen: <strong>{$sucursal_origen}</strong>";
-                        echo '</div>';
-                        
-                        $pasos_completados++;
-                        
-                    } catch (Exception $e) {
-                        echo '<div class="error">❌ Error en importación: ' . htmlspecialchars($e->getMessage()) . '</div>';
-                    }
-                    
-                } else {
-                    echo '<div class="info">ℹ️ Importación omitida - no se seleccionaron datos para importar</div>';
-                }
-                
-                echo '</div>';
-                flush();
-            }
-            
-        // ===== PASO 9: CREAR/ACTUALIZAR ARCHIVO DE CONEXIÓN =====
-        if (empty($errores) && $crear_archivo_conexion) {
-            echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 9/10: Actualizando modelos/conexion.php...";</script>';
-            echo '<div class="step"><h3>🔗 Paso 9: Alimentando archivo modelos/conexion.php</h3>';
-            
-            try {
-                
-                // ✅ RUTA DEL ARCHIVO A ALIMENTAR
-                $archivo_conexion = "modelos/conexion.php";
-                
-                // ✅ CREAR RESPALDO DEL ARCHIVO ORIGINAL
-                if(file_exists($archivo_conexion)) {
-                    $backup_file = "modelos/conexion-backup-" . date('Y-m-d-H-i-s') . ".php";
-                    if(copy($archivo_conexion, $backup_file)) {
                         echo '<div class="info">';
-                        echo '📋 <strong>Respaldo creado:</strong> ' . $backup_file;
+                        echo '🔄 <strong>Importando desde:</strong> ' . htmlspecialchars($bd_origen_datos);
                         echo '</div>';
-                    }
-                }
-                
-                // ✅ GENERAR CONTENIDO DEL ARCHIVO CONEXION.PHP ALIMENTADO
-                $contenido_conexion = '<?php
-        /*=============================================
-        CONEXIÓN BASE DE DATOS - SUCURSAL ' . $codigo_sucursal . '
-        Alimentado automáticamente por el instalador
-        Fecha: ' . $FECHA_INSTALACION . '
-        =============================================*/
-
-        class Conexion{
-
-            static public function conectar(){
-
-                $link = new PDO("mysql:host=' . $bd_host . ';dbname=' . $bd_nombre . '",
-                                "' . $bd_usuario . '",
-                                "' . str_replace('"', '\\"', $bd_password) . '");
-
-                $link->exec("set names utf8");
-
-                return $link;
-
-            }
-
-            /*=============================================
-            INFORMACIÓN DE LA SUCURSAL (OPCIONAL)
-            =============================================*/
-            static public function obtenerInfoSucursal(){
-                return array(
-                    "codigo" => "' . $codigo_sucursal . '",
-                    "nombre" => "' . addslashes($nombre_sucursal) . '",
-                    "bd_nombre" => "' . $bd_nombre . '",
-                    "fecha_instalacion" => "' . $FECHA_INSTALACION . '"
-                );
-            }
-
-        }
-        ?>';
-                
-                // ✅ ESCRIBIR EL ARCHIVO ALIMENTADO
-                if(file_put_contents($archivo_conexion, $contenido_conexion)) {
-                    
-                    echo '<div class="success">';
-                    echo '✅ <strong>Archivo modelos/conexion.php alimentado exitosamente</strong><br>';
-                    echo '• Host: ' . $bd_host . '<br>';
-                    echo '• Base de datos: <strong>' . $bd_nombre . '</strong><br>';
-                    echo '• Usuario: ' . $bd_usuario . '<br>';
-                    echo '• Sucursal: ' . $codigo_sucursal . ' (' . htmlspecialchars($nombre_sucursal) . ')';
-                    echo '</div>';
-                    
-                    // ✅ VERIFICAR QUE EL ARCHIVO SE ESCRIBIÓ CORRECTAMENTE
-                    if(file_exists($archivo_conexion) && filesize($archivo_conexion) > 0) {
-                        echo '<div class="success">';
-                        echo '✅ <strong>Verificación:</strong> Archivo creado correctamente (' . filesize($archivo_conexion) . ' bytes)';
-                        echo '</div>';
-                    } else {
-                        throw new Exception("El archivo se creó pero parece estar vacío o corrupto");
-                    }
-                    
-                } else {
-                    throw new Exception("No se pudo escribir el archivo modelos/conexion.php");
-                }
-                
-                // ✅ TAMBIÉN CREAR UNA COPIA ESPECÍFICA DE LA SUCURSAL
-                $archivo_sucursal = "../modelos/conexion-sucursal-{$codigo_sucursal}.php";
-                if(file_put_contents($archivo_sucursal, $contenido_conexion)) {
-                    echo '<div class="info">';
-                    echo '📁 <strong>Copia específica creada:</strong> ' . $archivo_sucursal;
-                    echo '</div>';
-                }
-                
-                // ✅ MOSTRAR EL CÓDIGO GENERADO PARA VERIFICACIÓN
-                echo '<div style="background: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; border-radius: 5px; margin: 15px 0;">';
-                echo '<h4>📋 Contenido generado en modelos/conexion.php:</h4>';
-                echo '<textarea readonly style="width: 100%; height: 200px; font-family: monospace; font-size: 12px; background: white; border: 1px solid #ccc; padding: 10px;">';
-                echo htmlspecialchars($contenido_conexion);
-                echo '</textarea>';
-                echo '</div>';
-                
-                // ✅ PROBAR LA CONEXIÓN INMEDIATAMENTE
-                echo '<h4>🧪 Probando la conexión generada:</h4>';
-                
-                try {
-                    // Cargar el archivo recién creado
-                    require_once $archivo_conexion;
-                    
-                    // Intentar conectar
-                    $conexion_test = Conexion::conectar();
-                    
-                    // Probar consulta
-                    $stmt = $conexion_test->query("SELECT DATABASE() as bd_actual, COUNT(*) as total_usuarios FROM usuarios");
-                    $resultado = $stmt->fetch();
-                    
-                    echo '<div class="success">';
-                    echo '✅ <strong>¡Conexión exitosa!</strong><br>';
-                    echo '• Base de datos conectada: <strong>' . $resultado['bd_actual'] . '</strong><br>';
-                    echo '• Usuarios en la BD: <strong>' . $resultado['total_usuarios'] . '</strong><br>';
-                    echo '<em>El sistema está listo para funcionar</em>';
-                    echo '</div>';
-                    
-                } catch(Exception $e) {
-                    echo '<div class="error">';
-                    echo '❌ <strong>Error probando conexión:</strong><br>' . htmlspecialchars($e->getMessage());
-                    echo '<br><em>Revise los datos de conexión ingresados</em>';
-                    echo '</div>';
-                }
-                
-                $pasos_completados++;
-                
-            } catch (Exception $e) {
-                echo '<div class="error">';
-                echo '❌ <strong>Error alimentando modelos/conexion.php:</strong><br>' . htmlspecialchars($e->getMessage());
-                echo '</div>';
-            }
-            
-            echo '</div>';
-            echo '<script>document.getElementById("progressBar").style.width = "90%";</script>';
-            flush();
-        }
-            
-            // ===== PASO 10: REGISTRAR EN BD CENTRAL (OPCIONAL) =====
-            if (empty($errores) && $registrar_en_central && $verificar_central) {
-                echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 10/10: Registrando en BD Central...";</script>';
-                echo '<div class="step"><h3>🌐 Paso 10: Registrando Sucursal en BD Central</h3>';
-                
-                try {
-                    $url_actual = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
-                    
-                    // Verificar si ya existe
-                    $stmt_verificar = $dbCentral->prepare("
-                        SELECT id FROM sucursales WHERE codigo_sucursal = ?
-                    ");
-                    $stmt_verificar->execute([$codigo_sucursal]);
-                    
-                    if ($stmt_verificar->rowCount() > 0) {
-                        echo '<div class="warning">⚠️ Sucursal ya registrada en BD Central</div>';
-                    } else {
-                        // Insertar nueva sucursal
-                        $stmt_insertar = $dbCentral->prepare("
-                            INSERT INTO sucursales 
-                            (codigo_sucursal, nombre, direccion, url_base, url_api, activo, fecha_creacion) 
-                            VALUES (?, ?, ?, ?, ?, 1, ?)
-                        ");
-                        $stmt_insertar->execute([
-                            $codigo_sucursal,
-                            $nombre_sucursal,
-                            'Dirección por definir',
-                            $url_actual,
-                            $url_actual . '/api-transferencias/',
-                            $FECHA_INSTALACION
-                        ]);
                         
-                        echo '<div class="success">';
-                        echo '✅ <strong>Sucursal registrada en BD Central</strong><br>';
-                        echo '• Código: ' . $codigo_sucursal . '<br>';
-                        echo '• URL: ' . $url_actual;
-                        echo '</div>';
+                        // ✅ CONEXIÓN A LA BD ORIGEN (PARA LEER DATOS)
+                        try {
+                            $pdo_origen = new PDO("mysql:host=localhost;dbname={$bd_origen_datos}", 
+                                                "epicosie_ricaurte", 
+                                                "m5Wwg)~M{i~*kFr{");
+                            $pdo_origen->exec("set names utf8");
+                            $pdo_origen->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                            
+                            echo '<div class="success">✅ Conectado a BD origen: ' . $bd_origen_datos . '</div>';
+                            
+                        } catch (Exception $e) {
+                            throw new Exception("Error conectando a BD origen ({$bd_origen_datos}): " . $e->getMessage());
+                        }
+                        
+                        // ✅ IMPORTAR CLIENTES SELECCIONADOS
+                        if (isset($_POST['clientes_importar_data']) && !empty($_POST['clientes_importar_data'])) {
+                            
+                            echo '<div class="info">📥 <strong>Importando clientes...</strong></div>';
+                            
+                            try {
+                                $datos_clientes = json_decode($_POST['clientes_importar_data'], true);
+                                
+                                if ($datos_clientes && isset($datos_clientes['opcion'])) {
+                                    
+                                    if ($datos_clientes['opcion'] === 'todos') {
+                                        // Importar todos los clientes
+                                        $stmt_clientes = $pdo_origen->prepare("
+                                            SELECT id, nombre, documento, email, telefono, direccion, 
+                                                nacimiento, compras, ultima_compra, fecha
+                                            FROM clientes 
+                                            WHERE LENGTH(TRIM(nombre)) > 0
+                                            ORDER BY nombre ASC
+                                        ");
+                                        $stmt_clientes->execute();
+                                        
+                                    } else if ($datos_clientes['opcion'] === 'solo_con_datos') {
+                                        // Solo clientes con email O teléfono
+                                        $stmt_clientes = $pdo_origen->prepare("
+                                            SELECT id, nombre, documento, email, telefono, direccion, 
+                                                nacimiento, compras, ultima_compra, fecha
+                                            FROM clientes 
+                                            WHERE LENGTH(TRIM(nombre)) > 0
+                                            AND (LENGTH(TRIM(email)) > 0 OR LENGTH(TRIM(telefono)) > 0)
+                                            ORDER BY nombre ASC
+                                        ");
+                                        $stmt_clientes->execute();
+                                    }
+                                    
+                                    $clientes_origen = $stmt_clientes->fetchAll(PDO::FETCH_ASSOC);
+                                    
+                                    // Insertar clientes en la nueva BD
+                                    $stmt_insert_cliente = $pdo_nueva->prepare("
+                                        INSERT INTO clientes (nombre, documento, email, telefono, direccion, nacimiento, compras, ultima_compra, fecha)
+                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                    ");
+                                    
+                                    foreach ($clientes_origen as $cliente) {
+                                        try {
+                                            $stmt_insert_cliente->execute([
+                                                $cliente['nombre'] ?? '',
+                                                $cliente['documento'] ?? '',
+                                                $cliente['email'] ?? '',
+                                                $cliente['telefono'] ?? '',
+                                                $cliente['direccion'] ?? '',
+                                                $cliente['nacimiento'] ?? '0000-00-00',
+                                                $cliente['compras'] ?? 0,
+                                                $cliente['ultima_compra'] ?? '0000-00-00 00:00:00',
+                                                $cliente['fecha'] ?? date('Y-m-d H:i:s')
+                                            ]);
+                                            $clientes_importados++;
+                                            
+                                        } catch (Exception $e) {
+                                            // Log el error pero continúa con otros clientes
+                                            error_log("Error importando cliente {$cliente['nombre']}: " . $e->getMessage());
+                                        }
+                                    }
+                                    
+                                    echo '<div class="success">✅ Clientes importados: ' . $clientes_importados . '</div>';
+                                    
+                                }
+                                
+                            } catch (Exception $e) {
+                                echo '<div class="warning">⚠️ Error importando clientes: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                            }
+                        }
+                        
+                        // ✅ IMPORTAR USUARIOS SELECCIONADOS
+                        if (isset($_POST['usuarios_importar']) && is_array($_POST['usuarios_importar'])) {
+                            
+                            echo '<div class="info">👥 <strong>Importando usuarios seleccionados...</strong></div>';
+                            
+                            try {
+                                $usuarios_ids = array_map('intval', $_POST['usuarios_importar']);
+                                
+                                if (!empty($usuarios_ids)) {
+                                    $placeholders = str_repeat('?,', count($usuarios_ids) - 1) . '?';
+                                    
+                                    $stmt_usuarios = $pdo_origen->prepare("
+                                        SELECT nombre, usuario, password, perfil, foto, estado, ultimo_login,
+                                            empresa, telefono, direccion, fecha
+                                        FROM usuarios 
+                                        WHERE id IN ({$placeholders})
+                                        AND estado = 1
+                                    ");
+                                    $stmt_usuarios->execute($usuarios_ids);
+                                    $usuarios_origen = $stmt_usuarios->fetchAll(PDO::FETCH_ASSOC);
+                                    
+                                    // Insertar usuarios en la nueva BD
+                                    $stmt_insert_usuario = $pdo_nueva->prepare("
+                                        INSERT INTO usuarios (nombre, usuario, password, perfil, foto, estado, ultimo_login, empresa, telefono, direccion, fecha)
+                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                    ");
+                                    
+                                    foreach ($usuarios_origen as $usuario) {
+                                        try {
+                                            // Modificar el usuario para evitar conflictos
+                                            $nuevo_usuario = $usuario['usuario'] . '_' . strtolower($codigo_sucursal);
+                                            
+                                            $stmt_insert_usuario->execute([
+                                                $usuario['nombre'] ?? '',
+                                                $nuevo_usuario,
+                                                $usuario['password'] ?? '',
+                                                $usuario['perfil'] ?? 'Especial',
+                                                $usuario['foto'] ?? 'vistas/img/usuarios/default/anonymous.png',
+                                                1, // Activo
+                                                $usuario['ultimo_login'] ?? '0000-00-00 00:00:00',
+                                                $usuario['empresa'] ?? $nombre_sucursal,
+                                                $usuario['telefono'] ?? '',
+                                                $usuario['direccion'] ?? '',
+                                                date('Y-m-d H:i:s')
+                                            ]);
+                                            $usuarios_importados++;
+                                            
+                                        } catch (Exception $e) {
+                                            error_log("Error importando usuario {$usuario['nombre']}: " . $e->getMessage());
+                                        }
+                                    }
+                                    
+                                    echo '<div class="success">✅ Usuarios importados: ' . $usuarios_importados . '</div>';
+                                }
+                                
+                            } catch (Exception $e) {
+                                echo '<div class="warning">⚠️ Error importando usuarios: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                            }
+                        }
+                        
+                    } else {
+                        echo '<div class="info">ℹ️ <strong>Sin importación de datos:</strong> No se seleccionó sucursal origen</div>';
                     }
                     
-                    // Actualizar estado local
-                    $stmt_local = $pdo_nueva->prepare("
-                        UPDATE sucursal_local 
-                        SET registrada_en_central = 1 
-                        WHERE codigo_sucursal = ?
-                    ");
-                    $stmt_local->execute([$codigo_sucursal]);
+                    // ✅ RESUMEN DE IMPORTACIÓN
+                    echo '<div class="success">';
+                    echo '✅ <strong>Importación completada:</strong><br>';
+                    echo '• Clientes importados: ' . $clientes_importados . '<br>';
+                    echo '• Usuarios importados: ' . $usuarios_importados . '<br>';
+                    if (!empty($bd_origen_datos)) {
+                        echo '• Origen: ' . htmlspecialchars($bd_origen_datos);
+                    }
+                    echo '</div>';
                     
                     $pasos_completados++;
                     
                 } catch (Exception $e) {
-                    echo '<div class="error">❌ Error registrando en central: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                    $errores[] = "Error en importación de datos: " . $e->getMessage();
+                    echo '<div class="error">';
+                    echo '❌ <strong>Error en importación:</strong><br>' . htmlspecialchars($e->getMessage());
+                    echo '</div>';
                 }
                 
                 echo '</div>';
-                echo '<script>document.getElementById("progressBar").style.width = "100%";</script>';
+                echo '<script>document.getElementById("progressBar").style.width = "85%";</script>';
                 flush();
             }
+            
+            // ===== PASO 9: ALIMENTAR ARCHIVO CONEXION.PHP =====
+            if (empty($errores)) {
+                echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 9/10: Creando archivo de conexión...";</script>';
+                echo '<div class="step"><h3>🔗 Paso 9: Alimentando archivo modelos/conexion.php</h3>';
+                
+                try {
+                    // ✅ DEFINIR TODAS LAS VARIABLES NECESARIAS
+                    $fecha_conexion = date('Y-m-d H:i:s');
+                    $archivo_conexion = "../modelos/conexion.php";
+                    
+                    // ✅ CREAR BACKUP DEL ARCHIVO ORIGINAL SI EXISTE
+                    if (file_exists($archivo_conexion)) {
+                        $fecha_backup = date('Y-m-d_H-i-s');
+                        $archivo_backup = "../modelos/conexion_backup_{$fecha_backup}.php";
+                        
+                        if (copy($archivo_conexion, $archivo_backup)) {
+                            echo '<div class="info">';
+                            echo '📋 <strong>Backup creado:</strong> conexion_backup_' . $fecha_backup . '.php';
+                            echo '</div>';
+                        }
+                    }
+                    
+                    // ✅ DEFINIR EL CONTENIDO DEL ARCHIVO
+                    $contenido_conexion = '<?php
+
+            /*=============================================
+            ARCHIVO DE CONEXIÓN GENERADO AUTOMÁTICAMENTE
+            Sucursal: ' . $codigo_sucursal . ' (' . $nombre_sucursal . ')
+            Fecha de creación: ' . $fecha_conexion . '
+            Sistema: AdminV5 - danytrax/adminv5
+            =============================================*/
+
+            class Conexion {
+
+                static public function conectar() {
+
+                    try {
+                        
+                        $link = new PDO("mysql:host=' . $bd_host . ';dbname=' . $bd_nombre . ';charset=utf8mb4", 
+                                    "' . $bd_usuario . '", 
+                                    "' . $bd_password . '");
+
+                        // Configuración de PDO
+                        $link->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                        $link->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+                        
+                        // Configurar charset UTF-8
+                        $link->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+                        
+                        return $link;
+
+                    } catch (PDOException $e) {
+                        
+                        // Log del error
+                        error_log("Error de conexión BD: " . $e->getMessage());
+                        
+                        // Mostrar error amigable en desarrollo
+                        if (ini_get("display_errors")) {
+                            die("Error de conexión a la base de datos: " . $e->getMessage());
+                        } else {
+                            die("Error de conexión a la base de datos. Contacte al administrador.");
+                        }
+                    }
+                }
+                
+                /*=============================================
+                INFORMACIÓN DE LA CONEXIÓN
+                =============================================*/
+                static public function getInfo() {
+                    return [
+                        "host" => "' . $bd_host . '",
+                        "database" => "' . $bd_nombre . '",
+                        "user" => "' . $bd_usuario . '",
+                        "sucursal" => "' . $codigo_sucursal . '",
+                        "nombre_sucursal" => "' . addslashes($nombre_sucursal) . '",
+                        "fecha_creacion" => "' . $fecha_conexion . '"
+                    ];
+                }
+            }
+
+            ?>';
+
+                    // ✅ VERIFICAR QUE EL DIRECTORIO EXISTE
+                    $directorio_modelos = dirname($archivo_conexion);
+                    if (!is_dir($directorio_modelos)) {
+                        if (mkdir($directorio_modelos, 0755, true)) {
+                            echo '<div class="info">📁 <strong>Directorio modelos creado:</strong> ' . $directorio_modelos . '</div>';
+                        } else {
+                            throw new Exception("No se pudo crear el directorio: " . $directorio_modelos);
+                        }
+                    }
+                    
+                    // ✅ ESCRIBIR EL ARCHIVO
+                    if (file_put_contents($archivo_conexion, $contenido_conexion)) {
+                        
+                        echo '<div class="success">';
+                        echo '✅ <strong>Archivo modelos/conexion.php creado exitosamente</strong><br>';
+                        echo '• Host: ' . htmlspecialchars($bd_host) . '<br>';
+                        echo '• Base de datos: <strong>' . htmlspecialchars($bd_nombre) . '</strong><br>';
+                        echo '• Usuario: ' . htmlspecialchars($bd_usuario) . '<br>';
+                        echo '• Sucursal: ' . htmlspecialchars($codigo_sucursal) . ' (' . htmlspecialchars($nombre_sucursal) . ')<br>';
+                        echo '• Archivo: ' . $archivo_conexion;
+                        echo '</div>';
+                        
+                        // ✅ VERIFICAR QUE EL ARCHIVO SE ESCRIBIÓ CORRECTAMENTE
+                        if (file_exists($archivo_conexion) && filesize($archivo_conexion) > 0) {
+                            $tamaño_archivo = filesize($archivo_conexion);
+                            echo '<div class="success">';
+                            echo '✅ <strong>Verificación exitosa:</strong> Archivo creado (' . $tamaño_archivo . ' bytes)';
+                            echo '</div>';
+                            
+                            // ✅ PROBAR LA CONEXIÓN CON EL NUEVO ARCHIVO
+                            try {
+                                include $archivo_conexion;
+                                $test_connection = Conexion::conectar();
+                                
+                                if ($test_connection) {
+                                    echo '<div class="success">';
+                                    echo '✅ <strong>Prueba de conexión exitosa:</strong> El archivo funciona correctamente';
+                                    echo '</div>';
+                                    $pasos_completados++;
+                                }
+                                
+                            } catch (Exception $e) {
+                                echo '<div class="warning">';
+                                echo '⚠️ <strong>Advertencia:</strong> El archivo se creó pero la prueba de conexión falló: ' . htmlspecialchars($e->getMessage());
+                                echo '</div>';
+                            }
+                            
+                        } else {
+                            throw new Exception("El archivo se creó pero está vacío o corrupto");
+                        }
+                        
+                    } else {
+                        throw new Exception("No se pudo escribir el archivo " . $archivo_conexion);
+                    }
+                    
+                    // ✅ CREAR COPIA DE SEGURIDAD ESPECÍFICA DE LA SUCURSAL
+                    $archivo_sucursal = "../modelos/conexion-{$codigo_sucursal}.php";
+                    if (file_put_contents($archivo_sucursal, $contenido_conexion)) {
+                        echo '<div class="info">';
+                        echo '📁 <strong>Copia específica creada:</strong> conexion-' . htmlspecialchars($codigo_sucursal) . '.php';
+                        echo '</div>';
+                    }
+                    
+                } catch (Exception $e) {
+                    $errores[] = "Error creando archivo de conexión: " . $e->getMessage();
+                    echo '<div class="error">';
+                    echo '❌ <strong>Error creando modelos/conexion.php:</strong><br>' . htmlspecialchars($e->getMessage());
+                    echo '<br><br><strong>Verificar:</strong>';
+                    echo '<ul>';
+                    echo '<li>Permisos de escritura en el directorio modelos/</li>';
+                    echo '<li>Espacio suficiente en disco</li>';
+                    echo '<li>Variables de BD correctas</li>';
+                    echo '</ul>';
+                    echo '</div>';
+                }
+                
+                echo '</div>';
+                echo '<script>document.getElementById("progressBar").style.width = "90%";</script>';
+                flush();
+            }
+            
+            // ===== PASO 10: FINALIZACIÓN Y LOG =====
+            echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 10/10: Finalizando instalación...";</script>';
+            echo '<div class="step"><h3>🎉 Instalación Completada</h3>';
+
+            // ✅ DEFINIR FECHA PARA LOG (SOLUCIONA EL WARNING)
+            $fecha = date('Y-m-d H:i:s');
+            $fecha_archivo = date('Y-m-d_H-i-s');
+
+            // ✅ CALCULAR PROGRESO FINAL
+            $progreso_porcentaje = ($pasos_completados / 10) * 100;
+            $estado_instalacion = empty($errores) ? 'exitosa' : 'con_advertencias';
+
+            if ($progreso_porcentaje >= 80) {
+                echo '<div class="success">';
+                echo '✅ <strong>¡Instalación Exitosa!</strong><br><br>';
+                echo '<strong>Progreso:</strong> ' . $pasos_completados . '/10 pasos completados (' . round($progreso_porcentaje) . '%)<br>';
+                echo '</div>';
+            } else {
+                echo '<div class="warning">';
+                echo '⚠️ <strong>Instalación con advertencias</strong><br><br>';
+                echo '<strong>Progreso:</strong> ' . $pasos_completados . '/10 pasos completados (' . round($progreso_porcentaje) . '%)<br>';
+                echo '</div>';
+            }
+
+            // ✅ RESUMEN DE LA INSTALACIÓN
+            echo '<div class="info">';
+            echo '📋 <strong>Resumen de la instalación:</strong><br><br>';
+            echo '• <strong>Sucursal:</strong> ' . htmlspecialchars($nombre_sucursal) . ' (' . htmlspecialchars($codigo_sucursal) . ')<br>';
+            echo '• <strong>Base de Datos:</strong> ' . htmlspecialchars($bd_nombre) . '<br>';
+            echo '• <strong>Usuario Admin:</strong> ' . (isset($usuario_admin_creado) && $usuario_admin_creado ? 'Creado' : 'No creado') . '<br>';
+            echo '• <strong>Fecha:</strong> ' . $fecha . '<br>';
+
+            if (!empty($errores)) {
+                echo '<br><strong>⚠️ Advertencias encontradas:</strong><br>';
+                foreach ($errores as $error) {
+                    echo '• ' . htmlspecialchars($error) . '<br>';
+                }
+            }
+            echo '</div>';
+
+            // ✅ CREAR LOG DE INSTALACIÓN
+            try {
+                // Crear directorio de logs si no existe
+                $logs_dir = __DIR__ . '/logs/';
+                if (!is_dir($logs_dir)) {
+                    mkdir($logs_dir, 0755, true);
+                }
+                
+                // ✅ DATOS DEL LOG
+                $log_data = [
+                    'instalacion' => [
+                        'fecha' => $fecha,
+                        'sucursal' => [
+                            'codigo' => $codigo_sucursal,
+                            'nombre' => $nombre_sucursal,
+                            'url' => 'https://' . $_SERVER['HTTP_HOST']
+                        ],
+                        'base_datos' => [
+                            'host' => $bd_host,
+                            'nombre' => $bd_nombre,
+                            'usuario' => $bd_usuario
+                        ],
+                        'progreso' => [
+                            'pasos_completados' => $pasos_completados,
+                            'total_pasos' => 10,
+                            'porcentaje' => $progreso_porcentaje,
+                            'estado' => $estado_instalacion
+                        ],
+                        'importacion' => [
+                            'clientes_importados' => $clientes_importados ?? 0,
+                            'usuarios_importados' => $usuarios_importados ?? 0,
+                            'bd_origen' => $bd_origen_datos ?? 'ninguna'
+                        ],
+                        'errores' => $errores,
+                        'sistema' => [
+                            'php_version' => phpversion(),
+                            'servidor' => $_SERVER['HTTP_HOST'] ?? 'unknown',
+                            'ip_instalador' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+                        ]
+                    ]
+                ];
+                
+                $log_file = $logs_dir . "instalacion_{$codigo_sucursal}_{$fecha_archivo}.json";
+                
+                if (file_put_contents($log_file, json_encode($log_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) {
+                    echo '<div class="success">';
+                    echo '📄 <strong>Log de instalación creado:</strong> ' . basename($log_file);
+                    echo '</div>';
+                }
+                
+            } catch (Exception $e) {
+                echo '<div class="warning">';
+                echo '⚠️ <strong>No se pudo crear el log:</strong> ' . htmlspecialchars($e->getMessage());
+                echo '</div>';
+            }
+
+            // ✅ PRÓXIMOS PASOS
+            echo '<div class="info">';
+            echo '🚀 <strong>Próximos pasos:</strong><br><br>';
+            echo '1. Acceder al sistema con las credenciales de administrador<br>';
+            echo '2. Cambiar la contraseña por defecto<br>';
+            echo '3. Configurar datos adicionales de la sucursal<br>';
+            echo '4. Sincronizar productos desde el catálogo maestro<br>';
+            echo '5. Entrenar al personal en el uso del sistema<br>';
+            echo '</div>';
+
+            // ✅ BOTONES DE ACCIÓN
+            echo '<div style="text-align: center; margin: 30px 0;">';
+
+            if ($progreso_porcentaje >= 80) {
+                echo '<a href="../" class="btn" style="background: #28a745; color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; margin: 0 10px;">';
+                echo '🏠 Ir al Sistema';
+                echo '</a>';
+            }
+
+            echo '<a href="logout.php" class="btn" style="background: #dc3545; color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; margin: 0 10px;">';
+            echo '🔓 Cerrar Sesión';
+            echo '</a>';
+
+            echo '</div>';
+
+            echo '</div>';
+
+            // ✅ INFORMACIÓN TÉCNICA
+            echo '<div class="step">';
+            echo '<h3>🔧 Información Técnica</h3>';
+            echo '<div class="info">';
+            echo '<strong>Versión del instalador:</strong> 1.0<br>';
+            echo '<strong>PHP Version:</strong> ' . phpversion() . '<br>';
+            echo '<strong>MySQL Version:</strong> ' . (isset($pdo_nueva) ? $pdo_nueva->getAttribute(PDO::ATTR_SERVER_VERSION) : 'No disponible') . '<br>';
+            echo '<strong>Directorio de instalación:</strong> ' . __DIR__ . '<br>';
+            echo '<strong>URL de acceso:</strong> https://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['REQUEST_URI']) . '/<br>';
+            echo '</div>';
+            echo '</div>';
+
+            echo '<script>document.getElementById("progressBar").style.width = "100%";</script>';
+            flush();
             
             // ===== RESULTADO FINAL =====
             echo '<script>document.getElementById("pasoActual").innerHTML = "¡Instalación completada!";</script>';
@@ -1644,6 +1806,8 @@ function actualizarResumen() {
             
             // Guardar log
             try {
+
+            $fecha = date('Y-m-d H:i:s');
             // Crear directorio de logs si no existe
             $logs_dir = __DIR__ . '/logs/';
             if (!is_dir($logs_dir)) {
@@ -1651,7 +1815,7 @@ function actualizarResumen() {
             }
 
             $log_file = $logs_dir . "instalacion_{$codigo_sucursal}_{$fecha}.json";
-            file_put_contents($log_file, json_encode($log_instalacion, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+            file_put_contents($log_file, ...);
             } catch (Exception $e) {
                 // Ignorar errores de log
             }
