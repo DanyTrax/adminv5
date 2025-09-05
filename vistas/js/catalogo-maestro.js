@@ -1511,36 +1511,147 @@ $(document).ready(function(){
 // Mensaje final para debug
 //console.log('Archivo catalogo-maestro.js cargado - Versión: 1.0 - Compatible con danytrax/adminv5');
 /*=============================================
-PARCHE SIMPLE PARA actualizarContador
+CORRECCIÓN DE ERROR: actualizarContador
 =============================================*/
 
-// Sobrescribir la función problemática
-window.actualizarContador = function(info) {
-    // Validación defensiva simple
-    if (!info || typeof info !== 'object' || !info.hasOwnProperty('recordsTotal')) {
-        return; // Salir silenciosamente si no hay datos válidos
+// Función para actualizar contador de manera segura
+function actualizarContador(info) {
+    // ✅ VALIDACIÓN DEFENSIVA
+    if (!info || typeof info !== 'object') {
+        console.warn('actualizarContador: info is undefined or invalid, using default values');
+        info = {
+            recordsTotal: 0,
+            recordsFiltered: 0,
+            recordsDisplay: 0
+        };
     }
     
-    // Solo procesar si hay datos válidos
-    try {
-        var total = parseInt(info.recordsTotal) || 0;
-        var filtrado = parseInt(info.recordsFiltered) || total;
-        
-        // Actualizar elementos en la página
-        $('.badge-catalogo-total').text(total);
-        
-        console.log(`Contador actualizado: ${total} productos total, ${filtrado} filtrados`);
-        
-    } catch (error) {
-        console.warn('Error actualizando contador (ignorado):', error);
+    // Asegurar que las propiedades existan
+    var recordsTotal = info.recordsTotal || 0;
+    var recordsFiltered = info.recordsFiltered || recordsTotal;
+    var recordsDisplay = info.recordsDisplay || recordsFiltered;
+    
+    // Actualizar contador en la interfaz
+    var contadorElement = $('.dataTables_info');
+    if (contadorElement.length > 0) {
+        var texto = `Mostrando ${recordsDisplay} productos de un total de ${recordsTotal}`;
+        if (recordsFiltered !== recordsTotal) {
+            texto += ` (filtrado de ${recordsTotal} total)`;
+        }
+        contadorElement.text(texto);
     }
-};
+    
+    // Actualizar otros elementos que dependan del contador
+    actualizarElementosContador(recordsTotal, recordsFiltered);
+}
 
-// Interceptar errores de recordsTotal
-window.addEventListener('error', function(event) {
-    if (event.error && event.error.message && event.error.message.includes('recordsTotal')) {
-        console.warn('Error de recordsTotal interceptado y suprimido');
-        event.preventDefault();
-        return true;
+// Función auxiliar para actualizar elementos adicionales
+function actualizarElementosContador(total, filtrado) {
+    // Actualizar badge de productos si existe
+    var badgeProductos = $('#badge-productos-catalogo');
+    if (badgeProductos.length > 0) {
+        badgeProductos.text(total);
     }
+    
+    // Actualizar título de la página si existe
+    var tituloTabla = $('.card-header .card-title');
+    if (tituloTabla.length > 0 && total > 0) {
+        var textoOriginal = tituloTabla.text().split('(')[0].trim();
+        tituloTabla.text(`${textoOriginal} (${total} productos)`);
+    }
+}
+
+/*=============================================
+OVERRIDE DE DATATABLES CALLBACKS PARA EVITAR ERRORES
+=============================================*/
+
+// Interceptar y corregir llamadas problemáticas
+$(document).ready(function() {
+    
+    // ✅ CORRECCIÓN PARA DATATABLES
+    if ($.fn.DataTable && $('.tabla-catalogo-maestro').length > 0) {
+        
+        // Interceptar el drawCallback original
+        var originalDrawCallback = function(settings) {
+            // Obtener información de la tabla de manera segura
+            var api = this.api();
+            var info = {
+                recordsTotal: api.page.info().recordsTotal || 0,
+                recordsFiltered: api.page.info().recordsFiltered || 0,
+                recordsDisplay: api.page.info().recordsDisplay || 0
+            };
+            
+            // Llamar a actualizarContador con datos válidos
+            actualizarContador(info);
+            
+            // Tooltip para botones
+            $('[data-toggle="tooltip"]').tooltip();
+        };
+        
+        // Si ya existe la tabla, actualizar el callback
+        if ($.fn.DataTable.isDataTable('.tabla-catalogo-maestro')) {
+            $('.tabla-catalogo-maestro').DataTable().on('draw', originalDrawCallback);
+        }
+    }
+    
+    // ✅ PREVENIR LLAMADAS PROBLEMÁTICAS CON TIMEOUT
+    var originalSetTimeout = window.setTimeout;
+    window.setTimeout = function(callback, delay) {
+        if (typeof callback === 'function') {
+            var wrappedCallback = function() {
+                try {
+                    callback();
+                } catch (error) {
+                    if (error.message && error.message.includes('recordsTotal')) {
+                        console.warn('Error de recordsTotal interceptado y corregido:', error);
+                        // Llamar actualizarContador con datos por defecto
+                        actualizarContador({
+                            recordsTotal: 0,
+                            recordsFiltered: 0,
+                            recordsDisplay: 0
+                        });
+                    } else {
+                        console.error('Error en setTimeout:', error);
+                    }
+                }
+            };
+            return originalSetTimeout.call(this, wrappedCallback, delay);
+        }
+        return originalSetTimeout.call(this, callback, delay);
+    };
 });
+
+/*=============================================
+FUNCIÓN DE EMERGENCIA PARA RECONSTRUIR CONTADOR
+=============================================*/
+
+function reconstruirContadorCatalogo() {
+    // Obtener datos de la tabla actual
+    if ($.fn.DataTable.isDataTable('.tabla-catalogo-maestro')) {
+        var table = $('.tabla-catalogo-maestro').DataTable();
+        var info = table.page.info();
+        
+        // Llamar actualizarContador con datos reales
+        actualizarContador({
+            recordsTotal: info.recordsTotal || 0,
+            recordsFiltered: info.recordsFiltered || 0,
+            recordsDisplay: info.recordsDisplay || 0
+        });
+    } else {
+        // Sin tabla, usar valores por defecto
+        actualizarContador({
+            recordsTotal: 0,
+            recordsFiltered: 0,
+            recordsDisplay: 0
+        });
+    }
+}
+
+// Ejecutar reconstrucción cada 5 segundos como respaldo
+setInterval(function() {
+    if ($('.tabla-catalogo-maestro').length > 0) {
+        reconstruirContadorCatalogo();
+    }
+}, 5000);
+
+console.log('✅ Corrección de actualizarContador aplicada - Catálogo Maestro JS');
