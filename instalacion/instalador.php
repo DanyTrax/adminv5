@@ -1265,10 +1265,10 @@ function actualizarResumen() {
                                 if ($datos_clientes && isset($datos_clientes['opcion'])) {
                                     
                                     if ($datos_clientes['opcion'] === 'todos') {
-                                        // Importar todos los clientes
+                                        // ✅ IMPORTAR TODOS LOS CLIENTES
                                         $stmt_clientes = $pdo_origen->prepare("
-                                            SELECT id, nombre, documento, email, telefono, direccion, 
-                                                nacimiento, compras, ultima_compra, fecha
+                                            SELECT nombre, documento, email, telefono, direccion, 
+                                                fecha_nacimiento as nacimiento, compras, ultima_compra, fecha
                                             FROM clientes 
                                             WHERE LENGTH(TRIM(nombre)) > 0
                                             ORDER BY nombre ASC
@@ -1276,118 +1276,176 @@ function actualizarResumen() {
                                         $stmt_clientes->execute();
                                         
                                     } else if ($datos_clientes['opcion'] === 'solo_con_datos') {
-                                        // Solo clientes con email O teléfono
+                                        // ✅ SOLO CLIENTES CON EMAIL O TELÉFONO
                                         $stmt_clientes = $pdo_origen->prepare("
-                                            SELECT id, nombre, documento, email, telefono, direccion, 
-                                                nacimiento, compras, ultima_compra, fecha
+                                            SELECT nombre, documento, email, telefono, direccion, 
+                                                fecha_nacimiento as nacimiento, compras, ultima_compra, fecha
                                             FROM clientes 
                                             WHERE LENGTH(TRIM(nombre)) > 0
                                             AND (LENGTH(TRIM(email)) > 0 OR LENGTH(TRIM(telefono)) > 0)
                                             ORDER BY nombre ASC
                                         ");
                                         $stmt_clientes->execute();
+                                    } else {
+                                        // No importar
+                                        echo '<div class="info">ℹ️ No se seleccionó importar clientes</div>';
+                                        $stmt_clientes = null;
                                     }
                                     
-                                    $clientes_origen = $stmt_clientes->fetchAll(PDO::FETCH_ASSOC);
-                                    
-                                    // Insertar clientes en la nueva BD
-                                    $stmt_insert_cliente = $pdo_nueva->prepare("
-                                        INSERT INTO clientes (nombre, documento, email, telefono, direccion, nacimiento, compras, ultima_compra, fecha)
-                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                    ");
-                                    
-                                    foreach ($clientes_origen as $cliente) {
-                                        try {
-                                            $stmt_insert_cliente->execute([
-                                                $cliente['nombre'] ?? '',
-                                                $cliente['documento'] ?? '',
-                                                $cliente['email'] ?? '',
-                                                $cliente['telefono'] ?? '',
-                                                $cliente['direccion'] ?? '',
-                                                $cliente['nacimiento'] ?? '0000-00-00',
-                                                $cliente['compras'] ?? 0,
-                                                $cliente['ultima_compra'] ?? '0000-00-00 00:00:00',
-                                                $cliente['fecha'] ?? date('Y-m-d H:i:s')
-                                            ]);
-                                            $clientes_importados++;
+                                    if ($stmt_clientes) {
+                                        $clientes_origen = $stmt_clientes->fetchAll(PDO::FETCH_ASSOC);
+                                        
+                                        echo '<div class="info">🔍 <strong>Clientes encontrados en origen:</strong> ' . count($clientes_origen) . '</div>';
+                                        
+                                        if (count($clientes_origen) > 0) {
+                                            // ✅ INSERTAR CLIENTES UNO POR UNO
+                                            $stmt_insert_cliente = $pdo_nueva->prepare("
+                                                INSERT INTO clientes (nombre, documento, email, telefono, direccion, fecha_nacimiento, compras, ultima_compra, fecha)
+                                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                            ");
                                             
-                                        } catch (Exception $e) {
-                                            // Log el error pero continúa con otros clientes
-                                            error_log("Error importando cliente {$cliente['nombre']}: " . $e->getMessage());
+                                            $clientes_procesados = 0;
+                                            $clientes_con_error = 0;
+                                            
+                                            foreach ($clientes_origen as $cliente) {
+                                                try {
+                                                    $stmt_insert_cliente->execute([
+                                                        trim($cliente['nombre']) ?: 'Sin nombre',
+                                                        $cliente['documento'] ?: 0,
+                                                        trim($cliente['email']) ?: '',
+                                                        trim($cliente['telefono']) ?: '',
+                                                        trim($cliente['direccion']) ?: '',
+                                                        $cliente['nacimiento'] ?: '0000-00-00',
+                                                        $cliente['compras'] ?: 0,
+                                                        $cliente['ultima_compra'] ?: '0000-00-00 00:00:00',
+                                                        $cliente['fecha'] ?: date('Y-m-d H:i:s')
+                                                    ]);
+                                                    $clientes_procesados++;
+                                                    
+                                                } catch (Exception $e) {
+                                                    $clientes_con_error++;
+                                                    error_log("Error importando cliente {$cliente['nombre']}: " . $e->getMessage());
+                                                }
+                                            }
+                                            
+                                            $clientes_importados = $clientes_procesados;
+                                            
+                                            echo '<div class="success">';
+                                            echo '✅ <strong>Clientes procesados:</strong><br>';
+                                            echo '• Importados exitosamente: ' . $clientes_procesados . '<br>';
+                                            if ($clientes_con_error > 0) {
+                                                echo '• Con errores: ' . $clientes_con_error . '<br>';
+                                            }
+                                            echo '</div>';
+                                            
+                                        } else {
+                                            echo '<div class="warning">⚠️ No se encontraron clientes que coincidan con los criterios</div>';
                                         }
                                     }
                                     
-                                    echo '<div class="success">✅ Clientes importados: ' . $clientes_importados . '</div>';
-                                    
+                                } else {
+                                    echo '<div class="warning">⚠️ Datos de importación de clientes inválidos</div>';
                                 }
                                 
                             } catch (Exception $e) {
-                                echo '<div class="warning">⚠️ Error importando clientes: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                                echo '<div class="error">❌ Error importando clientes: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                                error_log("Error en importación de clientes: " . $e->getMessage());
                             }
+                            
+                        } else {
+                            echo '<div class="info">ℹ️ <strong>Clientes:</strong> No se seleccionó importación</div>';
                         }
                         
-                        // ✅ IMPORTAR USUARIOS SELECCIONADOS
-                        if (isset($_POST['usuarios_importar']) && is_array($_POST['usuarios_importar'])) {
+                    // ✅ IMPORTAR USUARIOS SELECCIONADOS (SIN GUIÓN BAJO)
+                    if (isset($_POST['usuarios_importar']) && is_array($_POST['usuarios_importar'])) {
+                        
+                        echo '<div class="info">👥 <strong>Importando usuarios seleccionados...</strong></div>';
+                        
+                        try {
+                            $usuarios_ids = array_map('intval', $_POST['usuarios_importar']);
                             
-                            echo '<div class="info">👥 <strong>Importando usuarios seleccionados...</strong></div>';
-                            
-                            try {
-                                $usuarios_ids = array_map('intval', $_POST['usuarios_importar']);
+                            if (!empty($usuarios_ids)) {
+                                $placeholders = str_repeat('?,', count($usuarios_ids) - 1) . '?';
                                 
-                                if (!empty($usuarios_ids)) {
-                                    $placeholders = str_repeat('?,', count($usuarios_ids) - 1) . '?';
-                                    
-                                    $stmt_usuarios = $pdo_origen->prepare("
-                                        SELECT nombre, usuario, password, perfil, foto, estado, ultimo_login,
-                                            empresa, telefono, direccion, fecha
-                                        FROM usuarios 
-                                        WHERE id IN ({$placeholders})
-                                        AND estado = 1
-                                    ");
-                                    $stmt_usuarios->execute($usuarios_ids);
-                                    $usuarios_origen = $stmt_usuarios->fetchAll(PDO::FETCH_ASSOC);
-                                    
-                                    // Insertar usuarios en la nueva BD
-                                    $stmt_insert_usuario = $pdo_nueva->prepare("
-                                        INSERT INTO usuarios (nombre, usuario, password, perfil, foto, estado, ultimo_login, empresa, telefono, direccion, fecha)
-                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                    ");
-                                    
-                                    foreach ($usuarios_origen as $usuario) {
-                                        try {
-                                            // Modificar el usuario para evitar conflictos
-                                            $nuevo_usuario = $usuario['usuario'] . '_' . strtolower($codigo_sucursal);
-                                            
-                                            $stmt_insert_usuario->execute([
-                                                $usuario['nombre'] ?? '',
-                                                $nuevo_usuario,
-                                                $usuario['password'] ?? '',
-                                                $usuario['perfil'] ?? 'Especial',
-                                                $usuario['foto'] ?? 'vistas/img/usuarios/default/anonymous.png',
-                                                1, // Activo
-                                                $usuario['ultimo_login'] ?? '0000-00-00 00:00:00',
-                                                $usuario['empresa'] ?? $nombre_sucursal,
-                                                $usuario['telefono'] ?? '',
-                                                $usuario['direccion'] ?? '',
-                                                date('Y-m-d H:i:s')
-                                            ]);
-                                            $usuarios_importados++;
-                                            
-                                        } catch (Exception $e) {
-                                            error_log("Error importando usuario {$usuario['nombre']}: " . $e->getMessage());
+                                $stmt_usuarios = $pdo_origen->prepare("
+                                    SELECT nombre, usuario, password, perfil, foto, estado, ultimo_login,
+                                        empresa, telefono, direccion, fecha
+                                    FROM usuarios 
+                                    WHERE id IN ({$placeholders})
+                                    AND estado = 1
+                                ");
+                                $stmt_usuarios->execute($usuarios_ids);
+                                $usuarios_origen = $stmt_usuarios->fetchAll(PDO::FETCH_ASSOC);
+                                
+                                echo '<div class="info">🔍 <strong>Usuarios encontrados:</strong> ' . count($usuarios_origen) . '</div>';
+                                
+                                // ✅ INSERTAR USUARIOS SIN MODIFICAR NOMBRES DE USUARIO
+                                $stmt_insert_usuario = $pdo_nueva->prepare("
+                                    INSERT INTO usuarios (nombre, usuario, password, perfil, foto, estado, ultimo_login, empresa, telefono, direccion, fecha)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                ");
+                                
+                                $usuarios_procesados = 0;
+                                $usuarios_con_error = 0;
+                                
+                                foreach ($usuarios_origen as $usuario) {
+                                    try {
+                                        // ✅ NO MODIFICAR EL NOMBRE DE USUARIO - MANTENER ORIGINAL
+                                        $usuario_original = trim($usuario['usuario']);
+                                        
+                                        // ✅ VERIFICAR SI EL USUARIO YA EXISTE
+                                        $stmt_verificar = $pdo_nueva->prepare("SELECT id FROM usuarios WHERE usuario = ?");
+                                        $stmt_verificar->execute([$usuario_original]);
+                                        
+                                        if ($stmt_verificar->rowCount() > 0) {
+                                            echo '<div class="warning">⚠️ Usuario <strong>' . htmlspecialchars($usuario_original) . '</strong> ya existe - omitido</div>';
+                                            continue;
                                         }
+                                        
+                                        // ✅ INSERTAR CON USUARIO ORIGINAL
+                                        $stmt_insert_usuario->execute([
+                                            trim($usuario['nombre']) ?: 'Usuario sin nombre',
+                                            $usuario_original, // ✅ SIN MODIFICACIONES
+                                            $usuario['password'] ?: '',
+                                            $usuario['perfil'] ?: 'Especial',
+                                            $usuario['foto'] ?: 'vistas/img/usuarios/default/anonymous.png',
+                                            1, // Activo
+                                            $usuario['ultimo_login'] ?: '0000-00-00 00:00:00',
+                                            $usuario['empresa'] ?: $nombre_sucursal,
+                                            trim($usuario['telefono']) ?: '',
+                                            trim($usuario['direccion']) ?: '',
+                                            date('Y-m-d H:i:s')
+                                        ]);
+                                        
+                                        $usuarios_procesados++;
+                                        
+                                        echo '<div class="success">✅ Usuario importado: <strong>' . htmlspecialchars($usuario_original) . '</strong></div>';
+                                        
+                                    } catch (Exception $e) {
+                                        $usuarios_con_error++;
+                                        echo '<div class="error">❌ Error importando usuario ' . htmlspecialchars($usuario['nombre']) . ': ' . htmlspecialchars($e->getMessage()) . '</div>';
+                                        error_log("Error importando usuario {$usuario['nombre']}: " . $e->getMessage());
                                     }
-                                    
-                                    echo '<div class="success">✅ Usuarios importados: ' . $usuarios_importados . '</div>';
                                 }
                                 
-                            } catch (Exception $e) {
-                                echo '<div class="warning">⚠️ Error importando usuarios: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                                $usuarios_importados = $usuarios_procesados;
+                                
+                                echo '<div class="success">';
+                                echo '✅ <strong>Usuarios procesados:</strong><br>';
+                                echo '• Importados exitosamente: ' . $usuarios_procesados . '<br>';
+                                if ($usuarios_con_error > 0) {
+                                    echo '• Con errores: ' . $usuarios_con_error . '<br>';
+                                }
+                                echo '</div>';
                             }
+                            
+                        } catch (Exception $e) {
+                            echo '<div class="error">❌ Error importando usuarios: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                            error_log("Error en importación de usuarios: " . $e->getMessage());
                         }
                         
                     } else {
-                        echo '<div class="info">ℹ️ <strong>Sin importación de datos:</strong> No se seleccionó sucursal origen</div>';
+                        echo '<div class="info">ℹ️ <strong>Usuarios:</strong> No se seleccionaron usuarios para importar</div>';
                     }
                     
                     // ✅ RESUMEN DE IMPORTACIÓN
