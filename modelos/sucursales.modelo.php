@@ -31,11 +31,11 @@ class ModeloSucursales {
                 $sucursal['activo'] = (bool)$sucursal['activo'];
                 $sucursal['es_principal'] = (bool)$sucursal['es_principal'];
                 
-                if ($sucursal['fecha_ultima_sincronizacion_catalogo']) {
-                    $sucursal['ultima_sincronizacion_formato'] = date('d/m/Y H:i:s', strtotime($sucursal['fecha_ultima_sincronizacion_catalogo']));
-                } else {
-                    $sucursal['ultima_sincronizacion_formato'] = 'Nunca';
-                }
+            if ($sucursal['fecha_actualizacion']) {
+                $sucursal['ultima_sincronizacion_formato'] = date('d/m/Y H:i:s', strtotime($sucursal['fecha_actualizacion']));
+            } else {
+                $sucursal['ultima_sincronizacion_formato'] = 'Nunca';
+            }
             }
             
             return [
