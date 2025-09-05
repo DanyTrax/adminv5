@@ -362,100 +362,169 @@ $FECHA_INSTALACION = date('Y-m-d H:i:s');
                 actualizarResumen();
             }
 
-            function cargarClientes(bdOrigen) {
-                const contenedor = document.getElementById('listaClientes');
-                contenedor.innerHTML = '<p>⏳ Cargando clientes...</p>';
-                
-                // Hacer llamada AJAX para obtener clientes
-                fetch('ajax-instalador-datos.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        accion: 'obtener_clientes',
-                        bd_origen: bdOrigen
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if(data.success && data.clientes.length > 0) {
-                        let html = '<div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">';
-                        
-                        data.clientes.forEach(cliente => {
-                            html += `
-                                <div style="margin-bottom: 8px;">
-                                    <label style="display: flex; align-items: center;">
-                                        <input type="checkbox" name="clientes_importar[]" value="${cliente.id}" style="margin-right: 10px;">
-                                        <div>
-                                            <strong>${cliente.nombre}</strong><br>
-                                            <small>Doc: ${cliente.documento} | Email: ${cliente.email} | Tel: ${cliente.telefono}</small>
-                                        </div>
-                                    </label>
-                                </div>
-                            `;
-                        });
-                        
-                        html += '</div>';
-                        html += `<p style="margin-top: 10px;"><strong>Total clientes disponibles:</strong> ${data.clientes.length}</p>`;
-                        contenedor.innerHTML = html;
-                    } else {
-                        contenedor.innerHTML = '<p><em>No se encontraron clientes en la sucursal seleccionada</em></p>';
-                    }
-                })
-                .catch(error => {
-                    contenedor.innerHTML = '<p style="color: red;"><em>Error cargando clientes: ' + error.message + '</em></p>';
-                });
-            }
+function cargarClientes(bdOrigen) {
+    const contenedor = document.getElementById('listaClientes');
+    contenedor.innerHTML = '<p>⏳ Cargando clientes...</p>';
+    
+    fetch('ajax-datos.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            accion: 'obtener_clientes',
+            bd_origen: bdOrigen
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if(data.success && data.clientes && data.clientes.length > 0) {
+            // ✅ FORMATO SIMPLE PARA CLIENTES (SOLO CHECKBOX)
+            let html = '<div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: white;">';
+            
+            data.clientes.forEach(cliente => {
+                html += `
+                    <div style="margin-bottom: 8px; padding: 5px; border-bottom: 1px solid #eee;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="checkbox" name="clientes_importar[]" value="${cliente.id}" 
+                                   style="margin-right: 10px;" onchange="actualizarResumen()">
+                            <div style="flex: 1;">
+                                <strong>${cliente.nombre}</strong>
+                                <small style="color: #666; margin-left: 10px;">
+                                    ${cliente.documento} | ${cliente.email}
+                                </small>
+                            </div>
+                        </label>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            html += `<div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                <strong>📊 Total: ${data.clientes.length} clientes</strong>
+            </div>`;
+            
+            contenedor.innerHTML = html;
+            
+        } else {
+            contenedor.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #666;">
+                    <p><strong>ℹ️ Sin clientes</strong></p>
+                    <p>No se encontraron clientes en: <code>${bdOrigen}</code></p>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error cargando clientes:', error);
+        contenedor.innerHTML = `
+            <div style="padding: 20px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">
+                <p><strong>❌ Error cargando clientes</strong></p>
+                <p>${error.message}</p>
+                <p style="font-size: 12px;">Verifica la conexión y el archivo ajax-datos.php</p>
+            </div>
+        `;
+    });
+}
 
-            function cargarUsuarios(bdOrigen) {
-                const contenedor = document.getElementById('listaUsuarios');
-                contenedor.innerHTML = '<p>⏳ Cargando usuarios...</p>';
+function cargarUsuarios(bdOrigen) {
+    const contenedor = document.getElementById('listaUsuarios');
+    contenedor.innerHTML = '<p>⏳ Cargando usuarios...</p>';
+    
+    fetch('ajax-datos.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            accion: 'obtener_usuarios',
+            bd_origen: bdOrigen
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if(data.success && data.usuarios && data.usuarios.length > 0) {
+            // ✅ FORMATO COMPLETO PARA USUARIOS (CON DETALLES)
+            let html = '<div style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: white;">';
+            
+            data.usuarios.forEach(usuario => {
+                const esAdmin = usuario.perfil.toLowerCase() === 'administrador';
+                const colorPerfil = esAdmin ? '#dc3545' : '#007bff';
+                const iconoPerfil = esAdmin ? '👑' : '👤';
+                const estadoColor = usuario.estado == 1 ? '#28a745' : '#6c757d';
                 
-                // Hacer llamada AJAX para obtener usuarios
-                fetch('ajax-instalador-datos.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        accion: 'obtener_usuarios',
-                        bd_origen: bdOrigen
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if(data.success && data.usuarios.length > 0) {
-                        let html = '<div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">';
-                        
-                        data.usuarios.forEach(usuario => {
-                            const esAdmin = usuario.perfil.toLowerCase() === 'administrador';
-                            const colorPerfil = esAdmin ? '#dc3545' : '#007bff';
-                            
-                            html += `
-                                <div style="margin-bottom: 8px;">
-                                    <label style="display: flex; align-items: center;">
-                                        <input type="checkbox" name="usuarios_importar[]" value="${usuario.id}" style="margin-right: 10px;">
-                                        <div>
-                                            <strong>${usuario.nombre}</strong> <span style="color: ${colorPerfil}; font-weight: bold;">(${usuario.perfil})</span><br>
-                                            <small>Usuario: ${usuario.usuario} | Estado: ${usuario.estado == 1 ? 'Activo' : 'Inactivo'} | Último login: ${usuario.ultimo_login || 'Nunca'}</small>
-                                        </div>
-                                    </label>
+                html += `
+                    <div style="margin-bottom: 12px; padding: 10px; border: 1px solid #eee; border-radius: 6px; background: #f9f9f9;">
+                        <label style="display: flex; align-items: flex-start; cursor: pointer;">
+                            <input type="checkbox" name="usuarios_importar[]" value="${usuario.id}" 
+                                   style="margin-right: 12px; margin-top: 4px;" onchange="actualizarResumen()">
+                            <div style="flex: 1;">
+                                <!-- Nombre y perfil -->
+                                <div style="margin-bottom: 6px;">
+                                    <strong style="font-size: 14px; color: #333;">
+                                        ${iconoPerfil} ${usuario.nombre}
+                                    </strong>
+                                    <span style="color: ${colorPerfil}; font-size: 12px; font-weight: bold; margin-left: 8px; background: ${colorPerfil}20; padding: 2px 6px; border-radius: 3px;">
+                                        ${usuario.perfil}
+                                    </span>
                                 </div>
-                            `;
-                        });
-                        
-                        html += '</div>';
-                        html += `<p style="margin-top: 10px;"><strong>Total usuarios disponibles:</strong> ${data.usuarios.length}</p>`;
-                        contenedor.innerHTML = html;
-                    } else {
-                        contenedor.innerHTML = '<p><em>No se encontraron usuarios en la sucursal seleccionada</em></p>';
-                    }
-                })
-                .catch(error => {
-                    contenedor.innerHTML = '<p style="color: red;"><em>Error cargando usuarios: ' + error.message + '</em></p>';
-                });
-            }
+                                
+                                <!-- Información principal -->
+                                <div style="font-size: 12px; color: #666; margin-bottom: 4px;">
+                                    <strong>👤 Usuario:</strong> ${usuario.usuario} | 
+                                    <strong style="color: ${estadoColor};">⚫ ${usuario.estado == 1 ? 'Activo' : 'Inactivo'}</strong>
+                                </div>
+                                
+                                <!-- Información adicional -->
+                                <div style="font-size: 11px; color: #999;">
+                                    📅 Último login: ${usuario.ultimo_login} | 
+                                    🏢 ${usuario.empresa}<br>
+                                    📞 ${usuario.telefono} | 
+                                    📧 Registrado: ${usuario.fecha_registro}
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            html += `<div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                <strong>📊 Total: ${data.usuarios.length} usuarios activos</strong>
+            </div>`;
+            
+            contenedor.innerHTML = html;
+            
+        } else {
+            contenedor.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #666;">
+                    <p><strong>ℹ️ Sin usuarios</strong></p>
+                    <p>No se encontraron usuarios activos en: <code>${bdOrigen}</code></p>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error cargando usuarios:', error);
+        contenedor.innerHTML = `
+            <div style="padding: 20px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">
+                <p><strong>❌ Error cargando usuarios</strong></p>
+                <p>${error.message}</p>
+                <p style="font-size: 12px;">Verifica la conexión y el archivo ajax-datos.php</p>
+            </div>
+        `;
+    });
+}
 
             function seleccionarTodosClientes() {
                 const checkboxes = document.querySelectorAll('input[name="clientes_importar[]"]');
