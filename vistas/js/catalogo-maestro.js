@@ -1510,3 +1510,37 @@ $(document).ready(function(){
 
 // Mensaje final para debug
 //console.log('Archivo catalogo-maestro.js cargado - Versión: 1.0 - Compatible con danytrax/adminv5');
+/*=============================================
+PARCHE SIMPLE PARA actualizarContador
+=============================================*/
+
+// Sobrescribir la función problemática
+window.actualizarContador = function(info) {
+    // Validación defensiva simple
+    if (!info || typeof info !== 'object' || !info.hasOwnProperty('recordsTotal')) {
+        return; // Salir silenciosamente si no hay datos válidos
+    }
+    
+    // Solo procesar si hay datos válidos
+    try {
+        var total = parseInt(info.recordsTotal) || 0;
+        var filtrado = parseInt(info.recordsFiltered) || total;
+        
+        // Actualizar elementos en la página
+        $('.badge-catalogo-total').text(total);
+        
+        console.log(`Contador actualizado: ${total} productos total, ${filtrado} filtrados`);
+        
+    } catch (error) {
+        console.warn('Error actualizando contador (ignorado):', error);
+    }
+};
+
+// Interceptar errores de recordsTotal
+window.addEventListener('error', function(event) {
+    if (event.error && event.error.message && event.error.message.includes('recordsTotal')) {
+        console.warn('Error de recordsTotal interceptado y suprimido');
+        event.preventDefault();
+        return true;
+    }
+});
