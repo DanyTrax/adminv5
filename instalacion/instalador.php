@@ -748,7 +748,7 @@ function actualizarResumen() {
                 echo '<div class="step"><h3>🌐 Paso 1: Verificando BD Central</h3>';
                 
                 try {
-                    require_once "api-transferencias/conexion-central.php";
+                    require_once "../api-transferencias/conexion-central.php";
                     $dbCentral = ConexionCentral::conectar();
                     
                     $stmt = $dbCentral->prepare("SELECT COUNT(*) as total FROM catalogo_maestro WHERE activo = 1");
