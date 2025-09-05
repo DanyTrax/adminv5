@@ -3,7 +3,10 @@
 INSTALADOR PRINCIPAL DE BD LOCAL
 danytrax/adminv5 - Sistema Seguro
 =============================================*/
+// Verificación de autenticación simple
+session_start();
 
+if
 require_once 'config-instalacion.php';
 
 // 🔒 VERIFICAR AUTENTICACIÓN ANTES DE CONTINUAR
