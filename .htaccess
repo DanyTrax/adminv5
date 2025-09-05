@@ -1,16 +1,8 @@
-# =============================================
-# HTACCESS BÁSICO PARA ADMINV5
-# Compatible con la mayoría de servidores
-# =============================================
+# HTACCESS MÍNIMO PARA ADMINV5
 
-# Activar mod_rewrite
 RewriteEngine On
 
-# =============================================
-# PROTECCIÓN BÁSICA DE ARCHIVOS
-# =============================================
-
-# Proteger archivos de configuración
+# Proteger archivos críticos
 <Files "config.php">
     Deny from all
 </Files>
@@ -19,62 +11,12 @@ RewriteEngine On
     Deny from all
 </Files>
 
-<Files "*.controlador.php">
-    Deny from all
-</Files>
-
-# Proteger logs
 <Files "error_log">
     Deny from all
 </Files>
 
-<Files "*.log">
-    Deny from all
-</Files>
-
-# Proteger archivos de instalación antiguos
-<Files "instalador-bd-local.php">
-    Deny from all
-</Files>
-
-<Files "migracion.php">
-    Deny from all
-</Files>
-
-# =============================================
-# CONFIGURACIÓN PHP BÁSICA
-# =============================================
-
-# Ocultar errores en producción
+# Configuración PHP mínima
 php_flag display_errors Off
-php_flag log_errors On
 
-# Límites básicos
-php_value max_execution_time 300
-php_value memory_limit 256M
-php_value post_max_size 20M
-php_value upload_max_filesize 20M
-
-# =============================================
-# CONFIGURACIÓN DE ACCESO
-# =============================================
-
-# Prevenir listado de directorios
+# Sin listado de directorios
 Options -Indexes
-
-# Permitir acceso a instalación
-<Directory "instalacion">
-    Options +Indexes
-    AllowOverride All
-    Order allow,deny
-    Allow from all
-</Directory>
-
-# =============================================
-# HEADERS DE SEGURIDAD BÁSICOS
-# =============================================
-
-<IfModule mod_headers.c>
-    Header set X-Frame-Options SAMEORIGIN
-    Header set X-Content-Type-Options nosniff
-</IfModule>
