@@ -1440,7 +1440,7 @@ function actualizarResumen() {
                 }
                 
                 // ✅ TAMBIÉN CREAR UNA COPIA ESPECÍFICA DE LA SUCURSAL
-                $archivo_sucursal = "modelos/conexion-sucursal-{$codigo_sucursal}.php";
+                $archivo_sucursal = "../modelos/conexion-sucursal-{$codigo_sucursal}.php";
                 if(file_put_contents($archivo_sucursal, $contenido_conexion)) {
                     echo '<div class="info">';
                     echo '📁 <strong>Copia específica creada:</strong> ' . $archivo_sucursal;
@@ -1644,10 +1644,14 @@ function actualizarResumen() {
             
             // Guardar log
             try {
-                file_put_contents(
-                    "logs/instalacion_{$codigo_sucursal}_{$FECHA_INSTALACION}.json",
-                    json_encode($log_instalacion, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-                );
+            // Crear directorio de logs si no existe
+            $logs_dir = __DIR__ . '/logs/';
+            if (!is_dir($logs_dir)) {
+                mkdir($logs_dir, 0755, true);
+            }
+
+            $log_file = $logs_dir . "instalacion_{$codigo_sucursal}_{$fecha}.json";
+            file_put_contents($log_file, json_encode($log_instalacion, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
             } catch (Exception $e) {
                 // Ignorar errores de log
             }
