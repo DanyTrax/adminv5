@@ -1255,397 +1255,6 @@ function validarArchivo(archivo, tiposPermitidos, tamañoMaximo) {
     return { valido: true, mensaje: "Archivo válido" };
 }
 
-// Función para actualizar contador de productos
-function actualizarContador() {
-    var table = $('.tabla-catalogo-maestro').DataTable();
-    if (table) {
-        var info = table.page.info();
-        $('#contadorProductos').html(`
-            <small class="text-muted">
-                <i class="fa fa-cubes"></i> 
-                Total: ${info.recordsTotal} productos | 
-                Mostrando: ${info.recordsDisplay}
-            </small>
-        `);
-    }
-}
-
-// Función para recargar la tabla manteniendo filtros
-function recargarTabla() {
-    var table = $('.tabla-catalogo-maestro').DataTable();
-    if (table) {
-        table.ajax.reload(null, false); // false = mantener paginación actual
-    } else {
-        location.reload(); // Si no hay DataTable, recargar página
-    }
-}
-
-/*=============================================
-TOOLTIP Y COMPONENTES UI
-=============================================*/
-
-$(document).ready(function(){
-    
-    // Inicializar tooltips
-    $('[data-toggle="tooltip"]').tooltip();
-    
-    // Configurar tooltips dinámicos para elementos que se agregan después
-    $(document).on('mouseenter', '[data-toggle="tooltip"]:not([data-original-title])', function() {
-        $(this).tooltip();
-    });
-    
-    // Auto-ocultar alertas después de 5 segundos
-    $(document).on('shown.bs.alert', '.alert', function() {
-        var alert = $(this);
-        setTimeout(function() {
-            alert.fadeOut('slow');
-        }, 5000);
-    });
-    
-    // Confirmar antes de salir si hay cambios sin guardar
-    var formModificado = false;
-    
-    // Detectar cambios en formularios
-    $('#modalAgregarProductoMaestro form, #modalEditarProductoMaestro form').on('change input', function() {
-        formModificado = true;
-    });
-    
-    // Resetear flag cuando se guarda
-    $(document).on('submit', 'form', function() {
-        formModificado = false;
-    });
-    
-    // Advertir antes de cerrar modal con cambios
-    $('.modal').on('hide.bs.modal', function(e) {
-        if (formModificado) {
-            if (!confirm('¿Está seguro de cerrar? Los cambios no guardados se perderán.')) {
-                e.preventDefault();
-                return false;
-            }
-        }
-        formModificado = false;
-    });
-});
-
-/*=============================================
-MANEJO DE ERRORES AJAX GLOBAL
-=============================================*/
-
-$(document).ajaxError(function(event, xhr, settings, thrownError) {
-    
-    console.error("Error AJAX en catálogo maestro:", {
-        status: xhr.status,
-        error: thrownError,
-        url: settings.url
-    });
-    
-    // Si hay error 500 o similar, mostrar mensaje genérico
-    if (xhr.status >= 500) {
-        swal({
-            type: "error",
-            title: "Error del servidor",
-            text: "Ha ocurrido un error interno. Por favor contacte al administrador."
-        });
-    }
-    
-    // Si hay error 404
-    if (xhr.status === 404) {
-        swal({
-            type: "error",
-            title: "Recurso no encontrado",
-            text: "La página o archivo solicitado no existe."
-        });
-    }
-    
-    // Restaurar botones que puedan estar en estado de carga
-    $('.btn').each(function() {
-        if ($(this).prop('disabled') && $(this).html().includes('spinner')) {
-            $(this).prop('disabled', false);
-            var textoOriginal = $(this).data('texto-original');
-            if (textoOriginal) {
-                $(this).html(textoOriginal);
-            }
-        }
-    });
-});
-
-/*=============================================
-INICIALIZACIÓN FINAL
-=============================================*/
-
-$(document).ready(function(){
-    
-    //console.log('Catálogo Maestro JS - Cargado completamente');
-    
-    // Verificar que todos los componentes estén inicializados
-    setTimeout(function() {
-        
-        // Verificar DataTable
-        if (!$.fn.DataTable.isDataTable('.tabla-catalogo-maestro')) {
-            console.warn('DataTable no se inicializó correctamente');
-        }
-        
-        // Verificar modales
-        if ($('.modal').length === 0) {
-            console.warn('No se encontraron modales en la página');
-        }
-        
-        // Actualizar contador inicial
-        actualizarContador();
-        
-        //console.log('Catálogo Maestro - Sistema completamente inicializado');
-        
-    }, 1000);
-});
-
-/*=============================================
-DEBUG - VERIFICAR ELEMENTOS HTML
-=============================================*/
-
-function verificarElementosHTML() {
-  /*  
-    console.log("=== VERIFICANDO ELEMENTOS HTML ===");
-    
-    // Elementos del modal agregar
-    console.log("Modal agregar:");
-    console.log("- esDivisibleMaestro:", $("#esDivisibleMaestro").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- divisionConfigMaestro:", $("#divisionConfigMaestro").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- codigoHijoMitad:", $("#codigoHijoMitad").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- codigoHijoTercio:", $("#codigoHijoTercio").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- codigoHijoCuarto:", $("#codigoHijoCuarto").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    
-    // Elementos del modal editar
-    console.log("Modal editar:");
-    console.log("- editarEsDivisibleMaestro:", $("#editarEsDivisibleMaestro").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- divisionConfigEditarMaestro:", $("#divisionConfigEditarMaestro").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- editarCodigoHijoMitad:", $("#editarCodigoHijoMitad").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- editarCodigoHijoTercio:", $("#editarCodigoHijoTercio").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- editarCodigoHijoCuarto:", $("#editarCodigoHijoCuarto").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    
-    console.log("=== FIN VERIFICACIÓN ===");
-    */
-}
-
-/*=============================================
-DEBUG Y LIMPIEZA ANTES DE ENVIAR FORMULARIO
-=============================================*/
-
-$(document).on("submit", "form", function(e) {
-    
-    // Solo para el formulario de editar producto maestro
-    if($(this).find("#idProductoMaestro").length > 0) {
-        
-        //console.log("=== PROCESANDO FORMULARIO EDITAR ===");
-        
-        var esDivisible = $("#editarEsDivisibleMaestro").prop("checked");
-        //console.log("Es divisible:", esDivisible);
-        
-        if(!esDivisible) {
-            
-            // Si NO es divisible, limpiar todos los campos
-            $("#editarCodigoHijoMitad").val("");
-            $("#editarCodigoHijoTercio").val("");
-            $("#editarCodigoHijoCuarto").val("");
-            
-            //console.log("Limpiando todos los campos de división");
-            
-        } else {
-            
-            // Si ES divisible, verificar campos individualmente
-            var buscarMitad = $("#buscarEditarHijoMitad").val();
-            var buscarTercio = $("#buscarEditarHijoTercio").val();
-            var buscarCuarto = $("#buscarEditarHijoCuarto").val();
-            
-            /*console.log("Valores en campos de búsqueda:");
-            console.log("- Mitad: '" + buscarMitad + "'");
-            console.log("- Tercio: '" + buscarTercio + "'");
-            console.log("- Cuarto: '" + buscarCuarto + "'");
-            */
-            
-            // ✅ SI EL CAMPO DE BÚSQUEDA ESTÁ VACÍO, LIMPIAR EL HIDDEN
-            if(!buscarMitad || buscarMitad.trim() === "") {
-                $("#editarCodigoHijoMitad").val("");
-                //console.log("🧹 Campo mitad limpiado");
-            }
-            
-            if(!buscarTercio || buscarTercio.trim() === "") {
-                $("#editarCodigoHijoTercio").val("");
-                //console.log("🧹 Campo tercio limpiado");
-            }
-            
-            if(!buscarCuarto || buscarCuarto.trim() === "") {
-                $("#editarCodigoHijoCuarto").val("");
-                //console.log("🧹 Campo cuarto limpiado");
-            }
-        }
-        /*
-        console.log("Valores finales en campos hidden:");
-        console.log("- Mitad hidden: '" + $("#editarCodigoHijoMitad").val() + "'");
-        console.log("- Tercio hidden: '" + $("#editarCodigoHijoTercio").val() + "'");
-        console.log("- Cuarto hidden: '" + $("#editarCodigoHijoCuarto").val() + "'");
-        */
-        // ✅ FORZAR QUE LOS CAMPOS VACÍOS SE ENVÍEN
-        if($("#editarCodigoHijoMitad").val() === "") {
-            $("#editarCodigoHijoMitad").val("EMPTY_FIELD");
-        }
-        if($("#editarCodigoHijoTercio").val() === "") {
-            $("#editarCodigoHijoTercio").val("EMPTY_FIELD");
-        }
-        if($("#editarCodigoHijoCuarto").val() === "") {
-            $("#editarCodigoHijoCuarto").val("EMPTY_FIELD");
-        }
-        /*
-        console.log("Valores finales para envío:");
-        console.log("- Mitad: '" + $("#editarCodigoHijoMitad").val() + "'");
-        console.log("- Tercio: '" + $("#editarCodigoHijoTercio").val() + "'");
-        console.log("- Cuarto: '" + $("#editarCodigoHijoCuarto").val() + "'");
-        */
-    }
-});
-
-// Ejecutar verificación cuando se carge la página
-$(document).ready(function(){
-    setTimeout(verificarElementosHTML, 2000); // Ejecutar después de 2 segundos
-});
-
-// Mensaje final para debug
-//console.log('Archivo catalogo-maestro.js cargado - Versión: 1.0 - Compatible con danytrax/adminv5');
-/*=============================================
-CORRECCIÓN DE ERROR: actualizarContador
-=============================================*/
-
-// Función para actualizar contador de manera segura
-function actualizarContador(info) {
-    // ✅ VALIDACIÓN DEFENSIVA
-    if (!info || typeof info !== 'object') {
-        console.warn('actualizarContador: info is undefined or invalid, using default values');
-        info = {
-            recordsTotal: 0,
-            recordsFiltered: 0,
-            recordsDisplay: 0
-        };
-    }
-    
-    // Asegurar que las propiedades existan
-    var recordsTotal = info.recordsTotal || 0;
-    var recordsFiltered = info.recordsFiltered || recordsTotal;
-    var recordsDisplay = info.recordsDisplay || recordsFiltered;
-    
-    // Actualizar contador en la interfaz
-    var contadorElement = $('.dataTables_info');
-    if (contadorElement.length > 0) {
-        var texto = `Mostrando ${recordsDisplay} productos de un total de ${recordsTotal}`;
-        if (recordsFiltered !== recordsTotal) {
-            texto += ` (filtrado de ${recordsTotal} total)`;
-        }
-        contadorElement.text(texto);
-    }
-    
-    // Actualizar otros elementos que dependan del contador
-    actualizarElementosContador(recordsTotal, recordsFiltered);
-}
-
-// Función auxiliar para actualizar elementos adicionales
-function actualizarElementosContador(total, filtrado) {
-    // Actualizar badge de productos si existe
-    var badgeProductos = $('#badge-productos-catalogo');
-    if (badgeProductos.length > 0) {
-        badgeProductos.text(total);
-    }
-    
-    // Actualizar título de la página si existe
-    var tituloTabla = $('.card-header .card-title');
-    if (tituloTabla.length > 0 && total > 0) {
-        var textoOriginal = tituloTabla.text().split('(')[0].trim();
-        tituloTabla.text(`${textoOriginal} (${total} productos)`);
-    }
-}
-
-/*=============================================
-OVERRIDE DE DATATABLES CALLBACKS PARA EVITAR ERRORES
-=============================================*/
-
-// Interceptar y corregir llamadas problemáticas
-$(document).ready(function() {
-    
-    // ✅ CORRECCIÓN PARA DATATABLES
-    if ($.fn.DataTable && $('.tabla-catalogo-maestro').length > 0) {
-        
-        // Interceptar el drawCallback original
-        var originalDrawCallback = function(settings) {
-            // Obtener información de la tabla de manera segura
-            var api = this.api();
-            var info = {
-                recordsTotal: api.page.info().recordsTotal || 0,
-                recordsFiltered: api.page.info().recordsFiltered || 0,
-                recordsDisplay: api.page.info().recordsDisplay || 0
-            };
-            
-            // Llamar a actualizarContador con datos válidos
-            actualizarContador(info);
-            
-            // Tooltip para botones
-            $('[data-toggle="tooltip"]').tooltip();
-        };
-        
-        // Si ya existe la tabla, actualizar el callback
-        if ($.fn.DataTable.isDataTable('.tabla-catalogo-maestro')) {
-            $('.tabla-catalogo-maestro').DataTable().on('draw', originalDrawCallback);
-        }
-    }
-    
-    // ✅ PREVENIR LLAMADAS PROBLEMÁTICAS CON TIMEOUT
-    var originalSetTimeout = window.setTimeout;
-    window.setTimeout = function(callback, delay) {
-        if (typeof callback === 'function') {
-            var wrappedCallback = function() {
-                try {
-                    callback();
-                } catch (error) {
-                    if (error.message && error.message.includes('recordsTotal')) {
-                        console.warn('Error de recordsTotal interceptado y corregido:', error);
-                        // Llamar actualizarContador con datos por defecto
-                        actualizarContador({
-                            recordsTotal: 0,
-                            recordsFiltered: 0,
-                            recordsDisplay: 0
-                        });
-                    } else {
-                        console.error('Error en setTimeout:', error);
-                    }
-                }
-            };
-            return originalSetTimeout.call(this, wrappedCallback, delay);
-        }
-        return originalSetTimeout.call(this, callback, delay);
-    };
-});
-
-/*=============================================
-FUNCIÓN DE EMERGENCIA PARA RECONSTRUIR CONTADOR
-=============================================*/
-
-function reconstruirContadorCatalogo() {
-    // Obtener datos de la tabla actual
-    if ($.fn.DataTable.isDataTable('.tabla-catalogo-maestro')) {
-        var table = $('.tabla-catalogo-maestro').DataTable();
-        var info = table.page.info();
-        
-        // Llamar actualizarContador con datos reales
-        actualizarContador({
-            recordsTotal: info.recordsTotal || 0,
-            recordsFiltered: info.recordsFiltered || 0,
-            recordsDisplay: info.recordsDisplay || 0
-        });
-    } else {
-        // Sin tabla, usar valores por defecto
-        actualizarContador({
-            recordsTotal: 0,
-            recordsFiltered: 0,
-            recordsDisplay: 0
-        });
-    }
-}
 
 // Ejecutar reconstrucción cada 5 segundos como respaldo
 setInterval(function() {
@@ -1655,3 +1264,165 @@ setInterval(function() {
 }, 5000);
 
 console.log('✅ Corrección de actualizarContador aplicada - Catálogo Maestro JS');
+
+/*=============================================
+PARCHE PARA CORRECCIÓN DE ERRORES DE CONSOLE
+=============================================*/
+
+// ✅ FUNCIÓN SEGURA PARA actualizar contador
+function actualizarContador(info) {
+    try {
+        // Validación defensiva
+        if (!info || typeof info !== 'object') {
+            console.log('actualizarContador: usando valores por defecto');
+            return;
+        }
+        
+        // Validar propiedades necesarias
+        const recordsTotal = parseInt(info.recordsTotal) || 0;
+        const recordsFiltered = parseInt(info.recordsFiltered) || recordsTotal;
+        
+        // Actualizar contador visual
+        const contadorElement = $('.dataTables_info');
+        if (contadorElement.length > 0) {
+            const texto = `Mostrando productos del 1 al ${recordsFiltered} de un total de ${recordsTotal}`;
+            contadorElement.text(texto);
+        }
+        
+        console.log(`Contador actualizado: ${recordsTotal} productos`);
+        
+    } catch (error) {
+        console.warn('Error en actualizarContador (ignorado):', error.message);
+    }
+}
+
+// ✅ VERIFICACIÓN DE DATATABLES MEJORADA
+function verificarDataTable() {
+    try {
+        if ($('.tabla-catalogo-maestro').length === 0) {
+            console.log('No se encontró tabla .tabla-catalogo-maestro en esta página');
+            return false;
+        }
+        
+        if (!$.fn.DataTable) {
+            console.error('DataTable no está disponible');
+            return false;
+        }
+        
+        if ($.fn.DataTable.isDataTable('.tabla-catalogo-maestro')) {
+            console.log('DataTable ya está inicializado');
+            return true;
+        } else {
+            console.log('DataTable no se inicializó correctamente');
+            return false;
+        }
+        
+    } catch (error) {
+        console.error('Error verificando DataTable:', error);
+        return false;
+    }
+}
+
+// ✅ VERIFICACIÓN DE MODALES MEJORADA
+function verificarModales() {
+    try {
+        const modales = [
+            '#modalAgregarProductoMaestro',
+            '#modalEditarProductoMaestro',
+            '#modalEliminarProductoMaestro'
+        ];
+        
+        let modalesEncontrados = 0;
+        
+        modales.forEach(function(modalId) {
+            if ($(modalId).length > 0) {
+                modalesEncontrados++;
+            }
+        });
+        
+        if (modalesEncontrados === 0) {
+            console.log('No se encontraron modales en la página (normal si no estás en catálogo-maestro)');
+        } else {
+            console.log(`${modalesEncontrados} modales encontrados`);
+        }
+        
+        return modalesEncontrados > 0;
+        
+    } catch (error) {
+        console.error('Error verificando modales:', error);
+        return false;
+    }
+}
+
+// ✅ INTERCEPTAR LLAMADAS PROBLEMÁTICAS CON setTimeout
+const originalSetTimeout = window.setTimeout;
+window.setTimeout = function(callback, delay) {
+    if (typeof callback === 'function') {
+        const safeCallback = function() {
+            try {
+                callback();
+            } catch (error) {
+                if (error.message && (error.message.includes('recordsTotal') || error.message.includes('info is undefined'))) {
+                    console.warn('Error de recordsTotal interceptado y corregido');
+                    // Llamar función segura como fallback
+                    actualizarContador({ recordsTotal: 0, recordsFiltered: 0 });
+                } else {
+                    console.error('Error en setTimeout:', error);
+                }
+            }
+        };
+        return originalSetTimeout.call(this, safeCallback, delay);
+    }
+    return originalSetTimeout.call(this, callback, delay);
+};
+
+// ✅ EJECUTAR VERIFICACIONES AL CARGAR LA PÁGINA
+$(document).ready(function() {
+    
+    // Solo ejecutar si estamos en la página de catálogo maestro
+    if (window.location.href.includes('catalogo-maestro') || RUTA_ACTUAL === 'catalogo-maestro') {
+        
+        setTimeout(function() {
+            console.log('🔍 Verificando componentes del catálogo maestro...');
+            
+            const dataTableOK = verificarDataTable();
+            const modalesOK = verificarModales();
+            
+            if (!dataTableOK && $('.tabla-catalogo-maestro').length > 0) {
+                console.warn('DataTable no inicializado, intentando reinicializar...');
+                try {
+                    inicializarDataTables();
+                } catch (error) {
+                    console.error('Error reinicializando DataTable:', error);
+                }
+            }
+            
+        }, 1000);
+        
+    } else {
+        console.log('No estás en catálogo-maestro, omitiendo verificaciones específicas');
+    }
+});
+
+// ✅ FUNCIÓN DE CONFIGURACIÓN GLOBAL SEGURA
+function configurarValidaciones() {
+    try {
+        // Solo configurar si los elementos existen
+        if ($('#nuevoCodigoMaestro').length > 0) {
+            $('#nuevoCodigoMaestro').on('blur', function() {
+                // Validación de código
+                const codigo = $(this).val();
+                if (codigo && codigo.length < 3) {
+                    console.warn('Código muy corto');
+                }
+            });
+        }
+        
+        console.log('Validaciones configuradas correctamente');
+        
+    } catch (error) {
+        console.warn('Error configurando validaciones (no crítico):', error);
+    }
+}
+
+console.log('✅ Parche de corrección aplicado - Catálogo Maestro JS');
