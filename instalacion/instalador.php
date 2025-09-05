@@ -1057,124 +1057,151 @@ function actualizarResumen() {
                 flush();
             }
             
-            // ===== PASO 7: CREAR USUARIO ADMIN =====
-            if (empty($errores) && $crear_usuario_admin) {
-                echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 7/10: Creando usuario admin...";</script>';
-                echo '<div class="step"><h3>👤 Paso 7: Creando Usuario Administrador</h3>';
+// ===== PASO 7: CREAR USUARIO ADMIN =====
+if (empty($errores) && $crear_usuario_admin) {
+    echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 7/10: Creando usuario admin...";</script>';
+    echo '<div class="step"><h3>👤 Paso 7: Creando Usuario Administrador</h3>';
+    
+    try {
+        // ✅ GENERAR USUARIO SIN GUIÓN BAJO NI CARACTERES ESPECIALES
+        $usuario_admin = 'admin' . strtolower($codigo_sucursal); // Sin guión bajo
+        $password_admin = 'admin123';
+        
+        // ✅ VERIFICAR QUE EL NOMBRE DE USUARIO SEA VÁLIDO (SIN GUIÓN BAJO)
+        if (strpos($usuario_admin, '_') !== false) {
+            // Si tiene guión bajo, reemplazar con código más simple
+            $usuario_admin = 'admin' . str_replace('_', '', strtolower($codigo_sucursal));
+        }
+        
+        // ✅ LIMITAR LONGITUD Y CARACTERES ESPECIALES
+        $usuario_admin = preg_replace('/[^a-z0-9]/', '', $usuario_admin);
+        $usuario_admin = substr($usuario_admin, 0, 15); // Máximo 15 caracteres
+        
+        echo '<div class="info">';
+        echo '🔍 <strong>Generando usuario:</strong> ' . htmlspecialchars($usuario_admin);
+        echo '</div>';
+        
+        // ✅ GENERAR HASH DE CONTRASEÑA USANDO EL MISMO MÉTODO DEL SISTEMA
+        $password_hash = crypt($password_admin, '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+        
+        // ✅ VERIFICAR QUE EL HASH SE GENERÓ CORRECTAMENTE
+        if (strlen($password_hash) < 30) {
+            throw new Exception("Error generando hash de contraseña - muy corto: " . strlen($password_hash));
+        }
+        
+        // ✅ VERIFICAR SI EL USUARIO YA EXISTE
+        $stmtVerificar = $pdo_nueva->prepare("SELECT id FROM usuarios WHERE usuario = ?");
+        $stmtVerificar->execute([$usuario_admin]);
+        
+        if ($stmtVerificar->rowCount() > 0) {
+            echo '<div class="warning">';
+            echo '⚠️ <strong>Usuario ya existe:</strong> ' . htmlspecialchars($usuario_admin) . ' - Actualizando contraseña...';
+            echo '</div>';
+            
+            // Actualizar usuario existente
+            $stmt = $pdo_nueva->prepare("
+                UPDATE usuarios SET 
+                    password = ?, 
+                    estado = 1, 
+                    ultimo_login = ?,
+                    perfil = 'Administrador'
+                WHERE usuario = ?
+            ");
+            $resultado = $stmt->execute([$password_hash, $FECHA_INSTALACION, $usuario_admin]);
+            
+        } else {
+            // ✅ CREAR NUEVO USUARIO
+            $stmt = $pdo_nueva->prepare("
+                INSERT INTO usuarios 
+                (nombre, usuario, password, perfil, foto, estado, ultimo_login, empresa, telefono, direccion) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            $resultado = $stmt->execute([
+                'Administrador ' . $nombre_sucursal,
+                $usuario_admin, // ✅ SIN GUIÓN BAJO
+                $password_hash,
+                'Administrador',
+                'vistas/img/usuarios/default/anonymous.png',
+                1,
+                $FECHA_INSTALACION,
+                $nombre_sucursal,
+                '',
+                ''
+            ]);
+        }
+        
+        if ($resultado) {
+            echo '<div class="success">';
+            echo '✅ <strong>Usuario administrador configurado:</strong><br>';
+            echo '• Usuario: <code style="background: #e9ecef; padding: 4px 8px; border-radius: 3px; font-weight: bold;">' . htmlspecialchars($usuario_admin) . '</code><br>';
+            echo '• Contraseña: <code style="background: #e9ecef; padding: 4px 8px; border-radius: 3px; font-weight: bold;">' . $password_admin . '</code><br>';
+            echo '• Perfil: <strong>Administrador</strong><br>';
+            echo '• Estado: <strong>ACTIVO</strong><br>';
+            echo '<em style="color: #856404;">⚠️ Cambiar contraseña después del primer login</em>';
+            echo '</div>';
+            
+            // ✅ PROBAR INMEDIATAMENTE EL LOGIN
+            echo '<h4 style="margin-top: 20px;">🧪 Verificando credenciales generadas:</h4>';
+            
+            // Buscar el usuario recién creado
+            $stmtPrueba = $pdo_nueva->prepare("SELECT id, usuario, password, estado, perfil FROM usuarios WHERE usuario = ?");
+            $stmtPrueba->execute([$usuario_admin]);
+            $usuarioPrueba = $stmtPrueba->fetch();
+            
+            if ($usuarioPrueba) {
                 
-                try {
-                    // ✅ GENERAR USUARIO SIN CARACTERES ESPECIALES
-                    $usuario_admin = 'admin' . strtolower($codigo_sucursal);  // Sin guión bajo
-                    $password_admin = 'admin123';
-                    
-                    // ✅ GENERAR HASH DE CONTRASEÑA USANDO EL MISMO MÉTODO DEL SISTEMA
-                    $password_hash = crypt($password_admin, '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
-                    
-                    // ✅ VERIFICAR QUE EL HASH SE GENERÓ CORRECTAMENTE
-                    if (strlen($password_hash) < 30) {
-                        throw new Exception("Error generando hash de contraseña - muy corto");
-                    }
-                    
-                    // ✅ VERIFICAR SI EL USUARIO YA EXISTE
-                    $stmtVerificar = $pdo_nueva->prepare("SELECT id FROM usuarios WHERE usuario = ?");
-                    $stmtVerificar->execute([$usuario_admin]);
-                    
-                    if ($stmtVerificar->rowCount() > 0) {
-                        echo '<div class="warning">';
-                        echo '⚠️ <strong>Usuario ya existe:</strong> ' . $usuario_admin . ' - Actualizando contraseña...';
-                        echo '</div>';
-                        
-                        // Actualizar usuario existente
-                        $stmt = $pdo_nueva->prepare("
-                            UPDATE usuarios SET 
-                                password = ?, 
-                                estado = 1, 
-                                ultimo_login = ? 
-                            WHERE usuario = ?
-                        ");
-                        $resultado = $stmt->execute([$password_hash, $FECHA_INSTALACION, $usuario_admin]);
-                        
-                    } else {
-                        // ✅ CREAR NUEVO USUARIO
-                        $stmt = $pdo_nueva->prepare("
-                            INSERT INTO usuarios 
-                            (nombre, usuario, password, perfil, foto, estado, ultimo_login, empresa, telefono, direccion) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ");
-                        $resultado = $stmt->execute([
-                            'Administrador ' . $nombre_sucursal,
-                            $usuario_admin,
-                            $password_hash,
-                            'Administrador',
-                            'vistas/img/usuarios/default/anonymous.png',
-                            1,
-                            $FECHA_INSTALACION,
-                            $nombre_sucursal,
-                            '',
-                            ''
-                        ]);
-                    }
-                    
-                    if ($resultado) {
-                        echo '<div class="success">';
-                        echo '✅ <strong>Usuario administrador configurado:</strong><br>';
-                        echo '• Usuario: <code style="background: #e9ecef; padding: 2px 6px; border-radius: 3px;">' . $usuario_admin . '</code><br>';
-                        echo '• Contraseña: <code style="background: #e9ecef; padding: 2px 6px; border-radius: 3px;">' . $password_admin . '</code><br>';
-                        echo '• Hash generado: <code style="font-size: 11px;">' . substr($password_hash, 0, 40) . '...</code><br>';
-                        echo '<em>⚠️ Cambiar contraseña después del primer login</em>';
-                        echo '</div>';
-                        
-                        // ✅ PROBAR INMEDIATAMENTE EL LOGIN
-                        echo '<h4>🧪 Verificando credenciales generadas:</h4>';
-                        
-                        // Buscar el usuario recién creado
-                        $stmtPrueba = $pdo_nueva->prepare("SELECT id, usuario, password, estado FROM usuarios WHERE usuario = ?");
-                        $stmtPrueba->execute([$usuario_admin]);
-                        $usuarioPrueba = $stmtPrueba->fetch();
-                        
-                        if ($usuarioPrueba) {
-                            
-                            // Probar que el hash coincida
-                            $hashPrueba = crypt($password_admin, '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
-                            
-                            if ($usuarioPrueba['password'] === $hashPrueba) {
-                                echo '<div class="success">';
-                                echo '✅ <strong>Verificación exitosa:</strong> El login debería funcionar correctamente<br>';
-                                echo '• Usuario encontrado: ID ' . $usuarioPrueba['id'] . '<br>';
-                                echo '• Estado: ' . ($usuarioPrueba['estado'] == 1 ? 'ACTIVO' : 'INACTIVO') . '<br>';
-                                echo '• Hash coincide: SÍ';
-                                echo '</div>';
-                            } else {
-                                echo '<div class="warning">';
-                                echo '⚠️ <strong>Advertencia:</strong> Los hashes no coinciden exactamente<br>';
-                                echo '• Hash en BD: ' . substr($usuarioPrueba['password'], 0, 30) . '...<br>';
-                                echo '• Hash prueba: ' . substr($hashPrueba, 0, 30) . '...<br>';
-                                echo '<em>Puede requerir verificación manual</em>';
-                                echo '</div>';
-                            }
-                            
-                        } else {
-                            echo '<div class="error">';
-                            echo '❌ <strong>Error:</strong> No se encontró el usuario recién creado';
-                            echo '</div>';
-                        }
-                        
-                        $pasos_completados++;
-                        
-                    } else {
-                        throw new Exception("No se pudo crear/actualizar el usuario administrador");
-                    }
-                    
-                } catch (Exception $e) {
-                    echo '<div class="error">';
-                    echo '❌ <strong>Error creando usuario:</strong><br>' . htmlspecialchars($e->getMessage());
+                // Probar que el hash coincida
+                $hashPrueba = crypt($password_admin, '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+                
+                echo '<div class="info">';
+                echo '🔍 <strong>Verificación de usuario:</strong><br>';
+                echo '• ID: ' . $usuarioPrueba['id'] . '<br>';
+                echo '• Usuario: <strong>' . htmlspecialchars($usuarioPrueba['usuario']) . '</strong><br>';
+                echo '• Perfil: <strong>' . htmlspecialchars($usuarioPrueba['perfil']) . '</strong><br>';
+                echo '• Estado: ' . ($usuarioPrueba['estado'] == 1 ? '<span style="color: #28a745;">✅ ACTIVO</span>' : '<span style="color: #dc3545;">❌ INACTIVO</span>') . '<br>';
+                echo '• Hash válido: ' . (strlen($usuarioPrueba['password']) > 30 ? '<span style="color: #28a745;">✅ SÍ</span>' : '<span style="color: #dc3545;">❌ NO</span>');
+                echo '</div>';
+                
+                if ($usuarioPrueba['password'] === $hashPrueba) {
+                    echo '<div class="success">';
+                    echo '✅ <strong>Verificación exitosa:</strong> El login debería funcionar correctamente';
+                    echo '</div>';
+                } else {
+                    echo '<div class="warning">';
+                    echo '⚠️ <strong>Advertencia:</strong> Los hashes no coinciden exactamente<br>';
+                    echo '<small>Esto puede ser normal debido a diferencias en el salt</small>';
                     echo '</div>';
                 }
                 
+            } else {
+                echo '<div class="error">';
+                echo '❌ <strong>Error:</strong> No se encontró el usuario recién creado';
                 echo '</div>';
-                echo '<script>document.getElementById("progressBar").style.width = "70%";</script>';
-                flush();
             }
+            
+            $pasos_completados++;
+            $usuario_admin_creado = true;
+            
+        } else {
+            throw new Exception("No se pudo crear/actualizar el usuario administrador");
+        }
+        
+    } catch (Exception $e) {
+        echo '<div class="error">';
+        echo '❌ <strong>Error creando usuario administrador:</strong><br>' . htmlspecialchars($e->getMessage());
+        echo '<br><br><strong>Detalles técnicos:</strong>';
+        echo '<ul>';
+        echo '<li>Usuario propuesto: ' . htmlspecialchars($usuario_admin ?? 'No definido') . '</li>';
+        echo '<li>Longitud hash: ' . (isset($password_hash) ? strlen($password_hash) : 'No generado') . '</li>';
+        echo '<li>Verificar permisos de BD y tabla usuarios</li>';
+        echo '</ul>';
+        echo '</div>';
+    }
+    
+    echo '</div>';
+    echo '<script>document.getElementById("progressBar").style.width = "70%";</script>';
+    flush();
+}
             
             // ===== PASO 8: SINCRONIZAR CATEGORÍAS =====
             if (empty($errores) && $sincronizar_categorias && $verificar_central) {
@@ -1222,255 +1249,259 @@ function actualizarResumen() {
                 flush();
             }
 
-            // ===== PASO 8.5: IMPORTAR DATOS DE OTRA SUCURSAL =====
-            if (empty($errores)) {
-                echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 8.5/10: Importando datos seleccionados...";</script>';
-                echo '<div class="step"><h3>📊 Paso 8.5: Importando Datos Seleccionados</h3>';
+// ===== PASO 8.5: IMPORTAR DATOS DE OTRA SUCURSAL =====
+if (empty($errores)) {
+    echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 8.5/10: Importando datos seleccionados...";</script>';
+    echo '<div class="step"><h3>📊 Paso 8.5: Importando Datos Seleccionados</h3>';
+    
+    $clientes_importados = 0;
+    $usuarios_importados = 0;
+    $bd_origen_datos = '';
+    
+    try {
+        // ✅ OBTENER DATOS DEL FORMULARIO
+        if (isset($_POST['sucursal_origen']) && !empty($_POST['sucursal_origen'])) {
+            $bd_origen_datos = $_POST['sucursal_origen'];
+            
+            echo '<div class="info">';
+            echo '🔄 <strong>Importando desde:</strong> ' . htmlspecialchars($bd_origen_datos);
+            echo '</div>';
+            
+            // ✅ CONEXIÓN A LA BD ORIGEN (PARA LEER DATOS)
+            try {
+                $pdo_origen = new PDO("mysql:host=localhost;dbname={$bd_origen_datos}", 
+                                    "epicosie_ricaurte", 
+                                    "m5Wwg)~M{i~*kFr{");
+                $pdo_origen->exec("set names utf8");
+                $pdo_origen->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 
-                $clientes_importados = 0;
-                $usuarios_importados = 0;
-                $bd_origen_datos = '';
+                echo '<div class="success">✅ Conectado a BD origen: ' . $bd_origen_datos . '</div>';
+                
+            } catch (Exception $e) {
+                throw new Exception("Error conectando a BD origen ({$bd_origen_datos}): " . $e->getMessage());
+            }
+            
+            // ✅ IMPORTAR CLIENTES SELECCIONADOS
+            if (isset($_POST['clientes_importar_data']) && !empty($_POST['clientes_importar_data'])) {
+                
+                echo '<div class="info">📥 <strong>Importando clientes...</strong></div>';
                 
                 try {
-                    // ✅ OBTENER DATOS DEL FORMULARIO
-                    if (isset($_POST['sucursal_origen']) && !empty($_POST['sucursal_origen'])) {
-                        $bd_origen_datos = $_POST['sucursal_origen'];
+                    $datos_clientes = json_decode($_POST['clientes_importar_data'], true);
+                    
+                    if ($datos_clientes && isset($datos_clientes['opcion'])) {
                         
-                        echo '<div class="info">';
-                        echo '🔄 <strong>Importando desde:</strong> ' . htmlspecialchars($bd_origen_datos);
-                        echo '</div>';
-                        
-                        // ✅ CONEXIÓN A LA BD ORIGEN (PARA LEER DATOS)
-                        try {
-                            $pdo_origen = new PDO("mysql:host=localhost;dbname={$bd_origen_datos}", 
-                                                "epicosie_ricaurte", 
-                                                "m5Wwg)~M{i~*kFr{");
-                            $pdo_origen->exec("set names utf8");
-                            $pdo_origen->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                        if ($datos_clientes['opcion'] === 'todos') {
+                            // ✅ IMPORTAR TODOS LOS CLIENTES
+                            $stmt_clientes = $pdo_origen->prepare("
+                                SELECT nombre, documento, email, telefono, direccion, 
+                                       fecha_nacimiento as nacimiento, compras, ultima_compra, fecha
+                                FROM clientes 
+                                WHERE LENGTH(TRIM(nombre)) > 0
+                                ORDER BY nombre ASC
+                            ");
+                            $stmt_clientes->execute();
                             
-                            echo '<div class="success">✅ Conectado a BD origen: ' . $bd_origen_datos . '</div>';
-                            
-                        } catch (Exception $e) {
-                            throw new Exception("Error conectando a BD origen ({$bd_origen_datos}): " . $e->getMessage());
-                        }
-                        
-                        // ✅ IMPORTAR CLIENTES SELECCIONADOS
-                        if (isset($_POST['clientes_importar_data']) && !empty($_POST['clientes_importar_data'])) {
-                            
-                            echo '<div class="info">📥 <strong>Importando clientes...</strong></div>';
-                            
-                            try {
-                                $datos_clientes = json_decode($_POST['clientes_importar_data'], true);
-                                
-                                if ($datos_clientes && isset($datos_clientes['opcion'])) {
-                                    
-                                    if ($datos_clientes['opcion'] === 'todos') {
-                                        // ✅ IMPORTAR TODOS LOS CLIENTES
-                                        $stmt_clientes = $pdo_origen->prepare("
-                                            SELECT nombre, documento, email, telefono, direccion, 
-                                                fecha_nacimiento as nacimiento, compras, ultima_compra, fecha
-                                            FROM clientes 
-                                            WHERE LENGTH(TRIM(nombre)) > 0
-                                            ORDER BY nombre ASC
-                                        ");
-                                        $stmt_clientes->execute();
-                                        
-                                    } else if ($datos_clientes['opcion'] === 'solo_con_datos') {
-                                        // ✅ SOLO CLIENTES CON EMAIL O TELÉFONO
-                                        $stmt_clientes = $pdo_origen->prepare("
-                                            SELECT nombre, documento, email, telefono, direccion, 
-                                                fecha_nacimiento as nacimiento, compras, ultima_compra, fecha
-                                            FROM clientes 
-                                            WHERE LENGTH(TRIM(nombre)) > 0
-                                            AND (LENGTH(TRIM(email)) > 0 OR LENGTH(TRIM(telefono)) > 0)
-                                            ORDER BY nombre ASC
-                                        ");
-                                        $stmt_clientes->execute();
-                                    } else {
-                                        // No importar
-                                        echo '<div class="info">ℹ️ No se seleccionó importar clientes</div>';
-                                        $stmt_clientes = null;
-                                    }
-                                    
-                                    if ($stmt_clientes) {
-                                        $clientes_origen = $stmt_clientes->fetchAll(PDO::FETCH_ASSOC);
-                                        
-                                        echo '<div class="info">🔍 <strong>Clientes encontrados en origen:</strong> ' . count($clientes_origen) . '</div>';
-                                        
-                                        if (count($clientes_origen) > 0) {
-                                            // ✅ INSERTAR CLIENTES UNO POR UNO
-                                            $stmt_insert_cliente = $pdo_nueva->prepare("
-                                                INSERT INTO clientes (nombre, documento, email, telefono, direccion, fecha_nacimiento, compras, ultima_compra, fecha)
-                                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                            ");
-                                            
-                                            $clientes_procesados = 0;
-                                            $clientes_con_error = 0;
-                                            
-                                            foreach ($clientes_origen as $cliente) {
-                                                try {
-                                                    $stmt_insert_cliente->execute([
-                                                        trim($cliente['nombre']) ?: 'Sin nombre',
-                                                        $cliente['documento'] ?: 0,
-                                                        trim($cliente['email']) ?: '',
-                                                        trim($cliente['telefono']) ?: '',
-                                                        trim($cliente['direccion']) ?: '',
-                                                        $cliente['nacimiento'] ?: '0000-00-00',
-                                                        $cliente['compras'] ?: 0,
-                                                        $cliente['ultima_compra'] ?: '0000-00-00 00:00:00',
-                                                        $cliente['fecha'] ?: date('Y-m-d H:i:s')
-                                                    ]);
-                                                    $clientes_procesados++;
-                                                    
-                                                } catch (Exception $e) {
-                                                    $clientes_con_error++;
-                                                    error_log("Error importando cliente {$cliente['nombre']}: " . $e->getMessage());
-                                                }
-                                            }
-                                            
-                                            $clientes_importados = $clientes_procesados;
-                                            
-                                            echo '<div class="success">';
-                                            echo '✅ <strong>Clientes procesados:</strong><br>';
-                                            echo '• Importados exitosamente: ' . $clientes_procesados . '<br>';
-                                            if ($clientes_con_error > 0) {
-                                                echo '• Con errores: ' . $clientes_con_error . '<br>';
-                                            }
-                                            echo '</div>';
-                                            
-                                        } else {
-                                            echo '<div class="warning">⚠️ No se encontraron clientes que coincidan con los criterios</div>';
-                                        }
-                                    }
-                                    
-                                } else {
-                                    echo '<div class="warning">⚠️ Datos de importación de clientes inválidos</div>';
-                                }
-                                
-                            } catch (Exception $e) {
-                                echo '<div class="error">❌ Error importando clientes: ' . htmlspecialchars($e->getMessage()) . '</div>';
-                                error_log("Error en importación de clientes: " . $e->getMessage());
-                            }
-                            
+                        } else if ($datos_clientes['opcion'] === 'solo_con_datos') {
+                            // ✅ SOLO CLIENTES CON EMAIL O TELÉFONO
+                            $stmt_clientes = $pdo_origen->prepare("
+                                SELECT nombre, documento, email, telefono, direccion, 
+                                       fecha_nacimiento as nacimiento, compras, ultima_compra, fecha
+                                FROM clientes 
+                                WHERE LENGTH(TRIM(nombre)) > 0
+                                AND (LENGTH(TRIM(email)) > 0 OR LENGTH(TRIM(telefono)) > 0)
+                                ORDER BY nombre ASC
+                            ");
+                            $stmt_clientes->execute();
                         } else {
-                            echo '<div class="info">ℹ️ <strong>Clientes:</strong> No se seleccionó importación</div>';
+                            // No importar
+                            echo '<div class="info">ℹ️ No se seleccionó importar clientes</div>';
+                            $stmt_clientes = null;
                         }
                         
-                    // ✅ IMPORTAR USUARIOS SELECCIONADOS (SIN GUIÓN BAJO)
-                    if (isset($_POST['usuarios_importar']) && is_array($_POST['usuarios_importar'])) {
-                        
-                        echo '<div class="info">👥 <strong>Importando usuarios seleccionados...</strong></div>';
-                        
-                        try {
-                            $usuarios_ids = array_map('intval', $_POST['usuarios_importar']);
+                        if ($stmt_clientes) {
+                            $clientes_origen = $stmt_clientes->fetchAll(PDO::FETCH_ASSOC);
                             
-                            if (!empty($usuarios_ids)) {
-                                $placeholders = str_repeat('?,', count($usuarios_ids) - 1) . '?';
-                                
-                                $stmt_usuarios = $pdo_origen->prepare("
-                                    SELECT nombre, usuario, password, perfil, foto, estado, ultimo_login,
-                                        empresa, telefono, direccion, fecha
-                                    FROM usuarios 
-                                    WHERE id IN ({$placeholders})
-                                    AND estado = 1
-                                ");
-                                $stmt_usuarios->execute($usuarios_ids);
-                                $usuarios_origen = $stmt_usuarios->fetchAll(PDO::FETCH_ASSOC);
-                                
-                                echo '<div class="info">🔍 <strong>Usuarios encontrados:</strong> ' . count($usuarios_origen) . '</div>';
-                                
-                                // ✅ INSERTAR USUARIOS SIN MODIFICAR NOMBRES DE USUARIO
-                                $stmt_insert_usuario = $pdo_nueva->prepare("
-                                    INSERT INTO usuarios (nombre, usuario, password, perfil, foto, estado, ultimo_login, empresa, telefono, direccion, fecha)
-                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            echo '<div class="info">🔍 <strong>Clientes encontrados en origen:</strong> ' . count($clientes_origen) . '</div>';
+                            
+                            if (count($clientes_origen) > 0) {
+                                // ✅ INSERTAR CLIENTES UNO POR UNO
+                                $stmt_insert_cliente = $pdo_nueva->prepare("
+                                    INSERT INTO clientes (nombre, documento, email, telefono, direccion, fecha_nacimiento, compras, ultima_compra, fecha)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                                 ");
                                 
-                                $usuarios_procesados = 0;
-                                $usuarios_con_error = 0;
+                                $clientes_procesados = 0;
+                                $clientes_con_error = 0;
                                 
-                                foreach ($usuarios_origen as $usuario) {
+                                foreach ($clientes_origen as $cliente) {
                                     try {
-                                        // ✅ NO MODIFICAR EL NOMBRE DE USUARIO - MANTENER ORIGINAL
-                                        $usuario_original = trim($usuario['usuario']);
-                                        
-                                        // ✅ VERIFICAR SI EL USUARIO YA EXISTE
-                                        $stmt_verificar = $pdo_nueva->prepare("SELECT id FROM usuarios WHERE usuario = ?");
-                                        $stmt_verificar->execute([$usuario_original]);
-                                        
-                                        if ($stmt_verificar->rowCount() > 0) {
-                                            echo '<div class="warning">⚠️ Usuario <strong>' . htmlspecialchars($usuario_original) . '</strong> ya existe - omitido</div>';
-                                            continue;
-                                        }
-                                        
-                                        // ✅ INSERTAR CON USUARIO ORIGINAL
-                                        $stmt_insert_usuario->execute([
-                                            trim($usuario['nombre']) ?: 'Usuario sin nombre',
-                                            $usuario_original, // ✅ SIN MODIFICACIONES
-                                            $usuario['password'] ?: '',
-                                            $usuario['perfil'] ?: 'Especial',
-                                            $usuario['foto'] ?: 'vistas/img/usuarios/default/anonymous.png',
-                                            1, // Activo
-                                            $usuario['ultimo_login'] ?: '0000-00-00 00:00:00',
-                                            $usuario['empresa'] ?: $nombre_sucursal,
-                                            trim($usuario['telefono']) ?: '',
-                                            trim($usuario['direccion']) ?: '',
-                                            date('Y-m-d H:i:s')
+                                        $stmt_insert_cliente->execute([
+                                            trim($cliente['nombre']) ?: 'Sin nombre',
+                                            $cliente['documento'] ?: 0,
+                                            trim($cliente['email']) ?: '',
+                                            trim($cliente['telefono']) ?: '',
+                                            trim($cliente['direccion']) ?: '',
+                                            $cliente['nacimiento'] ?: '0000-00-00',
+                                            $cliente['compras'] ?: 0,
+                                            $cliente['ultima_compra'] ?: '0000-00-00 00:00:00',
+                                            $cliente['fecha'] ?: date('Y-m-d H:i:s')
                                         ]);
-                                        
-                                        $usuarios_procesados++;
-                                        
-                                        echo '<div class="success">✅ Usuario importado: <strong>' . htmlspecialchars($usuario_original) . '</strong></div>';
+                                        $clientes_procesados++;
                                         
                                     } catch (Exception $e) {
-                                        $usuarios_con_error++;
-                                        echo '<div class="error">❌ Error importando usuario ' . htmlspecialchars($usuario['nombre']) . ': ' . htmlspecialchars($e->getMessage()) . '</div>';
-                                        error_log("Error importando usuario {$usuario['nombre']}: " . $e->getMessage());
+                                        $clientes_con_error++;
+                                        error_log("Error importando cliente {$cliente['nombre']}: " . $e->getMessage());
                                     }
                                 }
                                 
-                                $usuarios_importados = $usuarios_procesados;
+                                $clientes_importados = $clientes_procesados;
                                 
                                 echo '<div class="success">';
-                                echo '✅ <strong>Usuarios procesados:</strong><br>';
-                                echo '• Importados exitosamente: ' . $usuarios_procesados . '<br>';
-                                if ($usuarios_con_error > 0) {
-                                    echo '• Con errores: ' . $usuarios_con_error . '<br>';
+                                echo '✅ <strong>Clientes procesados:</strong><br>';
+                                echo '• Importados exitosamente: ' . $clientes_procesados . '<br>';
+                                if ($clientes_con_error > 0) {
+                                    echo '• Con errores: ' . $clientes_con_error . '<br>';
                                 }
                                 echo '</div>';
+                                
+                            } else {
+                                echo '<div class="warning">⚠️ No se encontraron clientes que coincidan con los criterios</div>';
                             }
-                            
-                        } catch (Exception $e) {
-                            echo '<div class="error">❌ Error importando usuarios: ' . htmlspecialchars($e->getMessage()) . '</div>';
-                            error_log("Error en importación de usuarios: " . $e->getMessage());
                         }
                         
                     } else {
-                        echo '<div class="info">ℹ️ <strong>Usuarios:</strong> No se seleccionaron usuarios para importar</div>';
+                        echo '<div class="warning">⚠️ Datos de importación de clientes inválidos</div>';
                     }
-                    
-                    // ✅ RESUMEN DE IMPORTACIÓN
-                    echo '<div class="success">';
-                    echo '✅ <strong>Importación completada:</strong><br>';
-                    echo '• Clientes importados: ' . $clientes_importados . '<br>';
-                    echo '• Usuarios importados: ' . $usuarios_importados . '<br>';
-                    if (!empty($bd_origen_datos)) {
-                        echo '• Origen: ' . htmlspecialchars($bd_origen_datos);
-                    }
-                    echo '</div>';
-                    
-                    $pasos_completados++;
                     
                 } catch (Exception $e) {
-                    $errores[] = "Error en importación de datos: " . $e->getMessage();
-                    echo '<div class="error">';
-                    echo '❌ <strong>Error en importación:</strong><br>' . htmlspecialchars($e->getMessage());
-                    echo '</div>';
+                    echo '<div class="error">❌ Error importando clientes: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                    error_log("Error en importación de clientes: " . $e->getMessage());
                 }
                 
-                echo '</div>';
-                echo '<script>document.getElementById("progressBar").style.width = "85%";</script>';
-                flush();
+            } else {
+                echo '<div class="info">ℹ️ <strong>Clientes:</strong> No se seleccionó importación</div>';
             }
+            
+            // ✅ IMPORTAR USUARIOS SELECCIONADOS (SIN GUIÓN BAJO)
+            if (isset($_POST['usuarios_importar']) && is_array($_POST['usuarios_importar'])) {
+                
+                echo '<div class="info">👥 <strong>Importando usuarios seleccionados...</strong></div>';
+                
+                try {
+                    $usuarios_ids = array_map('intval', $_POST['usuarios_importar']);
+                    
+                    if (!empty($usuarios_ids)) {
+                        $placeholders = str_repeat('?,', count($usuarios_ids) - 1) . '?';
+                        
+                        $stmt_usuarios = $pdo_origen->prepare("
+                            SELECT nombre, usuario, password, perfil, foto, estado, ultimo_login,
+                                   empresa, telefono, direccion, fecha
+                            FROM usuarios 
+                            WHERE id IN ({$placeholders})
+                            AND estado = 1
+                        ");
+                        $stmt_usuarios->execute($usuarios_ids);
+                        $usuarios_origen = $stmt_usuarios->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        echo '<div class="info">🔍 <strong>Usuarios encontrados:</strong> ' . count($usuarios_origen) . '</div>';
+                        
+                        // ✅ INSERTAR USUARIOS SIN MODIFICAR NOMBRES DE USUARIO
+                        $stmt_insert_usuario = $pdo_nueva->prepare("
+                            INSERT INTO usuarios (nombre, usuario, password, perfil, foto, estado, ultimo_login, empresa, telefono, direccion, fecha)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ");
+                        
+                        $usuarios_procesados = 0;
+                        $usuarios_con_error = 0;
+                        
+                        foreach ($usuarios_origen as $usuario) {
+                            try {
+                                // ✅ NO MODIFICAR EL NOMBRE DE USUARIO - MANTENER ORIGINAL
+                                $usuario_original = trim($usuario['usuario']);
+                                
+                                // ✅ VERIFICAR SI EL USUARIO YA EXISTE
+                                $stmt_verificar = $pdo_nueva->prepare("SELECT id FROM usuarios WHERE usuario = ?");
+                                $stmt_verificar->execute([$usuario_original]);
+                                
+                                if ($stmt_verificar->rowCount() > 0) {
+                                    echo '<div class="warning">⚠️ Usuario <strong>' . htmlspecialchars($usuario_original) . '</strong> ya existe - omitido</div>';
+                                    continue;
+                                }
+                                
+                                // ✅ INSERTAR CON USUARIO ORIGINAL
+                                $stmt_insert_usuario->execute([
+                                    trim($usuario['nombre']) ?: 'Usuario sin nombre',
+                                    $usuario_original, // ✅ SIN MODIFICACIONES
+                                    $usuario['password'] ?: '',
+                                    $usuario['perfil'] ?: 'Especial',
+                                    $usuario['foto'] ?: 'vistas/img/usuarios/default/anonymous.png',
+                                    1, // Activo
+                                    $usuario['ultimo_login'] ?: '0000-00-00 00:00:00',
+                                    $usuario['empresa'] ?: $nombre_sucursal,
+                                    trim($usuario['telefono']) ?: '',
+                                    trim($usuario['direccion']) ?: '',
+                                    date('Y-m-d H:i:s')
+                                ]);
+                                
+                                $usuarios_procesados++;
+                                
+                                echo '<div class="success">✅ Usuario importado: <strong>' . htmlspecialchars($usuario_original) . '</strong></div>';
+                                
+                            } catch (Exception $e) {
+                                $usuarios_con_error++;
+                                echo '<div class="error">❌ Error importando usuario ' . htmlspecialchars($usuario['nombre']) . ': ' . htmlspecialchars($e->getMessage()) . '</div>';
+                                error_log("Error importando usuario {$usuario['nombre']}: " . $e->getMessage());
+                            }
+                        }
+                        
+                        $usuarios_importados = $usuarios_procesados;
+                        
+                        echo '<div class="success">';
+                        echo '✅ <strong>Usuarios procesados:</strong><br>';
+                        echo '• Importados exitosamente: ' . $usuarios_procesados . '<br>';
+                        if ($usuarios_con_error > 0) {
+                            echo '• Con errores: ' . $usuarios_con_error . '<br>';
+                        }
+                        echo '</div>';
+                    }
+                    
+                } catch (Exception $e) {
+                    echo '<div class="error">❌ Error importando usuarios: ' . htmlspecialchars($e->getMessage()) . '</div>';
+                    error_log("Error en importación de usuarios: " . $e->getMessage());
+                }
+                
+            } else {
+                echo '<div class="info">ℹ️ <strong>Usuarios:</strong> No se seleccionaron usuarios para importar</div>';
+            }
+            
+        } else {
+            echo '<div class="info">ℹ️ <strong>Sin importación de datos:</strong> No se seleccionó sucursal origen</div>';
+        }
+        
+        // ✅ RESUMEN DE IMPORTACIÓN
+        echo '<div class="success">';
+        echo '✅ <strong>Importación completada:</strong><br>';
+        echo '• Clientes importados: ' . $clientes_importados . '<br>';
+        echo '• Usuarios importados: ' . $usuarios_importados . '<br>';
+        if (!empty($bd_origen_datos)) {
+            echo '• Origen: ' . htmlspecialchars($bd_origen_datos);
+        }
+        echo '</div>';
+        
+        $pasos_completados++;
+        
+    } catch (Exception $e) {
+        $errores[] = "Error en importación de datos: " . $e->getMessage();
+        echo '<div class="error">';
+        echo '❌ <strong>Error en importación:</strong><br>' . htmlspecialchars($e->getMessage());
+        echo '</div>';
+    }
+    
+    echo '</div>';
+    echo '<script>document.getElementById("progressBar").style.width = "85%";</script>';
+    flush();
+}
             
             // ===== PASO 9: ALIMENTAR ARCHIVO CONEXION.PHP =====
             if (empty($errores)) {
