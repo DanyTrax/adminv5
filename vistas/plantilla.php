@@ -82,11 +82,43 @@ $url = $protocol . $host . $script_name;
   FIN DE LA CORRECCIÓN
   ============================================== -->
 <script>
-    const nombreUsuario = '<?= $_SESSION["nombre"] ?>';
-    const nombreSucursal = '<?= NOMBRE_SUCURSAL ?>';
-    const perfilUsuario = '<?= $_SESSION["perfil"] ?>';
-    // IMPORTANTE: URL de tu API central
-    const apiUrl = "https://pruebas.acplasticos.com/api-transferencias/"; 
+<?php
+// ✅ VERIFICAR SI HAY SESIÓN INICIADA
+if (isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok") {
+    // Usuario logueado - usar datos de sesión
+    $nombreUsuario = isset($_SESSION["nombre"]) ? addslashes(trim($_SESSION["nombre"])) : 'Usuario';
+    $nombreSucursal = defined('NOMBRE_SUCURSAL') ? addslashes(trim(NOMBRE_SUCURSAL)) : 'Sucursal Principal';
+    $perfilUsuario = isset($_SESSION["perfil"]) ? addslashes(trim($_SESSION["perfil"])) : 'Usuario';
+} else {
+    // Usuario NO logueado - usar valores por defecto para login
+    $nombreUsuario = 'Invitado';
+    $nombreSucursal = 'Sistema';
+    $perfilUsuario = 'Sin sesión';
+}
+
+// Limpiar caracteres problemáticos
+$nombreUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\"'], $nombreUsuario);
+$nombreSucursal = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\"'], $nombreSucursal);
+$perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\"'], $perfilUsuario);
+?>
+    // ✅ VARIABLES GLOBALES SEGURAS (FUNCIONAN EN LOGIN Y SISTEMA)
+    const nombreUsuario = '<?php echo $nombreUsuario; ?>';
+    const nombreSucursal = '<?php echo $nombreSucursal; ?>';
+    const perfilUsuario = '<?php echo $perfilUsuario; ?>';
+    const apiUrl = "https://pruebas.acplasticos.com/api-transferencias/";
+    const sesionActiva = <?php echo (isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok") ? 'true' : 'false'; ?>;
+    
+    // ✅ LOG SOLO SI HAY PROBLEMAS
+    if (nombreUsuario === '' || nombreSucursal === '') {
+        console.warn('Advertencia: Variables de usuario vacías');
+    }
+    
+    console.log('Variables inicializadas:', {
+        usuario: nombreUsuario,
+        sucursal: nombreSucursal,
+        perfil: perfilUsuario,
+        sesion: sesionActiva
+    });
 </script>
 
 </head>
