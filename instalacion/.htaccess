@@ -1,0 +1,42 @@
+# Protección para la carpeta de instalación
+RewriteEngine On
+
+# Prevenir acceso directo a archivos sensibles
+<Files "config-instalacion.php">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+<Files "ajax-datos.php">
+    Order Allow,Deny
+    Deny from all
+    # Solo permitir acceso AJAX local
+    SetEnvIf Request_Method "POST" ajax_request
+    Allow from env=ajax_request
+</Files>
+
+# Proteger logs
+<Files "*.log">
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# Configuración de PHP para la instalación
+php_flag display_errors Off
+php_flag log_errors On
+php_value error_log "./logs/php-errors.log"
+
+# Headers de seguridad
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options DENY
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Prevenir listado de directorios
+Options -Indexes
+
+# Tiempo de sesión personalizado
+php_value session.gc_maxlifetime 3600
+php_value session.cookie_lifetime 3600
