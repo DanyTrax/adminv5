@@ -1801,23 +1801,42 @@ function actualizarResumen() {
                 'pasos_completados' => $pasos_completados,
                 'total_pasos' => $total_pasos,
                 'porcentaje_exito' => $porcentaje_exito,
-                'errores' => $errores
+                'errores' => $errores,
+                'importacion' => [
+                    'clientes_importados' => $clientes_importados ?? 0,
+                    'usuarios_importados' => $usuarios_importados ?? 0,
+                    'bd_origen' => $bd_origen_datos ?? 'ninguna'
+                ],
+                'sistema' => [
+                    'php_version' => phpversion(),
+                    'servidor' => $_SERVER['HTTP_HOST'] ?? 'unknown',
+                    'ip_instalador' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+                ]
             ];
             
-            // Guardar log
+            // ✅ GUARDAR LOG CORRECTAMENTE
             try {
+                $fecha = date('Y-m-d H:i:s');
+                $fecha_archivo = date('Y-m-d_H-i-s');
+                
+                // Crear directorio de logs si no existe
+                $logs_dir = __DIR__ . '/logs/';
+                if (!is_dir($logs_dir)) {
+                    mkdir($logs_dir, 0755, true);
+                }
 
-            $fecha = date('Y-m-d H:i:s');
-            // Crear directorio de logs si no existe
-            $logs_dir = __DIR__ . '/logs/';
-            if (!is_dir($logs_dir)) {
-                mkdir($logs_dir, 0755, true);
-            }
-
-            $log_file = $logs_dir . "instalacion_{$codigo_sucursal}_{$fecha}.json";
-            file_put_contents($log_file, ...);
+                $log_file = $logs_dir . "instalacion_{$codigo_sucursal}_{$fecha_archivo}.json";
+                
+                // ✅ ESCRIBIR EL LOG CORRECTAMENTE
+                if (file_put_contents($log_file, json_encode($log_instalacion, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) {
+                    echo '<div class="info">';
+                    echo '📄 <strong>Log de instalación guardado:</strong> ' . basename($log_file);
+                    echo '</div>';
+                }
+                
             } catch (Exception $e) {
-                // Ignorar errores de log
+                // Ignorar errores de log - no afectan la instalación
+                error_log("Error guardando log de instalación: " . $e->getMessage());
             }
         }
         
