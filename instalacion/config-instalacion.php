@@ -4,6 +4,12 @@ CONFIGURACIÓN DE SEGURIDAD PARA INSTALACIÓN
 danytrax/adminv5 - Sistema Seguro
 =============================================*/
 
+// Iniciar sesión inmediatamente
+if (session_status() == PHP_SESSION_NONE) {
+    session_name('INSTALACION_SESSION');
+    session_start();
+}
+
 // 🔒 CONTRASEÑA MAESTRA PARA INSTALACIÓN
 define('INSTALACION_PASSWORD', 'InstalarAdmin2024!');
 
@@ -12,19 +18,6 @@ define('SESION_DURACION', 60);
 
 // 🔒 INTENTOS MÁXIMOS DE LOGIN
 define('MAX_INTENTOS_LOGIN', 3);
-
-// 🔒 CONFIGURACIÓN DE BASE DE DATOS PERMITIDA
-$configuraciones_bd_permitidas = [
-    'epicosie_pruebas',
-    'epicosie_pruebas2',
-    'epicosie_sucursal',
-    // Agregar otras BDs según sea necesario
-];
-
-// 🔒 USUARIOS DE BD PERMITIDOS
-$usuarios_bd_permitidos = [
-    'epicosie_ricaurte'
-];
 
 /*=============================================
 FUNCIONES DE SEGURIDAD
@@ -35,6 +28,7 @@ function iniciarSesionInstalacion() {
         session_name('INSTALACION_SESSION');
         session_start();
     }
+    return true;
 }
 
 function verificarAutenticacion() {
@@ -45,8 +39,11 @@ function verificarAutenticacion() {
         !isset($_SESSION['instalacion_tiempo']) ||
         (time() - $_SESSION['instalacion_tiempo']) > (SESION_DURACION * 60)) {
         
-        // Limpiar sesión
-        session_destroy();
+        // Limpiar sesión si expiró
+        if (isset($_SESSION['instalacion_autenticado'])) {
+            session_destroy();
+            iniciarSesionInstalacion();
+        }
         return false;
     }
     
@@ -57,6 +54,9 @@ function verificarAutenticacion() {
 
 function autenticarUsuario($password) {
     iniciarSesionInstalacion();
+    
+    // Debug log
+    error_log("INSTALACION AUTH: Intentando autenticar con password de longitud: " . strlen($password));
     
     // Verificar intentos previos
     $intentos = $_SESSION['intentos_login'] ?? 0;
@@ -76,12 +76,18 @@ function autenticarUsuario($password) {
         }
     }
     
-    if ($password === INSTALACION_PASSWORD) {
+    // Comparar contraseñas
+    $password_correcta = INSTALACION_PASSWORD;
+    error_log("INSTALACION AUTH: Comparando '" . substr($password, 0, 5) . "...' con '" . substr($password_correcta, 0, 5) . "...'");
+    
+    if ($password === $password_correcta) {
         // Autenticación exitosa
         $_SESSION['instalacion_autenticado'] = true;
         $_SESSION['instalacion_tiempo'] = time();
         $_SESSION['instalacion_usuario'] = 'Administrador';
         $_SESSION['intentos_login'] = 0;
+        
+        error_log("INSTALACION AUTH: Autenticación exitosa");
         
         return [
             'success' => true,
@@ -94,6 +100,8 @@ function autenticarUsuario($password) {
         if ($_SESSION['intentos_login'] >= MAX_INTENTOS_LOGIN) {
             $_SESSION['tiempo_bloqueo'] = time();
         }
+        
+        error_log("INSTALACION AUTH: Contraseña incorrecta, intentos: " . $_SESSION['intentos_login']);
         
         return [
             'success' => false,
@@ -108,32 +116,6 @@ function cerrarSesionInstalacion() {
     session_destroy();
 }
 
-function validarConfiguracionBD($bd_nombre, $bd_usuario) {
-    global $configuraciones_bd_permitidas, $usuarios_bd_permitidos;
-    
-    $errores = [];
-    
-    // Validar nombre de BD
-    $bd_permitida = false;
-    foreach ($configuraciones_bd_permitidas as $bd_permitida_pattern) {
-        if (strpos($bd_nombre, $bd_permitida_pattern) === 0) {
-            $bd_permitida = true;
-            break;
-        }
-    }
-    
-    if (!$bd_permitida) {
-        $errores[] = "Base de datos no permitida: {$bd_nombre}";
-    }
-    
-    // Validar usuario de BD
-    if (!in_array($bd_usuario, $usuarios_bd_permitidos)) {
-        $errores[] = "Usuario de BD no permitido: {$bd_usuario}";
-    }
-    
-    return $errores;
-}
-
 function logInstalacion($mensaje, $tipo = 'INFO') {
     $log_dir = __DIR__ . '/logs/';
     if (!is_dir($log_dir)) {
@@ -143,13 +125,12 @@ function logInstalacion($mensaje, $tipo = 'INFO') {
     $log_file = $log_dir . 'instalacion-' . date('Y-m-d') . '.log';
     $timestamp = date('Y-m-d H:i:s');
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
-    $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
     
-    $log_entry = "[{$timestamp}] [{$tipo}] IP: {$ip} | {$mensaje} | UA: {$user_agent}" . PHP_EOL;
+    $log_entry = "[{$timestamp}] [{$tipo}] IP: {$ip} | {$mensaje}" . PHP_EOL;
     
-    file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
+    error_log($log_entry, 3, $log_file);
 }
 
-// Log de acceso al archivo de configuración
-logInstalacion("Archivo de configuración cargado");
+// Log de carga del archivo
+error_log("INSTALACION CONFIG: Archivo de configuración cargado correctamente");
 ?>
