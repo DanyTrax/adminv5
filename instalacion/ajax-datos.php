@@ -66,45 +66,77 @@ try {
     
     switch ($accion) {
         
-        case 'obtener_clientes':
-            
-            // Verificar que existe la tabla
-            $stmt_check = $pdo->prepare("SHOW TABLES LIKE 'clientes'");
-            $stmt_check->execute();
-            if ($stmt_check->rowCount() === 0) {
-                throw new Exception('Tabla clientes no existe');
-            }
-            
-            // Obtener clientes (solo datos básicos para checkbox)
-            $stmt = $pdo->prepare("
-                SELECT id, nombre, documento, email 
-                FROM clientes 
-                WHERE LENGTH(TRIM(nombre)) > 0
-                ORDER BY nombre ASC 
-                LIMIT 50
-            ");
-            $stmt->execute();
-            $clientes = $stmt->fetchAll();
-            
-            // Procesar clientes (formato simple)
-            $clientes_procesados = [];
-            foreach ($clientes as $cliente) {
-                $clientes_procesados[] = [
-                    'id' => (int)$cliente['id'],
-                    'nombre' => trim($cliente['nombre']) ?: 'Sin nombre',
-                    'documento' => trim($cliente['documento']) ?: 'Sin documento',
-                    'email' => trim($cliente['email']) ?: 'Sin email'
-                ];
-            }
-            
-            echo json_encode([
-                'success' => true,
-                'clientes' => $clientes_procesados,
-                'total' => count($clientes_procesados),
-                'bd_origen' => $bd_origen
-            ], JSON_UNESCAPED_UNICODE);
-            
-            break;
+case 'obtener_clientes':
+    
+    // Verificar que existe la tabla
+    $stmt_check = $pdo->prepare("SHOW TABLES LIKE 'clientes'");
+    $stmt_check->execute();
+    if ($stmt_check->rowCount() === 0) {
+        throw new Exception('Tabla clientes no existe');
+    }
+    
+    // ✅ OBTENER SOLO EL CONTEO TOTAL DE CLIENTES
+    $stmt_total = $pdo->prepare("
+        SELECT COUNT(*) as total_clientes 
+        FROM clientes 
+        WHERE LENGTH(TRIM(nombre)) > 0
+    ");
+    $stmt_total->execute();
+    $resultado_total = $stmt_total->fetch();
+    $total_clientes = (int)$resultado_total['total_clientes'];
+    
+    // ✅ OBTENER ALGUNOS DATOS ESTADÍSTICOS ADICIONALES
+    $stmt_stats = $pdo->prepare("
+        SELECT 
+            COUNT(CASE WHEN LENGTH(TRIM(email)) > 0 AND email LIKE '%@%' THEN 1 END) as con_email,
+            COUNT(CASE WHEN LENGTH(TRIM(telefono)) > 0 THEN 1 END) as con_telefono,
+            COUNT(CASE WHEN LENGTH(TRIM(direccion)) > 0 THEN 1 END) as con_direccion,
+            COUNT(CASE WHEN compras > 0 THEN 1 END) as con_compras,
+            MIN(fecha) as primer_cliente,
+            MAX(fecha) as ultimo_cliente
+        FROM clientes 
+        WHERE LENGTH(TRIM(nombre)) > 0
+    ");
+    $stmt_stats->execute();
+    $stats = $stmt_stats->fetch();
+    
+    // ✅ OBTENER LISTA DE IDs PARA IMPORTACIÓN MASIVA
+    $stmt_ids = $pdo->prepare("
+        SELECT id, nombre 
+        FROM clientes 
+        WHERE LENGTH(TRIM(nombre)) > 0
+        ORDER BY nombre ASC
+    ");
+    $stmt_ids->execute();
+    $clientes_ids = $stmt_ids->fetchAll();
+    
+    // Procesar IDs para importación
+    $ids_importacion = [];
+    foreach ($clientes_ids as $cliente) {
+        $ids_importacion[] = [
+            'id' => (int)$cliente['id'],
+            'nombre' => trim($cliente['nombre'])
+        ];
+    }
+    
+    echo json_encode([
+        'success' => true,
+        'tipo_respuesta' => 'resumen_clientes',
+        'total_clientes' => $total_clientes,
+        'estadisticas' => [
+            'con_email' => (int)$stats['con_email'],
+            'con_telefono' => (int)$stats['con_telefono'], 
+            'con_direccion' => (int)$stats['con_direccion'],
+            'con_compras' => (int)$stats['con_compras'],
+            'primer_cliente' => $stats['primer_cliente'] ?: 'No disponible',
+            'ultimo_cliente' => $stats['ultimo_cliente'] ?: 'No disponible'
+        ],
+        'clientes_para_importar' => $ids_importacion,
+        'bd_origen' => $bd_origen,
+        'mensaje' => "Se encontraron {$total_clientes} clientes en la base de datos"
+    ], JSON_UNESCAPED_UNICODE);
+    
+    break;
             
         case 'obtener_usuarios':
             

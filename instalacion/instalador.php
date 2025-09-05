@@ -364,7 +364,7 @@ $FECHA_INSTALACION = date('Y-m-d H:i:s');
 
 function cargarClientes(bdOrigen) {
     const contenedor = document.getElementById('listaClientes');
-    contenedor.innerHTML = '<p>⏳ Cargando clientes...</p>';
+    contenedor.innerHTML = '<p>⏳ Obteniendo información de clientes...</p>';
     
     fetch('ajax-datos.php', {
         method: 'POST',
@@ -383,33 +383,96 @@ function cargarClientes(bdOrigen) {
         return response.json();
     })
     .then(data => {
-        if(data.success && data.clientes && data.clientes.length > 0) {
-            // ✅ FORMATO SIMPLE PARA CLIENTES (SOLO CHECKBOX)
-            let html = '<div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: white;">';
+        if(data.success && data.tipo_respuesta === 'resumen_clientes') {
             
-            data.clientes.forEach(cliente => {
-                html += `
-                    <div style="margin-bottom: 8px; padding: 5px; border-bottom: 1px solid #eee;">
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="checkbox" name="clientes_importar[]" value="${cliente.id}" 
-                                   style="margin-right: 10px;" onchange="actualizarResumen()">
-                            <div style="flex: 1;">
-                                <strong>${cliente.nombre}</strong>
-                                <small style="color: #666; margin-left: 10px;">
-                                    ${cliente.documento} | ${cliente.email}
-                                </small>
+            // ✅ MOSTRAR SOLO RESUMEN Y OPCIÓN DE IMPORTAR TODOS
+            let html = `
+                <div style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 20px;">
+                    
+                    <!-- Resumen principal -->
+                    <div style="text-align: center; margin-bottom: 20px; padding: 15px; background: #e8f4f8; border-radius: 6px;">
+                        <h4 style="margin: 0 0 10px 0; color: #0c5460;">
+                            📊 Base de Datos: <code>${bdOrigen}</code>
+                        </h4>
+                        <div style="font-size: 24px; font-weight: bold; color: #28a745; margin: 10px 0;">
+                            ${data.total_clientes} clientes encontrados
+                        </div>
+                        <p style="margin: 5px 0; color: #666; font-size: 14px;">
+                            ${data.mensaje}
+                        </p>
+                    </div>
+                    
+                    <!-- Estadísticas detalladas -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; text-align: center;">
+                            <div style="font-size: 18px; font-weight: bold; color: #007bff;">${data.estadisticas.con_email}</div>
+                            <div style="font-size: 12px; color: #666;">📧 Con Email</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; text-align: center;">
+                            <div style="font-size: 18px; font-weight: bold; color: #28a745;">${data.estadisticas.con_telefono}</div>
+                            <div style="font-size: 12px; color: #666;">📞 Con Teléfono</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; text-align: center;">
+                            <div style="font-size: 18px; font-weight: bold; color: #ffc107;">${data.estadisticas.con_direccion}</div>
+                            <div style="font-size: 12px; color: #666;">🏠 Con Dirección</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; text-align: center;">
+                            <div style="font-size: 18px; font-weight: bold; color: #dc3545;">${data.estadisticas.con_compras}</div>
+                            <div style="font-size: 12px; color: #666;">🛒 Con Compras</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Información adicional -->
+                    <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
+                        <h5 style="margin: 0 0 10px 0; color: #856404;">📅 Información Temporal:</h5>
+                        <div style="font-size: 13px; color: #856404;">
+                            <strong>Primer cliente:</strong> ${data.estadisticas.primer_cliente}<br>
+                            <strong>Último cliente:</strong> ${data.estadisticas.ultimo_cliente}
+                        </div>
+                    </div>
+                    
+                    <!-- Opciones de importación -->
+                    <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 6px; padding: 15px;">
+                        <h5 style="margin: 0 0 15px 0; color: #155724;">⚙️ Opciones de Importación:</h5>
+                        
+                        <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer;">
+                            <input type="radio" name="importar_clientes_opcion" value="todos" 
+                                   style="margin-right: 10px;" onchange="manejarSeleccionClientes(this)">
+                            <div>
+                                <strong>Importar TODOS los clientes</strong> (${data.total_clientes} registros)<br>
+                                <small style="color: #666;">Se importarán todos los clientes de la base de datos origen</small>
                             </div>
                         </label>
+                        
+                        <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer;">
+                            <input type="radio" name="importar_clientes_opcion" value="solo_con_datos" 
+                                   style="margin-right: 10px;" onchange="manejarSeleccionClientes(this)">
+                            <div>
+                                <strong>Solo clientes con datos completos</strong> (${data.estadisticas.con_email + data.estadisticas.con_telefono} aprox.)<br>
+                                <small style="color: #666;">Solo clientes que tengan email O teléfono registrado</small>
+                            </div>
+                        </label>
+                        
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="importar_clientes_opcion" value="ninguno" checked
+                                   style="margin-right: 10px;" onchange="manejarSeleccionClientes(this)">
+                            <div>
+                                <strong>No importar clientes</strong><br>
+                                <small style="color: #666;">La sucursal empezará sin clientes</small>
+                            </div>
+                        </label>
+                        
+                        <!-- Campo oculto con los datos para el POST -->
+                        <input type="hidden" name="clientes_importar_data" id="clientesImportarData" value="">
                     </div>
-                `;
-            });
-            
-            html += '</div>';
-            html += `<div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
-                <strong>📊 Total: ${data.clientes.length} clientes</strong>
-            </div>`;
+                    
+                </div>
+            `;
             
             contenedor.innerHTML = html;
+            
+            // Guardar datos para importación
+            window.datosClientesImportar = data.clientes_para_importar;
             
         } else {
             contenedor.innerHTML = `
@@ -419,17 +482,46 @@ function cargarClientes(bdOrigen) {
                 </div>
             `;
         }
+        
+        actualizarResumen();
     })
     .catch(error => {
         console.error('Error cargando clientes:', error);
         contenedor.innerHTML = `
             <div style="padding: 20px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">
-                <p><strong>❌ Error cargando clientes</strong></p>
+                <p><strong>❌ Error cargando información de clientes</strong></p>
                 <p>${error.message}</p>
                 <p style="font-size: 12px;">Verifica la conexión y el archivo ajax-datos.php</p>
             </div>
         `;
     });
+}
+
+// ✅ FUNCIÓN PARA MANEJAR SELECCIÓN DE CLIENTES
+function manejarSeleccionClientes(radio) {
+    const datosField = document.getElementById('clientesImportarData');
+    
+    if (radio.value === 'todos' && window.datosClientesImportar) {
+        // Preparar todos los IDs para importación
+        const todosIds = window.datosClientesImportar.map(cliente => cliente.id);
+        datosField.value = JSON.stringify({
+            opcion: 'todos',
+            ids: todosIds,
+            total: todosIds.length
+        });
+    } else if (radio.value === 'solo_con_datos' && window.datosClientesImportar) {
+        // En este caso, el filtrado se hará en el backend
+        datosField.value = JSON.stringify({
+            opcion: 'solo_con_datos',
+            ids: [],
+            total: 0
+        });
+    } else {
+        // No importar
+        datosField.value = '';
+    }
+    
+    actualizarResumen();
 }
 
 function cargarUsuarios(bdOrigen) {
@@ -550,33 +642,51 @@ function cargarUsuarios(bdOrigen) {
                 actualizarResumen();
             }
 
-            function actualizarResumen() {
-                const clientesSeleccionados = document.querySelectorAll('input[name="clientes_importar[]"]:checked').length;
-                const usuariosSeleccionados = document.querySelectorAll('input[name="usuarios_importar[]"]:checked').length;
-                const sucursalOrigen = document.getElementById('sucursal_origen').value;
-                
-                const resumen = document.getElementById('resumenImportacion');
-                const contenido = document.getElementById('contenidoResumen');
-                
-                if(clientesSeleccionados > 0 || usuariosSeleccionados > 0) {
-                    let html = `<strong>📊 Datos a importar desde:</strong> ${sucursalOrigen}<br>`;
-                    
-                    if(clientesSeleccionados > 0) {
-                        html += `• <strong>${clientesSeleccionados}</strong> cliente(s) seleccionado(s)<br>`;
-                    }
-                    
-                    if(usuariosSeleccionados > 0) {
-                        html += `• <strong>${usuariosSeleccionados}</strong> usuario(s) seleccionado(s)<br>`;
-                    }
-                    
-                    html += '<br><em>Estos datos se importarán después de crear la estructura básica de la sucursal.</em>';
-                    
-                    contenido.innerHTML = html;
-                    resumen.style.display = 'block';
-                } else {
-                    resumen.style.display = 'none';
+function actualizarResumen() {
+    // Contar usuarios seleccionados (mantener lógica actual)
+    const usuariosSeleccionados = document.querySelectorAll('input[name="usuarios_importar[]"]:checked').length;
+    
+    // Obtener opción de clientes seleccionada
+    const opcionClientes = document.querySelector('input[name="importar_clientes_opcion"]:checked');
+    let clientesInfo = 'Ninguno';
+    
+    if (opcionClientes && opcionClientes.value !== 'ninguno') {
+        const datosField = document.getElementById('clientesImportarData');
+        if (datosField && datosField.value) {
+            try {
+                const datos = JSON.parse(datosField.value);
+                if (datos.opcion === 'todos') {
+                    clientesInfo = `Todos (${datos.total} clientes)`;
+                } else if (datos.opcion === 'solo_con_datos') {
+                    clientesInfo = 'Solo con datos completos';
                 }
+            } catch (e) {
+                clientesInfo = opcionClientes.value;
             }
+        }
+    }
+    
+    const sucursalOrigen = document.getElementById('sucursal_origen').value;
+    const resumen = document.getElementById('resumenImportacion');
+    const contenido = document.getElementById('contenidoResumen');
+    
+    if (usuariosSeleccionados > 0 || opcionClientes.value !== 'ninguno') {
+        let html = `<strong>📊 Datos a importar desde:</strong> ${sucursalOrigen}<br>`;
+        
+        html += `• <strong>Clientes:</strong> ${clientesInfo}<br>`;
+        
+        if (usuariosSeleccionados > 0) {
+            html += `• <strong>Usuarios:</strong> ${usuariosSeleccionados} seleccionado(s)<br>`;
+        }
+        
+        html += '<br><em>Estos datos se importarán después de crear la estructura básica de la sucursal.</em>';
+        
+        contenido.innerHTML = html;
+        resumen.style.display = 'block';
+    } else {
+        resumen.style.display = 'none';
+    }
+}
             </script>
             <div style="text-align: center; margin-top: 30px;">
                 <button type="submit" class="btn" onclick="return confirmarInstalacion()">
