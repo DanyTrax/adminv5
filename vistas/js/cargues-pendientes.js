@@ -93,7 +93,13 @@ success: function(cargues) {
             dataType: "json",
             success: function(items) {
                 items.forEach(function(item) {
-                    $("#listaProductosManifiesto").append(`<tr><td>${item.descripcion}</td><td>${item.cantidad_enviada}</td></tr>`);
+                    $("#listaProductosManifiesto").append(`
+                        <tr>
+                            <td><strong>${item.codigo_producto || 'N/A'}</strong></td>
+                            <td>${item.descripcion}</td>
+                            <td>${item.cantidad_enviada}</td>
+                        </tr>
+                    `);
                 });
                 $('#modalVerManifiesto').modal('show');
             }

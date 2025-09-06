@@ -38,7 +38,7 @@
       </div>
       <div class="modal-body">
         <table class="table table-bordered">
-          <thead><tr><th>Descripción</th><th>Cantidad Enviada</th></tr></thead>
+          <thead><tr><th>Código</th><th>Descripción</th><th>Cantidad Enviada</th></tr></thead>
           <tbody id="listaProductosManifiesto"></tbody>
         </table>
       </div>

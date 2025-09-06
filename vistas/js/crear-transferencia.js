@@ -63,7 +63,7 @@ $('.tablaProductosTransferencia').on('click', '.btnAgregarProducto', function() 
             }).then(function(result) {
                 if (result.value && result.value > 0) {
                     let cantidad = result.value;
-                    listaProductosSolicitados.push({ "id": idProducto, "descripcion": descripcion, "cantidad": cantidad });
+                    listaProductosSolicitados.push({ "id": idProducto, "codigo": codigoProducto, "descripcion": descripcion, "cantidad": cantidad });
                     mostrarProductosEnFormulario();
                 } else {
                     $(`button[idProducto='${idProducto}']`).removeClass('btn-default').addClass('btn-primary btnAgregarProducto');

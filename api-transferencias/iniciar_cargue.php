@@ -31,13 +31,14 @@ try {
     // 2. Insertamos los productos en el manifiesto
     $productos = json_decode($productos_json, true);
     $stmt_items = $pdo->prepare(
-        "INSERT INTO transferencia_items (id_transferencia, id_producto_origen, descripcion, cantidad_enviada)
-         VALUES (:id_transferencia, :id_producto, :descripcion, :cantidad)"
+        "INSERT INTO transferencia_items (id_transferencia, id_producto_origen, codigo_producto, descripcion, cantidad_enviada)
+         VALUES (:id_transferencia, :id_producto, :codigo_producto, :descripcion, :cantidad)"
     );
     foreach($productos as $producto){
         $stmt_items->execute([
             ':id_transferencia' => $id_transferencia,
             ':id_producto' => $producto['id'],
+            ':codigo_producto' => $producto['codigo'],
             ':descripcion' => $producto['descripcion'],
             ':cantidad' => $producto['cantidad']
         ]);

@@ -3,7 +3,7 @@ require_once "../config.php";
 
 class ControladorTransferencias{
 
-    // Descuenta el stock de la sucursal de origen
+    // ✅ MÉTODO MODIFICADO: Descuenta el stock usando CÓDIGO del producto
     static public function ctrDespacharTransferencia($idTransferencia){
         $urlApi = API_URL . "obtener_items.php?id_transferencia=" . $idTransferencia;
         $respuestaJson = file_get_contents($urlApi);
@@ -11,7 +11,22 @@ class ControladorTransferencias{
 
         if($items && count($items) > 0){
             foreach ($items as $item) {
-                ModeloProductos::mdlActualizarStock("productos", $item['id_producto_origen'], $item['cantidad_enviada']);
+                // ✅ CAMBIO CLAVE: Buscar producto por CÓDIGO en lugar de ID
+                if (!empty($item['codigo_producto'])) {
+                    // Buscar el producto local por su código
+                    $productoLocal = ModeloProductos::mdlMostrarProductos("productos", "codigo", $item['codigo_producto'], "id");
+                    
+                    if ($productoLocal) {
+                        // Descontar stock usando el ID local encontrado
+                        ModeloProductos::mdlActualizarStock("productos", $productoLocal['id'], $item['cantidad_enviada']);
+                    } else {
+                        // Log de error: producto no encontrado localmente
+                        error_log("Producto con código {$item['codigo_producto']} no encontrado en sucursal local");
+                    }
+                } else {
+                    // Fallback: usar el método anterior si no hay código (compatibilidad)
+                    ModeloProductos::mdlActualizarStock("productos", $item['id_producto_origen'], $item['cantidad_enviada']);
+                }
             }
             return "ok";
         } else {
@@ -19,34 +34,39 @@ class ControladorTransferencias{
         }
     }
 
-    // Aumenta el stock en la sucursal de destino
-    static public function ctrAgregarStock($idProducto, $cantidad){
-        $tabla = "productos";
-        return ModeloProductos::mdlAgregarStock($tabla, $idProducto, $cantidad);
-    }
-        static public function ctrRecibirTransferencia($datos){
+    // ✅ MÉTODO MEJORADO: Recibir transferencia usando código
+    static public function ctrRecibirTransferencia($datos){
         
         $idTransferencia = $datos['idTransferenciaHidden'];
         $cantidadesRecibidas = $datos['cantidadRecibida'];
 
-        // 1. Obtenemos el manifiesto original desde la API Central para saber el ID local de cada producto.
+        // 1. Obtenemos el manifiesto desde la API Central
         $urlApi = API_URL . "obtener_items.php?id_transferencia=" . $idTransferencia;
         $respuestaJson = file_get_contents($urlApi);
         $itemsOriginales = json_decode($respuestaJson, true);
         
         if($itemsOriginales && count($itemsOriginales) > 0){
             
-            // 2. Recorremos el manifiesto original.
+            // 2. Recorremos el manifiesto original
             foreach($itemsOriginales as $item){
                 
-                $idItemLocal = $item['id_producto_origen'];
-                // Obtenemos la cantidad que el usuario reportó como recibida para este item.
                 $cantidadARecibir = $cantidadesRecibidas[$item['id']] ?? 0;
                 
-                // Solo si se recibió una cantidad mayor a cero, la añadimos al stock.
                 if($cantidadARecibir > 0){
-                     // Llamamos a la función del modelo de productos para SUMAR el stock.
-                     ModeloProductos::mdlAgregarStock("productos", $idItemLocal, $cantidadARecibir);
+                    // ✅ CAMBIO CLAVE: Buscar producto local por CÓDIGO
+                    if (!empty($item['codigo_producto'])) {
+                        $productoLocal = ModeloProductos::mdlMostrarProductos("productos", "codigo", $item['codigo_producto'], "id");
+                        
+                        if ($productoLocal) {
+                            // Agregar stock usando el ID local
+                            ModeloProductos::mdlAgregarStock("productos", $productoLocal['id'], $cantidadARecibir);
+                        } else {
+                            error_log("Producto con código {$item['codigo_producto']} no encontrado para recepción");
+                        }
+                    } else {
+                        // Fallback: usar método anterior
+                        ModeloProductos::mdlAgregarStock("productos", $item['id_producto_origen'], $cantidadARecibir);
+                    }
                 }
             }
 
@@ -56,21 +76,26 @@ class ControladorTransferencias{
             return "error: no se pudo obtener el manifiesto original de la transferencia.";
         }
     }
+
+    // Mantener métodos existentes...
+    static public function ctrAgregarStock($idProducto, $cantidad){
+        $tabla = "productos";
+        return ModeloProductos::mdlAgregarStock($tabla, $idProducto, $cantidad);
+    }
+    
     static public function ctrAgregarStockPorNombre($descripcion, $cantidad){
         $tabla = "productos";
-        $item = "descripcion"; // Buscamos por nombre
-        // Primero, verificamos que el producto exista
+        $item = "descripcion";
         $producto = ModeloProductos::mdlMostrarProductos($tabla, $item, $descripcion, "id");
         if($producto){
-            // Si existe, sumamos el stock
             return ModeloProductos::mdlAgregarStock($tabla, $producto["id"], $cantidad);
         } else {
             return "error";
         }
     }
-    // En controlador/transferencias.controlador.php
-static public function ctrAgregarStockPorId($idProducto, $cantidad){
-    $tabla = "productos";
-    return ModeloProductos::mdlAgregarStock($tabla, $idProducto, $cantidad);
-}
+    
+    static public function ctrAgregarStockPorId($idProducto, $cantidad){
+        $tabla = "productos";
+        return ModeloProductos::mdlAgregarStock($tabla, $idProducto, $cantidad);
+    }
 }
