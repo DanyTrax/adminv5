@@ -105,7 +105,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
     const nombreUsuario = '<?php echo $nombreUsuario; ?>';
     const nombreSucursal = '<?php echo $nombreSucursal; ?>';
     const perfilUsuario = '<?php echo $perfilUsuario; ?>';
-    const apiUrl = "https://pruebas.acplasticos.com/api-transferencias/";
+    const apiUrl = "https://pruebas2.acplasticos.com/api-transferencias/";
     const sesionActiva = <?php echo (isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok") ? 'true' : 'false'; ?>;
     
     // ✅ LOG SOLO SI HAY PROBLEMAS
