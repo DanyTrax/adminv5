@@ -29,22 +29,37 @@
     </div>
   </section>
 </div>
-<div id="modalVerManifiesto" class="modal fade" role="dialog">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header" style="background:#00c0ef; color:white">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title">Manifiesto de Carga</h4>
-      </div>
-      <div class="modal-body">
-        <table class="table table-bordered">
-          <thead><tr><th>Código</th><th>Descripción</th><th>Cantidad Enviada</th></tr></thead>
-          <tbody id="listaProductosManifiesto"></tbody>
-        </table>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default pull-right" data-dismiss="modal">Cerrar</button>
-      </div>
+<!-- Modal Ver Manifiesto -->
+<div class="modal fade" id="modalVerManifiesto" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">📋 Manifiesto de Transferencia</h4>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th width="20%">Código</th>
+                                <th width="60%">Descripción</th>
+                                <th width="20%" class="text-center">Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaProductosManifiesto">
+                            <!-- Los datos se cargan aquí dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>

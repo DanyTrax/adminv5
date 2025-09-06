@@ -34,16 +34,17 @@ try {
         "INSERT INTO transferencia_items (id_transferencia, id_producto_origen, codigo_producto, descripcion, cantidad_enviada)
          VALUES (:id_transferencia, :id_producto, :codigo_producto, :descripcion, :cantidad)"
     );
+
     foreach($productos as $producto){
         $stmt_items->execute([
             ':id_transferencia' => $id_transferencia,
             ':id_producto' => $producto['id'],
-            ':codigo_producto' => $producto['codigo'],
+            ':codigo_producto' => $producto['codigo'] ?? null, 
             ':descripcion' => $producto['descripcion'],
             ':cantidad' => $producto['cantidad']
         ]);
     }
-    
+
     // 3. Creamos el primer registro en el log
     $accion_log = "Preparo el cargue para " . $usuario_transporte;
     $stmt_log = $pdo->prepare(
