@@ -211,15 +211,6 @@ $FECHA_INSTALACION = date('Y-m-d H:i:s');
                         Registrar sucursal en BD Central
                     </label>
                 </div>
-                <!-- Agregar este campo en la sección de configuración de sucursal -->
-                <div class="form-group">
-                    <label for="url_api">URL del API de Transferencias:</label>
-                    <input type="url" id="url_api" name="url_api" required 
-                        value="https://pruebas2.acplasticos.com/api-transferencias/"
-                        placeholder="https://tu-dominio.com/api-transferencias/">
-                    <small>URL completa donde está instalado el API de transferencias (debe terminar con /)</small>
-                </div>
-            </div>
             <!-- Importación desde otras sucursales -->
             <div class="step">
                 <h3>📊 Importar Datos de Otras Sucursales (Opcional)</h3>
@@ -705,6 +696,42 @@ function actualizarResumen() {
         resumen.style.display = 'none';
     }
 }
+function actualizarUrlApiEnPlantilla($nuevaUrlApi) {
+    $archivoPlantilla = '../vistas/plantilla.php';
+
+    if (!file_exists($archivoPlantilla)) {
+        return ['success' => false, 'message' => 'Archivo plantilla.php no encontrado'];
+    }
+
+    // Leer el contenido actual
+    $contenido = file_get_contents($archivoPlantilla);
+
+    if ($contenido === false) {
+        return ['success' => false, 'message' => 'No se pudo leer el archivo plantilla.php'];
+    }
+
+    // Formatear la URL (asegurar que termine con /)
+    $urlFormateada = rtrim($nuevaUrlApi, '/') . '/';
+
+    // Buscar y reemplazar la línea del apiUrl
+    $patron = '/const apiUrl = "[^"]*";/';
+    $reemplazo = 'const apiUrl = "' . $urlFormateada . '";';
+
+    $nuevoContenido = preg_replace($patron, $reemplazo, $contenido);
+
+    if ($nuevoContenido === null) {
+        return ['success' => false, 'message' => 'Error al procesar la URL del API'];
+    }
+
+    // Escribir el archivo modificado
+    $resultado = file_put_contents($archivoPlantilla, $nuevoContenido);
+
+    if ($resultado === false) {
+        return ['success' => false, 'message' => 'No se pudo escribir el archivo plantilla.php'];
+    }
+
+    return ['success' => true, 'message' => 'URL del API actualizada correctamente en plantilla.php'];
+}
             </script>
             <div style="text-align: center; margin-top: 30px;">
                 <button type="submit" class="btn" onclick="return confirmarInstalacion()">
@@ -1041,15 +1068,16 @@ function actualizarResumen() {
                 flush();
             }
             
-            // ===== PASO 6: CONFIGURAR SUCURSAL =====
+            // ===== PASO 6: CONFIGURAR SUCURSAL Y ACTUALIZAR PLANTILLA =====
             if (empty($errores)) {
-                echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 6/10: Configurando sucursal...";</script>';
-                echo '<div class="step"><h3>⚙️ Paso 6: Configurando Sucursal</h3>';
+                echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 6/10: Configurando sucursal y API...";</script>';
+                echo '<div class="step"><h3>⚙️ Paso 6: Configurando Sucursal y API</h3>';
                 
                 try {
                     $url_actual = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
                     $url_api = $url_actual . '/api-transferencias/';
                     
+                    // Insertar configuración en la base de datos
                     $stmt = $pdo_nueva->prepare("
                         INSERT INTO sucursal_local 
                         (codigo_sucursal, nombre, url_base, url_api, activo, fecha_registro) 
@@ -1062,10 +1090,22 @@ function actualizarResumen() {
                     echo '• Código: ' . $codigo_sucursal . '<br>';
                     echo '• Nombre: ' . htmlspecialchars($nombre_sucursal) . '<br>';
                     echo '• URL: ' . $url_actual . '<br>';
-                    echo '• API: ' . $url_api;
+                    echo '• API: ' . $url_api . '<br>';
                     echo '</div>';
                     
+                    // ✅ ACTUALIZAR PLANTILLA.PHP CON LA URL DEL API
+                    echo '<div class="info">🔄 Actualizando archivo plantilla.php...</div>';
+                    $resultadoPlantilla = actualizarUrlApiEnPlantilla($url_api);
+                    
+                    if ($resultadoPlantilla['success']) {
+                        echo '<div class="success">✅ <strong>Plantilla actualizada:</strong> URL del API configurada correctamente</div>';
+                    } else {
+                        echo '<div class="warning">⚠️ <strong>Advertencia:</strong> ' . htmlspecialchars($resultadoPlantilla['message']) . '</div>';
+                        echo '<div class="info">💡 La aplicación funcionará, pero deberás actualizar manualmente la URL en vistas/plantilla.php</div>';
+                    }
+                    
                     $pasos_completados++;
+                    
                 } catch (Exception $e) {
                     echo '<div class="error">❌ Error configurando: ' . htmlspecialchars($e->getMessage()) . '</div>';
                 }
@@ -1075,151 +1115,151 @@ function actualizarResumen() {
                 flush();
             }
             
-// ===== PASO 7: CREAR USUARIO ADMIN =====
-if (empty($errores) && $crear_usuario_admin) {
-    echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 7/10: Creando usuario admin...";</script>';
-    echo '<div class="step"><h3>👤 Paso 7: Creando Usuario Administrador</h3>';
-    
-    try {
-        // ✅ GENERAR USUARIO SIN GUIÓN BAJO NI CARACTERES ESPECIALES
-        $usuario_admin = 'admin' . strtolower($codigo_sucursal); // Sin guión bajo
-        $password_admin = 'admin123';
-        
-        // ✅ VERIFICAR QUE EL NOMBRE DE USUARIO SEA VÁLIDO (SIN GUIÓN BAJO)
-        if (strpos($usuario_admin, '_') !== false) {
-            // Si tiene guión bajo, reemplazar con código más simple
-            $usuario_admin = 'admin' . str_replace('_', '', strtolower($codigo_sucursal));
-        }
-        
-        // ✅ LIMITAR LONGITUD Y CARACTERES ESPECIALES
-        $usuario_admin = preg_replace('/[^a-z0-9]/', '', $usuario_admin);
-        $usuario_admin = substr($usuario_admin, 0, 15); // Máximo 15 caracteres
-        
-        echo '<div class="info">';
-        echo '🔍 <strong>Generando usuario:</strong> ' . htmlspecialchars($usuario_admin);
-        echo '</div>';
-        
-        // ✅ GENERAR HASH DE CONTRASEÑA USANDO EL MISMO MÉTODO DEL SISTEMA
-        $password_hash = crypt($password_admin, '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
-        
-        // ✅ VERIFICAR QUE EL HASH SE GENERÓ CORRECTAMENTE
-        if (strlen($password_hash) < 30) {
-            throw new Exception("Error generando hash de contraseña - muy corto: " . strlen($password_hash));
-        }
-        
-        // ✅ VERIFICAR SI EL USUARIO YA EXISTE
-        $stmtVerificar = $pdo_nueva->prepare("SELECT id FROM usuarios WHERE usuario = ?");
-        $stmtVerificar->execute([$usuario_admin]);
-        
-        if ($stmtVerificar->rowCount() > 0) {
-            echo '<div class="warning">';
-            echo '⚠️ <strong>Usuario ya existe:</strong> ' . htmlspecialchars($usuario_admin) . ' - Actualizando contraseña...';
-            echo '</div>';
-            
-            // Actualizar usuario existente
-            $stmt = $pdo_nueva->prepare("
-                UPDATE usuarios SET 
-                    password = ?, 
-                    estado = 1, 
-                    ultimo_login = ?,
-                    perfil = 'Administrador'
-                WHERE usuario = ?
-            ");
-            $resultado = $stmt->execute([$password_hash, $FECHA_INSTALACION, $usuario_admin]);
-            
-        } else {
-            // ✅ CREAR NUEVO USUARIO
-            $stmt = $pdo_nueva->prepare("
-                INSERT INTO usuarios 
-                (nombre, usuario, password, perfil, foto, estado, ultimo_login, empresa, telefono, direccion) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            $resultado = $stmt->execute([
-                'Administrador ' . $nombre_sucursal,
-                $usuario_admin, // ✅ SIN GUIÓN BAJO
-                $password_hash,
-                'Administrador',
-                'vistas/img/usuarios/default/anonymous.png',
-                1,
-                $FECHA_INSTALACION,
-                $nombre_sucursal,
-                '',
-                ''
-            ]);
-        }
-        
-        if ($resultado) {
-            echo '<div class="success">';
-            echo '✅ <strong>Usuario administrador configurado:</strong><br>';
-            echo '• Usuario: <code style="background: #e9ecef; padding: 4px 8px; border-radius: 3px; font-weight: bold;">' . htmlspecialchars($usuario_admin) . '</code><br>';
-            echo '• Contraseña: <code style="background: #e9ecef; padding: 4px 8px; border-radius: 3px; font-weight: bold;">' . $password_admin . '</code><br>';
-            echo '• Perfil: <strong>Administrador</strong><br>';
-            echo '• Estado: <strong>ACTIVO</strong><br>';
-            echo '<em style="color: #856404;">⚠️ Cambiar contraseña después del primer login</em>';
-            echo '</div>';
-            
-            // ✅ PROBAR INMEDIATAMENTE EL LOGIN
-            echo '<h4 style="margin-top: 20px;">🧪 Verificando credenciales generadas:</h4>';
-            
-            // Buscar el usuario recién creado
-            $stmtPrueba = $pdo_nueva->prepare("SELECT id, usuario, password, estado, perfil FROM usuarios WHERE usuario = ?");
-            $stmtPrueba->execute([$usuario_admin]);
-            $usuarioPrueba = $stmtPrueba->fetch();
-            
-            if ($usuarioPrueba) {
+            // ===== PASO 7: CREAR USUARIO ADMIN =====
+            if (empty($errores) && $crear_usuario_admin) {
+                echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 7/10: Creando usuario admin...";</script>';
+                echo '<div class="step"><h3>👤 Paso 7: Creando Usuario Administrador</h3>';
                 
-                // Probar que el hash coincida
-                $hashPrueba = crypt($password_admin, '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
-                
-                echo '<div class="info">';
-                echo '🔍 <strong>Verificación de usuario:</strong><br>';
-                echo '• ID: ' . $usuarioPrueba['id'] . '<br>';
-                echo '• Usuario: <strong>' . htmlspecialchars($usuarioPrueba['usuario']) . '</strong><br>';
-                echo '• Perfil: <strong>' . htmlspecialchars($usuarioPrueba['perfil']) . '</strong><br>';
-                echo '• Estado: ' . ($usuarioPrueba['estado'] == 1 ? '<span style="color: #28a745;">✅ ACTIVO</span>' : '<span style="color: #dc3545;">❌ INACTIVO</span>') . '<br>';
-                echo '• Hash válido: ' . (strlen($usuarioPrueba['password']) > 30 ? '<span style="color: #28a745;">✅ SÍ</span>' : '<span style="color: #dc3545;">❌ NO</span>');
-                echo '</div>';
-                
-                if ($usuarioPrueba['password'] === $hashPrueba) {
-                    echo '<div class="success">';
-                    echo '✅ <strong>Verificación exitosa:</strong> El login debería funcionar correctamente';
+                try {
+                    // ✅ GENERAR USUARIO SIN GUIÓN BAJO NI CARACTERES ESPECIALES
+                    $usuario_admin = 'admin' . strtolower($codigo_sucursal); // Sin guión bajo
+                    $password_admin = 'admin123';
+                    
+                    // ✅ VERIFICAR QUE EL NOMBRE DE USUARIO SEA VÁLIDO (SIN GUIÓN BAJO)
+                    if (strpos($usuario_admin, '_') !== false) {
+                        // Si tiene guión bajo, reemplazar con código más simple
+                        $usuario_admin = 'admin' . str_replace('_', '', strtolower($codigo_sucursal));
+                    }
+                    
+                    // ✅ LIMITAR LONGITUD Y CARACTERES ESPECIALES
+                    $usuario_admin = preg_replace('/[^a-z0-9]/', '', $usuario_admin);
+                    $usuario_admin = substr($usuario_admin, 0, 15); // Máximo 15 caracteres
+                    
+                    echo '<div class="info">';
+                    echo '🔍 <strong>Generando usuario:</strong> ' . htmlspecialchars($usuario_admin);
                     echo '</div>';
-                } else {
-                    echo '<div class="warning">';
-                    echo '⚠️ <strong>Advertencia:</strong> Los hashes no coinciden exactamente<br>';
-                    echo '<small>Esto puede ser normal debido a diferencias en el salt</small>';
+                    
+                    // ✅ GENERAR HASH DE CONTRASEÑA USANDO EL MISMO MÉTODO DEL SISTEMA
+                    $password_hash = crypt($password_admin, '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+                    
+                    // ✅ VERIFICAR QUE EL HASH SE GENERÓ CORRECTAMENTE
+                    if (strlen($password_hash) < 30) {
+                        throw new Exception("Error generando hash de contraseña - muy corto: " . strlen($password_hash));
+                    }
+                    
+                    // ✅ VERIFICAR SI EL USUARIO YA EXISTE
+                    $stmtVerificar = $pdo_nueva->prepare("SELECT id FROM usuarios WHERE usuario = ?");
+                    $stmtVerificar->execute([$usuario_admin]);
+                    
+                    if ($stmtVerificar->rowCount() > 0) {
+                        echo '<div class="warning">';
+                        echo '⚠️ <strong>Usuario ya existe:</strong> ' . htmlspecialchars($usuario_admin) . ' - Actualizando contraseña...';
+                        echo '</div>';
+                        
+                        // Actualizar usuario existente
+                        $stmt = $pdo_nueva->prepare("
+                            UPDATE usuarios SET 
+                                password = ?, 
+                                estado = 1, 
+                                ultimo_login = ?,
+                                perfil = 'Administrador'
+                            WHERE usuario = ?
+                        ");
+                        $resultado = $stmt->execute([$password_hash, $FECHA_INSTALACION, $usuario_admin]);
+                        
+                    } else {
+                        // ✅ CREAR NUEVO USUARIO
+                        $stmt = $pdo_nueva->prepare("
+                            INSERT INTO usuarios 
+                            (nombre, usuario, password, perfil, foto, estado, ultimo_login, empresa, telefono, direccion) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ");
+                        $resultado = $stmt->execute([
+                            'Administrador ' . $nombre_sucursal,
+                            $usuario_admin, // ✅ SIN GUIÓN BAJO
+                            $password_hash,
+                            'Administrador',
+                            'vistas/img/usuarios/default/anonymous.png',
+                            1,
+                            $FECHA_INSTALACION,
+                            $nombre_sucursal,
+                            '',
+                            ''
+                        ]);
+                    }
+                    
+                    if ($resultado) {
+                        echo '<div class="success">';
+                        echo '✅ <strong>Usuario administrador configurado:</strong><br>';
+                        echo '• Usuario: <code style="background: #e9ecef; padding: 4px 8px; border-radius: 3px; font-weight: bold;">' . htmlspecialchars($usuario_admin) . '</code><br>';
+                        echo '• Contraseña: <code style="background: #e9ecef; padding: 4px 8px; border-radius: 3px; font-weight: bold;">' . $password_admin . '</code><br>';
+                        echo '• Perfil: <strong>Administrador</strong><br>';
+                        echo '• Estado: <strong>ACTIVO</strong><br>';
+                        echo '<em style="color: #856404;">⚠️ Cambiar contraseña después del primer login</em>';
+                        echo '</div>';
+                        
+                        // ✅ PROBAR INMEDIATAMENTE EL LOGIN
+                        echo '<h4 style="margin-top: 20px;">🧪 Verificando credenciales generadas:</h4>';
+                        
+                        // Buscar el usuario recién creado
+                        $stmtPrueba = $pdo_nueva->prepare("SELECT id, usuario, password, estado, perfil FROM usuarios WHERE usuario = ?");
+                        $stmtPrueba->execute([$usuario_admin]);
+                        $usuarioPrueba = $stmtPrueba->fetch();
+                        
+                        if ($usuarioPrueba) {
+                            
+                            // Probar que el hash coincida
+                            $hashPrueba = crypt($password_admin, '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+                            
+                            echo '<div class="info">';
+                            echo '🔍 <strong>Verificación de usuario:</strong><br>';
+                            echo '• ID: ' . $usuarioPrueba['id'] . '<br>';
+                            echo '• Usuario: <strong>' . htmlspecialchars($usuarioPrueba['usuario']) . '</strong><br>';
+                            echo '• Perfil: <strong>' . htmlspecialchars($usuarioPrueba['perfil']) . '</strong><br>';
+                            echo '• Estado: ' . ($usuarioPrueba['estado'] == 1 ? '<span style="color: #28a745;">✅ ACTIVO</span>' : '<span style="color: #dc3545;">❌ INACTIVO</span>') . '<br>';
+                            echo '• Hash válido: ' . (strlen($usuarioPrueba['password']) > 30 ? '<span style="color: #28a745;">✅ SÍ</span>' : '<span style="color: #dc3545;">❌ NO</span>');
+                            echo '</div>';
+                            
+                            if ($usuarioPrueba['password'] === $hashPrueba) {
+                                echo '<div class="success">';
+                                echo '✅ <strong>Verificación exitosa:</strong> El login debería funcionar correctamente';
+                                echo '</div>';
+                            } else {
+                                echo '<div class="warning">';
+                                echo '⚠️ <strong>Advertencia:</strong> Los hashes no coinciden exactamente<br>';
+                                echo '<small>Esto puede ser normal debido a diferencias en el salt</small>';
+                                echo '</div>';
+                            }
+                            
+                        } else {
+                            echo '<div class="error">';
+                            echo '❌ <strong>Error:</strong> No se encontró el usuario recién creado';
+                            echo '</div>';
+                        }
+                        
+                        $pasos_completados++;
+                        $usuario_admin_creado = true;
+                        
+                    } else {
+                        throw new Exception("No se pudo crear/actualizar el usuario administrador");
+                    }
+                    
+                } catch (Exception $e) {
+                    echo '<div class="error">';
+                    echo '❌ <strong>Error creando usuario administrador:</strong><br>' . htmlspecialchars($e->getMessage());
+                    echo '<br><br><strong>Detalles técnicos:</strong>';
+                    echo '<ul>';
+                    echo '<li>Usuario propuesto: ' . htmlspecialchars($usuario_admin ?? 'No definido') . '</li>';
+                    echo '<li>Longitud hash: ' . (isset($password_hash) ? strlen($password_hash) : 'No generado') . '</li>';
+                    echo '<li>Verificar permisos de BD y tabla usuarios</li>';
+                    echo '</ul>';
                     echo '</div>';
                 }
                 
-            } else {
-                echo '<div class="error">';
-                echo '❌ <strong>Error:</strong> No se encontró el usuario recién creado';
                 echo '</div>';
+                echo '<script>document.getElementById("progressBar").style.width = "70%";</script>';
+                flush();
             }
-            
-            $pasos_completados++;
-            $usuario_admin_creado = true;
-            
-        } else {
-            throw new Exception("No se pudo crear/actualizar el usuario administrador");
-        }
-        
-    } catch (Exception $e) {
-        echo '<div class="error">';
-        echo '❌ <strong>Error creando usuario administrador:</strong><br>' . htmlspecialchars($e->getMessage());
-        echo '<br><br><strong>Detalles técnicos:</strong>';
-        echo '<ul>';
-        echo '<li>Usuario propuesto: ' . htmlspecialchars($usuario_admin ?? 'No definido') . '</li>';
-        echo '<li>Longitud hash: ' . (isset($password_hash) ? strlen($password_hash) : 'No generado') . '</li>';
-        echo '<li>Verificar permisos de BD y tabla usuarios</li>';
-        echo '</ul>';
-        echo '</div>';
-    }
-    
-    echo '</div>';
-    echo '<script>document.getElementById("progressBar").style.width = "70%";</script>';
-    flush();
-}
             
             // ===== PASO 8: SINCRONIZAR CATEGORÍAS =====
             if (empty($errores) && $sincronizar_categorias && $verificar_central) {
