@@ -44,7 +44,6 @@ error_reporting(E_ALL);
 $INSTALADOR_VERSION = "1.0";
 $FECHA_INSTALACION = date('Y-m-d H:i:s');
 
-// ✅ AGREGAR ESTA FUNCIÓN AQUÍ
 /**
  * Función para actualizar físicamente la URL del API en plantilla.php
  */
@@ -52,7 +51,7 @@ function actualizarUrlApiEnPlantilla($nuevaUrlApi) {
     $archivoPlantilla = '../vistas/plantilla.php';
 
     if (!file_exists($archivoPlantilla)) {
-        return ['success' => false, 'message' => 'Archivo plantilla.php no encontrado'];
+        return ['success' => false, 'message' => 'Archivo plantilla.php no encontrado en: ' . $archivoPlantilla];
     }
 
     // Leer el contenido actual
@@ -65,20 +64,29 @@ function actualizarUrlApiEnPlantilla($nuevaUrlApi) {
     // Formatear la URL (asegurar que termine con /)
     $urlFormateada = rtrim($nuevaUrlApi, '/') . '/';
 
-    // Buscar y reemplazar la línea del apiUrl
-    $patron = '/const apiUrl = "[^"]*";/';
+    // ✅ PATRÓN MÁS ESPECÍFICO Y ROBUSTO
+    $patron = '/const\s+apiUrl\s*=\s*["\'][^"\']*["\'];/i';
     $reemplazo = 'const apiUrl = "' . $urlFormateada . '";';
+
+    // Verificar si encontramos la línea
+    if (!preg_match($patron, $contenido)) {
+        return ['success' => false, 'message' => 'No se encontró la línea "const apiUrl" en plantilla.php'];
+    }
 
     $nuevoContenido = preg_replace($patron, $reemplazo, $contenido);
 
     if ($nuevoContenido === null) {
-        return ['success' => false, 'message' => 'Error al procesar la URL del API'];
+        return ['success' => false, 'message' => 'Error al procesar el reemplazo de la URL'];
     }
 
     // Verificar si realmente se hizo el cambio
     if ($nuevoContenido === $contenido) {
-        return ['success' => false, 'message' => 'No se encontró la línea const apiUrl para actualizar'];
+        return ['success' => false, 'message' => 'No se pudo realizar el cambio en const apiUrl'];
     }
+
+    // Crear backup antes de modificar
+    $backup = $archivoPlantilla . '.backup.' . date('YmdHis');
+    copy($archivoPlantilla, $backup);
 
     // Escribir el archivo modificado
     $resultado = file_put_contents($archivoPlantilla, $nuevoContenido);
@@ -87,7 +95,10 @@ function actualizarUrlApiEnPlantilla($nuevaUrlApi) {
         return ['success' => false, 'message' => 'No se pudo escribir el archivo plantilla.php'];
     }
 
-    return ['success' => true, 'message' => 'URL del API actualizada correctamente en plantilla.php'];
+    return [
+        'success' => true, 
+        'message' => 'URL actualizada de: anterior → ' . $urlFormateada
+    ];
 }
 
 /**
@@ -1134,60 +1145,67 @@ function verificarConexion($host, $usuario, $password, $bd = null) {
             }
             
             // ===== PASO 6: CONFIGURAR SUCURSAL Y ACTUALIZAR PLANTILLA =====
-            if (empty($errores)) {
-                echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 6/10: Configurando sucursal y API...";</script>';
-                echo '<div class="step"><h3>⚙️ Paso 6: Configurando Sucursal y API</h3>';
-                
-                try {
-                    // ✅ CORREGIR LA GENERACIÓN DE URL
-                    $url_actual = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['HTTP_HOST'];
-                    // Remover '/instalacion' del path si existe
-                    $script_dir = dirname($_SERVER['PHP_SELF']);
-                    if (strpos($script_dir, '/instalacion') !== false) {
-                        $script_dir = str_replace('/instalacion', '', $script_dir);
-                    }
-                    $url_actual .= $script_dir;
-                    
-                    // ✅ URL DEL API CORREGIDA
-                    $url_api = $url_actual . '/api-transferencias/';
-                    
-                    // Insertar configuración en la base de datos
-                    $stmt = $pdo_nueva->prepare("
-                        INSERT INTO sucursal_local 
-                        (codigo_sucursal, nombre, url_base, url_api, activo, fecha_registro) 
-                        VALUES (?, ?, ?, ?, 1, ?)
-                    ");
-                    $stmt->execute([$codigo_sucursal, $nombre_sucursal, $url_actual, $url_api, $FECHA_INSTALACION]);
-                    
-                    echo '<div class="success">';
-                    echo '✅ <strong>Sucursal configurada:</strong><br>';
-                    echo '• Código: ' . $codigo_sucursal . '<br>';
-                    echo '• Nombre: ' . htmlspecialchars($nombre_sucursal) . '<br>';
-                    echo '• URL: ' . $url_actual . '<br>';
-                    echo '• API: ' . $url_api . '<br>';
-                    echo '</div>';
-                    
-                    // ✅ ACTUALIZAR PLANTILLA.PHP CON LA URL DEL API
-                    echo '<div class="info">🔄 Actualizando archivo plantilla.php...</div>';
-                    $resultadoPlantilla = actualizarUrlApiEnPlantilla($url_api);
-                    
-                    if ($resultadoPlantilla['success']) {
-                        echo '<div class="success">✅ <strong>Plantilla actualizada:</strong> URL del API configurada correctamente</div>';
-                    } else {
-                        echo '<div class="warning">⚠️ <strong>Advertencia:</strong> ' . htmlspecialchars($resultadoPlantilla['message']) . '</div>';
-                        echo '<div class="info">💡 La aplicación funcionará, pero deberás actualizar manualmente la URL en vistas/plantilla.php</div>';
-                    }
-                    
-                    $pasos_completados++;
-                    
-                } catch (Exception $e) {
-                    echo '<div class="error">❌ Error configurando: ' . htmlspecialchars($e->getMessage()) . '</div>';
-                }
-                
-                echo '</div>';
-                echo '<script>document.getElementById("progressBar").style.width = "60%";</script>';
-                flush();
-            }
+// ===== PASO 6: CONFIGURAR SUCURSAL Y ACTUALIZAR PLANTILLA =====
+if (empty($errores)) {
+    echo '<script>document.getElementById("pasoActual").innerHTML = "Paso 6/10: Configurando sucursal y API...";</script>';
+    echo '<div class="step"><h3>⚙️ Paso 6: Configurando Sucursal y API</h3>';
+    
+    try {
+        // ✅ CORREGIR LA GENERACIÓN DE URL - QUITAR /instalacion del path
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+        $host = $_SERVER['HTTP_HOST'];
+        
+        // Obtener el directorio base SIN /instalacion
+        $script_dir = dirname($_SERVER['PHP_SELF']);
+        if (strpos($script_dir, '/instalacion') !== false) {
+            $script_dir = str_replace('/instalacion', '', $script_dir);
+        }
+        
+        $url_actual = $protocol . $host . $script_dir;
+        
+        // ✅ URL DEL API CORREGIDA (sin /instalacion)
+        $url_api = $url_actual . '/api-transferencias/';
+        
+        // Insertar configuración en la base de datos
+        $stmt = $pdo_nueva->prepare("
+            INSERT INTO sucursal_local 
+            (codigo_sucursal, nombre, url_base, url_api, activo, fecha_registro) 
+            VALUES (?, ?, ?, ?, 1, ?)
+        ");
+        $stmt->execute([$codigo_sucursal, $nombre_sucursal, $url_actual, $url_api, $FECHA_INSTALACION]);
+        
+        echo '<div class="success">';
+        echo '✅ <strong>Sucursal configurada:</strong><br>';
+        echo '• Código: ' . $codigo_sucursal . '<br>';
+        echo '• Nombre: ' . htmlspecialchars($nombre_sucursal) . '<br>';
+        echo '• URL Base: ' . $url_actual . '<br>';
+        echo '• API URL: ' . $url_api . '<br>';
+        echo '</div>';
+        
+        // ✅ ACTUALIZAR PLANTILLA.PHP CON LA URL DEL API
+        echo '<div class="info">🔄 Actualizando archivo plantilla.php...</div>';
+        echo '<div class="info">📍 URL API que se aplicará: <strong>' . $url_api . '</strong></div>';
+        
+        $resultadoPlantilla = actualizarUrlApiEnPlantilla($url_api);
+        
+        if ($resultadoPlantilla['success']) {
+            echo '<div class="success">✅ <strong>Plantilla actualizada:</strong> ' . htmlspecialchars($resultadoPlantilla['message']) . '</div>';
+        } else {
+            echo '<div class="error">❌ <strong>Error actualizando plantilla:</strong> ' . htmlspecialchars($resultadoPlantilla['message']) . '</div>';
+            echo '<div class="info">💡 Actualización manual necesaria en vistas/plantilla.php</div>';
+            echo '<div class="code">Cambiar: const apiUrl = "URL_ANTIGUA";<br>Por: const apiUrl = "' . $url_api . '";</div>';
+        }
+        
+        $pasos_completados++;
+        
+    } catch (Exception $e) {
+        echo '<div class="error">❌ Error configurando sucursal: ' . htmlspecialchars($e->getMessage()) . '</div>';
+    }
+    
+    echo '</div>';
+    echo '<script>document.getElementById("progressBar").style.width = "60%";</script>';
+    flush();
+}
             
             // ===== PASO 7: CREAR USUARIO ADMIN =====
             if (empty($errores) && $crear_usuario_admin) {
