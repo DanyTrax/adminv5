@@ -109,6 +109,34 @@ class ModeloSucursales {
     }
 
     /*=============================================
+    ACTUALIZAR URL DEL API EN CONFIGURACIÓN LOCAL
+    =============================================*/
+    static public function mdlActualizarUrlApi($nuevaUrl) {
+        try {
+            $stmt = Conexion::conectar()->prepare("UPDATE sucursal_local SET url_api = ?, fecha_actualizacion = NOW() WHERE id = 1");
+            $urlFormateada = rtrim($nuevaUrl, '/') . '/';
+            
+            if ($stmt->execute([$urlFormateada])) {
+                return [
+                    'success' => true,
+                    'message' => 'URL del API actualizada correctamente'
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Error al actualizar la URL del API'
+                ];
+            }
+        } catch (Exception $e) {
+            error_log("Error en mdlActualizarUrlApi: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error de base de datos: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /*=============================================
     OBTENER CONFIGURACIÓN LOCAL
     =============================================*/
     static public function mdlObtenerConfiguracionLocal() {

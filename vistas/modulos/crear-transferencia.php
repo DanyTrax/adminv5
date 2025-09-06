@@ -31,7 +31,7 @@
                 <table class="table table-bordered" width="100%">
                   <thead>
                     <tr>
-                      <th>Descripci®Æn</th>
+                      <th>Descripci√≥n</th>
                       <th>Cantidad</th>
                       <th>Acciones</th>
                     </tr>
@@ -58,8 +58,8 @@
                  <tr>
                   <th style="width: 10px">#</th>
                   <th>Imagen</th>
-                  <th>C®Ædigo</th>
-                  <th>Descripci®Æn</th>
+                  <th>C√≥digo</th>
+                  <th>Descripci√≥n</th>
                   <th>Stock</th>
                   <th>Acciones</th>
                 </tr>

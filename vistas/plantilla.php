@@ -100,18 +100,24 @@ if (isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok") {
 $nombreUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\"'], $nombreUsuario);
 $nombreSucursal = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\"'], $nombreSucursal);
 $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\"'], $perfilUsuario);
+
+// ✅ OBTENER API URL DINÁMICAMENTE
+$apiUrlDinamica = defined('API_URL') ? API_URL : 'https://pruebas2.acplasticos.com/api-transferencias/';
 ?>
     // ✅ VARIABLES GLOBALES SEGURAS (FUNCIONAN EN LOGIN Y SISTEMA)
     const nombreUsuario = '<?php echo $nombreUsuario; ?>';
     const nombreSucursal = '<?php echo $nombreSucursal; ?>';
     const perfilUsuario = '<?php echo $perfilUsuario; ?>';
-    const apiUrl = "https://pruebas2.acplasticos.com/api-transferencias/";
+    const apiUrl = "<?php echo $apiUrlDinamica; ?>"; // ✅ AHORA ES DINÁMICO
     const sesionActiva = <?php echo (isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok") ? 'true' : 'false'; ?>;
     
     // ✅ LOG SOLO SI HAY PROBLEMAS
     if (nombreUsuario === '' || nombreSucursal === '') {
         console.warn('Advertencia: Variables de usuario vacías');
-    };
+    }
+    
+    // ✅ LOG PARA VERIFICAR API URL
+    console.log('API URL configurada:', apiUrl);
 </script>
 
 </head>

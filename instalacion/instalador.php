@@ -211,6 +211,14 @@ $FECHA_INSTALACION = date('Y-m-d H:i:s');
                         Registrar sucursal en BD Central
                     </label>
                 </div>
+                <!-- Agregar este campo en la sección de configuración de sucursal -->
+                <div class="form-group">
+                    <label for="url_api">URL del API de Transferencias:</label>
+                    <input type="url" id="url_api" name="url_api" required 
+                        value="https://pruebas2.acplasticos.com/api-transferencias/"
+                        placeholder="https://tu-dominio.com/api-transferencias/">
+                    <small>URL completa donde está instalado el API de transferencias (debe terminar con /)</small>
+                </div>
             </div>
             <!-- Importación desde otras sucursales -->
             <div class="step">
