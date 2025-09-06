@@ -44,6 +44,66 @@ error_reporting(E_ALL);
 $INSTALADOR_VERSION = "1.0";
 $FECHA_INSTALACION = date('Y-m-d H:i:s');
 
+// ✅ AGREGAR ESTA FUNCIÓN AQUÍ
+/**
+ * Función para actualizar físicamente la URL del API en plantilla.php
+ */
+function actualizarUrlApiEnPlantilla($nuevaUrlApi) {
+    $archivoPlantilla = '../vistas/plantilla.php';
+
+    if (!file_exists($archivoPlantilla)) {
+        return ['success' => false, 'message' => 'Archivo plantilla.php no encontrado'];
+    }
+
+    // Leer el contenido actual
+    $contenido = file_get_contents($archivoPlantilla);
+
+    if ($contenido === false) {
+        return ['success' => false, 'message' => 'No se pudo leer el archivo plantilla.php'];
+    }
+
+    // Formatear la URL (asegurar que termine con /)
+    $urlFormateada = rtrim($nuevaUrlApi, '/') . '/';
+
+    // Buscar y reemplazar la línea del apiUrl
+    $patron = '/const apiUrl = "[^"]*";/';
+    $reemplazo = 'const apiUrl = "' . $urlFormateada . '";';
+
+    $nuevoContenido = preg_replace($patron, $reemplazo, $contenido);
+
+    if ($nuevoContenido === null) {
+        return ['success' => false, 'message' => 'Error al procesar la URL del API'];
+    }
+
+    // Verificar si realmente se hizo el cambio
+    if ($nuevoContenido === $contenido) {
+        return ['success' => false, 'message' => 'No se encontró la línea const apiUrl para actualizar'];
+    }
+
+    // Escribir el archivo modificado
+    $resultado = file_put_contents($archivoPlantilla, $nuevoContenido);
+
+    if ($resultado === false) {
+        return ['success' => false, 'message' => 'No se pudo escribir el archivo plantilla.php'];
+    }
+
+    return ['success' => true, 'message' => 'URL del API actualizada correctamente en plantilla.php'];
+}
+
+/**
+ * Función auxiliar para verificar conexión a BD
+ */
+function verificarConexion($host, $usuario, $password, $bd = null) {
+    try {
+        $dsn = "mysql:host=$host" . ($bd ? ";dbname=$bd" : "") . ";charset=utf8";
+        $pdo = new PDO($dsn, $usuario, $password);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        return ['success' => true, 'pdo' => $pdo];
+    } catch (PDOException $e) {
+        return ['success' => false, 'message' => $e->getMessage()];
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -1119,7 +1179,16 @@ function actualizarUrlApiEnPlantilla($nuevaUrlApi) {
                 echo '<div class="step"><h3>⚙️ Paso 6: Configurando Sucursal y API</h3>';
                 
                 try {
-                    $url_actual = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
+                    // ✅ CORREGIR LA GENERACIÓN DE URL
+                    $url_actual = 'http' . (isset($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['HTTP_HOST'];
+                    // Remover '/instalacion' del path si existe
+                    $script_dir = dirname($_SERVER['PHP_SELF']);
+                    if (strpos($script_dir, '/instalacion') !== false) {
+                        $script_dir = str_replace('/instalacion', '', $script_dir);
+                    }
+                    $url_actual .= $script_dir;
+                    
+                    // ✅ URL DEL API CORREGIDA
                     $url_api = $url_actual . '/api-transferencias/';
                     
                     // Insertar configuración en la base de datos
