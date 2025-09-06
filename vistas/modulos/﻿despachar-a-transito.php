@@ -17,22 +17,22 @@
             <div class="box-body">
               <div class="box">
                 
-<div class="form-group">
-  <div class="input-group">
-    <span class="input-group-addon"><i class="fa fa-truck"></i></span>
-    <select class="form-control" name="seleccionarTransportador" required>
-      <option value="">Seleccionar Transportador</option>
-      <?php
-        // CORRECCIÓN: Llamamos a un nuevo método del controlador que usará nuestra nueva función del modelo
-        $transportadores = ControladorUsuarios::ctrMostrarUsuariosPorPerfil("Transportador");
+                <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-truck"></i></span>
+                    <select class="form-control" name="seleccionarTransportador" required>
+                    <option value="">Seleccionar Transportador</option>
+                    <?php
+                        // CORRECCIÓN: Llamamos a un nuevo método del controlador que usará nuestra nueva función del modelo
+                        $transportadores = ControladorUsuarios::ctrMostrarUsuariosPorPerfil("Transportador");
 
-        foreach ($transportadores as $key => $value) {
-          echo '<option value="' . htmlspecialchars($value["nombre"]) . '">' . htmlspecialchars($value["nombre"]) . '</option>';
-        }
-      ?>
-    </select>
-  </div>
-</div>
+                        foreach ($transportadores as $key => $value) {
+                        echo '<option value="' . htmlspecialchars($value["nombre"]) . '">' . htmlspecialchars($value["nombre"]) . '</option>';
+                        }
+                    ?>
+                    </select>
+                </div>
+                </div>
 
                 <table class="table table-bordered" width="100%">
                   <thead>
