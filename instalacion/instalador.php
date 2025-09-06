@@ -798,46 +798,6 @@ function verificarConexion($host, $usuario, $password, $bd = null) {
     // ✅ FUNCIÓN PHP MOVIDA AL LUGAR CORRECTO (DEBE IR FUERA DEL SCRIPT)
     // Esta función debe estar en PHP, no en JavaScript
 </script>
-
-<?php
-// ✅ FUNCIÓN PHP PARA ACTUALIZAR PLANTILLA (FUERA DEL SCRIPT)
-function actualizarUrlApiEnPlantilla($nuevaUrlApi) {
-    $archivoPlantilla = '../vistas/plantilla.php';
-
-    if (!file_exists($archivoPlantilla)) {
-        return ['success' => false, 'message' => 'Archivo plantilla.php no encontrado'];
-    }
-
-    // Leer el contenido actual
-    $contenido = file_get_contents($archivoPlantilla);
-
-    if ($contenido === false) {
-        return ['success' => false, 'message' => 'No se pudo leer el archivo plantilla.php'];
-    }
-
-    // Formatear la URL (asegurar que termine con /)
-    $urlFormateada = rtrim($nuevaUrlApi, '/') . '/';
-
-    // Buscar y reemplazar la línea del apiUrl
-    $patron = '/const apiUrl = "[^"]*";/';
-    $reemplazo = 'const apiUrl = "' . $urlFormateada . '";';
-
-    $nuevoContenido = preg_replace($patron, $reemplazo, $contenido);
-
-    if ($nuevoContenido === null) {
-        return ['success' => false, 'message' => 'Error al procesar la URL del API'];
-    }
-
-    // Escribir el archivo modificado
-    $resultado = file_put_contents($archivoPlantilla, $nuevoContenido);
-
-    if ($resultado === false) {
-        return ['success' => false, 'message' => 'No se pudo escribir el archivo plantilla.php'];
-    }
-
-    return ['success' => true, 'message' => 'URL del API actualizada correctamente en plantilla.php'];
-}
-?>
             <div style="text-align: center; margin-top: 30px;">
                 <button type="submit" class="btn" onclick="return confirmarInstalacion()">
                     🚀 Iniciar Instalación
