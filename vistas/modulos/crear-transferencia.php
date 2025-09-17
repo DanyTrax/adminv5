@@ -19,12 +19,43 @@
                 
                 <div class="form-group">
                   <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-building"></i></span>
+                    <?php
+                    $sucursalLocal = ControladorSucursales::ctrObtenerConfiguracionLocal();
+                    $nombreSucursal = $sucursalLocal ? $sucursalLocal['nombre'] : 'Sucursal no configurada';
+                    ?>
+                    <input type="text" class="form-control" 
+                          value="<?php echo htmlspecialchars($nombreSucursal); ?>" 
+                          readonly style="background-color: #f4f4f4; cursor: not-allowed;">
+                    <input type="hidden" name="sucursalOrigen" 
+                          value="<?php echo $sucursalLocal ? htmlspecialchars($sucursalLocal['codigo_sucursal']) : ''; ?>">
+                  </div>
+                  <small class="text-muted">
+                    <i class="fa fa-info-circle"></i> Esta es tu sucursal actual (configuración local)
+                  </small>
+                </div>
+
+                <div class="form-group">
+                  <div class="input-group">
                     <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
                     <select class="form-control" name="seleccionarDestino" required>
                       <option value="">Seleccionar sucursal de destino</option>
-                      <option value="Sucursal Principal">Sucursal Principal</option>
-                      <option value="Sucursal Norte">Sucursal Norte</option>
-                       </select>
+                      <?php
+                      // Obtener sucursales desde la BD central para el destino
+                      $respuesta = ModeloSucursales::mdlObtenerSucursales(true);
+                      if ($respuesta["success"]) {
+                          $sucursales = $respuesta["data"];
+                          foreach ($sucursales as $sucursal) {
+                              // No mostrar la sucursal actual como opción de destino
+                              if ($sucursalLocal && $sucursal['codigo_sucursal'] == $sucursalLocal['codigo_sucursal']) {
+                                  continue;
+                              }
+                              echo '<option value="' . htmlspecialchars($sucursal['codigo_sucursal']) . '">' 
+                                  . htmlspecialchars($sucursal['nombre']) . '</option>';
+                          }
+                      }
+                      ?>
+                    </select>
                   </div>
                 </div>
 
