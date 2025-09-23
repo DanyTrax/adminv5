@@ -169,7 +169,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
       } else {
         include "modulos/404.php";
       }
-    } else {
+    } else { 
       include "modulos/inicio.php";
     }
 
