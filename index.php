@@ -33,7 +33,7 @@ require_once "modelos/sucursales.modelo.php";
 require_once "modelos/solicitudes-stock.modelo.php";
 
 require_once "src/MedioPago.php";
-require_once "src/FormaPago.php";
+require_once "src/FormaPago.php"; 
 
 $plantilla = new ControladorPlantilla();
 $plantilla->ctrPlantilla();
