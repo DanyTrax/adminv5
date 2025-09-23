@@ -1,6 +1,7 @@
 <?php
 
 require_once "conexion.php";
+require_once "api-transferencias/conexion-central.php"; 
 
 class ModeloSolicitudesStock {
 
@@ -9,7 +10,7 @@ class ModeloSolicitudesStock {
     =============================================*/
     static public function mdlCrearSolicitud($tabla, $datos) {
         
-        $stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(
+        $stmt = ConexionCentral::conectar()->prepare("INSERT INTO $tabla(
             numero_solicitud,
             codigo_sucursal_solicitante,
             nombre_sucursal_solicitante,
@@ -75,14 +76,14 @@ class ModeloSolicitudesStock {
         
         if($item != null) {
             
-            $stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item ORDER BY fecha_solicitud DESC");
+            $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item ORDER BY fecha_solicitud DESC");
             $stmt->bindParam(":".$item, $valor, PDO::PARAM_STR);
             $stmt->execute();
             return $stmt->fetch();
             
         } else {
             
-            $stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla ORDER BY fecha_solicitud DESC");
+            $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM $tabla ORDER BY fecha_solicitud DESC");
             $stmt->execute();
             return $stmt->fetchAll();
         }
@@ -96,7 +97,7 @@ class ModeloSolicitudesStock {
     =============================================*/
     static public function mdlMostrarSolicitudesCompletas($tabla) {
         
-        $stmt = Conexion::conectar()->prepare("SELECT 
+        $stmt = ConexionCentral::conectar()->prepare("SELECT 
             s.*,
             u1.nombre as nombre_usuario_solicitante_actual,
             u1.usuario as usuario_solicitante_actual,
@@ -119,7 +120,7 @@ class ModeloSolicitudesStock {
     =============================================*/
     static public function mdlContarSolicitudesPendientes($tabla) {
         
-        $stmt = Conexion::conectar()->prepare("SELECT COUNT(*) as total FROM $tabla WHERE estado = 'pendiente'");
+        $stmt = ConexionCentral::conectar()->prepare("SELECT COUNT(*) as total FROM $tabla WHERE estado = 'pendiente'");
         $stmt->execute();
         $resultado = $stmt->fetch();
         
@@ -134,7 +135,7 @@ class ModeloSolicitudesStock {
     =============================================*/
     static public function mdlObtenerSolicitudesPendientes($tabla, $limite = 5) {
         
-        $stmt = Conexion::conectar()->prepare("SELECT 
+        $stmt = ConexionCentral::conectar()->prepare("SELECT 
             numero_solicitud,
             nombre_sucursal_solicitante,
             nombre_usuario_solicitante,
@@ -159,7 +160,7 @@ class ModeloSolicitudesStock {
     =============================================*/
     static public function mdlActualizarEstadoSolicitud($tabla, $datos) {
         
-        $stmt = Conexion::conectar()->prepare("UPDATE $tabla SET 
+        $stmt = ConexionCentral::conectar()->prepare("UPDATE $tabla SET 
             estado = :estado,
             usuario_aprobacion = :usuario_aprobacion,
             nombre_usuario_aprobacion = :nombre_usuario_aprobacion,
@@ -194,7 +195,7 @@ class ModeloSolicitudesStock {
             $placeholders = str_repeat('?,', count($ids) - 1) . '?';
             $sql = "UPDATE $tabla SET $campo = 1 WHERE id IN ($placeholders)";
             
-            $stmt = Conexion::conectar()->prepare($sql);
+            $stmt = ConexionCentral::conectar()->prepare($sql);
             $stmt->execute($ids);
             
             return "ok";
@@ -211,7 +212,7 @@ class ModeloSolicitudesStock {
     =============================================*/
     static public function mdlEliminarSolicitud($tabla, $datos) {
         
-        $stmt = Conexion::conectar()->prepare("DELETE FROM $tabla WHERE id = :id");
+        $stmt = ConexionCentral::conectar()->prepare("DELETE FROM $tabla WHERE id = :id");
         $stmt->bindParam(":id", $datos, PDO::PARAM_INT);
 
         if($stmt->execute()) {
@@ -229,7 +230,7 @@ class ModeloSolicitudesStock {
     =============================================*/
     static public function mdlBuscarVentasRemision($busqueda) {
         
-        $stmt = Conexion::conectar()->prepare("SELECT 
+        $stmt = ConexionCentral::conectar()->prepare("SELECT 
             v.id,
             v.codigo,
             v.fecha_venta,
@@ -259,7 +260,7 @@ class ModeloSolicitudesStock {
     =============================================*/
     static public function mdlObtenerProductosVenta($codigoVenta) {
         
-        $stmt = Conexion::conectar()->prepare("SELECT 
+        $stmt = ConexionCentral::conectar()->prepare("SELECT 
             p.id,
             p.codigo,
             p.descripcion,
@@ -284,7 +285,7 @@ class ModeloSolicitudesStock {
     =============================================*/
     static public function mdlGenerarNumeroSolicitud($tabla) {
         
-        $stmt = Conexion::conectar()->prepare("SELECT numero_solicitud FROM $tabla ORDER BY id DESC LIMIT 1");
+        $stmt = ConexionCentral::conectar()->prepare("SELECT numero_solicitud FROM $tabla ORDER BY id DESC LIMIT 1");
         $stmt->execute();
         $resultado = $stmt->fetch();
         
@@ -308,7 +309,7 @@ class ModeloSolicitudesStock {
     =============================================*/
     static public function mdlRegistrarLog($datos) {
         
-        $stmt = Conexion::conectar()->prepare("INSERT INTO solicitudes_stock_log(
+        $stmt = ConexionCentral::conectar()->prepare("INSERT INTO solicitudes_stock_log(
             solicitud_id,
             usuario_id,
             accion,
@@ -351,7 +352,7 @@ class ModeloSolicitudesStock {
     =============================================*/
     static public function mdlObtenerEstadisticas($tabla) {
         
-        $stmt = Conexion::conectar()->prepare("SELECT 
+        $stmt = ConexionCentral::conectar()->prepare("SELECT 
             COUNT(*) as total,
             COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) as pendientes,
             COUNT(CASE WHEN estado = 'aprobado' THEN 1 END) as aprobadas,
@@ -372,7 +373,7 @@ class ModeloSolicitudesStock {
     =============================================*/
     static public function mdlBuscarSolicitudes($tabla, $termino) {
         
-        $stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla 
+        $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM $tabla 
             WHERE numero_solicitud LIKE :termino 
             OR nombre_sucursal_solicitante LIKE :termino 
             OR nombre_usuario_solicitante LIKE :termino 
