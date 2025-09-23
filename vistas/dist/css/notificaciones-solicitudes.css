@@ -1,0 +1,55 @@
+/* ANIMACIONES PARA NOTIFICACIONES */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.animated.pulse {
+    animation: pulse 0.5s ease-in-out;
+}
+
+/* MEJORAS VISUALES PARA LA CAMPANA */
+.notifications-menu > a {
+    position: relative;
+}
+
+.notifications-menu .label {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* EFECTOS HOVER PARA NOTIFICACIONES */
+.notifications-menu .menu li a {
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.notifications-menu .menu li a:hover {
+    background-color: #f8f9fa !important;
+    border-left-color: #3c8dbc !important;
+    padding-left: 15px;
+}
+
+/* INDICADOR DE NUEVA SOLICITUD */
+.notif-item-nueva::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: #f39c12;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .notifications-menu .dropdown-menu {
+        left: -200px;
+        width: 250px;
+    }
+}

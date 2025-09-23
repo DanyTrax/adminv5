@@ -88,38 +88,9 @@
                   </a>
                   <ul class="treeview-menu">
                     <li>
-                      <a href="transferencias">
+                      <a href="solicitar-stock">
                         <i class="fa fa-list-ul"></i>
                         <span>Ver Solicitudes</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="crear-transferencia">
-                        <i class="fa fa-plus-square"></i>
-                        <span>Crear Solicitud</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="despachar-a-transito">
-                        <i class="fa fa-truck"></i>
-                        <span>Despachar a Tránsito</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="cargues-pendientes">
-                        <i class="fa fa-clock-o"></i>
-                        <span>Confirmar Cargues</span>
-                      </a>
-                    </li>
-                     <li>
-                      <a href="almacen-transito"> <i class="fa fa-archive"></i>
-                        <span>Almacén en Tránsito</span>
-                      </a>
-                    </li>
-                     <li>
-                      <a href="recepciones">
-                        <i class="fa fa-check-square-o"></i>
-                        <span>Historial de Recepciones</span>
                       </a>
                     </li>
                   </ul>
