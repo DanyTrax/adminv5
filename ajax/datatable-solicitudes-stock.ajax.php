@@ -1,5 +1,8 @@
 <?php
 
+session_start();
+
+require_once "../api-transferencias/conexion-central.php";
 require_once "../controladores/solicitudes-stock.controlador.php";
 require_once "../modelos/solicitudes-stock.modelo.php";
 
