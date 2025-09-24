@@ -311,98 +311,224 @@
         </div>
     </div>
 </div>
-<!-- MODAL VER DETALLES DE SOLICITUD -->
-<div id="modalVerSolicitud" class="modal fade" role="dialog">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header" style="background:#3c8dbc; color:white">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title">
-          <i class="fa fa-eye"></i>
-          Detalles de Solicitud
-        </h4>
-      </div>
-      <div class="modal-body">
-        
-        <!-- INFORMACIÓN BÁSICA -->
-        <div class="row">
-          <div class="col-md-6">
-            <strong>N° Solicitud:</strong> <span id="modalNumeroSolicitud"></span><br>
-            <strong>Sucursal:</strong> <span id="modalSucursal"></span><br>
-            <strong>Usuario:</strong> <span id="modalUsuario"></span><br>
-            <strong>Tipo:</strong> <span id="modalTipo"></span>
-          </div>
-          <div class="col-md-6">
-            <strong>Estado:</strong> <span id="modalEstado"></span><br>
-            <strong>Fecha Solicitud:</strong> <span id="modalFechaSolicitud"></span><br>
-            <strong>Aprobado por:</strong> <span id="modalAprobadoPor"></span><br>
-            <strong>Fecha Aprobación:</strong> <span id="modalFechaAprobacion"></span>
-          </div>
+<!-- Modal para ver detalles de solicitud -->
+<div class="modal fade" id="modalVerSolicitud" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">
+                    <i class="fa fa-eye text-info"></i> Detalles de Solicitud
+                </h4>
+            </div>
+            <div class="modal-body">
+                
+                <!-- Información Básica -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><strong>N° Solicitud:</strong></label>
+                            <p id="modalNumeroSolicitud" class="text-primary"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><strong>Estado:</strong></label>
+                            <p id="modalEstado"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><strong>Sucursal:</strong></label>
+                            <p id="modalSucursal"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><strong>Usuario Solicitante:</strong></label>
+                            <p id="modalUsuario"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><strong>Tipo de Solicitud:</strong></label>
+                            <p id="modalTipo"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><strong>Fecha Solicitud:</strong></label>
+                            <p id="modalFechaSolicitud"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de Remisión (si aplica) -->
+                <div id="infoRemision" style="display: none;">
+                    <hr>
+                    <h5><i class="fa fa-file-text-o"></i> Información de Remisión</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label><strong>Código Remisión:</strong></label>
+                                <p id="modalCodigoRemision"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label><strong>Cliente:</strong></label>
+                                <p id="modalClienteRemision"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de Aprobación -->
+                <hr>
+                <h5><i class="fa fa-check-circle"></i> Información de Aprobación</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><strong>Aprobado por:</strong></label>
+                            <p id="modalAprobadoPor"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><strong>Fecha Aprobación:</strong></label>
+                            <p id="modalFechaAprobacion"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detalle Adicional -->
+                <div id="detalleAdicional" style="display: none;">
+                    <hr>
+                    <div class="form-group">
+                        <label><strong><i class="fa fa-comment"></i> Detalle Adicional:</strong></label>
+                        <div class="well well-sm">
+                            <p id="modalDetalleTexto"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Productos Solicitados -->
+                <hr>
+                <h5><i class="fa fa-cubes"></i> Productos Solicitados</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-condensed">
+                        <thead>
+                            <tr class="bg-light">
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th class="text-center">Cantidad</th>
+                                <th>Observación</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalProductosLista">
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                
+                <!-- Botones de acción (solo si está pendiente) -->
+                <div id="botonesAccionModal" style="display: none;">
+                    <?php if($_SESSION["perfil"] == "Transportador" || $_SESSION["perfil"] == "Administrador"): ?>
+                    <button type="button" class="btn btn-success" id="btnAprobarModal">
+                        <i class="fa fa-check"></i> Aprobar
+                    </button>
+                    <button type="button" class="btn btn-warning" id="btnCancelarModal">
+                        <i class="fa fa-times"></i> Cancelar
+                    </button>
+                    <?php endif; ?>
+                </div>
+
+                <button type="button" class="btn btn-info" onclick="imprimirSolicitud()">
+                    <i class="fa fa-print"></i> Imprimir
+                </button>
+                <button type="button" class="btn btn-success" onclick="exportarExcel()">
+                    <i class="fa fa-file-excel-o"></i> Exportar
+                </button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cerrar
+                </button>
+            </div>
         </div>
-
-        <!-- REMISIÓN SI APLICA -->
-        <div id="infoRemision" style="display: none;">
-          <hr>
-          <h4><i class="fa fa-file-text"></i> Información de Remisión</h4>
-          <strong>Código:</strong> <span id="modalCodigoRemision"></span><br>
-          <strong>Cliente:</strong> <span id="modalClienteRemision"></span>
-        </div>
-
-        <!-- DETALLE ADICIONAL -->
-        <div id="detalleAdicional" style="display: none;">
-          <hr>
-          <h4><i class="fa fa-comment"></i> Detalle Adicional</h4>
-          <p id="modalDetalleTexto" class="well"></p>
-        </div>
-
-        <hr>
-
-        <!-- PRODUCTOS SOLICITADOS -->
-        <h4><i class="fa fa-cubes"></i> Productos Solicitados</h4>
-        <div class="table-responsive">
-          <table class="table table-bordered table-striped">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Descripción</th>
-                <th>Cantidad</th>
-                <th>Observación</th>
-              </tr>
-            </thead>
-            <tbody id="modalProductosLista">
-            </tbody>
-          </table>
-        </div>
-
-        <!-- BOTONES DE ACCIÓN PARA TRANSPORTADOR/ADMIN -->
-        <?php if($_SESSION["perfil"] == "Transportador" || $_SESSION["perfil"] == "Administrador"): ?>
-        <hr>
-        <div class="text-center" id="botonesAccionModal">
-          <button class="btn btn-success btn-lg" id="btnAprobarModal" style="margin-right: 10px;">
-            <i class="fa fa-check"></i> Aprobar Solicitud
-          </button>
-          <button class="btn btn-warning btn-lg" id="btnCancelarModal">
-            <i class="fa fa-times"></i> Cancelar Solicitud
-          </button>
-        </div>
-        <?php endif; ?>
-
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-info" onclick="imprimirSolicitud()">
-          <i class="fa fa-print"></i> Imprimir
-        </button>
-        <button type="button" class="btn btn-success" onclick="exportarExcel()">
-          <i class="fa fa-file-excel-o"></i> Excel
-        </button>
-        <button type="button" class="btn btn-default pull-right" data-dismiss="modal">
-          <i class="fa fa-times"></i> Cerrar
-        </button>
-      </div>
     </div>
-  </div>
 </div>
 
+<!-- JavaScript personalizado -->
+<script>
+$(document).ready(function() {
+    
+    // ✅ FUNCIÓN SEGURA PARA ACTUALIZAR CONTADORES
+    function actualizarContadorSeguro() {
+        // Solo ejecutar si el elemento existe
+        if($('.badge-contador-solicitudes').length > 0) {
+            
+            $.ajax({
+                url: 'ajax/notificaciones-solicitudes.ajax.php',
+                type: 'POST',
+                data: { accion: 'obtener_notificaciones' },
+                dataType: 'json',
+                timeout: 5000, // 5 segundos timeout
+                success: function(response) {
+                    // ✅ VALIDAR RESPUESTA ANTES DE USAR
+                    if(response && response.success && response.data && response.data.contador !== undefined) {
+                        var contador = parseInt(response.data.contador) || 0;
+                        
+                        if(contador > 0) {
+                            $('.badge-contador-solicitudes').text(contador).show();
+                        } else {
+                            $('.badge-contador-solicitudes').hide();
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // ✅ MANEJAR ERROR SILENCIOSAMENTE
+                    console.log('Error actualizando contador (no crítico):', error);
+                    $('.badge-contador-solicitudes').hide();
+                }
+            });
+        }
+    }
+
+    // ✅ SOLO EJECUTAR SI ES TRANSPORTADOR O ADMINISTRADOR
+    <?php if($_SESSION["perfil"] == "Transportador" || $_SESSION["perfil"] == "Administrador"): ?>
+    
+    // Ejecutar una vez al cargar
+    setTimeout(function() {
+        actualizarContadorSeguro();
+    }, 2000);
+
+    // Actualizar cada 60 segundos (no cada 30 para reducir carga)
+    setInterval(function() {
+        actualizarContadorSeguro();
+    }, 60000);
+    
+    <?php endif; ?>
+
+    // ✅ RECARGAR TABLA DESPUÉS DE CREAR SOLICITUD
+    $('.formularioSolicitudStock').on('submit', function() {
+        setTimeout(function() {
+            if($('.tablaSolicitudesStock').length > 0) {
+                $('.tablaSolicitudesStock').DataTable().ajax.reload();
+            }
+        }, 1000);
+    });
+
+});
+</script>
 <?php
 // Ejecutar controladores para acciones
 $aprobarSolicitud = new ControladorSolicitudesStock();

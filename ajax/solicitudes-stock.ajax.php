@@ -31,13 +31,13 @@ class AjaxSolicitudesStock {
     public $busquedaVenta;
 
     public function ajaxBuscarVentas(){
-    
+        
         try {
-            // ✅ USAR CUALQUIER NOMBRE DE FECHA QUE EXISTA
+            // ✅ USAR NOMBRE CORRECTO DE COLUMNA DE FECHA
             $stmt = Conexion::conectar()->prepare("SELECT 
                 v.id,
                 v.codigo,
-                COALESCE(v.fecha, v.fecha_venta, v.created_at, NOW()) as fecha,
+                v.fecha_venta as fecha,  -- ✅ CAMBIAR A fecha_venta
                 v.total,
                 c.nombre as nombre_cliente,
                 c.documento as documento_cliente
@@ -46,7 +46,7 @@ class AjaxSolicitudesStock {
                 WHERE v.codigo LIKE :busqueda 
                 OR c.nombre LIKE :busqueda 
                 OR c.documento LIKE :busqueda
-                ORDER BY v.id DESC 
+                ORDER BY v.fecha_venta DESC 
                 LIMIT 10");
             
             $busqueda = "%" . $this->busquedaVenta . "%";
