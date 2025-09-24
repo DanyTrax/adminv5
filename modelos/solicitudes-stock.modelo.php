@@ -1,49 +1,51 @@
 <?php
 
 require_once "conexion.php";
-require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+
+// ✅ INCLUIR CONEXIÓN CENTRAL CON RUTA CORRECTA
+if (file_exists("api-transferencias/conexion-central.php")) {
+    require_once "api-transferencias/conexion-central.php";
+} elseif (file_exists("../api-transferencias/conexion-central.php")) {
+    require_once "../api-transferencias/conexion-central.php";
+} elseif (file_exists(__DIR__ . "/../api-transferencias/conexion-central.php")) {
+    require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+} else {
+    die("Error: No se pudo encontrar el archivo conexion-central.php");
+}
 
 class ModeloSolicitudesStock {
 
     /*=============================================
-    CREAR SOLICITUD DE STOCK
+    CREAR SOLICITUD DE STOCK - EN BASE CENTRAL
     =============================================*/
     static public function mdlCrearSolicitud($tabla, $datos) {
-        
+
         $stmt = ConexionCentral::conectar()->prepare("INSERT INTO $tabla(
-            numero_solicitud,
-            codigo_sucursal_solicitante,
-            nombre_sucursal_solicitante,
-            usuario_solicitante,
-            nombre_usuario_solicitante,
-            productos_solicitados,
-            tipo_solicitud,
-            codigo_remision,
-            nombre_cliente_remision,
-            detalle_adicional,
-            estado,
-            fecha_solicitud,
-            total_productos,
-            total_cantidad,
-            notificado_transportador,
-            notificado_administrador
+            numero_solicitud, 
+            codigo_sucursal_solicitante, 
+            nombre_sucursal_solicitante, 
+            usuario_solicitante, 
+            nombre_usuario_solicitante, 
+            productos_solicitados, 
+            tipo_solicitud, 
+            codigo_remision, 
+            nombre_cliente_remision, 
+            detalle_adicional, 
+            total_productos, 
+            total_cantidad
         ) VALUES (
-            :numero_solicitud,
-            :codigo_sucursal_solicitante,
-            :nombre_sucursal_solicitante,
-            :usuario_solicitante,
-            :nombre_usuario_solicitante,
-            :productos_solicitados,
-            :tipo_solicitud,
-            :codigo_remision,
-            :nombre_cliente_remision,
-            :detalle_adicional,
-            'pendiente',
-            NOW(),
-            :total_productos,
-            :total_cantidad,
-            1,
-            1
+            :numero_solicitud, 
+            :codigo_sucursal_solicitante, 
+            :nombre_sucursal_solicitante, 
+            :usuario_solicitante, 
+            :nombre_usuario_solicitante, 
+            :productos_solicitados, 
+            :tipo_solicitud, 
+            :codigo_remision, 
+            :nombre_cliente_remision, 
+            :detalle_adicional, 
+            :total_productos, 
+            :total_cantidad
         )");
 
         $stmt->bindParam(":numero_solicitud", $datos["numero_solicitud"], PDO::PARAM_STR);
@@ -59,7 +61,7 @@ class ModeloSolicitudesStock {
         $stmt->bindParam(":total_productos", $datos["total_productos"], PDO::PARAM_INT);
         $stmt->bindParam(":total_cantidad", $datos["total_cantidad"], PDO::PARAM_INT);
 
-        if($stmt->execute()) {
+        if($stmt->execute()){
             return "ok";
         } else {
             return "error";
@@ -70,21 +72,26 @@ class ModeloSolicitudesStock {
     }
 
     /*=============================================
-    MOSTRAR SOLICITUDES
+    MOSTRAR SOLICITUDES - DESDE BASE CENTRAL
     =============================================*/
     static public function mdlMostrarSolicitudes($tabla, $item, $valor) {
-        
+
         if($item != null) {
-            
+
             $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item ORDER BY fecha_solicitud DESC");
+
             $stmt->bindParam(":".$item, $valor, PDO::PARAM_STR);
+
             $stmt->execute();
+
             return $stmt->fetch();
-            
+
         } else {
-            
+
             $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM $tabla ORDER BY fecha_solicitud DESC");
+
             $stmt->execute();
+
             return $stmt->fetchAll();
         }
 
@@ -93,22 +100,14 @@ class ModeloSolicitudesStock {
     }
 
     /*=============================================
-    MOSTRAR SOLICITUDES CON INFORMACIÓN DE USUARIOS
+    MOSTRAR SOLICITUDES COMPLETAS - DESDE BASE CENTRAL
     =============================================*/
     static public function mdlMostrarSolicitudesCompletas($tabla) {
-        
-        $stmt = ConexionCentral::conectar()->prepare("SELECT 
-            s.*,
-            u1.nombre as nombre_usuario_solicitante_actual,
-            u1.usuario as usuario_solicitante_actual,
-            u2.nombre as nombre_usuario_aprobacion_actual,
-            u2.usuario as usuario_aprobacion_actual
-            FROM $tabla s
-            LEFT JOIN usuarios u1 ON s.usuario_solicitante = u1.id
-            LEFT JOIN usuarios u2 ON s.usuario_aprobacion = u2.id
-            ORDER BY s.fecha_solicitud DESC");
-            
+
+        $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM $tabla ORDER BY fecha_solicitud DESC");
+
         $stmt->execute();
+
         return $stmt->fetchAll();
 
         $stmt->close();
@@ -116,50 +115,10 @@ class ModeloSolicitudesStock {
     }
 
     /*=============================================
-    CONTAR SOLICITUDES PENDIENTES PARA NOTIFICACIONES
-    =============================================*/
-    static public function mdlContarSolicitudesPendientes($tabla) {
-        
-        $stmt = ConexionCentral::conectar()->prepare("SELECT COUNT(*) as total FROM $tabla WHERE estado = 'pendiente'");
-        $stmt->execute();
-        $resultado = $stmt->fetch();
-        
-        return $resultado["total"];
-
-        $stmt->close();
-        $stmt = null;
-    }
-
-    /*=============================================
-    OBTENER SOLICITUDES PENDIENTES PARA NOTIFICACIONES
-    =============================================*/
-    static public function mdlObtenerSolicitudesPendientes($tabla, $limite = 5) {
-        
-        $stmt = ConexionCentral::conectar()->prepare("SELECT 
-            numero_solicitud,
-            nombre_sucursal_solicitante,
-            nombre_usuario_solicitante,
-            fecha_solicitud,
-            total_productos
-            FROM $tabla 
-            WHERE estado = 'pendiente' 
-            ORDER BY fecha_solicitud DESC 
-            LIMIT :limite");
-            
-        $stmt->bindParam(":limite", $limite, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        return $stmt->fetchAll();
-
-        $stmt->close();
-        $stmt = null;
-    }
-
-    /*=============================================
-    ACTUALIZAR ESTADO DE SOLICITUD
+    ACTUALIZAR ESTADO DE SOLICITUD - EN BASE CENTRAL
     =============================================*/
     static public function mdlActualizarEstadoSolicitud($tabla, $datos) {
-        
+
         $stmt = ConexionCentral::conectar()->prepare("UPDATE $tabla SET 
             estado = :estado,
             usuario_aprobacion = :usuario_aprobacion,
@@ -176,7 +135,7 @@ class ModeloSolicitudesStock {
         $stmt->bindParam(":motivo_cancelacion", $datos["motivo_cancelacion"], PDO::PARAM_STR);
         $stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
 
-        if($stmt->execute()) {
+        if($stmt->execute()){
             return "ok";
         } else {
             return "error";
@@ -187,35 +146,15 @@ class ModeloSolicitudesStock {
     }
 
     /*=============================================
-    MARCAR SOLICITUDES COMO VISTAS
-    =============================================*/
-    static public function mdlMarcarComoVista($tabla, $campo, $ids) {
-        
-        if(is_array($ids) && !empty($ids)) {
-            $placeholders = str_repeat('?,', count($ids) - 1) . '?';
-            $sql = "UPDATE $tabla SET $campo = 1 WHERE id IN ($placeholders)";
-            
-            $stmt = ConexionCentral::conectar()->prepare($sql);
-            $stmt->execute($ids);
-            
-            return "ok";
-        }
-        
-        return "error";
-
-        $stmt->close();
-        $stmt = null;
-    }
-
-    /*=============================================
-    ELIMINAR SOLICITUD
+    ELIMINAR SOLICITUD - DE BASE CENTRAL
     =============================================*/
     static public function mdlEliminarSolicitud($tabla, $datos) {
-        
+
         $stmt = ConexionCentral::conectar()->prepare("DELETE FROM $tabla WHERE id = :id");
+
         $stmt->bindParam(":id", $datos, PDO::PARAM_INT);
 
-        if($stmt->execute()) {
+        if($stmt->execute()){
             return "ok";
         } else {
             return "error";
@@ -226,98 +165,189 @@ class ModeloSolicitudesStock {
     }
 
     /*=============================================
-    BUSCAR VENTAS PARA REMISIÓN
-    =============================================*/
-    static public function mdlBuscarVentasRemision($busqueda) {
-        
-        $stmt = ConexionCentral::conectar()->prepare("SELECT 
-            v.id,
-            v.codigo,
-            v.fecha_venta,
-            v.total,
-            c.nombre as nombre_cliente,
-            c.documento as documento_cliente
-            FROM ventas v 
-            LEFT JOIN clientes c ON v.id_cliente = c.id 
-            WHERE v.codigo LIKE :busqueda 
-            OR c.nombre LIKE :busqueda 
-            OR c.documento LIKE :busqueda
-            ORDER BY v.fecha_venta DESC 
-            LIMIT 10");
-        
-        $busqueda = "%" . $busqueda . "%";
-        $stmt->bindParam(":busqueda", $busqueda, PDO::PARAM_STR);
-        $stmt->execute();
-        
-        return $stmt->fetchAll();
-
-        $stmt->close();
-        $stmt = null;
-    }
-
-    /*=============================================
-    OBTENER PRODUCTOS DE UNA VENTA
-    =============================================*/
-    static public function mdlObtenerProductosVenta($codigoVenta) {
-        
-        $stmt = ConexionCentral::conectar()->prepare("SELECT 
-            p.id,
-            p.codigo,
-            p.descripcion,
-            p.imagen,
-            p.stock,
-            p.precio_venta
-            FROM ventas v
-            INNER JOIN productos p ON FIND_IN_SET(p.id, v.productos)
-            WHERE v.codigo = :codigo");
-        
-        $stmt->bindParam(":codigo", $codigoVenta, PDO::PARAM_STR);
-        $stmt->execute();
-        
-        return $stmt->fetchAll();
-
-        $stmt->close();
-        $stmt = null;
-    }
-
-    /*=============================================
-    GENERAR NÚMERO DE SOLICITUD
+    GENERAR NÚMERO DE SOLICITUD - BASE CENTRAL
     =============================================*/
     static public function mdlGenerarNumeroSolicitud($tabla) {
-        
+
+        // Obtener el último número de solicitud
         $stmt = ConexionCentral::conectar()->prepare("SELECT numero_solicitud FROM $tabla ORDER BY id DESC LIMIT 1");
+
         $stmt->execute();
-        $resultado = $stmt->fetch();
-        
-        if($resultado) {
-            // Extraer el número del último registro (formato: SOL000001)
-            $ultimoNumero = intval(substr($resultado["numero_solicitud"], 3));
+
+        $ultimaSolicitud = $stmt->fetch();
+
+        if($ultimaSolicitud) {
+            // Extraer el número y sumarle 1
+            $ultimoNumero = intval(substr($ultimaSolicitud["numero_solicitud"], 3)); // Quitar SOL
             $nuevoNumero = $ultimoNumero + 1;
         } else {
             $nuevoNumero = 1;
         }
-        
+
         // Formatear con ceros a la izquierda
-        return "SOL" . str_pad($nuevoNumero, 6, "0", STR_PAD_LEFT);
+        $numeroFormateado = "SOL" . str_pad($nuevoNumero, 6, "0", STR_PAD_LEFT);
+
+        $stmt->close();
+        $stmt = null;
+
+        return $numeroFormateado;
+    }
+
+    /*=============================================
+    BUSCAR VENTAS PARA REMISIÓN - EN BASE LOCAL (NO CENTRAL)
+    =============================================*/
+    static public function mdlBuscarVentasRemision($busqueda) {
+        
+        // ✅ LAS VENTAS ESTÁN EN LA BASE LOCAL DE CADA SUCURSAL
+        try {
+            $stmt = Conexion::conectar()->prepare("SELECT 
+                v.id,
+                v.codigo,
+                v.fecha,
+                v.total,
+                c.nombre as nombre_cliente,
+                c.documento as documento_cliente
+                FROM ventas v 
+                LEFT JOIN clientes c ON v.id_cliente = c.id 
+                WHERE v.codigo LIKE :busqueda 
+                OR c.nombre LIKE :busqueda 
+                OR c.documento LIKE :busqueda
+                ORDER BY v.fecha DESC 
+                LIMIT 10");
+            
+            $busqueda = "%" . $busqueda . "%";
+            $stmt->bindParam(":busqueda", $busqueda, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            return $stmt->fetchAll();
+        } catch(Exception $e) {
+            error_log("Error buscando ventas: " . $e->getMessage());
+            return array();
+        }
 
         $stmt->close();
         $stmt = null;
     }
 
     /*=============================================
-    REGISTRAR ACCIÓN EN LOG
+    OBTENER PRODUCTOS DE UNA VENTA - EN BASE LOCAL
+    =============================================*/
+    static public function mdlObtenerProductosVenta($codigoVenta) {
+        
+        try {
+            $stmt = Conexion::conectar()->prepare("SELECT 
+                productos
+                FROM ventas 
+                WHERE codigo = :codigo");
+            
+            $stmt->bindParam(":codigo", $codigoVenta, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            $venta = $stmt->fetch();
+            
+            if($venta) {
+                $productos = json_decode($venta["productos"], true);
+                return $productos;
+            } else {
+                return array();
+            }
+            
+        } catch(Exception $e) {
+            error_log("Error obteniendo productos de venta: " . $e->getMessage());
+            return array();
+        }
+
+        $stmt->close();
+        $stmt = null;
+    }
+
+    /*=============================================
+    CONTAR SOLICITUDES PENDIENTES - BASE CENTRAL
+    =============================================*/
+    static public function mdlContarSolicitudesPendientes($tabla) {
+
+        $stmt = ConexionCentral::conectar()->prepare("SELECT COUNT(*) as total FROM $tabla WHERE estado = 'pendiente'");
+
+        $stmt->execute();
+
+        $resultado = $stmt->fetch();
+
+        $stmt->close();
+        $stmt = null;
+
+        return $resultado["total"];
+    }
+
+    /*=============================================
+    OBTENER SOLICITUDES PENDIENTES - BASE CENTRAL
+    =============================================*/
+    static public function mdlObtenerSolicitudesPendientes($tabla, $limite) {
+
+        $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM $tabla WHERE estado = 'pendiente' ORDER BY fecha_solicitud DESC LIMIT $limite");
+
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+
+        $stmt->close();
+        $stmt = null;
+    }
+
+    /*=============================================
+    MARCAR SOLICITUDES COMO VISTAS - BASE CENTRAL
+    =============================================*/
+    static public function mdlMarcarComoVista($tabla, $campo, $ids) {
+
+        $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+        
+        $stmt = ConexionCentral::conectar()->prepare("UPDATE $tabla SET $campo = 1 WHERE id IN ($placeholders)");
+
+        if($stmt->execute($ids)){
+            return "ok";
+        } else {
+            return "error";
+        }
+
+        $stmt->close();
+        $stmt = null;
+    }
+
+    /*=============================================
+    OBTENER ESTADÍSTICAS - BASE CENTRAL
+    =============================================*/
+    static public function mdlObtenerEstadisticas($tabla) {
+
+        $stmt = ConexionCentral::conectar()->prepare("SELECT 
+            COUNT(*) as total_solicitudes,
+            SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END) as pendientes,
+            SUM(CASE WHEN estado = 'aprobado' THEN 1 ELSE 0 END) as aprobadas,
+            SUM(CASE WHEN estado = 'cancelado' THEN 1 ELSE 0 END) as canceladas,
+            SUM(total_productos) as total_productos_solicitados,
+            SUM(total_cantidad) as total_cantidad_solicitada
+            FROM $tabla");
+
+        $stmt->execute();
+
+        return $stmt->fetch();
+
+        $stmt->close();
+        $stmt = null;
+    }
+
+    /*=============================================
+    REGISTRAR LOG DE AUDITORÍA - BASE CENTRAL
     =============================================*/
     static public function mdlRegistrarLog($datos) {
-        
-        $stmt = ConexionCentral::conectar()->prepare("INSERT INTO solicitudes_stock_log(
+
+        $stmt = ConexionCentral::conectar()->prepare("INSERT INTO log_solicitudes_stock(
             solicitud_id,
             usuario_id,
             accion,
             estado_anterior,
             estado_nuevo,
             comentario,
-            fecha_accion,
-            ip_usuario
+            ip_usuario,
+            fecha_accion
         ) VALUES (
             :solicitud_id,
             :usuario_id,
@@ -325,8 +355,8 @@ class ModeloSolicitudesStock {
             :estado_anterior,
             :estado_nuevo,
             :comentario,
-            NOW(),
-            :ip_usuario
+            :ip_usuario,
+            NOW()
         )");
 
         $stmt->bindParam(":solicitud_id", $datos["solicitud_id"], PDO::PARAM_INT);
@@ -337,7 +367,7 @@ class ModeloSolicitudesStock {
         $stmt->bindParam(":comentario", $datos["comentario"], PDO::PARAM_STR);
         $stmt->bindParam(":ip_usuario", $datos["ip_usuario"], PDO::PARAM_STR);
 
-        if($stmt->execute()) {
+        if($stmt->execute()){
             return "ok";
         } else {
             return "error";
@@ -348,42 +378,138 @@ class ModeloSolicitudesStock {
     }
 
     /*=============================================
-    OBTENER ESTADÍSTICAS
+    BUSCAR PRODUCTOS EN CATÁLOGO - BASE LOCAL
     =============================================*/
-    static public function mdlObtenerEstadisticas($tabla) {
+    static public function mdlBuscarProductosCatalogo($busqueda) {
         
-        $stmt = ConexionCentral::conectar()->prepare("SELECT 
-            COUNT(*) as total,
-            COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) as pendientes,
-            COUNT(CASE WHEN estado = 'aprobado' THEN 1 END) as aprobadas,
-            COUNT(CASE WHEN estado = 'cancelado' THEN 1 END) as canceladas,
-            COUNT(CASE WHEN DATE(fecha_solicitud) = CURDATE() THEN 1 END) as hoy,
-            COUNT(CASE WHEN WEEK(fecha_solicitud) = WEEK(CURDATE()) THEN 1 END) as esta_semana
-            FROM $tabla");
+        try {
+            // ✅ BUSCAR EN LA BASE LOCAL DE LA SUCURSAL
+            $stmt = Conexion::conectar()->prepare("SELECT 
+                id, codigo, descripcion, stock, precio_venta
+                FROM productos 
+                WHERE codigo LIKE :busqueda 
+                OR descripcion LIKE :busqueda
+                ORDER BY codigo 
+                LIMIT 20");
             
-        $stmt->execute();
-        return $stmt->fetch();
+            $busqueda = "%" . $busqueda . "%";
+            $stmt->bindParam(":busqueda", $busqueda, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            return $stmt->fetchAll();
+            
+        } catch(Exception $e) {
+            error_log("Error buscando productos: " . $e->getMessage());
+            return array();
+        }
 
         $stmt->close();
         $stmt = null;
     }
 
     /*=============================================
-    BUSCAR SOLICITUDES
+    OBTENER PRODUCTO POR ID - BASE LOCAL
     =============================================*/
-    static public function mdlBuscarSolicitudes($tabla, $termino) {
+    static public function mdlObtenerProducto($id) {
         
-        $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM $tabla 
-            WHERE numero_solicitud LIKE :termino 
-            OR nombre_sucursal_solicitante LIKE :termino 
-            OR nombre_usuario_solicitante LIKE :termino 
-            OR detalle_adicional LIKE :termino
-            ORDER BY fecha_solicitud DESC");
+        try {
+            $stmt = Conexion::conectar()->prepare("SELECT 
+                id, codigo, descripcion, stock, precio_venta
+                FROM productos 
+                WHERE id = :id");
+            
+            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return $stmt->fetch();
+            
+        } catch(Exception $e) {
+            error_log("Error obteniendo producto: " . $e->getMessage());
+            return false;
+        }
+
+        $stmt->close();
+        $stmt = null;
+    }
+
+    /*=============================================
+    VERIFICAR CONEXIONES
+    =============================================*/
+    static public function mdlVerificarConexiones() {
         
-        $termino = "%" . $termino . "%";
-        $stmt->bindParam(":termino", $termino, PDO::PARAM_STR);
+        $resultado = array(
+            "conexion_local" => false,
+            "conexion_central" => false,
+            "tabla_usuarios_local" => false,
+            "tabla_solicitudes_central" => false
+        );
+
+        try {
+            // Verificar conexión local
+            $conexionLocal = Conexion::conectar();
+            if($conexionLocal) {
+                $resultado["conexion_local"] = true;
+                
+                // Verificar tabla usuarios
+                $stmt = $conexionLocal->prepare("SHOW TABLES LIKE 'usuarios'");
+                $stmt->execute();
+                if($stmt->fetch()) {
+                    $resultado["tabla_usuarios_local"] = true;
+                }
+            }
+
+            // Verificar conexión central
+            $conexionCentral = ConexionCentral::conectar();
+            if($conexionCentral) {
+                $resultado["conexion_central"] = true;
+                
+                // Verificar tabla solicitudes
+                $stmt = $conexionCentral->prepare("SHOW TABLES LIKE 'solicitudes_stock'");
+                $stmt->execute();
+                if($stmt->fetch()) {
+                    $resultado["tabla_solicitudes_central"] = true;
+                }
+            }
+
+        } catch(Exception $e) {
+            error_log("Error verificando conexiones: " . $e->getMessage());
+        }
+
+        return $resultado;
+    }
+
+    /*=============================================
+    OBTENER SOLICITUDES POR SUCURSAL - BASE CENTRAL
+    =============================================*/
+    static public function mdlObtenerSolicitudesPorSucursal($codigoSucursal, $limite = 10) {
+        
+        $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM solicitudes_stock 
+            WHERE codigo_sucursal_solicitante = :codigo_sucursal 
+            ORDER BY fecha_solicitud DESC 
+            LIMIT $limite");
+
+        $stmt->bindParam(":codigo_sucursal", $codigoSucursal, PDO::PARAM_STR);
         $stmt->execute();
+
+        return $stmt->fetchAll();
+
+        $stmt->close();
+        $stmt = null;
+    }
+
+    /*=============================================
+    OBTENER SOLICITUDES POR USUARIO - BASE CENTRAL
+    =============================================*/
+    static public function mdlObtenerSolicitudesPorUsuario($idUsuario, $limite = 10) {
         
+        $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM solicitudes_stock 
+            WHERE usuario_solicitante = :id_usuario 
+            ORDER BY fecha_solicitud DESC 
+            LIMIT $limite");
+
+        $stmt->bindParam(":id_usuario", $idUsuario, PDO::PARAM_INT);
+        $stmt->execute();
+
         return $stmt->fetchAll();
 
         $stmt->close();

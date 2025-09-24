@@ -117,41 +117,35 @@ var configuracionIdioma = {
 };
 
 /*=============================================
-AGREGAR PRODUCTO DESDE CATÁLOGO
+AGREGAR PRODUCTO DESDE CATÁLOGO (SIN VALIDAR STOCK)
 =============================================*/
 $(document).on('click', '.btnAgregarProducto', function() {
     
     var idProducto = $(this).attr('idProducto');
     var codigoProducto = $(this).attr('codigoProducto');
     var descripcionProducto = $(this).attr('descripcionProducto');
-    var stockProducto = $(this).attr('stockProducto');
 
-    // Verificar si ya está seleccionado
-    var yaSeleccionado = productosSeleccionados.find(p => p.id === idProducto);
-    if(yaSeleccionado) {
-        mostrarAlerta('warning', 'Este producto ya está en la lista de solicitud');
-        return;
-    }
+    // ✅ NO VERIFICAR SI YA ESTÁ SELECCIONADO - PERMITIR AGREGAR CUALQUIERA
+    // ✅ NO IMPORTA EL STOCK ACTUAL
 
     // Abrir modal para cantidad
     $('#nombreProductoModal').text(descripcionProducto);
-    $('#stockDisponible').text(stockProducto);
-    $('#cantidadProductoModal').val(1).attr('max', stockProducto);
+    $('#stockDisponible').text('Sin límite'); // ✅ NO MOSTRAR STOCK
+    $('#cantidadProductoModal').val(1).removeAttr('max'); // ✅ QUITAR LÍMITE MÁXIMO
     $('#observacionProductoModal').val('');
     
     // Guardar datos temporales
     $('#modalCantidadProducto').data('producto', {
         id: idProducto,
         codigo: codigoProducto,
-        descripcion: descripcionProducto,
-        stock: parseInt(stockProducto)
+        descripcion: descripcionProducto
     });
 
     $('#modalCantidadProducto').modal('show');
 });
 
 /*=============================================
-AGREGAR PRODUCTO A LA LISTA
+AGREGAR PRODUCTO A LA LISTA (SIN VALIDAR STOCK)
 =============================================*/
 function agregarProductoALista() {
     
@@ -159,18 +153,20 @@ function agregarProductoALista() {
     var cantidad = parseInt($('#cantidadProductoModal').val());
     var observacion = $('#observacionProductoModal').val().trim();
 
-    // Validaciones
-    if(cantidad <= 0) {
-        mostrarAlerta('error', 'La cantidad debe ser mayor a 0');
+    // ✅ VALIDACIONES SIMPLES (SIN STOCK)
+    if(isNaN(cantidad) || cantidad <= 0) {
+        mostrarAlerta('error', 'La cantidad debe ser un número mayor a 0');
         return;
     }
 
-    if(cantidad > producto.stock) {
-        mostrarAlerta('error', 'La cantidad no puede ser mayor al stock disponible (' + producto.stock + ')');
+    // ✅ VERIFICAR SI YA ESTÁ EN LA LISTA
+    var yaSeleccionado = productosSeleccionados.find(p => p.codigo === producto.codigo);
+    if(yaSeleccionado) {
+        mostrarAlerta('warning', 'Este producto ya está en la lista de solicitud');
         return;
     }
 
-    // Agregar a la lista
+    // ✅ AGREGAR SIN VALIDAR STOCK
     var nuevoProducto = {
         id: producto.id,
         codigo: producto.codigo,
@@ -260,7 +256,7 @@ function habilitarBotonCrear() {
 }
 
 /*=============================================
-BUSCAR REMISIONES
+BUSCAR REMISIONES (VENTAS EN BASE LOCAL)
 =============================================*/
 function buscarRemisiones(busqueda) {
     
@@ -272,12 +268,19 @@ function buscarRemisiones(busqueda) {
             busqueda: busqueda
         },
         dataType: 'json',
-        success: function(ventas) {
-            mostrarResultadosRemision(ventas);
+        success: function(response) {
+            if(response.success) {
+                mostrarResultadosRemision(response.data);
+            } else {
+                console.log('Error: ' + response.message);
+                $('#resultadosRemision').hide();
+                mostrarAlerta('warning', response.message);
+            }
         },
-        error: function() {
-            console.log('Error al buscar remisiones');
+        error: function(xhr, status, error) {
+            console.log('Error AJAX al buscar remisiones:', error);
             $('#resultadosRemision').hide();
+            mostrarAlerta('error', 'Error al buscar remisiones');
         }
     });
 }
@@ -296,7 +299,7 @@ function mostrarResultadosRemision(ventas) {
     } else {
         ventas.forEach(function(venta) {
             var cliente = venta.nombre_cliente || 'Cliente no especificado';
-            var fecha = new Date(venta.fecha_venta).toLocaleDateString();
+            var fecha = new Date(venta.fecha).toLocaleDateString();
             
             html += '<a href="#" class="list-group-item seleccionar-remision" ' +
                    'data-codigo="' + venta.codigo + '" ' +
@@ -347,19 +350,19 @@ function cargarProductosDeRemision(codigo) {
             codigo_venta: codigo
         },
         dataType: 'json',
-        success: function(productos) {
-            if(productos.length > 0) {
+        success: function(response) {
+            if(response.success && response.productos.length > 0) {
                 // Limpiar lista actual
                 productosSeleccionados = [];
                 
                 // Agregar productos de la remisión
-                productos.forEach(function(producto) {
+                response.productos.forEach(function(producto) {
                     productosSeleccionados.push({
-                        id: producto.id,
+                        id: producto.id || 0,
                         codigo: producto.codigo,
                         descripcion: producto.descripcion,
-                        cantidad: 1, // Cantidad por defecto
-                        observacion: 'De remisión ' + codigo
+                        cantidad: parseInt(producto.cantidad),
+                        observacion: 'Desde remisión ' + codigo
                     });
                 });
                 
@@ -368,11 +371,14 @@ function cargarProductosDeRemision(codigo) {
                 actualizarContadorProductos();
                 habilitarBotonCrear();
                 
-                mostrarAlerta('info', 'Se cargaron ' + productos.length + ' productos de la remisión');
+                mostrarAlerta('success', 'Se cargaron ' + response.productos.length + ' productos de la remisión');
+            } else {
+                mostrarAlerta('warning', response.message || 'No se encontraron productos en la remisión');
             }
         },
         error: function() {
-            console.log('Error al cargar productos de la remisión');
+            console.log('Error al cargar productos de remisión');
+            mostrarAlerta('error', 'Error al cargar productos de la remisión');
         }
     });
 }
@@ -392,43 +398,65 @@ LIMPIAR FORMULARIO DE SOLICITUD
 =============================================*/
 function limpiarFormularioSolicitud() {
     productosSeleccionados = [];
-    $('input[name="tipo_solicitud"][value="stock"]').prop('checked', true);
-    $('.campoRemision').hide();
-    limpiarRemisionSeleccionada();
-    $('textarea[name="detalle_adicional"]').val('');
     actualizarListaProductosSeleccionados();
     actualizarContadorProductos();
     habilitarBotonCrear();
     
-    // Recargar tabla de productos
-    if($('.tablaProductosCatalogo').length > 0) {
-        $('.tablaProductosCatalogo').DataTable().ajax.reload();
-    }
+    $('#detalleAdicional').val('');
+    $('input[name="tipo_solicitud"]').prop('checked', false);
+    $('.campoRemision').hide();
+    limpiarRemisionSeleccionada();
 }
 
 /*=============================================
 LIMPIAR MODAL CANTIDAD
 =============================================*/
 function limpiarModalCantidad() {
+    $('#nombreProductoModal').text('');
+    $('#stockDisponible').text('');
     $('#cantidadProductoModal').val(1);
     $('#observacionProductoModal').val('');
-    $('#modalCantidadProducto').removeData('producto');
 }
 
 /*=============================================
-MOSTRAR ALERTAS
+MOSTRAR ALERTA
 =============================================*/
 function mostrarAlerta(tipo, mensaje) {
-    if(typeof swal !== 'undefined') {
-        swal({
-            type: tipo,
-            title: mensaje,
-            showConfirmButton: false,
-            timer: 2000
-        });
-    } else {
-        alert(mensaje);
+    var icono = 'fa-info-circle';
+    var clase = 'alert-info';
+    
+    switch(tipo) {
+        case 'success':
+            icono = 'fa-check-circle';
+            clase = 'alert-success';
+            break;
+        case 'warning':
+            icono = 'fa-warning';
+            clase = 'alert-warning';
+            break;
+        case 'error':
+            icono = 'fa-times-circle';
+            clase = 'alert-danger';
+            break;
     }
+    
+    var alerta = '<div class="alert ' + clase + ' alert-dismissible" role="alert">' +
+                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                '<span aria-hidden="true">&times;</span>' +
+                '</button>' +
+                '<i class="fa ' + icono + '"></i> ' + mensaje +
+                '</div>';
+    
+    // Remover alertas existentes
+    $('.alert').remove();
+    
+    // Agregar nueva alerta
+    $('body').prepend(alerta);
+    
+    // Auto-remover después de 5 segundos
+    setTimeout(function() {
+        $('.alert').fadeOut();
+    }, 5000);
 }
 
 /*=============================================

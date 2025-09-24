@@ -2,15 +2,11 @@
 
 session_start();
 
+
+require_once "../modelos/conexion.php";
 require_once "../api-transferencias/conexion-central.php";
 require_once "../controladores/solicitudes-stock.controlador.php";
 require_once "../modelos/solicitudes-stock.modelo.php";
-
-require_once "../controladores/productos.controlador.php";
-require_once "../modelos/productos.modelo.php";
-
-require_once "../controladores/usuarios.controlador.php";
-require_once "../modelos/usuarios.modelo.php";
 
 class AjaxSolicitudesStock {
 
@@ -30,71 +26,126 @@ class AjaxSolicitudesStock {
     }
 
     /*=============================================
-    BUSCAR VENTAS PARA REMISIÓN
+    BUSCAR VENTAS PARA REMISIÓN - EN BASE LOCAL
     =============================================*/
     public $busquedaVenta;
 
     public function ajaxBuscarVentas(){
         
-        $respuesta = ControladorSolicitudesStock::ctrBuscarVentasRemision($this->busquedaVenta);
-        
-        if($respuesta){
-            echo json_encode($respuesta);
-        } else {
-            echo json_encode([]);
+        try {
+            // ✅ USAR CONEXIÓN LOCAL PARA BUSCAR VENTAS
+            $stmt = Conexion::conectar()->prepare("SELECT 
+                v.id,
+                v.codigo,
+                v.fecha,
+                v.total,
+                c.nombre as nombre_cliente,
+                c.documento as documento_cliente
+                FROM ventas v 
+                LEFT JOIN clientes c ON v.id_cliente = c.id 
+                WHERE v.codigo LIKE :busqueda 
+                OR c.nombre LIKE :busqueda 
+                OR c.documento LIKE :busqueda
+                ORDER BY v.fecha DESC 
+                LIMIT 10");
+            
+            $busqueda = "%" . $this->busquedaVenta . "%";
+            $stmt->bindParam(":busqueda", $busqueda, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            $ventas = $stmt->fetchAll();
+            
+            echo json_encode([
+                "success" => true,
+                "data" => $ventas
+            ]);
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                "success" => false,
+                "message" => "Error buscando remisiones: " . $e->getMessage()
+            ]);
         }
     }
 
     /*=============================================
-    OBTENER PRODUCTOS DE UNA VENTA
+    OBTENER PRODUCTOS DE UNA VENTA - EN BASE LOCAL
     =============================================*/
     public $codigoVenta;
 
     public function ajaxObtenerProductosVenta(){
         
-        $respuesta = ControladorSolicitudesStock::ctrObtenerProductosVenta($this->codigoVenta);
-        
-        if($respuesta){
-            echo json_encode($respuesta);
-        } else {
-            echo json_encode([]);
+        try {
+            // ✅ USAR CONEXIÓN LOCAL PARA OBTENER PRODUCTOS DE LA VENTA
+            $stmt = Conexion::conectar()->prepare("SELECT 
+                productos
+                FROM ventas 
+                WHERE codigo = :codigo");
+            
+            $stmt->bindParam(":codigo", $this->codigoVenta, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            $venta = $stmt->fetch();
+            
+            if($venta) {
+                $productos = json_decode($venta["productos"], true);
+                
+                echo json_encode([
+                    "success" => true,
+                    "productos" => $productos
+                ]);
+            } else {
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Venta no encontrada"
+                ]);
+            }
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                "success" => false,
+                "message" => "Error obteniendo productos de venta: " . $e->getMessage()
+            ]);
         }
     }
 
     /*=============================================
-    OBTENER PRODUCTO INDIVIDUAL
+    OBTENER PRODUCTO INDIVIDUAL - BASE LOCAL
     =============================================*/
     public $idProducto;
 
     public function ajaxObtenerProducto(){
         
-        $item = "id";
-        $valor = $this->idProducto;
-        
-        $respuesta = ControladorProductos::ctrMostrarProductos($item, $valor);
-        
-        echo json_encode($respuesta);
-    }
-
-    /*=============================================
-    VALIDAR STOCK PRODUCTO
-    =============================================*/
-    public $validarStock;
-    public $cantidadSolicitada;
-
-    public function ajaxValidarStock(){
-        
-        $producto = ControladorProductos::ctrMostrarProductos("id", $this->validarStock);
-        
-        $resultado = array(
-            "producto_id" => $this->validarStock,
-            "stock_disponible" => $producto["stock"],
-            "cantidad_solicitada" => $this->cantidadSolicitada,
-            "stock_suficiente" => ($producto["stock"] >= $this->cantidadSolicitada),
-            "stock_restante" => ($producto["stock"] - $this->cantidadSolicitada)
-        );
-        
-        echo json_encode($resultado);
+        try {
+            // ✅ USAR CONEXIÓN LOCAL PARA PRODUCTOS
+            $stmt = Conexion::conectar()->prepare("SELECT 
+                id, codigo, descripcion, stock
+                FROM productos 
+                WHERE id = :id");
+            
+            $stmt->bindParam(":id", $this->idProducto, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $producto = $stmt->fetch();
+            
+            if($producto) {
+                echo json_encode([
+                    "success" => true,
+                    "data" => $producto
+                ]);
+            } else {
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Producto no encontrado"
+                ]);
+            }
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                "success" => false,
+                "message" => "Error obteniendo producto: " . $e->getMessage()
+            ]);
+        }
     }
 }
 
@@ -109,7 +160,7 @@ if(isset($_POST["idSolicitud"])){
 }
 
 /*=============================================
-BUSCAR VENTAS
+BUSCAR VENTAS (REMISIONES)
 =============================================*/
 if(isset($_POST["accion"]) && $_POST["accion"] == "buscar_ventas"){
     
@@ -136,15 +187,4 @@ if(isset($_POST["idProducto"])){
     $producto = new AjaxSolicitudesStock();
     $producto->idProducto = $_POST["idProducto"];
     $producto->ajaxObtenerProducto();
-}
-
-/*=============================================
-VALIDAR STOCK
-=============================================*/
-if(isset($_POST["accion"]) && $_POST["accion"] == "validar_stock"){
-    
-    $validarStock = new AjaxSolicitudesStock();
-    $validarStock->validarStock = $_POST["producto_id"];
-    $validarStock->cantidadSolicitada = $_POST["cantidad"];
-    $validarStock->ajaxValidarStock();
 }
