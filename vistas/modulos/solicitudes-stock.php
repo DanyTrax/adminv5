@@ -105,17 +105,17 @@
         
         <!-- TABS DE NAVEGACIÓN -->
         <ul class="nav nav-tabs" role="tablist" style="margin: 0; background: #f4f4f4;">
-          <li role="presentation" class="active">
+          <li role="presentation">
             <a href="#tabInformacion" role="tab" data-toggle="tab">
               <i class="fa fa-info-circle"></i> Información General
             </a>
           </li>
-          <li role="presentation">
+          <li role="presentation" class="active">
             <a href="#tabProductos" role="tab" data-toggle="tab">
               <i class="fa fa-list"></i> Productos Solicitados
             </a>
           </li>
-          <li role="presentation" class="active">
+          <li role="presentation">
             <a href="#tabHistorial" role="tab" data-toggle="tab">
               <i class="fa fa-history"></i> Historial
             </a>
