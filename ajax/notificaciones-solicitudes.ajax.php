@@ -1,11 +1,88 @@
 <?php
+    session_start();
 
-session_start();
+    // ✅ DEBUG: Agregar estas líneas para debug
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+
+    // Verificar sesión
+    if (!isset($_SESSION['perfil'])) {
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Sin sesión activa"
+        ]);
+        exit;
+    }
+
+    // Verificar archivos
+    if (!file_exists("../api-transferencias/conexion-central.php")) {
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Archivo conexion-central.php no encontrado"
+        ]);
+        exit;
+    }
+
+    if (!file_exists("../controladores/solicitudes-stock.controlador.php")) {
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "Controlador solicitudes-stock no encontrado"
+        ]);
+        exit;
+    }
+
+
+if (!file_exists("../modelos/solicitudes-stock.modelo.php")) {
+    http_response_code(500);
+    echo json_encode([
+        "success" => false,
+        "message" => "Modelo solicitudes-stock no encontrado"
+    ]);
+    exit;
+}
+
 
 require_once "../api-transferencias/conexion-central.php";
 require_once "../controladores/solicitudes-stock.controlador.php";
 require_once "../modelos/solicitudes-stock.modelo.php";
 
+// Verificar conexión central
+$conexionTest = ConexionCentral::conectar();
+if (!$conexionTest) {
+    http_response_code(500);
+    echo json_encode([
+        "success" => false,
+        "message" => "No se pudo conectar a la base de datos central"
+    ]);
+    exit;
+}
+}
+
+// Verificar si existe la tabla
+try {
+    $stmt = $conexionTest->prepare("SHOW TABLES LIKE 'solicitudes_stock'");
+    $stmt->execute();
+    $tabla_existe = $stmt->fetch();
+
+    if (!$tabla_existe) {
+        http_response_code(500);
+        echo json_encode([
+            "success" => false,
+            "message" => "La tabla solicitudes_stock no existe en la base de datos central"
+        ]);
+        exit;
+    }
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        "success" => false,
+        "message" => "Error verificando tabla: " . $e->getMessage()
+    ]);
+    exit;
+}
 class AjaxNotificacionesSolicitudes {
 
     /*=============================================
