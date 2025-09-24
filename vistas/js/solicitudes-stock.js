@@ -68,17 +68,52 @@ $(document).ready(function() {
     });
 
     // Validar formulario antes de enviar
-    $('.formularioSolicitudStock').submit(function(e) {
-        if(productosSeleccionados.length === 0) {
-            e.preventDefault();
-            mostrarAlerta('warning', 'Debe seleccionar al menos un producto');
-            return false;
+
+$('.formularioSolicitudStock').submit(function(e) {
+    e.preventDefault(); 
+    
+    if(productosSeleccionados.length === 0) {
+        mostrarAlerta('warning', 'Debe seleccionar al menos un producto');
+        return false;
+    }
+    
+    
+    swal({
+        title: '¿Crear esta solicitud?',
+        text: "Se enviará la solicitud con " + productosSeleccionados.length + " productos",
+        type: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, crear solicitud',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.value) {
+            
+            $('#productosJsonInput').val(JSON.stringify(productosSeleccionados));
+            
+            
+            var formData = new FormData($('.formularioSolicitudStock')[0]);
+            
+            $.ajax({
+                url: 'index.php?ruta=solicitudes-stock',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    
+                    window.location.reload();
+                },
+                error: function() {
+                    mostrarAlerta('error', 'Error al crear la solicitud');
+                }
+            });
         }
-        
-        // Actualizar campo hidden con productos
-        $('#productosJsonInput').val(JSON.stringify(productosSeleccionados));
-        return true;
     });
+    
+    return false; 
+});
 
     // Confirmar agregar producto
     $('#confirmarAgregarProducto').click(function() {
@@ -383,7 +418,7 @@ function mostrarResultadosRemision(ventas) {
 }
 
 /*=============================================
-SELECCIONAR REMISIÓN
+SELECCIONAR REMISIÓN - SOLO INFORMATIVO
 =============================================*/
 $(document).on('click', '.seleccionar-remision', function(e) {
     e.preventDefault();
@@ -391,7 +426,7 @@ $(document).on('click', '.seleccionar-remision', function(e) {
     var codigo = $(this).data('codigo');
     var cliente = $(this).data('cliente');
     
-    // Actualizar campos
+    // ✅ SOLO ACTUALIZAR CAMPOS INFORMATIVOS - NO CARGAR PRODUCTOS
     $('#buscarRemision').val('Remisión: ' + codigo + ' - ' + cliente);
     $('#codigoRemisionSeleccionada').val(codigo);
     $('#nombreClienteRemision').val(cliente);
@@ -399,11 +434,17 @@ $(document).on('click', '.seleccionar-remision', function(e) {
     // Ocultar resultados
     $('#resultadosRemision').hide();
     
-    // Cargar productos de la remisión
-    cargarProductosDeRemision(codigo);
-    
-    mostrarAlerta('success', 'Remisión seleccionada: ' + codigo);
+    // ✅ NO CARGAR PRODUCTOS - SOLO MOSTRAR CONFIRMACIÓN
+    mostrarAlerta('info', 'Remisión seleccionada: ' + codigo + '. Ahora agregue manualmente los productos que necesita solicitar.');
 });
+
+// ✅ ELIMINAR LA FUNCIÓN cargarProductosDeRemision O COMENTARLA
+/*
+function cargarProductosDeRemision(codigo) {
+    // ✅ FUNCIÓN DESHABILITADA - Ya no carga productos automáticamente
+    console.log('Función deshabilitada - agregar productos manualmente');
+}
+*/
 
 /*=============================================
 CARGAR PRODUCTOS DE REMISIÓN
