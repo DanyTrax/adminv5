@@ -108,15 +108,15 @@
                 echo '    </a>
                       </li>';
                 
-                // Opción "Nueva Solicitud" - Solo para NO transportadores
-                if ($_SESSION["perfil"] != "Transportador") {
-                    echo '<li>
-                            <a href="solicitar-stock">
-                              <i class="fa fa-plus"></i>
-                              <span>Nueva Solicitud</span>
-                            </a>
-                          </li>';
-                }
+            // Opción "Nueva Solicitud" - Solo para NO transportadores
+            if ($_SESSION["perfil"] != "Transportador") {
+                echo '<li>
+                        <a href="crear-solicitud-stock">
+                        <i class="fa fa-plus"></i>
+                        <span>Nueva Solicitud</span>
+                        </a>
+                    </li>';
+            }
                 
                 echo '</ul>
                 </li>';

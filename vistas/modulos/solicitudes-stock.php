@@ -22,10 +22,10 @@
             // Verificar si el usuario puede crear solicitudes
             if($_SESSION["perfil"] != "Transportador"): 
             ?>
-              <button class="btn btn-primary" data-toggle="modal" data-target="#modalSolicitarStock">
-                <i class="fa fa-plus"></i>
-                Nueva Solicitud de Stock
-              </button>
+          <a href="crear-solicitud-stock" class="btn btn-primary">
+            <i class="fa fa-plus"></i>
+            Nueva Solicitud de Stock
+          </a>
             <?php 
             else: 
             ?>

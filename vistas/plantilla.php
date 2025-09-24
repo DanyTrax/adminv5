@@ -150,7 +150,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "cotizacion" => ["Administrador", "Vendedor", "Contador"],
         "crear-cotizacion" => ["Administrador", "Vendedor", "Contador"],
         "solicitudes-stock" => ["Administrador", "Vendedor", "Contador", "Transportador"],
-        "solicitar-stock" => ["Administrador", "Vendedor", "Contador"],
+        "crear-solicitud-stock" => ["Administrador", "Vendedor", "Contador"],
         "editar-cotizacion" => ["Administrador", "Vendedor", "Contador"],
         "medios-pago" => ["Administrador"],
         "sucursales" => ["Administrador"], 
@@ -193,7 +193,8 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
   <script src="<?php echo $url; ?>vistas/js/medios-pago.js"></script>
   <script src="<?php echo $url; ?>vistas/js/filtros-fechas.js"></script>
   <script src="<?php echo $url; ?>vistas/js/sucursales.js"></script> 
-  <script src="<?php echo $url; ?>vistas/js/solicitudes-stock.js"></script> 
+  <script src="<?php echo $url; ?>vistas/js/solicitudes-stock.js"></script>
+  <script src="<?php echo $url; ?>vistas/js/crear-solicitud-stock.js"></script>  
   <script src="<?php echo $url; ?>vistas/js/catalogo-maestro.js"></script>
 </html>
 </body>
