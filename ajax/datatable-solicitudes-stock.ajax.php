@@ -1,145 +1,93 @@
 <?php
 
 session_start();
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-require_once "../api-transferencias/conexion-central.php";
-require_once "../controladores/solicitudes-stock.controlador.php";
-require_once "../modelos/solicitudes-stock.modelo.php";
-
-class TablaSolicitudesStock {
-
-    /*=============================================
-    MOSTRAR LA TABLA DE SOLICITUDES DE STOCK
-    =============================================*/
-    public function mostrarTablaSolicitudesStock(){
-        
-        $solicitudes = ControladorSolicitudesStock::ctrMostrarSolicitudesCompletas();
-        
-        if(count($solicitudes) == 0){
-            echo '{"data": []}';
-            return;
-        }
-
-        $datosJson = '{
-            "data": [';
-
-        for($i = 0; $i < count($solicitudes); $i++){
-            
-            /*=============================================
-            DETERMINAR COLOR DEL ESTADO
-            =============================================*/
-            $estadoColor = '';
-            $estadoTexto = '';
-            
-            switch($solicitudes[$i]["estado"]) {
-                case 'pendiente':
-                    $estadoColor = 'label-warning';
-                    $estadoTexto = 'Pendiente';
-                    break;
-                case 'aprobado':
-                    $estadoColor = 'label-success';
-                    $estadoTexto = 'Aprobado';
-                    break;
-                case 'cancelado':
-                    $estadoColor = 'label-danger';
-                    $estadoTexto = 'Cancelado';
-                    break;
-            }
-            
-            $estado = "<span class='label ".$estadoColor."'>".$estadoTexto."</span>";
-
-            /*=============================================
-            TIPO DE SOLICITUD CON ICONO
-            =============================================*/
-            $tipoIcono = $solicitudes[$i]["tipo_solicitud"] == 'stock' ? 'fa-cubes' : 'fa-file-text-o';
-            $tipoTexto = $solicitudes[$i]["tipo_solicitud"] == 'stock' ? 'Stock' : 'Remisión';
-            $tipo = "<i class='fa ".$tipoIcono."'></i> ".$tipoTexto;
-
-            /*=============================================
-            INFORMACIÓN DE PRODUCTOS
-            =============================================*/
-            $totalProductos = $solicitudes[$i]["total_productos"];
-            $totalCantidad = $solicitudes[$i]["total_cantidad"];
-            $productos = "<span class='badge bg-blue'>".$totalProductos." prod.</span><br>".
-                        "<small class='text-muted'>".$totalCantidad." unidades</small>";
-
-            /*=============================================
-            FECHAS FORMATEADAS
-            =============================================*/
-            $fechaSolicitud = date('d/m/Y H:i', strtotime($solicitudes[$i]["fecha_solicitud"]));
-            
-            $aprobadoPor = 'N/A';
-            $fechaAprobacion = 'N/A';
-            
-            if($solicitudes[$i]["fecha_aprobacion"]) {
-                $fechaAprobacion = date('d/m/Y H:i', strtotime($solicitudes[$i]["fecha_aprobacion"]));
-                $aprobadoPor = $solicitudes[$i]["nombre_usuario_aprobacion"] ?: 'Usuario eliminado';
-            }
-
-            /*=============================================
-            BOTONES DE ACCIONES
-            =============================================*/
-            $acciones = "<div class='btn-group'>";
-
-            // Botón VER - Para todos
-            $acciones .= "<button class='btn btn-info btn-xs btnVerSolicitud' ".
-                        "idSolicitud='".$solicitudes[$i]["id"]."' ".
-                        "data-toggle='modal' data-target='#modalVerSolicitud' ".
-                        "title='Ver detalles'>".
-                        "<i class='fa fa-eye'></i>".
-                        "</button>";
-
-            // Botones APROBAR y CANCELAR - Solo para Transportador y Administrador
-            if(($_SESSION["perfil"] == "Transportador" || $_SESSION["perfil"] == "Administrador") && 
-               $solicitudes[$i]["estado"] == "pendiente") {
-                
-                $acciones .= "<button class='btn btn-success btn-xs btnAprobarSolicitud' ".
-                            "idSolicitud='".$solicitudes[$i]["id"]."' ".
-                            "title='Aprobar solicitud'>".
-                            "<i class='fa fa-check'></i>".
-                            "</button>";
-                
-                $acciones .= "<button class='btn btn-warning btn-xs btnCancelarSolicitud' ".
-                            "idSolicitud='".$solicitudes[$i]["id"]."' ".
-                            "title='Cancelar solicitud'>".
-                            "<i class='fa fa-times'></i>".
-                            "</button>";
-            }
-
-            // Botón ELIMINAR - Solo para Administrador
-            if($_SESSION["perfil"] == "Administrador") {
-                $acciones .= "<button class='btn btn-danger btn-xs btnEliminarSolicitud' ".
-                            "idSolicitud='".$solicitudes[$i]["id"]."' ".
-                            "title='Eliminar solicitud'>".
-                            "<i class='fa fa-trash'></i>".
-                            "</button>";
-            }
-
-            $acciones .= "</div>";
-
-            $datosJson .='[
-                "'.($i+1).'",
-                "'.$solicitudes[$i]["numero_solicitud"].'",
-                "'.$solicitudes[$i]["nombre_sucursal_solicitante"].'",
-                "'.$solicitudes[$i]["nombre_usuario_solicitante"].'",
-                "'.$tipo.'",
-                "'.$productos.'",
-                "'.$estado.'",
-                "'.$fechaSolicitud.'",
-                "'.$aprobadoPor.'",
-                "'.$acciones.'"
-            ],';
-        }
-
-        $datosJson = substr($datosJson, 0, -1);
-        $datosJson .= '] }';
-        
-        echo $datosJson;
-    }
+// TEST 1: Verificar sesión
+if (!isset($_SESSION['perfil'])) {
+    die(json_encode([
+        "error" => "Sin sesión activa"
+    ]));
 }
 
-/*=============================================
-ACTIVAR TABLA DE SOLICITUDES DE STOCK
-=============================================*/
-$activarSolicitudesStock = new TablaSolicitudesStock();
-$activarSolicitudesStock->mostrarTablaSolicitudesStock();
+// TEST 2: Verificar archivos necesarios
+if (!file_exists("../api-transferencias/conexion-central.php")) {
+    die(json_encode([
+        "error" => "Archivo conexion-central.php no encontrado"
+    ]));
+}
+
+if (!file_exists("../controladores/solicitudes-stock.controlador.php")) {
+    die(json_encode([
+        "error" => "Controlador solicitudes-stock no encontrado"
+    ]));
+}
+
+if (!file_exists("../modelos/solicitudes-stock.modelo.php")) {
+    die(json_encode([
+        "error" => "Modelo solicitudes-stock no encontrado"
+    ]));
+}
+
+// TEST 3: Incluir archivos
+try {
+    require_once "../api-transferencias/conexion-central.php";
+    require_once "../controladores/solicitudes-stock.controlador.php";
+    require_once "../modelos/solicitudes-stock.modelo.php";
+} catch (Exception $e) {
+    die(json_encode([
+        "error" => "Error incluyendo archivos: " . $e->getMessage()
+    ]));
+}
+
+// TEST 4: Verificar conexión central
+try {
+    $conexion = ConexionCentral::conectar();
+    if (!$conexion) {
+        die(json_encode([
+            "error" => "No se pudo conectar a la base de datos central"
+        ]));
+    }
+} catch (Exception $e) {
+    die(json_encode([
+        "error" => "Error en conexión central: " . $e->getMessage()
+    ]));
+}
+
+// TEST 5: Verificar tabla existe
+try {
+    $stmt = $conexion->prepare("SHOW TABLES LIKE 'solicitudes_stock'");
+    $stmt->execute();
+    $tabla_existe = $stmt->fetch();
+    
+    if (!$tabla_existe) {
+        die(json_encode([
+            "error" => "La tabla solicitudes_stock no existe en epicosie_central"
+        ]));
+    }
+} catch (Exception $e) {
+    die(json_encode([
+        "error" => "Error verificando tabla: " . $e->getMessage()
+    ]));
+}
+
+// TEST 6: Probar consulta básica
+try {
+    $solicitudes = ControladorSolicitudesStock::ctrMostrarSolicitudesCompletas();
+    
+    // Si llegó hasta aquí, todo funciona, retornar datos para DataTable
+    if(count($solicitudes) == 0){
+        echo '{"data": []}';
+        exit;
+    }
+
+    // Por ahora, solo mostrar que funcionó
+    echo '{"data": [["1", "SOL000001", "Sucursal Test", "Usuario Test", "Stock", "1 prod.", "Pendiente", "01/01/2024", "N/A", ""]]}';
+    exit;
+    
+} catch (Exception $e) {
+    die(json_encode([
+        "error" => "Error ejecutando controlador: " . $e->getMessage()
+    ]));
+}
