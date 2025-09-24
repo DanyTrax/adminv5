@@ -34,10 +34,11 @@ try {
         exit;
     }
 
-    // ✅ INCLUIR ARCHIVOS NECESARIOS
+    // ✅ INCLUIR ARCHIVOS CON RUTAS CORRECTAS (subir un nivel desde /ajax/)
+    $rutaRaiz = dirname(__DIR__) . '/';
+    
     $archivos_requeridos = [
-        "../api-transferencias/conexion-central.php",
-        "../controladores/solicitudes-stock.controlador.php"
+        $rutaRaiz . 'api-transferencias/conexion-central.php'
     ];
 
     foreach($archivos_requeridos as $archivo) {
@@ -60,13 +61,13 @@ try {
         case 'obtener_notificaciones':
         case 'obtener_pendientes':
             
-            // ✅ CONTAR SOLICITUDES PENDIENTES - DIRECTO
+            // ✅ CONTAR SOLICITUDES PENDIENTES - DIRECTO CON PDO
             $stmt = $conexion->prepare("SELECT COUNT(*) as total FROM solicitudes_stock WHERE estado = 'pendiente'");
             $stmt->execute();
-            $conteoResult = $stmt->fetch();
+            $conteoResult = $stmt->fetch(PDO::FETCH_ASSOC);
             $contador = intval($conteoResult['total'] ?? 0);
 
-            // ✅ OBTENER SOLICITUDES RECIENTES - DIRECTO
+            // ✅ OBTENER SOLICITUDES RECIENTES - DIRECTO CON PDO
             $stmt = $conexion->prepare("
                 SELECT 
                     id,
@@ -86,7 +87,7 @@ try {
             $stmt->execute();
             $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // ✅ PROCESAR FECHAS
+            // ✅ PROCESAR FECHAS RELATIVAS
             foreach($solicitudes as &$solicitud) {
                 $timestamp = strtotime($solicitud['fecha_solicitud']);
                 $diferencia = time() - $timestamp;
@@ -100,7 +101,12 @@ try {
                     $horas = floor($diferencia / 3600);
                     $solicitud['fecha_relativa'] = $horas . 'h';
                 } else {
-                    $solicitud['fecha_relativa'] = date('d/m', $timestamp);
+                    $dias = floor($diferencia / 86400);
+                    if($dias < 7) {
+                        $solicitud['fecha_relativa'] = $dias . 'd';
+                    } else {
+                        $solicitud['fecha_relativa'] = date('d/m', $timestamp);
+                    }
                 }
                 
                 $solicitud['fecha_formateada'] = date('d/m/Y H:i', $timestamp);
@@ -113,16 +119,20 @@ try {
                     "contador" => $contador,
                     "solicitudes" => $solicitudes,
                     "perfil" => $_SESSION["perfil"],
-                    "timestamp" => time()
+                    "timestamp" => time(),
+                    "debug_info" => [
+                        "total_encontradas" => count($solicitudes),
+                        "ruta_conexion" => $rutaRaiz . 'api-transferencias/conexion-central.php'
+                    ]
                 ]
-            ]);
+            ], JSON_UNESCAPED_UNICODE);
             break;
             
         case 'marcar_como_vistas':
             echo json_encode([
                 "success" => true,
                 "message" => "Notificaciones marcadas como vistas"
-            ]);
+            ], JSON_UNESCAPED_UNICODE);
             break;
             
         default:
@@ -130,7 +140,7 @@ try {
                 "success" => false,
                 "message" => "Acción no reconocida: $accion",
                 "data" => ["contador" => 0, "solicitudes" => []]
-            ]);
+            ], JSON_UNESCAPED_UNICODE);
             break;
     }
 
@@ -146,13 +156,15 @@ try {
         "debug" => [
             "file" => $e->getFile(),
             "line" => $e->getLine(),
-            "trace" => $e->getTraceAsString()
+            "working_directory" => getcwd(),
+            "script_path" => __FILE__,
+            "root_path" => dirname(__DIR__),
+            "connection_file" => dirname(__DIR__) . '/api-transferencias/conexion-central.php',
+            "file_exists" => file_exists(dirname(__DIR__) . '/api-transferencias/conexion-central.php') ? 'YES' : 'NO'
         ]
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
 }
 
-// ✅ LIMPIAR BUFFER DE SALIDA
-if (ob_get_level()) {
-    ob_end_flush();
-}
+// ✅ EVITAR SALIDA ADICIONAL
+exit;
 ?>
