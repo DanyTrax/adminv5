@@ -121,7 +121,7 @@ $(document).ready(function() {
 });
 
 /*=============================================
-CREAR SOLICITUD - CORREGIDO
+CREAR SOLICITUD VIA AJAX - CORREGIDO
 =============================================*/
 function crearSolicitud() {
     
@@ -136,32 +136,58 @@ function crearSolicitud() {
         return false;
     }
     
-    // Actualizar campo hidden con productos
+    // ✅ ACTUALIZAR CAMPO HIDDEN CON PRODUCTOS
     $('#productosJsonInput').val(JSON.stringify(productosSeleccionados));
     
     // Crear FormData del formulario
     var formData = new FormData($('.formularioCrearSolicitud')[0]);
     
-    // ✅ AGREGAR DATOS ADICIONALES AL FormData
-    formData.append('crear_solicitud', 'true');
+    // ✅ NO AGREGAR 'crear_solicitud' - El controlador busca 'productos_solicitados'
+    // formData.append('crear_solicitud', 'true'); // ❌ ELIMINAR ESTA LÍNEA
     
     // Deshabilitar botón y mostrar loading
     $('#btnCrearSolicitudFinal').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Creando solicitud...');
     
     $.ajax({
-        url: window.location.href, // ✅ ENVIAR A LA MISMA PÁGINA
+        url: window.location.href, // Enviar a la misma página
         type: 'POST',
         data: formData,
         processData: false,
         contentType: false,
         success: function(response) {
             
-            // ✅ VERIFICAR SI LA RESPUESTA CONTIENE ÉXITO
-            if(response.indexOf('swal') > -1 && response.indexOf('success') > -1) {
-                // Solicitud creada exitosamente
+            // ✅ BUSCAR EL SCRIPT DE RESPUESTA EN EL HTML RETORNADO
+            if(response.indexOf('swal') > -1) {
+                
+                if(response.indexOf('success') > -1) {
+                    // Solicitud creada exitosamente
+                    swal({
+                        title: '¡Solicitud creada!',
+                        text: 'La solicitud se ha creado correctamente',
+                        type: 'success',
+                        confirmButtonText: 'Ver solicitudes'
+                    }).then((result) => {
+                        if (result.value) {
+                            window.location.href = 'solicitudes-stock';
+                        }
+                    });
+                    
+                } else if(response.indexOf('error') > -1) {
+                    // Error en la creación
+                    swal({
+                        title: 'Error',
+                        text: 'Error al crear la solicitud. Revise los datos e intente nuevamente.',
+                        type: 'error',
+                        confirmButtonText: 'Cerrar'
+                    });
+                    $('#btnCrearSolicitudFinal').prop('disabled', false).html('<i class="fa fa-save"></i> Crear Solicitud');
+                }
+                
+            } else {
+                // Si no hay script SweetAlert, asumir éxito y redirigir
                 swal({
                     title: '¡Solicitud creada!',
-                    text: 'La solicitud se ha creado correctamente',
+                    text: 'La solicitud se ha procesado correctamente',
                     type: 'success',
                     confirmButtonText: 'Ver solicitudes'
                 }).then((result) => {
@@ -169,18 +195,16 @@ function crearSolicitud() {
                         window.location.href = 'solicitudes-stock';
                     }
                 });
-            } else if(response.indexOf('swal') > -1 && response.indexOf('error') > -1) {
-                // Error en la creación
-                mostrarAlerta('error', 'Error al crear la solicitud. Revise los datos e intente nuevamente.');
-                $('#btnCrearSolicitudFinal').prop('disabled', false).html('<i class="fa fa-save"></i> Crear Solicitud');
-            } else {
-                // Respuesta inesperada - asumir éxito y redirigir
-                window.location.href = 'solicitudes-stock';
             }
         },
         error: function(xhr, status, error) {
             console.log('Error al crear solicitud:', error);
-            mostrarAlerta('error', 'Error de conexión. Intente nuevamente.');
+            swal({
+                title: 'Error de conexión',
+                text: 'Error de conexión. Intente nuevamente.',
+                type: 'error',
+                confirmButtonText: 'Cerrar'
+            });
             $('#btnCrearSolicitudFinal').prop('disabled', false).html('<i class="fa fa-save"></i> Crear Solicitud');
         }
     });
