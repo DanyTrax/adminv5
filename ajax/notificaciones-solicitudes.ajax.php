@@ -1,128 +1,158 @@
 <?php
-
 session_start();
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 
-// Verificar sesión
-if (!isset($_SESSION['perfil'])) {
-    http_response_code(500);
-    echo json_encode([
-        "success" => false,
-        "message" => "Sin sesión activa",
-        "data" => ["contador" => 0]
-    ]);
-    exit;
+// ✅ LIMPIAR CUALQUIER SALIDA PREVIA
+if (ob_get_level()) {
+    ob_clean();
 }
 
-require_once "../api-transferencias/conexion-central.php";
-require_once "../controladores/solicitudes-stock.controlador.php";
-require_once "../modelos/solicitudes-stock.modelo.php";
+// ✅ ESTABLECER HEADER PARA JSON
+header('Content-Type: application/json; charset=utf-8');
 
-class AjaxNotificacionesSolicitudes {
+try {
+    
+    // ✅ VERIFICAR SESIÓN
+    if (!isset($_SESSION['perfil'])) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Sin sesión activa",
+            "data" => ["contador" => 0, "solicitudes" => []]
+        ]);
+        exit;
+    }
 
-    /*=============================================
-    OBTENER NOTIFICACIONES DE SOLICITUDES PENDIENTES
-    =============================================*/
-    public function ajaxObtenerNotificaciones() {
-        
-        try {
-            // Verificar permisos
-            if($_SESSION["perfil"] != "Transportador" && $_SESSION["perfil"] != "Administrador") {
-                echo json_encode([
-                    "success" => true,
-                    "data" => [
-                        "contador" => 0,
-                        "solicitudes" => [],
-                        "mensaje" => "Sin permisos para ver notificaciones"
-                    ]
-                ]);
-                return;
+    // ✅ VERIFICAR PERMISOS
+    if($_SESSION["perfil"] != "Transportador" && $_SESSION["perfil"] != "Administrador") {
+        echo json_encode([
+            "success" => true,
+            "data" => [
+                "contador" => 0,
+                "solicitudes" => [],
+                "mensaje" => "Sin permisos para ver notificaciones"
+            ]
+        ]);
+        exit;
+    }
+
+    // ✅ INCLUIR ARCHIVOS NECESARIOS
+    $archivos_requeridos = [
+        "../api-transferencias/conexion-central.php",
+        "../controladores/solicitudes-stock.controlador.php"
+    ];
+
+    foreach($archivos_requeridos as $archivo) {
+        if(!file_exists($archivo)) {
+            throw new Exception("Archivo requerido no encontrado: $archivo");
+        }
+        require_once $archivo;
+    }
+
+    // ✅ VERIFICAR CONEXIÓN
+    $conexion = ConexionCentral::conectar();
+    if(!$conexion) {
+        throw new Exception("No se pudo conectar a la base central");
+    }
+
+    // ✅ PROCESAR SEGÚN ACCIÓN
+    $accion = $_POST["accion"] ?? 'obtener_notificaciones';
+    
+    switch($accion) {
+        case 'obtener_notificaciones':
+        case 'obtener_pendientes':
+            
+            // ✅ CONTAR SOLICITUDES PENDIENTES - DIRECTO
+            $stmt = $conexion->prepare("SELECT COUNT(*) as total FROM solicitudes_stock WHERE estado = 'pendiente'");
+            $stmt->execute();
+            $conteoResult = $stmt->fetch();
+            $contador = intval($conteoResult['total'] ?? 0);
+
+            // ✅ OBTENER SOLICITUDES RECIENTES - DIRECTO
+            $stmt = $conexion->prepare("
+                SELECT 
+                    id,
+                    numero_solicitud,
+                    nombre_sucursal_solicitante,
+                    nombre_usuario_solicitante,
+                    tipo_solicitud,
+                    total_productos,
+                    total_cantidad,
+                    fecha_solicitud,
+                    detalle_adicional
+                FROM solicitudes_stock 
+                WHERE estado = 'pendiente'
+                ORDER BY fecha_solicitud DESC 
+                LIMIT 8
+            ");
+            $stmt->execute();
+            $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // ✅ PROCESAR FECHAS
+            foreach($solicitudes as &$solicitud) {
+                $timestamp = strtotime($solicitud['fecha_solicitud']);
+                $diferencia = time() - $timestamp;
+                
+                if($diferencia < 60) {
+                    $solicitud['fecha_relativa'] = 'Ahora';
+                } elseif($diferencia < 3600) {
+                    $minutos = floor($diferencia / 60);
+                    $solicitud['fecha_relativa'] = $minutos . 'min';
+                } elseif($diferencia < 86400) {
+                    $horas = floor($diferencia / 3600);
+                    $solicitud['fecha_relativa'] = $horas . 'h';
+                } else {
+                    $solicitud['fecha_relativa'] = date('d/m', $timestamp);
+                }
+                
+                $solicitud['fecha_formateada'] = date('d/m/Y H:i', $timestamp);
             }
 
-            // Obtener contador de solicitudes pendientes
-            $contador = ControladorSolicitudesStock::ctrContarSolicitudesPendientes();
-            
-            // Obtener solicitudes pendientes recientes (máximo 8)
-            $solicitudes = ControladorSolicitudesStock::ctrObtenerSolicitudesPendientes(8);
-
-            // ✅ SIEMPRE RETORNAR ESTRUCTURA CONSISTENTE
+            // ✅ RESPUESTA EXITOSA
             echo json_encode([
                 "success" => true,
                 "data" => [
-                    "contador" => intval($contador),
+                    "contador" => $contador,
                     "solicitudes" => $solicitudes,
-                    "perfil" => $_SESSION["perfil"]
+                    "perfil" => $_SESSION["perfil"],
+                    "timestamp" => time()
                 ]
             ]);
-
-        } catch (Exception $e) {
-            echo json_encode([
-                "success" => false,
-                "message" => "Error obteniendo notificaciones: " . $e->getMessage(),
-                "data" => [
-                    "contador" => 0,
-                    "solicitudes" => []
-                ]
-            ]);
-        }
-    }
-
-    /*=============================================
-    MARCAR NOTIFICACIONES COMO VISTAS (OPCIONAL)
-    =============================================*/
-    public function ajaxMarcarComoVistas() {
-        
-        try {
-            // Por ahora solo retornamos éxito
-            // En el futuro se puede implementar un sistema de notificaciones vistas
+            break;
+            
+        case 'marcar_como_vistas':
             echo json_encode([
                 "success" => true,
                 "message" => "Notificaciones marcadas como vistas"
             ]);
-
-        } catch (Exception $e) {
-            echo json_encode([
-                "success" => false,
-                "message" => "Error: " . $e->getMessage()
-            ]);
-        }
-    }
-}
-
-// ✅ PROCESAR PETICIONES
-if(isset($_POST["accion"])) {
-    
-    $notificaciones = new AjaxNotificacionesSolicitudes();
-    
-    switch($_POST["accion"]) {
-        case 'obtener_notificaciones':
-        case 'obtener_pendientes': // ✅ AMBAS ACCIONES FUNCIONAN
-            $notificaciones->ajaxObtenerNotificaciones();
-            break;
-            
-        case 'marcar_como_vistas':
-            $notificaciones->ajaxMarcarComoVistas();
             break;
             
         default:
             echo json_encode([
                 "success" => false,
-                "message" => "Acción no reconocida",
+                "message" => "Acción no reconocida: $accion",
                 "data" => ["contador" => 0, "solicitudes" => []]
             ]);
             break;
     }
-    
-} else {
-    // ✅ RESPUESTA POR DEFECTO
+
+} catch(Exception $e) {
+    // ✅ ERROR CONTROLADO
     echo json_encode([
-        "success" => true,
+        "success" => false,
+        "message" => "Error: " . $e->getMessage(),
         "data" => [
             "contador" => 0,
             "solicitudes" => []
+        ],
+        "debug" => [
+            "file" => $e->getFile(),
+            "line" => $e->getLine(),
+            "trace" => $e->getTraceAsString()
         ]
     ]);
 }
 
+// ✅ LIMPIAR BUFFER DE SALIDA
+if (ob_get_level()) {
+    ob_end_flush();
+}
 ?>
