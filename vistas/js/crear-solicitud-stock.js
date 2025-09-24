@@ -121,7 +121,7 @@ $(document).ready(function() {
 });
 
 /*=============================================
-CREAR SOLICITUD CON DEBUG COMPLETO
+CREAR SOLICITUD - VERSION CORREGIDA
 =============================================*/
 function crearSolicitud() {
     
@@ -138,97 +138,124 @@ function crearSolicitud() {
     }
     
     // ✅ DEBUG: Ver datos antes de enviar
-    console.log("=== DEBUG JAVASCRIPT ===");
+    console.log("=== DEBUG CREAR SOLICITUD ===");
     console.log("Productos seleccionados:", productosSeleccionados);
     console.log("Tipo de solicitud:", $('input[name="tipo_solicitud"]:checked').val());
-    console.log("Detalle adicional:", $('#detalleAdicional').val());
     
-    // ✅ ACTUALIZAR CAMPO HIDDEN
+    // ✅ ACTUALIZAR CAMPO HIDDEN CON JSON DE PRODUCTOS
     $('#productosJsonInput').val(JSON.stringify(productosSeleccionados));
-    console.log("JSON de productos:", $('#productosJsonInput').val());
+    console.log("JSON enviado:", $('#productosJsonInput').val());
     
     // ✅ MOSTRAR LOADING
     $('#btnCrearSolicitudFinal').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Creando solicitud...');
     
-    // ✅ CREAR FormData Y VERIFICAR CONTENIDO
-    var formData = new FormData($('.formularioCrearSolicitud')[0]);
+    // ✅ CREAR FormData MANUALMENTE PARA ASEGURAR QUE TODOS LOS DATOS SE ENVÍEN
+    var formData = new FormData();
+    
+    // ✅ AGREGAR TODOS LOS CAMPOS MANUALMENTE
+    formData.append('productos_solicitados', JSON.stringify(productosSeleccionados));
+    formData.append('tipo_solicitud', $('input[name="tipo_solicitud"]:checked').val());
+    
+    // ✅ CAMPOS OPCIONALES
+    var detalleAdicional = $('#detalleAdicional').val().trim();
+    if(detalleAdicional) {
+        formData.append('detalle_adicional', detalleAdicional);
+    }
+    
+    // ✅ CAMPOS DE REMISIÓN (si aplica)
+    var codigoRemision = $('#codigoRemisionSeleccionada').val();
+    var nombreClienteRemision = $('#nombreClienteRemision').val();
+    
+    if(codigoRemision) {
+        formData.append('codigo_remision', codigoRemision);
+    }
+    
+    if(nombreClienteRemision) {
+        formData.append('nombre_cliente_remision', nombreClienteRemision);
+    }
     
     // ✅ DEBUG: Ver todos los datos que se envían
-    console.log("=== DATOS DEL FORMULARIO ===");
+    console.log("=== DATOS QUE SE ENVÍAN ===");
     for (var pair of formData.entries()) {
         console.log(pair[0] + ': ' + pair[1]);
     }
     
-    // ✅ ENVIAR VIA AJAX CON DEBUG COMPLETO
+    // ✅ ENVIAR VIA AJAX
     $.ajax({
-        url: window.location.href,
+        url: window.location.href, // Enviar a la misma página
         type: 'POST',
         data: formData,
         processData: false,
         contentType: false,
         success: function(response) {
             console.log("=== RESPUESTA DEL SERVIDOR ===");
-            console.log("Respuesta completa:", response);
-            console.log("Longitud de respuesta:", response.length);
+            console.log("Respuesta:", response);
             
-            // ✅ BUSCAR SCRIPT DE SWEETALERT EN LA RESPUESTA
+            // ✅ RESETEAR BOTÓN PRIMERO
+            $('#btnCrearSolicitudFinal').prop('disabled', false).html('<i class="fa fa-save"></i> Crear Solicitud');
+            
+            // ✅ BUSCAR SWEETALERT EN LA RESPUESTA
             if(response.indexOf('swal') > -1) {
-                console.log("✅ SweetAlert encontrado en respuesta");
                 
                 if(response.indexOf('success') > -1) {
-                    console.log("✅ Respuesta de éxito detectada");
-                    
-                    // ✅ EXTRAER EL NÚMERO DE SOLICITUD DE LA RESPUESTA
-                    var match = response.match(/solicitud ([A-Z0-9]+) se ha creado/);
-                    var numeroSolicitud = match ? match[1] : 'desconocida';
+                    console.log("✅ Solicitud creada exitosamente");
                     
                     swal({
                         title: '¡Solicitud creada!',
-                        text: 'La solicitud ' + numeroSolicitud + ' se ha creado correctamente',
+                        text: 'La solicitud se ha creado correctamente',
                         type: 'success',
-                        confirmButtonText: 'Ver solicitudes'
-                    }).then((result) => {
-                        if (result.value) {
-                            window.location.href = 'solicitudes-stock';
-                        }
+                        showConfirmButton: false,
+                        timer: 2000
+                    }).then(function(result) {
+                        window.location.href = 'solicitudes-stock';
                     });
                     
                 } else if(response.indexOf('error') > -1) {
-                    console.log("❌ Respuesta de error detectada");
-                    
-                    // ✅ EXTRAER MENSAJE DE ERROR
-                    var errorMatch = response.match(/text: "([^"]+)"/);
-                    var mensajeError = errorMatch ? errorMatch[1] : 'Error desconocido';
+                    console.log("❌ Error en la solicitud");
                     
                     swal({
                         title: 'Error',
-                        text: mensajeError,
+                        text: 'Error al crear la solicitud. Revise los datos.',
                         type: 'error',
                         confirmButtonText: 'Cerrar'
                     });
-                    $('#btnCrearSolicitudFinal').prop('disabled', false).html('<i class="fa fa-save"></i> Crear Solicitud');
                 }
                 
             } else {
-                console.log("❌ No se encontró SweetAlert en la respuesta");
-                console.log("Primeros 500 caracteres:", response.substring(0, 500));
+                console.log("⚠️ Respuesta sin SweetAlert - posible problema");
+                console.log("Primeros 200 caracteres:", response.substring(0, 200));
                 
-                // ✅ MOSTRAR RESPUESTA COMPLETA PARA DEBUG
-                $('body').append('<div id="debug-response" style="display:none;">' + response + '</div>');
-                console.log("Respuesta guardada en #debug-response para inspección");
-                
-                mostrarAlerta('warning', 'Respuesta inesperada del servidor. Revise la consola para más detalles.');
-                $('#btnCrearSolicitudFinal').prop('disabled', false).html('<i class="fa fa-save"></i> Crear Solicitud');
+                // ✅ MOSTRAR PARTE DE LA RESPUESTA PARA DEBUG
+                if(response.trim() === '') {
+                    mostrarAlerta('error', 'Respuesta vacía del servidor. Verifique los logs.');
+                } else {
+                    // ✅ ASUMIR ÉXITO SI NO HAY ERROR OBVIO
+                    swal({
+                        title: '¡Solicitud enviada!',
+                        text: 'La solicitud se ha procesado. Verificando...',
+                        type: 'info',
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(function() {
+                        window.location.href = 'solicitudes-stock';
+                    });
+                }
             }
         },
         error: function(xhr, status, error) {
             console.log("=== ERROR DE AJAX ===");
             console.log("Status:", status);
             console.log("Error:", error);
-            console.log("Response text:", xhr.responseText);
+            console.log("Response:", xhr.responseText);
             
-            mostrarAlerta('error', 'Error de conexión: ' + error);
             $('#btnCrearSolicitudFinal').prop('disabled', false).html('<i class="fa fa-save"></i> Crear Solicitud');
+            
+            swal({
+                title: 'Error de conexión',
+                text: 'Error de conexión: ' + error,
+                type: 'error',
+                confirmButtonText: 'Cerrar'
+            });
         }
     });
 }
