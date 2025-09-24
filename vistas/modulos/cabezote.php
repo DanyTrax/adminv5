@@ -169,91 +169,49 @@
 		border-radius: 50%;
 	}
 
-	.notifications-menu .dropdown-menu {
-		width: 280px;
-		padding: 0;
-		margin: 0;
-		top: 100%;
-	}
+<style>
+/* Estilos para notificaciones */
+.notifications-menu .dropdown-menu {
+    width: 280px;
+    max-width: 280px;
+    left: auto;
+    right: 0;
+}
 
-	.notifications-menu .dropdown-menu .header {
-		padding: 7px 10px;
-		border-bottom: 1px solid #f4f4f4;
-		color: #444444;
-		background-color: #ffffff;
-		font-size: 14px;
-		font-weight: 600;
-	}
+.notifications-menu .dropdown-menu .menu {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
 
-	.notifications-menu .dropdown-menu .menu {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-		max-height: 250px;
-		overflow-y: auto;
-	}
+.notifications-menu .dropdown-menu .menu li a {
+    display: block;
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+    text-decoration: none;
+    color: #333;
+}
 
-	.notifications-menu .dropdown-menu .menu li a {
-		color: #444;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		padding: 10px 10px;
-		border-bottom: 1px solid #f4f4f4;
-		text-decoration: none;
-		font-size: 13px;
-		display: block;
-	}
+.notifications-menu .dropdown-menu .menu li a:hover {
+    background-color: #f5f5f5;
+    text-decoration: none;
+}
 
-	.notifications-menu .dropdown-menu .menu li a:hover {
-		background-color: #f4f4f4;
-		text-decoration: none;
-	}
+.notifications-menu .dropdown-menu .menu li:last-child a {
+    border-bottom: none;
+}
 
-	.notifications-menu .dropdown-menu .footer {
-		background-color: #f4f4f4;
-		padding: 7px 10px;
-		border-top: 1px solid #eeeeee;
-		text-align: center;
-		font-size: 12px;
-	}
+.notifications-menu .dropdown-menu .header {
+    background-color: #3c8dbc;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+}
 
-	.notifications-menu .dropdown-menu .footer a {
-		color: #444;
-		text-decoration: none;
-		font-weight: 600;
-	}
-
-	.notifications-menu .dropdown-menu .footer a:hover {
-		color: #337ab7;
-	}
-
-	.notif-item-nueva {
-		background-color: #fff3cd !important;
-		border-left: 3px solid #f39c12;
-	}
-
-	.notif-tiempo {
-		color: #999;
-		font-size: 11px;
-	}
-
-	.notif-sucursal {
-		color: #666;
-		font-weight: 500;
-	}
-
-	@media (max-width: 767px) {
-		.dropdown-toggle-sucursales .hidden-xs {
-			display: none !important;
-		}
-		.dropdown-toggle-sucursales {
-			padding: 15px 10px;
-		}
-		.notifications-menu .dropdown-menu {
-			width: 250px;
-		}
-	}
-	/* ANIMACIONES PARA NOTIFICACIONES */
+/* Animación para el contador */
 @keyframes pulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
@@ -264,9 +222,11 @@
     animation: pulse 0.5s ease-in-out;
 }
 
-/* EFECTO HOVER MEJORADO */
-.notifications-menu .dropdown-toggle:hover {
-    background-color: rgba(255,255,255,0.1);
+/* Responsive */
+@media (max-width: 480px) {
+    .notifications-menu .dropdown-menu {
+        width: 250px;
+    }
 }
 
 /* INDICADOR DE NUEVA SOLICITUD */
@@ -321,64 +281,281 @@ $(document).ready(function() {
     
     <?php if($_SESSION["perfil"] == "Transportador" || $_SESSION["perfil"] == "Administrador"): ?>
     
-    // TEST INICIAL
+    let contadorAnterior = 0;
+    let notificacionesCache = [];
+    
+    // Cargar notificaciones al iniciar
     setTimeout(function() {
-        console.log("🧪 Ejecutando test de notificaciones...");
-        testNotificaciones();
+        console.log("🔄 Cargando notificaciones iniciales...");
+        cargarNotificacionesCompletas();
     }, 2000);
     
+    // Actualizar cada 30 segundos
+    setInterval(cargarNotificacionesCompletas, 30000);
+    
+    // Marcar como vistas cuando se abre el dropdown
+    $('#notificacionesSolicitudes').on('show.bs.dropdown', function () {
+        console.log("👁️ Dropdown abierto - marcando como vistas");
+        marcarNotificacionesComoVistas();
+    });
+    
+    <?php else: ?>
+    console.log("ℹ️ Usuario sin permisos para notificaciones");
     <?php endif; ?>
 });
 
-// Función de test simplificada
-function testNotificaciones() {
-    console.log("📤 Enviando petición de prueba...");
+// Función principal completa
+function cargarNotificacionesCompletas() {
+    console.log("🔄 Cargando notificaciones completas...");
     
     $.ajax({
         url: 'ajax/notificaciones-solicitudes.ajax.php',
         method: 'POST',
         data: { accion: 'obtener_pendientes' },
-        dataType: 'text', // Cambiar a text temporalmente para debug
+        dataType: 'json',
+        timeout: 15000,
         success: function(response) {
-            console.log("📥 Respuesta recibida (raw):");
-            console.log(response);
+            console.log("📥 Respuesta completa recibida:", response);
             
-            try {
-                const jsonData = JSON.parse(response);
-                console.log("✅ JSON parseado correctamente:");
-                console.log(jsonData);
+            if(response.success && response.data) {
+                const contador = parseInt(response.data.contador) || 0;
+                const solicitudes = response.data.solicitudes || [];
                 
-                if(jsonData.success && jsonData.data) {
-                    const contador = jsonData.data.contador || 0;
-                    console.log("🔢 Contador de solicitudes:", contador);
-                    
-                    // Actualizar contador
-                    if(contador > 0) {
-                        $('#contadorSolicitudes').text(contador).show().addClass('label-info');
-                        console.log("✅ Contador mostrado en UI");
-                    } else {
-                        $('#contadorSolicitudes').hide();
-                        console.log("👻 Sin solicitudes - contador oculto");
-                    }
+                console.log("✅ Procesando datos:");
+                console.log("- Contador:", contador);
+                console.log("- Solicitudes:", solicitudes.length);
+                
+                // Detectar nuevas solicitudes
+                if(contadorAnterior > 0 && contador > contadorAnterior) {
+                    console.log("🔔 Nueva solicitud detectada!");
+                    mostrarNotificacionNuevaSolicitud();
                 }
                 
-            } catch(e) {
-                console.error("❌ Error parseando JSON:", e);
-                console.error("Respuesta que causó error:", response);
+                contadorAnterior = contador;
+                notificacionesCache = solicitudes;
+                
+                // ✅ ACTUALIZAR TANTO CONTADOR COMO LISTA
+                actualizarContadorNotificaciones(contador);
+                actualizarListaNotificaciones(solicitudes);
+                
+            } else {
+                console.warn("⚠️ Respuesta sin datos válidos");
+                actualizarContadorNotificaciones(0);
+                mostrarListaVacia();
             }
         },
         error: function(xhr, status, error) {
-            console.error("❌ Error AJAX:");
+            console.error("❌ Error AJAX completo:");
             console.error("Status:", status);
             console.error("Error:", error);
             console.error("Response:", xhr.responseText);
+            
+            // Mostrar error en el dropdown
+            mostrarErrorEnDropdown();
         }
     });
 }
 
-// Función manual para debug
-function manualTestNotif() {
-    console.log("🔄 Test manual iniciado");
-    testNotificaciones();
+// Actualizar contador (ya funciona)
+function actualizarContadorNotificaciones(contador) {
+    console.log("🔢 Actualizando contador:", contador);
+    
+    const $contador = $('#contadorSolicitudes');
+    
+    if(!$contador.length) {
+        console.warn("⚠️ Elemento #contadorSolicitudes no encontrado");
+        return;
+    }
+    
+    if(contador > 0) {
+        $contador.text(contador).show();
+        
+        // Color según cantidad
+        $contador.removeClass('label-success label-info label-danger label-warning');
+        
+        if(contador >= 10) {
+            $contador.addClass('label-danger');
+        } else if(contador >= 5) {
+            $contador.addClass('label-warning');
+        } else {
+            $contador.addClass('label-info');
+        }
+        
+        console.log("✅ Contador actualizado:", contador);
+    } else {
+        $contador.hide();
+        console.log("👻 Contador oculto (sin solicitudes)");
+    }
+}
+
+// ✅ NUEVA FUNCIÓN: Actualizar lista de notificaciones en el dropdown
+function actualizarListaNotificaciones(solicitudes) {
+    console.log("📝 Actualizando lista del dropdown con", solicitudes.length, "solicitudes");
+    
+    const $header = $('#headerNotificaciones');
+    const $lista = $('#listaSolicitudesNotificaciones');
+    
+    if(!$header.length || !$lista.length) {
+        console.error("❌ Elementos del dropdown no encontrados");
+        console.log("Header encontrado:", $header.length > 0);
+        console.log("Lista encontrada:", $lista.length > 0);
+        return;
+    }
+    
+    // ✅ ACTUALIZAR HEADER
+    if(solicitudes.length === 0) {
+        $header.html('<i class="fa fa-check text-success"></i> No hay solicitudes pendientes');
+        mostrarListaVacia();
+        return;
+    }
+    
+    const textoHeader = solicitudes.length === 1 ? 
+        'Tienes 1 solicitud pendiente' : 
+        `Tienes ${solicitudes.length} solicitudes pendientes`;
+    $header.html(`<i class="fa fa-bell text-yellow"></i> ${textoHeader}`);
+    
+    // ✅ GENERAR HTML PARA LA LISTA
+    let html = '';
+    
+    solicitudes.forEach(function(solicitud, index) {
+        if(index < 8) { // Máximo 8 solicitudes
+            
+            const tiempoTranscurrido = solicitud.fecha_relativa || 'Sin fecha';
+            const tipoIcon = solicitud.tipo_solicitud === 'remision' ? 'fa-file-text' : 'fa-cubes';
+            const sucursalCorta = truncarTexto(solicitud.nombre_sucursal_solicitante, 25);
+            const tieneObservaciones = solicitud.detalle_adicional && 
+                                     solicitud.detalle_adicional.trim() !== '' && 
+                                     solicitud.detalle_adicional.toLowerCase() !== 'null';
+            
+            html += `
+                <li>
+                    <a href="solicitudes-stock" title="Ver solicitud ${solicitud.numero_solicitud}">
+                        <i class="fa ${tipoIcon} text-yellow" style="margin-right: 8px;"></i>
+                        <div style="display: inline-block; width: calc(100% - 20px);">
+                            <strong style="color: #337ab7;">${solicitud.numero_solicitud}</strong>
+                            <span class="pull-right text-muted" style="font-size: 10px;">
+                                ${solicitud.total_productos}p
+                            </span>
+                            <br>
+                            <span title="${solicitud.nombre_sucursal_solicitante}">
+                                ${sucursalCorta}
+                            </span>
+                            <br>
+                            <small style="color: #999;">
+                                <i class="fa fa-clock-o"></i> ${tiempoTranscurrido}
+                                ${tieneObservaciones ? '<i class="fa fa-comment text-info" title="Con observaciones"></i>' : ''}
+                            </small>
+                        </div>
+                    </a>
+                </li>
+            `;
+        }
+    });
+    
+    // ✅ AGREGAR INDICADOR SI HAY MÁS DE 8
+    if(solicitudes.length > 8) {
+        html += `
+            <li>
+                <a href="solicitudes-stock" style="text-align: center; background-color: #f0f0f0; font-style: italic; color: #666;">
+                    <i class="fa fa-plus-circle"></i> 
+                    Ver ${solicitudes.length - 8} solicitudes más...
+                </a>
+            </li>
+        `;
+    }
+    
+    // ✅ ACTUALIZAR EL DOM
+    $lista.html(html);
+    console.log("✅ Lista del dropdown actualizada correctamente");
+}
+
+// ✅ FUNCIÓN: Mostrar lista vacía
+function mostrarListaVacia() {
+    $('#listaSolicitudesNotificaciones').html(`
+        <li>
+            <a href="#" style="text-align: center; color: #28a745; padding: 20px;">
+                <i class="fa fa-check-circle" style="font-size: 24px;"></i><br>
+                <strong>¡Todo al día!</strong><br>
+                <small>No hay solicitudes pendientes</small>
+            </a>
+        </li>
+    `);
+}
+
+// ✅ FUNCIÓN: Mostrar error en dropdown
+function mostrarErrorEnDropdown() {
+    $('#headerNotificaciones').html('<i class="fa fa-exclamation-triangle text-danger"></i> Error cargando');
+    $('#listaSolicitudesNotificaciones').html(`
+        <li>
+            <a href="#" style="text-align: center; color: #dc3545; padding: 15px;">
+                <i class="fa fa-exclamation-triangle"></i><br>
+                <strong>Error de conexión</strong><br>
+                <small>No se pudieron cargar las notificaciones</small>
+            </a>
+        </li>
+    `);
+}
+
+// ✅ FUNCIÓN: Truncar texto
+function truncarTexto(texto, longitud) {
+    if (!texto || texto.length <= longitud) return texto || 'Sin nombre';
+    return texto.substring(0, longitud - 3) + '...';
+}
+
+// ✅ FUNCIÓN: Marcar como vistas
+function marcarNotificacionesComoVistas() {
+    $.ajax({
+        url: 'ajax/notificaciones-solicitudes.ajax.php',
+        method: 'POST',
+        data: { accion: 'marcar_como_vistas' },
+        success: function() {
+            console.log("👁️ Notificaciones marcadas como vistas");
+        },
+        error: function() {
+            console.warn("⚠️ Error marcando como vistas (no crítico)");
+        }
+    });
+}
+
+// ✅ FUNCIÓN: Notificación de nueva solicitud
+function mostrarNotificacionNuevaSolicitud() {
+    console.log("🔔 Nueva solicitud detectada!");
+    
+    if (typeof swal !== 'undefined') {
+        swal({
+            title: '¡Nueva Solicitud!',
+            text: 'Se ha recibido una nueva solicitud de stock',
+            type: 'info',
+            timer: 4000,
+            showConfirmButton: false
+        });
+    }
+    
+    // Efecto visual en la campana
+    const $campana = $('.fa-bell-o');
+    if($campana.length) {
+        $campana.addClass('fa-spin');
+        setTimeout(() => $campana.removeClass('fa-spin'), 1000);
+    }
+}
+
+// ✅ FUNCIÓN PÚBLICA: Actualizar después de crear solicitud
+function actualizarNotificacionesDespuesDeCrear() {
+    console.log("🔄 Actualizando notificaciones después de crear solicitud");
+    setTimeout(() => {
+        cargarNotificacionesCompletas();
+    }, 2000);
+}
+
+// ✅ FUNCIÓN DE DEBUG MANUAL
+function debugNotificacionesCompleto() {
+    console.log("🔍 DEBUG MANUAL COMPLETO");
+    console.log("Elementos del DOM:");
+    console.log("- Contador:", $('#contadorSolicitudes').length > 0 ? "✅" : "❌");
+    console.log("- Header:", $('#headerNotificaciones').length > 0 ? "✅" : "❌");
+    console.log("- Lista:", $('#listaSolicitudesNotificaciones').length > 0 ? "✅" : "❌");
+    console.log("- Dropdown:", $('#notificacionesSolicitudes').length > 0 ? "✅" : "❌");
+    
+    cargarNotificacionesCompletas();
 }
 </script>
