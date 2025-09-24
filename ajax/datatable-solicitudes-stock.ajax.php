@@ -1,132 +1,168 @@
-<?php
+/*=============================================
+CREAR SOLICITUD DE STOCK - SOLO AL RECIBIR POST
+=============================================*/
+static public function ctrCrearSolicitud(){
 
-session_start();
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+    // ✅ SOLO EJECUTAR SI SE RECIBIÓ UN POST CON productos_solicitados
+    if(isset($_POST["productos_solicitados"]) && $_SERVER['REQUEST_METHOD'] === 'POST'){
 
-// INCLUIR AMBAS CONEXIONES
-require_once "../modelos/conexion.php";           // ✅ Base LOCAL
-require_once "../api-transferencias/conexion-central.php"; // ✅ Base CENTRAL
-
-try {
-    // TEST 1: Verificar conexión LOCAL (usuarios)
-    $conexionLocal = Conexion::conectar();
-    if (!$conexionLocal) {
-        echo json_encode(["error" => "No hay conexión LOCAL"]);
-        exit;
-    }
-
-    // TEST 2: Verificar conexión CENTRAL (solicitudes)
-    $conexionCentral = ConexionCentral::conectar();
-    if (!$conexionCentral) {
-        echo json_encode(["error" => "No hay conexión CENTRAL"]);
-        exit;
-    }
-
-    // TEST 3: Verificar tabla usuarios en base LOCAL
-    $stmt = $conexionLocal->prepare("SHOW TABLES LIKE 'usuarios'");
-    $stmt->execute();
-    $tabla_usuarios = $stmt->fetch();
-    
-    if (!$tabla_usuarios) {
-        echo json_encode(["error" => "Tabla usuarios no existe en base LOCAL"]);
-        exit;
-    }
-
-    // TEST 4: Verificar tabla solicitudes en base CENTRAL
-    $stmt = $conexionCentral->prepare("SHOW TABLES LIKE 'solicitudes_stock'");
-    $stmt->execute();
-    $tabla_solicitudes = $stmt->fetch();
-    
-    if (!$tabla_solicitudes) {
-        echo json_encode(["error" => "Tabla solicitudes_stock no existe en base CENTRAL"]);
-        exit;
-    }
-
-    // TEST 5: Verificar usuario actual en base LOCAL
-    $stmt = $conexionLocal->prepare("SELECT id, nombre, perfil FROM usuarios WHERE id = :id");
-    $stmt->bindParam(":id", $_SESSION["id"], PDO::PARAM_INT);
-    $stmt->execute();
-    $usuario_actual = $stmt->fetch();
-    
-    if (!$usuario_actual) {
-        echo json_encode(["error" => "Usuario actual no encontrado en base LOCAL"]);
-        exit;
-    }
-
-    // TEST 6: Contar solicitudes en base CENTRAL
-    $stmt = $conexionCentral->prepare("SELECT COUNT(*) as total FROM solicitudes_stock");
-    $stmt->execute();
-    $resultado = $stmt->fetch();
-    $total_solicitudes = $resultado['total'];
-
-    // TEST 7: Si hay solicitudes, obtenerlas de base CENTRAL
-    if($total_solicitudes > 0) {
-        $stmt = $conexionCentral->prepare("SELECT * FROM solicitudes_stock ORDER BY fecha_solicitud DESC");
-        $stmt->execute();
-        $solicitudes = $stmt->fetchAll();
+        // ✅ LOG COMPLETO DE TODOS LOS DATOS RECIBIDOS
+        error_log("=== CONTROLADOR DEBUG - CREANDO SOLICITUD ===");
+        error_log("POST: " . json_encode($_POST));
+        error_log("SESSION ID: " . (isset($_SESSION["id"]) ? $_SESSION["id"] : 'NO_SESSION'));
         
-        // Crear JSON para DataTable usando datos de AMBAS bases
-        $data = [];
-        foreach($solicitudes as $solicitud) {
+        // ✅ DEBUG ESPECÍFICO PARA REMISIÓN
+        error_log("Tipo de solicitud recibido: " . (isset($_POST["tipo_solicitud"]) ? $_POST["tipo_solicitud"] : 'NO_DEFINIDO'));
+        
+        if(isset($_POST["tipo_solicitud"]) && $_POST["tipo_solicitud"] == "remision") {
+            error_log("📋 SOLICITUD POR REMISIÓN DETECTADA");
+            error_log("Código remisión: " . (isset($_POST["codigo_remision"]) ? $_POST["codigo_remision"] : 'NO_ENVIADO'));
+            error_log("Nombre cliente: " . (isset($_POST["nombre_cliente_remision"]) ? $_POST["nombre_cliente_remision"] : 'NO_ENVIADO'));
             
-            // Datos de SOLICITUD (base central)
-            $estado = $solicitud["estado"];
-            $estadoClass = $estado == 'pendiente' ? 'label-warning' : ($estado == 'aprobado' ? 'label-success' : 'label-danger');
-            $estadoHtml = "<span class='label {$estadoClass}'>".ucfirst($estado)."</span>";
-            
-            // Botones según perfil del USUARIO (base local)
-            $acciones = "<button class='btn btn-info btn-xs' title='Ver'><i class='fa fa-eye'></i></button>";
-            
-            if($usuario_actual["perfil"] == "Transportador" || $usuario_actual["perfil"] == "Administrador") {
-                if($estado == "pendiente") {
-                    $acciones .= " <button class='btn btn-success btn-xs' title='Aprobar'><i class='fa fa-check'></i></button>";
-                    $acciones .= " <button class='btn btn-warning btn-xs' title='Cancelar'><i class='fa fa-times'></i></button>";
-                }
+            // ✅ VALIDAR QUE HAYA CÓDIGO DE REMISIÓN
+            if(!isset($_POST["codigo_remision"]) || empty(trim($_POST["codigo_remision"]))) {
+                error_log("❌ ERROR: Falta código de remisión para solicitud por remisión");
+                echo '<script>
+                    swal({
+                        type: "error",
+                        title: "Error",
+                        text: "Debe seleccionar una remisión para este tipo de solicitud",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                </script>';
+                return;
             }
-            
-            if($usuario_actual["perfil"] == "Administrador") {
-                $acciones .= " <button class='btn btn-danger btn-xs' title='Eliminar'><i class='fa fa-trash'></i></button>";
-            }
-            
-            $data[] = [
-                $solicitud["id"],
-                $solicitud["numero_solicitud"],
-                $solicitud["nombre_sucursal_solicitante"],
-                $solicitud["nombre_usuario_solicitante"], // Ya guardado en base central
-                $solicitud["tipo_solicitud"],
-                $solicitud["total_productos"] . " productos",
-                $estadoHtml,
-                date('d/m/Y H:i', strtotime($solicitud["fecha_solicitud"])),
-                $solicitud["nombre_usuario_aprobacion"] ?: "N/A",
-                $acciones
-            ];
         }
         
-        echo json_encode([
-            "data" => $data,
-            "debug_info" => [
-                "usuario_local" => $usuario_actual["nombre"] . " (" . $usuario_actual["perfil"] . ")",
-                "solicitudes_central" => $total_solicitudes,
-                "conexiones" => "LOCAL ✓ CENTRAL ✓"
-            ]
-        ]);
+        // ✅ OBTENER DATOS DE LA SUCURSAL DESDE BD LOCAL
+        $datosSucursal = self::obtenerDatosSucursalLocal();
         
-    } else {
-        // No hay solicitudes, mostrar tabla vacía con info de debug
-        echo json_encode([
-            "data" => [],
-            "debug_info" => [
-                "mensaje" => "No hay solicitudes registradas",
-                "usuario_local" => $usuario_actual["nombre"] . " (" . $usuario_actual["perfil"] . ")",
-                "conexiones" => "LOCAL ✓ CENTRAL ✓"
-            ]
-        ]);
-    }
+        if(!$datosSucursal) {
+            error_log("❌ ERROR: No se pudieron obtener datos de sucursal");
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: "No se pudieron obtener los datos de la sucursal",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+            return;
+        }
 
-} catch (Exception $e) {
-    echo json_encode([
-        "error" => "Error en test dual: " . $e->getMessage(),
-        "trace" => $e->getTraceAsString()
-    ]);
+        error_log("Datos de sucursal obtenidos: " . json_encode($datosSucursal));
+        
+        // ✅ VALIDAR QUE HAYA PRODUCTOS
+        $productos = json_decode($_POST["productos_solicitados"], true);
+        
+        if(empty($productos) || !is_array($productos)) {
+            error_log("❌ ERROR: productos_solicitados está vacío o inválido");
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: "No hay productos para solicitar",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+            return;
+        }
+
+        // ✅ VALIDAR TIPO DE SOLICITUD
+        if(!isset($_POST["tipo_solicitud"]) || empty($_POST["tipo_solicitud"])) {
+            error_log("❌ ERROR: tipo_solicitud no definido");
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: "Debe seleccionar un tipo de solicitud",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+            return;
+        }
+
+        // ✅ GENERAR NÚMERO DE SOLICITUD
+        $numeroSolicitud = ModeloSolicitudesStock::mdlGenerarNumeroSolicitud("solicitudes_stock");
+        
+        error_log("Número de solicitud generado: " . $numeroSolicitud);
+        
+        if(empty($numeroSolicitud)) {
+            error_log("❌ ERROR: No se pudo generar número de solicitud");
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: "Error al generar número de solicitud",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+            return;
+        }
+
+        // ✅ PREPARAR DATOS CON INFORMACIÓN DE SUCURSAL DESDE BD LOCAL
+        $datos = array(
+            "numero_solicitud" => $numeroSolicitud,
+            "codigo_sucursal_solicitante" => $datosSucursal["codigo_sucursal"],
+            "nombre_sucursal_solicitante" => $datosSucursal["nombre"],
+            "usuario_solicitante" => $_SESSION["id"],
+            "nombre_usuario_solicitante" => $_SESSION["nombre"],
+            "productos_solicitados" => $_POST["productos_solicitados"],
+            "tipo_solicitud" => $_POST["tipo_solicitud"],
+            "codigo_remision" => isset($_POST["codigo_remision"]) && !empty(trim($_POST["codigo_remision"])) ? trim($_POST["codigo_remision"]) : null,
+            "nombre_cliente_remision" => isset($_POST["nombre_cliente_remision"]) && !empty(trim($_POST["nombre_cliente_remision"])) ? trim($_POST["nombre_cliente_remision"]) : null,
+            "detalle_adicional" => isset($_POST["detalle_adicional"]) && !empty(trim($_POST["detalle_adicional"])) ? trim($_POST["detalle_adicional"]) : null,
+            "total_productos" => count($productos),
+            "total_cantidad" => array_sum(array_column($productos, 'cantidad'))
+        );
+
+        // ✅ DEBUG: Verificar datos preparados
+        error_log("Datos preparados para insertar: " . json_encode($datos));
+
+        // ✅ INTENTAR CREAR SOLICITUD
+        $respuesta = ModeloSolicitudesStock::mdlCrearSolicitud("solicitudes_stock", $datos);
+
+        // ✅ DEBUG: Verificar respuesta del modelo
+        error_log("Respuesta del modelo: " . $respuesta);
+
+        if($respuesta == "ok"){
+
+            error_log("✅ SOLICITUD CREADA EXITOSAMENTE: " . $numeroSolicitud);
+            
+            echo '<script>
+                swal({
+                    type: "success",
+                    title: "¡Solicitud creada!",
+                    text: "La solicitud ' . $numeroSolicitud . ' se ha creado correctamente",
+                    showConfirmButton: false,
+                    timer: 2000
+                }).then(function(result){
+                    window.location = "solicitudes-stock";
+                });
+            </script>';
+
+        } else {
+
+            // ✅ DEBUG: Error en la creación
+            error_log("❌ ERROR AL CREAR SOLICITUD: " . $respuesta);
+
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: "Error al crear la solicitud. Revise los logs del servidor para más detalles.",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+
+        }
+        
+    }
+    // ✅ SI NO HAY POST, NO HACER NADA (no mostrar errores)
 }

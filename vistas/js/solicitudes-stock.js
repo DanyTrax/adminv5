@@ -482,3 +482,89 @@ $(document).on('keydown', '#cantidadProductoModal', function(e) {
         e.preventDefault();
     }
 });
+/*=============================================
+VER DETALLES DE SOLICITUD
+=============================================*/
+$(document).on('click', '.btnVerSolicitud', function() {
+    
+    var idSolicitud = $(this).attr('idSolicitud');
+    console.log("Ver solicitud ID:", idSolicitud);
+    
+    // Aquí agregar lógica para mostrar modal con detalles
+    alert('Ver solicitud: ' + idSolicitud);
+});
+
+/*=============================================
+APROBAR SOLICITUD
+=============================================*/
+$(document).on('click', '.btnAprobarSolicitud', function() {
+    
+    var idSolicitud = $(this).attr('idSolicitud');
+    console.log("Aprobar solicitud ID:", idSolicitud);
+    
+    swal({
+        title: '¿Aprobar esta solicitud?',
+        text: "La solicitud será marcada como aprobada",
+        type: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, aprobar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.value) {
+            // Aquí agregar lógica para aprobar
+            alert('Aprobando solicitud: ' + idSolicitud);
+        }
+    });
+});
+
+/*=============================================
+CANCELAR SOLICITUD
+=============================================*/
+$(document).on('click', '.btnCancelarSolicitud', function() {
+    
+    var idSolicitud = $(this).attr('idSolicitud');
+    console.log("Cancelar solicitud ID:", idSolicitud);
+    
+    swal({
+        title: '¿Cancelar esta solicitud?',
+        text: "La solicitud será marcada como cancelada",
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'No cancelar'
+    }).then((result) => {
+        if (result.value) {
+            // Aquí agregar lógica para cancelar
+            alert('Cancelando solicitud: ' + idSolicitud);
+        }
+    });
+});
+
+/*=============================================
+ELIMINAR SOLICITUD
+=============================================*/
+$(document).on('click', '.btnEliminarSolicitud', function() {
+    
+    var idSolicitud = $(this).attr('idSolicitud');
+    console.log("Eliminar solicitud ID:", idSolicitud);
+    
+    swal({
+        title: '¿Eliminar esta solicitud?',
+        text: "¡Esta acción no se puede deshacer!",
+        type: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.value) {
+            // Aquí agregar lógica para eliminar
+            alert('Eliminando solicitud: ' + idSolicitud);
+        }
+    });
+});
