@@ -490,55 +490,136 @@ static public function obtenerDatosSucursalLocal() {
         return $respuesta;
     }
 
-    /*=============================================
-    CONTAR SOLICITUDES PENDIENTES PARA NOTIFICACIONES - BASE CENTRAL
-    =============================================*/
-    static public function ctrContarSolicitudesPendientes() {
+/*=============================================
+CONTAR SOLICITUDES PENDIENTES - PARA NOTIFICACIONES
+=============================================*/
+static public function ctrContarSolicitudesPendientes() {
+    
+    try {
+        require_once "api-transferencias/conexion-central.php";
         
-        $tabla = "solicitudes_stock";
-        $respuesta = ModeloSolicitudesStock::mdlContarSolicitudesPendientes($tabla);
+        $stmt = ConexionCentral::conectar()->prepare("
+            SELECT COUNT(*) as total 
+            FROM solicitudes_stock 
+            WHERE estado = 'pendiente'
+        ");
         
-        return $respuesta;
+        $stmt->execute();
+        $resultado = $stmt->fetch();
+        
+        return $resultado['total'] ?? 0;
+        
+    } catch(Exception $e) {
+        error_log("Error contando solicitudes pendientes: " . $e->getMessage());
+        return 0;
     }
+}
 
-    /*=============================================
-    OBTENER SOLICITUDES PENDIENTES PARA NOTIFICACIONES - BASE CENTRAL
-    =============================================*/
-    static public function ctrObtenerSolicitudesPendientes($limite = 5) {
+/*=============================================
+OBTENER SOLICITUDES PENDIENTES RECIENTES - PARA NOTIFICACIONES
+=============================================*/
+static public function ctrObtenerSolicitudesPendientes($limite = 8) {
+    
+    try {
+        require_once "api-transferencias/conexion-central.php";
         
-        $tabla = "solicitudes_stock";
-        $respuesta = ModeloSolicitudesStock::mdlObtenerSolicitudesPendientes($tabla, $limite);
+        $stmt = ConexionCentral::conectar()->prepare("
+            SELECT 
+                id,
+                numero_solicitud,
+                nombre_sucursal_solicitante,
+                nombre_usuario_solicitante,
+                tipo_solicitud,
+                total_productos,
+                total_cantidad,
+                fecha_solicitud,
+                detalle_adicional
+            FROM solicitudes_stock 
+            WHERE estado = 'pendiente'
+            ORDER BY fecha_solicitud DESC 
+            LIMIT :limite
+        ");
         
-        return $respuesta;
-    }
-
-    /*=============================================
-    MARCAR SOLICITUDES COMO VISTAS - BASE CENTRAL
-    =============================================*/
-    static public function ctrMarcarSolicitudesComoVistas($ids) {
+        $stmt->bindParam(":limite", $limite, PDO::PARAM_INT);
+        $stmt->execute();
         
-        $tabla = "solicitudes_stock";
-        $campo = "visto_por_transportador";
+        $solicitudes = $stmt->fetchAll();
         
-        if($_SESSION["perfil"] == "Administrador") {
-            $campo = "visto_por_administrador";
+        // Formatear fechas para mejor visualización
+        foreach($solicitudes as &$solicitud) {
+            $solicitud['fecha_relativa'] = self::obtenerTiempoRelativo($solicitud['fecha_solicitud']);
+            $solicitud['fecha_formateada'] = date('d/m/Y H:i', strtotime($solicitud['fecha_solicitud']));
         }
         
-        $respuesta = ModeloSolicitudesStock::mdlMarcarComoVista($tabla, $campo, $ids);
+        return $solicitudes;
         
-        return $respuesta;
+    } catch(Exception $e) {
+        error_log("Error obteniendo solicitudes pendientes: " . $e->getMessage());
+        return [];
     }
+}
 
-    /*=============================================
-    OBTENER ESTADÍSTICAS - BASE CENTRAL
-    =============================================*/
-    static public function ctrObtenerEstadisticas() {
+/*=============================================
+OBTENER TIEMPO RELATIVO - HELPER PARA NOTIFICACIONES
+=============================================*/
+static private function obtenerTiempoRelativo($fecha) {
+    
+    try {
+        $timestamp = strtotime($fecha);
+        $diferencia = time() - $timestamp;
         
-        $tabla = "solicitudes_stock";
-        $respuesta = ModeloSolicitudesStock::mdlObtenerEstadisticas($tabla);
+        if($diferencia < 60) {
+            return 'Hace unos segundos';
+        } elseif($diferencia < 3600) {
+            $minutos = floor($diferencia / 60);
+            return 'Hace ' . $minutos . ' minuto' . ($minutos != 1 ? 's' : '');
+        } elseif($diferencia < 86400) {
+            $horas = floor($diferencia / 3600);
+            return 'Hace ' . $horas . ' hora' . ($horas != 1 ? 's' : '');
+        } elseif($diferencia < 2592000) {
+            $dias = floor($diferencia / 86400);
+            return 'Hace ' . $dias . ' día' . ($dias != 1 ? 's' : '');
+        } else {
+            return date('d/m/Y', $timestamp);
+        }
         
-        return $respuesta;
+    } catch(Exception $e) {
+        return 'Fecha no disponible';
     }
+}
+
+/*=============================================
+OBTENER ESTADÍSTICAS BÁSICAS - PARA DASHBOARD
+=============================================*/
+static public function ctrObtenerEstadisticas() {
+    
+    try {
+        require_once "api-transferencias/conexion-central.php";
+        
+        $stmt = ConexionCentral::conectar()->prepare("
+            SELECT 
+                COUNT(CASE WHEN estado = 'pendiente' THEN 1 END) as pendientes,
+                COUNT(CASE WHEN estado = 'aprobado' THEN 1 END) as aprobadas,
+                COUNT(CASE WHEN estado = 'cancelado' THEN 1 END) as canceladas,
+                COUNT(*) as total
+            FROM solicitudes_stock
+        ");
+        
+        $stmt->execute();
+        $estadisticas = $stmt->fetch();
+        
+        return $estadisticas;
+        
+    } catch(Exception $e) {
+        error_log("Error obteniendo estadísticas: " . $e->getMessage());
+        return [
+            'pendientes' => 0,
+            'aprobadas' => 0,
+            'canceladas' => 0,
+            'total' => 0
+        ];
+    }
+}
 
     /*=============================================
     VERIFICAR PERMISOS

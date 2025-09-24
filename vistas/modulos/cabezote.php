@@ -249,6 +249,63 @@
 			width: 250px;
 		}
 	}
+	/* ANIMACIONES PARA NOTIFICACIONES */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.animated.pulse {
+    animation: pulse 0.5s ease-in-out;
+}
+
+/* EFECTO HOVER MEJORADO */
+.notifications-menu .dropdown-toggle:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+/* INDICADOR DE NUEVA SOLICITUD */
+.notif-item-nueva {
+    background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%) !important;
+    border-left: 4px solid #f39c12 !important;
+    position: relative;
+}
+
+.notif-item-nueva::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    background-color: #f39c12;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(243, 156, 18, 0.6);
+}
+
+/* ESTILOS RESPONSIVOS MEJORADOS */
+@media (max-width: 480px) {
+    .notifications-menu .dropdown-menu {
+        width: 220px;
+        right: 0;
+        left: auto;
+    }
+    
+    .notifications-menu .dropdown-menu .menu li a {
+        padding: 8px;
+        font-size: 12px;
+    }
+    
+    .notif-sucursal {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 140px;
+    }
+}
 	</style>
 
 </header>
@@ -258,6 +315,8 @@
 $(document).ready(function() {
     // Solo cargar notificaciones para transportadores y administradores
     <?php if($_SESSION["perfil"] == "Transportador" || $_SESSION["perfil"] == "Administrador"): ?>
+    
+    let contadorAnterior = 0;
     
     // Cargar notificaciones al iniciar
     cargarNotificacionesSolicitudes();
@@ -273,21 +332,34 @@ $(document).ready(function() {
     <?php endif; ?>
 });
 
-// Función para cargar notificaciones
+// Función principal para cargar notificaciones
 function cargarNotificacionesSolicitudes() {
     $.ajax({
         url: 'ajax/notificaciones-solicitudes.ajax.php',
         method: 'POST',
         data: { accion: 'obtener_pendientes' },
         dataType: 'json',
+        timeout: 10000,
         success: function(response) {
-            if(response.success) {
-                actualizarContadorNotificaciones(response.data.contador);
-                actualizarListaNotificaciones(response.data.solicitudes);
+            if(response.success && response.data) {
+                const nuevoContador = parseInt(response.data.contador) || 0;
+                
+                // Detectar nuevas solicitudes
+                if(contadorAnterior > 0 && nuevoContador > contadorAnterior) {
+                    mostrarNotificacionNuevaSolicitud();
+                }
+                
+                contadorAnterior = nuevoContador;
+                
+                actualizarContadorNotificaciones(nuevoContador);
+                actualizarListaNotificaciones(response.data.solicitudes || []);
             }
         },
-        error: function() {
-            console.log('Error al cargar notificaciones de solicitudes');
+        error: function(xhr, status, error) {
+            console.log('Error al cargar notificaciones:', error);
+            
+            // En caso de error, ocultar contador
+            $('#contadorSolicitudes').hide();
         }
     });
 }
@@ -298,11 +370,22 @@ function actualizarContadorNotificaciones(contador) {
     
     if(contador > 0) {
         $contador.text(contador).show();
-        $contador.removeClass('label-success label-info').addClass('label-warning');
         
-        // Animación de pulso para nuevas notificaciones
+        // Color según cantidad
+        $contador.removeClass('label-success label-info label-danger label-warning');
+        
+        if(contador >= 10) {
+            $contador.addClass('label-danger'); // Rojo para muchas
+        } else if(contador >= 5) {
+            $contador.addClass('label-warning'); // Amarillo para varias
+        } else {
+            $contador.addClass('label-info'); // Azul para pocas
+        }
+        
+        // Animación de pulso
         $contador.addClass('animated pulse');
-        setTimeout(() => $contador.removeClass('animated pulse'), 1000);
+        setTimeout(() => $contador.removeClass('animated pulse'), 600);
+        
     } else {
         $contador.hide();
     }
@@ -314,37 +397,71 @@ function actualizarListaNotificaciones(solicitudes) {
     const $lista = $('#listaSolicitudesNotificaciones');
     
     if(solicitudes.length === 0) {
-        $header.text('No hay solicitudes pendientes');
-        $lista.html('<li><a href="#" style="text-align: center; color: #999;"><i class="fa fa-check"></i> Todo al día</a></li>');
+        $header.html('<i class="fa fa-check text-success"></i> No hay solicitudes pendientes');
+        $lista.html(`
+            <li>
+                <a href="#" style="text-align: center; color: #28a745; padding: 20px;">
+                    <i class="fa fa-check-circle" style="font-size: 24px;"></i><br>
+                    <strong>¡Todo al día!</strong><br>
+                    <small>No hay solicitudes pendientes</small>
+                </a>
+            </li>
+        `);
         return;
     }
     
     // Actualizar header
     const texto = solicitudes.length === 1 ? 
-        '1 solicitud pendiente' : 
-        solicitudes.length + ' solicitudes pendientes';
-    $header.text(texto);
+        'Tienes 1 solicitud pendiente' : 
+        `Tienes ${solicitudes.length} solicitudes pendientes`;
+    $header.html(`<i class="fa fa-bell text-yellow"></i> ${texto}`);
     
     // Actualizar lista
     let html = '';
-    solicitudes.forEach(function(solicitud) {
+    solicitudes.forEach(function(solicitud, index) {
         const tiempoTranscurrido = calcularTiempoTranscurrido(solicitud.fecha_solicitud);
         const esNueva = (new Date() - new Date(solicitud.fecha_solicitud)) < (30 * 60 * 1000); // 30 minutos
+        const tipoIcon = solicitud.tipo_solicitud === 'remision' ? 'fa-file-text' : 'fa-cubes';
         
+        // Solo mostrar máximo 8 notificaciones
+        if(index < 8) {
+            html += `
+                <li>
+                    <a href="solicitudes-stock" class="${esNueva ? 'notif-item-nueva' : ''}" 
+                       title="Ver solicitud ${solicitud.numero_solicitud}">
+                        <i class="fa ${tipoIcon} text-yellow" style="margin-right: 8px;"></i>
+                        <div style="display: inline-block; width: calc(100% - 20px);">
+                            <strong style="color: #337ab7;">${solicitud.numero_solicitud}</strong>
+                            <span class="pull-right text-muted" style="font-size: 10px;">
+                                ${solicitud.total_productos}p
+                            </span>
+                            <br>
+                            <span class="notif-sucursal" title="${solicitud.nombre_sucursal_solicitante}">
+                                ${truncarTexto(solicitud.nombre_sucursal_solicitante, 25)}
+                            </span>
+                            <br>
+                            <small class="notif-tiempo">
+                                <i class="fa fa-clock-o"></i> ${tiempoTranscurrido}
+                                ${solicitud.detalle_adicional ? '<i class="fa fa-comment text-info" title="Con observaciones"></i>' : ''}
+                            </small>
+                        </div>
+                    </a>
+                </li>
+            `;
+        }
+    });
+    
+    // Si hay más de 8, agregar indicador
+    if(solicitudes.length > 8) {
         html += `
             <li>
-                <a href="solicitudes-stock" class="${esNueva ? 'notif-item-nueva' : ''}">
-                    <i class="fa fa-cubes text-yellow"></i>
-                    <strong>${solicitud.numero_solicitud}</strong><br>
-                    <span class="notif-sucursal">${solicitud.nombre_sucursal_solicitante}</span><br>
-                    <small class="notif-tiempo">
-                        <i class="fa fa-clock-o"></i> ${tiempoTranscurrido}
-                        <span class="pull-right">${solicitud.total_productos} prod.</span>
-                    </small>
+                <a href="solicitudes-stock" style="text-align: center; background-color: #f0f0f0; font-style: italic;">
+                    <i class="fa fa-plus-circle"></i> 
+                    Ver ${solicitudes.length - 8} solicitudes más...
                 </a>
             </li>
         `;
-    });
+    }
     
     $lista.html(html);
 }
@@ -370,28 +487,44 @@ function calcularTiempoTranscurrido(fechaSolicitud) {
     const fecha = new Date(fechaSolicitud);
     const diff = Math.floor((ahora - fecha) / 1000); // diferencia en segundos
     
-    if (diff < 60) return 'Hace un momento';
-    if (diff < 3600) return `Hace ${Math.floor(diff / 60)} min`;
-    if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} h`;
-    return `Hace ${Math.floor(diff / 86400)} días`;
+    if (diff < 60) return 'Ahora';
+    if (diff < 3600) return `${Math.floor(diff / 60)}min`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
+    return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+}
+
+// Truncar texto para evitar desbordamiento
+function truncarTexto(texto, longitud) {
+    if (texto.length <= longitud) return texto;
+    return texto.substring(0, longitud - 3) + '...';
 }
 
 // Función para mostrar notificación cuando llega una nueva solicitud
-function mostrarNotificacionNuevaSolicitud(solicitud) {
-    // Mostrar notificación toast o similar
+function mostrarNotificacionNuevaSolicitud() {
+    // Notificación toast si SweetAlert está disponible
     if (typeof swal !== 'undefined') {
         swal({
-            title: 'Nueva Solicitud',
-            text: `Solicitud ${solicitud.numero_solicitud} de ${solicitud.nombre_sucursal_solicitante}`,
+            title: '¡Nueva Solicitud!',
+            text: 'Se ha recibido una nueva solicitud de stock',
             type: 'info',
-            timer: 3000,
+            timer: 4000,
             showConfirmButton: false,
-            position: 'top-right',
-            toast: true
+            toast: true,
+            position: 'top-end'
         });
     }
     
-    // Actualizar contador inmediatamente
-    cargarNotificacionesSolicitudes();
+    // Efecto visual en la campana
+    const $campana = $('.fa-bell-o');
+    $campana.addClass('fa-spin');
+    setTimeout(() => $campana.removeClass('fa-spin'), 1000);
+}
+
+// Función para refrescar notificaciones cuando se crea una nueva solicitud
+function actualizarNotificacionesDespuesDeCrear() {
+    setTimeout(() => {
+        cargarNotificacionesSolicitudes();
+    }, 1000);
 }
 </script>
