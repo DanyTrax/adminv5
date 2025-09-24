@@ -42,6 +42,9 @@ $url = $protocol . $host . $script_name;
   <link rel="stylesheet" href="<?php echo $url; ?>vistas/plugins/iCheck/all.css">
   <link rel="stylesheet" href="<?php echo $url; ?>vistas/bower_components/bootstrap-daterangepicker/daterangepicker.css">
   <link rel="stylesheet" href="<?php echo $url; ?>vistas/bower_components/morris.js/morris.css">
+  <!-- Toastr CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
   <script src="<?php echo $url; ?>vistas/bower_components/jquery/dist/jquery.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/fastclick/lib/fastclick.js"></script>
@@ -63,6 +66,8 @@ $url = $protocol . $host . $script_name;
   <script src="<?php echo $url; ?>vistas/bower_components/raphael/raphael.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/morris.js/morris.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/Chart.js/Chart.js"></script>
+  <!-- Toastr JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
   <!-- =============================================
   INICIO DE LA CORRECCIÓN

@@ -919,6 +919,16 @@ $(document).on("keydown", function(e) {
         e.preventDefault();
     }
 });
+/*=============================================
+VARIABLES GLOBALES ADICIONALES
+=============================================*/
+// Solo declarar si no existe
+if (typeof window.perfilUsuario === 'undefined') {
+    window.perfilUsuario = '<?php echo $_SESSION["perfil"]; ?>';
+}
+if (typeof window.idUsuario === 'undefined') {
+    window.idUsuario = '<?php echo $_SESSION["id"]; ?>';
+}
 
 /*=============================================
 LOG DE INICIALIZACIÓN
