@@ -60,21 +60,25 @@
 				if($_SESSION["perfil"] == "Transportador" || $_SESSION["perfil"] == "Administrador"){ ?>
 				
 				<!-- CAMPANA DE NOTIFICACIONES -->
+				<!-- En el menú superior, la campana debería ser así: -->
 				<li class="dropdown notifications-menu" id="notificacionesSolicitudes">
-					<a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-						<i class="fa fa-bell-o" style="font-size: 18px;"></i>
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+						<i class="fa fa-bell-o"></i>
 						<span class="label label-warning" id="contadorSolicitudes" style="display: none;">0</span>
 					</a>
 					<ul class="dropdown-menu">
-						<li class="header" id="headerNotificaciones">No hay solicitudes pendientes</li>
-						<li>
-							<!-- Lista interna de notificaciones -->
-							<ul class="menu" id="listaSolicitudesNotificaciones">
-								<!-- Aquí se cargan las notificaciones dinámicamente -->
-							</ul>
+						<li class="header" id="headerNotificaciones">
+							<i class="fa fa-bell"></i> Sin notificaciones
 						</li>
-						<li class="footer">
-							<a href="solicitudes-stock">Ver todas las solicitudes</a>
+						<li>
+							<ul class="menu" id="listaSolicitudesNotificaciones">
+								<li>
+									<a href="#" style="text-align: center; padding: 15px;">
+										<i class="fa fa-spinner fa-spin"></i><br>
+										<small>Cargando notificaciones...</small>
+									</a>
+								</li>
+							</ul>
 						</li>
 					</ul>
 				</li>
@@ -313,60 +317,123 @@
 <!-- SCRIPT PARA NOTIFICACIONES -->
 <script>
 $(document).ready(function() {
+    
+    console.log("🔔 Iniciando sistema de notificaciones...");
+    
     // Solo cargar notificaciones para transportadores y administradores
     <?php if($_SESSION["perfil"] == "Transportador" || $_SESSION["perfil"] == "Administrador"): ?>
     
     let contadorAnterior = 0;
+    let notificacionesCache = [];
     
-    // Cargar notificaciones al iniciar
-    cargarNotificacionesSolicitudes();
+    // Cargar notificaciones al iniciar (después de un pequeño delay)
+    setTimeout(function() {
+        console.log("🔄 Cargando notificaciones iniciales...");
+        cargarNotificacionesSolicitudes();
+    }, 2000);
     
     // Actualizar cada 30 segundos
     setInterval(cargarNotificacionesSolicitudes, 30000);
     
     // Marcar como vistas cuando se abre el dropdown
     $('#notificacionesSolicitudes').on('show.bs.dropdown', function () {
+        console.log("👁️ Dropdown abierto - marcando como vistas");
         marcarNotificacionesComoVistas();
     });
     
+    <?php else: ?>
+    console.log("ℹ️ Usuario sin permisos para notificaciones - Perfil: <?php echo $_SESSION['perfil']; ?>");
     <?php endif; ?>
 });
 
 // Función principal para cargar notificaciones
 function cargarNotificacionesSolicitudes() {
+    
+    console.log("🔄 Iniciando carga de notificaciones...");
+    
     $.ajax({
         url: 'ajax/notificaciones-solicitudes.ajax.php',
         method: 'POST',
         data: { accion: 'obtener_pendientes' },
         dataType: 'json',
-        timeout: 10000,
-        success: function(response) {
+        timeout: 15000,
+        beforeSend: function() {
+            console.log("📤 Enviando petición AJAX...");
+        },
+        success: function(response, textStatus, xhr) {
+            
+            console.log("📥 Respuesta recibida:");
+            console.log("Status:", xhr.status);
+            console.log("Response:", response);
+            
+            // Verificar que la respuesta sea válida
+            if(typeof response !== 'object' || response === null) {
+                console.error("❌ Respuesta no es un objeto JSON válido");
+                return;
+            }
+            
             if(response.success && response.data) {
                 const nuevoContador = parseInt(response.data.contador) || 0;
+                const solicitudes = response.data.solicitudes || [];
+                
+                console.log("✅ Datos procesados:");
+                console.log("- Contador:", nuevoContador);
+                console.log("- Solicitudes:", solicitudes.length);
                 
                 // Detectar nuevas solicitudes
                 if(contadorAnterior > 0 && nuevoContador > contadorAnterior) {
+                    console.log("🔔 Nueva solicitud detectada!");
                     mostrarNotificacionNuevaSolicitud();
                 }
                 
                 contadorAnterior = nuevoContador;
+                notificacionesCache = solicitudes;
                 
                 actualizarContadorNotificaciones(nuevoContador);
-                actualizarListaNotificaciones(response.data.solicitudes || []);
+                actualizarListaNotificaciones(solicitudes);
+                
+            } else {
+                console.warn("⚠️ Respuesta exitosa pero sin datos válidos:", response);
+                actualizarContadorNotificaciones(0);
+                actualizarListaNotificaciones([]);
             }
         },
         error: function(xhr, status, error) {
-            console.log('Error al cargar notificaciones:', error);
+            console.error("❌ Error en AJAX:");
+            console.error("- Status:", status);
+            console.error("- Error:", error);
+            console.error("- Response Text:", xhr.responseText);
+            console.error("- Status Code:", xhr.status);
             
             // En caso de error, ocultar contador
             $('#contadorSolicitudes').hide();
+            
+            // Mostrar mensaje de error en el dropdown si está visible
+            if($('#notificacionesSolicitudes').hasClass('open')) {
+                $('#listaSolicitudesNotificaciones').html(`
+                    <li>
+                        <a href="#" style="text-align: center; color: #dc3545; padding: 15px;">
+                            <i class="fa fa-exclamation-triangle"></i><br>
+                            <small>Error cargando notificaciones</small>
+                        </a>
+                    </li>
+                `);
+            }
         }
     });
 }
 
 // Actualizar contador en la campana
 function actualizarContadorNotificaciones(contador) {
+    
+    console.log("🔢 Actualizando contador:", contador);
+    
     const $contador = $('#contadorSolicitudes');
+    
+    if(!$contador.length) {
+        console.warn("⚠️ Elemento #contadorSolicitudes no encontrado en el DOM");
+        return;
+    }
     
     if(contador > 0) {
         $contador.text(contador).show();
@@ -375,26 +442,40 @@ function actualizarContadorNotificaciones(contador) {
         $contador.removeClass('label-success label-info label-danger label-warning');
         
         if(contador >= 10) {
-            $contador.addClass('label-danger'); // Rojo para muchas
+            $contador.addClass('label-danger');
+            console.log("🔴 Contador crítico (≥10)");
         } else if(contador >= 5) {
-            $contador.addClass('label-warning'); // Amarillo para varias
+            $contador.addClass('label-warning');
+            console.log("🟡 Contador alto (≥5)");
         } else {
-            $contador.addClass('label-info'); // Azul para pocas
+            $contador.addClass('label-info');
+            console.log("🔵 Contador normal (<5)");
         }
         
         // Animación de pulso
         $contador.addClass('animated pulse');
         setTimeout(() => $contador.removeClass('animated pulse'), 600);
         
+        console.log("✅ Contador actualizado correctamente");
+        
     } else {
         $contador.hide();
+        console.log("👻 Contador oculto (sin solicitudes)");
     }
 }
 
 // Actualizar lista de notificaciones
 function actualizarListaNotificaciones(solicitudes) {
+    
+    console.log("📝 Actualizando lista con", solicitudes.length, "solicitudes");
+    
     const $header = $('#headerNotificaciones');
     const $lista = $('#listaSolicitudesNotificaciones');
+    
+    if(!$header.length || !$lista.length) {
+        console.warn("⚠️ Elementos del dropdown no encontrados en el DOM");
+        return;
+    }
     
     if(solicitudes.length === 0) {
         $header.html('<i class="fa fa-check text-success"></i> No hay solicitudes pendientes');
@@ -407,6 +488,7 @@ function actualizarListaNotificaciones(solicitudes) {
                 </a>
             </li>
         `);
+        console.log("✅ Lista vacía renderizada");
         return;
     }
     
@@ -419,12 +501,14 @@ function actualizarListaNotificaciones(solicitudes) {
     // Actualizar lista
     let html = '';
     solicitudes.forEach(function(solicitud, index) {
-        const tiempoTranscurrido = calcularTiempoTranscurrido(solicitud.fecha_solicitud);
-        const esNueva = (new Date() - new Date(solicitud.fecha_solicitud)) < (30 * 60 * 1000); // 30 minutos
-        const tipoIcon = solicitud.tipo_solicitud === 'remision' ? 'fa-file-text' : 'fa-cubes';
         
         // Solo mostrar máximo 8 notificaciones
         if(index < 8) {
+            const tiempoTranscurrido = solicitud.fecha_relativa || 'Sin fecha';
+            const esNueva = (new Date() - new Date(solicitud.fecha_solicitud)) < (30 * 60 * 1000); // 30 minutos
+            const tipoIcon = solicitud.tipo_solicitud === 'remision' ? 'fa-file-text' : 'fa-cubes';
+            const sucursalCorta = truncarTexto(solicitud.nombre_sucursal_solicitante, 25);
+            
             html += `
                 <li>
                     <a href="solicitudes-stock" class="${esNueva ? 'notif-item-nueva' : ''}" 
@@ -437,12 +521,12 @@ function actualizarListaNotificaciones(solicitudes) {
                             </span>
                             <br>
                             <span class="notif-sucursal" title="${solicitud.nombre_sucursal_solicitante}">
-                                ${truncarTexto(solicitud.nombre_sucursal_solicitante, 25)}
+                                ${sucursalCorta}
                             </span>
                             <br>
                             <small class="notif-tiempo">
                                 <i class="fa fa-clock-o"></i> ${tiempoTranscurrido}
-                                ${solicitud.detalle_adicional ? '<i class="fa fa-comment text-info" title="Con observaciones"></i>' : ''}
+                                ${solicitud.detalle_adicional && solicitud.detalle_adicional.trim() ? '<i class="fa fa-comment text-info" title="Con observaciones"></i>' : ''}
                             </small>
                         </div>
                     </a>
@@ -464,6 +548,7 @@ function actualizarListaNotificaciones(solicitudes) {
     }
     
     $lista.html(html);
+    console.log("✅ Lista de notificaciones renderizada correctamente");
 }
 
 // Marcar notificaciones como vistas
@@ -472,36 +557,30 @@ function marcarNotificacionesComoVistas() {
         url: 'ajax/notificaciones-solicitudes.ajax.php',
         method: 'POST',
         data: { accion: 'marcar_como_vistas' },
-        success: function() {
+        success: function(response) {
+            console.log("👁️ Notificaciones marcadas como vistas");
+            
             // Remover clases de "nueva" después de un momento
             setTimeout(() => {
                 $('.notif-item-nueva').removeClass('notif-item-nueva');
             }, 2000);
+        },
+        error: function() {
+            console.warn("⚠️ Error marcando notificaciones como vistas (no crítico)");
         }
     });
 }
 
-// Calcular tiempo transcurrido
-function calcularTiempoTranscurrido(fechaSolicitud) {
-    const ahora = new Date();
-    const fecha = new Date(fechaSolicitud);
-    const diff = Math.floor((ahora - fecha) / 1000); // diferencia en segundos
-    
-    if (diff < 60) return 'Ahora';
-    if (diff < 3600) return `${Math.floor(diff / 60)}min`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
-    return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
-}
-
 // Truncar texto para evitar desbordamiento
 function truncarTexto(texto, longitud) {
-    if (texto.length <= longitud) return texto;
+    if (!texto || texto.length <= longitud) return texto || 'Sin nombre';
     return texto.substring(0, longitud - 3) + '...';
 }
 
 // Función para mostrar notificación cuando llega una nueva solicitud
 function mostrarNotificacionNuevaSolicitud() {
+    console.log("🔔 Mostrando notificación de nueva solicitud");
+    
     // Notificación toast si SweetAlert está disponible
     if (typeof swal !== 'undefined') {
         swal({
@@ -513,18 +592,31 @@ function mostrarNotificacionNuevaSolicitud() {
             toast: true,
             position: 'top-end'
         });
+    } else {
+        console.log("ℹ️ SweetAlert no disponible - notificación omitida");
     }
     
     // Efecto visual en la campana
     const $campana = $('.fa-bell-o');
-    $campana.addClass('fa-spin');
-    setTimeout(() => $campana.removeClass('fa-spin'), 1000);
+    if($campana.length) {
+        $campana.addClass('fa-spin');
+        setTimeout(() => $campana.removeClass('fa-spin'), 1000);
+    }
 }
 
-// Función para refrescar notificaciones cuando se crea una nueva solicitud
+// Función pública para refrescar notificaciones después de crear solicitud
 function actualizarNotificacionesDespuesDeCrear() {
+    console.log("🔄 Actualizando notificaciones después de crear solicitud");
     setTimeout(() => {
         cargarNotificacionesSolicitudes();
-    }, 1000);
+    }, 2000);
+}
+
+// Función para debug manual
+function debugNotificaciones() {
+    console.log("🔍 DEBUG MANUAL DE NOTIFICACIONES");
+    console.log("Contador anterior:", contadorAnterior);
+    console.log("Cache de notificaciones:", notificacionesCache);
+    cargarNotificacionesSolicitudes();
 }
 </script>
