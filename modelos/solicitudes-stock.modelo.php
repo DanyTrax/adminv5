@@ -124,7 +124,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
             return $stmt->fetchAll();
         }
 
-        $stmt->close();
+        
         $stmt = null;
     }
 
@@ -139,7 +139,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
 
         return $stmt->fetchAll();
 
-        $stmt->close();
+        
         $stmt = null;
     }
 
@@ -170,7 +170,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
             return "error";
         }
 
-        $stmt->close();
+        
         $stmt = null;
     }
 
@@ -189,7 +189,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
             return "error";
         }
 
-        $stmt->close();
+        
         $stmt = null;
     }
 
@@ -216,7 +216,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
         // Formatear con ceros a la izquierda
         $numeroFormateado = "SOL" . str_pad($nuevoNumero, 6, "0", STR_PAD_LEFT);
 
-        $stmt->close();
+        
         $stmt = null;
 
         return $numeroFormateado;
@@ -254,7 +254,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
             return array();
         }
 
-        $stmt->close();
+        
         $stmt = null;
     }
 
@@ -286,7 +286,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
             return array();
         }
 
-        $stmt->close();
+        
         $stmt = null;
     }
 
@@ -301,7 +301,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
 
         $resultado = $stmt->fetch();
 
-        $stmt->close();
+        
         $stmt = null;
 
         return $resultado["total"];
@@ -318,7 +318,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
 
         return $stmt->fetchAll();
 
-        $stmt->close();
+        
         $stmt = null;
     }
 
@@ -337,7 +337,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
             return "error";
         }
 
-        $stmt->close();
+        
         $stmt = null;
     }
 
@@ -359,7 +359,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
 
         return $stmt->fetch();
 
-        $stmt->close();
+        
         $stmt = null;
     }
 
@@ -402,7 +402,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
             return "error";
         }
 
-        $stmt->close();
+        
         $stmt = null;
     }
 
@@ -432,7 +432,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
             return array();
         }
 
-        $stmt->close();
+        
         $stmt = null;
     }
 
@@ -457,7 +457,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
             return false;
         }
 
-        $stmt->close();
+        
         $stmt = null;
     }
 
@@ -522,7 +522,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
 
         return $stmt->fetchAll();
 
-        $stmt->close();
+        
         $stmt = null;
     }
 
@@ -541,7 +541,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
 
         return $stmt->fetchAll();
 
-        $stmt->close();
+        
         $stmt = null;
     }
 }
