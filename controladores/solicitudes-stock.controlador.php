@@ -32,8 +32,21 @@ class ControladorSolicitudesStock {
                     return;
                 }
                 
-                // Obtener información del usuario
+                // ✅ OBTENER USUARIO DE BASE LOCAL (NO CENTRAL)
                 $usuario = ControladorUsuarios::ctrMostrarUsuarios("id", $_SESSION["id"]);
+                
+                if(!$usuario) {
+                    echo '<script>
+                        swal({
+                            type: "error",
+                            title: "Error de usuario",
+                            text: "No se pudo obtener la información del usuario",
+                            showConfirmButton: true,
+                            confirmButtonText: "Cerrar"
+                        });
+                    </script>';
+                    return;
+                }
                 
                 // Generar número de solicitud
                 $tabla = "solicitudes_stock";
@@ -53,7 +66,7 @@ class ControladorSolicitudesStock {
                 // Preparar datos para inserción
                 $datos = array(
                     "numero_solicitud" => $numeroSolicitud,
-                    "codigo_sucursal_solicitante" => $sucursalLocal["codigo_sucursal"],
+                    "codigo_sucursal_solicitante" => $sucursalLocal["codigo"],
                     "nombre_sucursal_solicitante" => $sucursalLocal["nombre"],
                     "usuario_solicitante" => $_SESSION["id"],
                     "nombre_usuario_solicitante" => $usuario["nombre"],
@@ -72,7 +85,7 @@ class ControladorSolicitudesStock {
                     
                     // Registrar en el log
                     $datosLog = array(
-                        "solicitud_id" => null, // Se obtiene del último insert
+                        "solicitud_id" => null,
                         "usuario_id" => $_SESSION["id"],
                         "accion" => "creada",
                         "estado_anterior" => null,
@@ -80,6 +93,8 @@ class ControladorSolicitudesStock {
                         "comentario" => "Solicitud creada desde sucursal: " . $sucursalLocal["nombre"],
                         "ip_usuario" => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
                     );
+                    
+                    ModeloSolicitudesStock::mdlRegistrarLog($datosLog);
                     
                     echo '<script>
                         swal({
@@ -130,7 +145,7 @@ class ControladorSolicitudesStock {
     }
 
     /*=============================================
-    MOSTRAR SOLICITUDES
+    MOSTRAR SOLICITUDES - DESDE BASE CENTRAL
     =============================================*/
     static public function ctrMostrarSolicitudes($item, $valor) {
         
@@ -141,7 +156,7 @@ class ControladorSolicitudesStock {
     }
 
     /*=============================================
-    MOSTRAR SOLICITUDES COMPLETAS CON INFORMACIÓN DE USUARIOS
+    MOSTRAR SOLICITUDES COMPLETAS - DESDE BASE CENTRAL
     =============================================*/
     static public function ctrMostrarSolicitudesCompletas() {
         
@@ -173,7 +188,22 @@ class ControladorSolicitudesStock {
             }
             
             $tabla = "solicitudes_stock";
+            
+            // ✅ OBTENER USUARIO DE BASE LOCAL (NO CENTRAL)
             $usuario = ControladorUsuarios::ctrMostrarUsuarios("id", $_SESSION["id"]);
+            
+            if(!$usuario) {
+                echo '<script>
+                    swal({
+                        type: "error",
+                        title: "Error",
+                        text: "No se pudo obtener información del usuario",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                </script>';
+                return;
+            }
             
             $datos = array(
                 "id" => $_POST["idSolicitudAprobar"],
@@ -249,7 +279,22 @@ class ControladorSolicitudesStock {
             }
             
             $tabla = "solicitudes_stock";
+            
+            // ✅ OBTENER USUARIO DE BASE LOCAL (NO CENTRAL)
             $usuario = ControladorUsuarios::ctrMostrarUsuarios("id", $_SESSION["id"]);
+            
+            if(!$usuario) {
+                echo '<script>
+                    swal({
+                        type: "error",
+                        title: "Error",
+                        text: "No se pudo obtener información del usuario",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                </script>';
+                return;
+            }
             
             $datos = array(
                 "id" => $_POST["idSolicitudCancelar"],
@@ -373,7 +418,7 @@ class ControladorSolicitudesStock {
     }
 
     /*=============================================
-    BUSCAR VENTAS PARA REMISIÓN
+    BUSCAR VENTAS PARA REMISIÓN - BASE LOCAL
     =============================================*/
     static public function ctrBuscarVentasRemision($busqueda) {
         
@@ -382,7 +427,7 @@ class ControladorSolicitudesStock {
     }
 
     /*=============================================
-    OBTENER PRODUCTOS DE UNA VENTA
+    OBTENER PRODUCTOS DE UNA VENTA - BASE LOCAL
     =============================================*/
     static public function ctrObtenerProductosVenta($codigoVenta) {
         
@@ -391,7 +436,7 @@ class ControladorSolicitudesStock {
     }
 
     /*=============================================
-    CONTAR SOLICITUDES PENDIENTES PARA NOTIFICACIONES
+    CONTAR SOLICITUDES PENDIENTES PARA NOTIFICACIONES - BASE CENTRAL
     =============================================*/
     static public function ctrContarSolicitudesPendientes() {
         
@@ -402,7 +447,7 @@ class ControladorSolicitudesStock {
     }
 
     /*=============================================
-    OBTENER SOLICITUDES PENDIENTES PARA NOTIFICACIONES
+    OBTENER SOLICITUDES PENDIENTES PARA NOTIFICACIONES - BASE CENTRAL
     =============================================*/
     static public function ctrObtenerSolicitudesPendientes($limite = 5) {
         
@@ -413,16 +458,14 @@ class ControladorSolicitudesStock {
     }
 
     /*=============================================
-    MARCAR SOLICITUDES COMO VISTAS
+    MARCAR SOLICITUDES COMO VISTAS - BASE CENTRAL
     =============================================*/
     static public function ctrMarcarSolicitudesComoVistas($ids) {
         
         $tabla = "solicitudes_stock";
-        $campo = "visto_por_" . strtolower($_SESSION["perfil"]);
+        $campo = "visto_por_transportador";
         
-        if($_SESSION["perfil"] == "Transportador") {
-            $campo = "visto_por_transportador";
-        } elseif($_SESSION["perfil"] == "Administrador") {
+        if($_SESSION["perfil"] == "Administrador") {
             $campo = "visto_por_administrador";
         }
         
@@ -432,7 +475,7 @@ class ControladorSolicitudesStock {
     }
 
     /*=============================================
-    OBTENER ESTADÍSTICAS
+    OBTENER ESTADÍSTICAS - BASE CENTRAL
     =============================================*/
     static public function ctrObtenerEstadisticas() {
         
