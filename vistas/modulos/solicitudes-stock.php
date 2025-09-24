@@ -84,7 +84,7 @@
   </section>
 </div>
 
-<!-- ✅ MODAL VER DETALLES DE SOLICITUD - VERSIÓN AVANZADA -->
+<!-- ✅ MODAL VER DETALLES DE SOLICITUD - CON ORDEN DE TABS CAMBIADO -->
 <div class="modal fade" id="modalVerSolicitud" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
@@ -103,16 +103,16 @@
       <!-- BODY -->
       <div class="modal-body" style="padding: 0;">
         
-        <!-- TABS DE NAVEGACIÓN -->
+        <!-- ✅ TABS DE NAVEGACIÓN - ORDEN CAMBIADO: PRODUCTOS PRIMERO -->
         <ul class="nav nav-tabs" role="tablist" style="margin: 0; background: #f4f4f4;">
-          <li role="presentation">
-            <a href="#tabInformacion" role="tab" data-toggle="tab">
-              <i class="fa fa-info-circle"></i> Información General
-            </a>
-          </li>
           <li role="presentation" class="active">
             <a href="#tabProductos" role="tab" data-toggle="tab">
               <i class="fa fa-list"></i> Productos Solicitados
+            </a>
+          </li>
+          <li role="presentation">
+            <a href="#tabInformacion" role="tab" data-toggle="tab">
+              <i class="fa fa-info-circle"></i> Información General
             </a>
           </li>
           <li role="presentation">
@@ -122,11 +122,40 @@
           </li>
         </ul>
 
-        <!-- CONTENIDO DE LOS TABS -->
+        <!-- ✅ CONTENIDO DE LOS TABS - ORDEN CAMBIADO -->
         <div class="tab-content" style="padding: 20px;">
           
-          <!-- TAB 1: INFORMACIÓN GENERAL -->
-          <div role="tabpanel" class="tab-pane fade in active" id="tabInformacion">
+          <!-- ✅ TAB 1: PRODUCTOS SOLICITADOS - AHORA ES EL PRIMERO Y ACTIVO -->
+          <div role="tabpanel" class="tab-pane fade in active" id="tabProductos">
+            
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped" id="tablaProductosSolicitados">
+                <thead class="bg-primary">
+                  <tr>
+                    <th width="80px">#</th>
+                    <th width="120px">Código</th>
+                    <th>Descripción del Producto</th>
+                    <th width="100px" class="text-center">Cantidad</th>
+                    <th>Observaciones</th>
+                  </tr>
+                </thead>
+                <tbody id="productosModalBody">
+                  <!-- Productos se cargan dinámicamente -->
+                </tbody>
+                <tfoot>
+                  <tr class="bg-light">
+                    <td colspan="3"><strong>TOTAL:</strong></td>
+                    <td class="text-center"><strong id="totalCantidadProductos">0</strong></td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+          </div>
+
+          <!-- ✅ TAB 2: INFORMACIÓN GENERAL - AHORA ES EL SEGUNDO -->
+          <div role="tabpanel" class="tab-pane fade" id="tabInformacion">
             
             <div class="row">
               
@@ -246,36 +275,7 @@
 
           </div>
 
-          <!-- TAB 2: PRODUCTOS SOLICITADOS -->
-          <div role="tabpanel" class="tab-pane fade" id="tabProductos">
-            
-            <div class="table-responsive">
-              <table class="table table-bordered table-striped" id="tablaProductosSolicitados">
-                <thead class="bg-primary">
-                  <tr>
-                    <th width="80px">#</th>
-                    <th width="120px">Código</th>
-                    <th>Descripción del Producto</th>
-                    <th width="100px" class="text-center">Cantidad</th>
-                    <th>Observaciones</th>
-                  </tr>
-                </thead>
-                <tbody id="productosModalBody">
-                  <!-- Productos se cargan dinámicamente -->
-                </tbody>
-                <tfoot>
-                  <tr class="bg-light">
-                    <td colspan="3"><strong>TOTAL:</strong></td>
-                    <td class="text-center"><strong id="totalCantidadProductos">0</strong></td>
-                    <td></td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-
-          </div>
-
-          <!-- TAB 3: HISTORIAL -->
+          <!-- ✅ TAB 3: HISTORIAL - AHORA ES EL TERCERO -->
           <div role="tabpanel" class="tab-pane fade" id="tabHistorial">
             
             <div class="timeline">
