@@ -176,6 +176,12 @@
 	border-radius: 50%;
 }
 
+#contadorSolicitudes {
+  background-color: #f39c12 !important;
+  font-weight: 700 !important;
+  font-size: 12px;
+}
+
 .notifications-menu .dropdown-menu {
 	width: 320px !important;
 	max-width: 320px !important;
