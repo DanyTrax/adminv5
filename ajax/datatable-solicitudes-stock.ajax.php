@@ -4,130 +4,129 @@ session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-require_once "../api-transferencias/conexion-central.php";
-require_once "../modelos/solicitudes-stock.modelo.php";
+// INCLUIR AMBAS CONEXIONES
+require_once "../modelos/conexion.php";           // ✅ Base LOCAL
+require_once "../api-transferencias/conexion-central.php"; // ✅ Base CENTRAL
 
-class TablaSolicitudesStock {
-
-    public function mostrarTablaSolicitudesStock(){
-        
-        try {
-            // ✅ OBTENER SOLICITUDES DIRECTAMENTE DEL MODELO (NO DEL CONTROLADOR)
-            $solicitudes = ModeloSolicitudesStock::mdlMostrarSolicitudesCompletas("solicitudes_stock");
-            
-            if(count($solicitudes) == 0){
-                echo '{"data": []}';
-                return;
-            }
-
-            $datosJson = '{"data": [';
-
-            for($i = 0; $i < count($solicitudes); $i++){
-                
-                // Estados con colores
-                $estadoColor = '';
-                $estadoTexto = '';
-                
-                switch($solicitudes[$i]["estado"]) {
-                    case 'pendiente':
-                        $estadoColor = 'label-warning';
-                        $estadoTexto = 'Pendiente';
-                        break;
-                    case 'aprobado':
-                        $estadoColor = 'label-success';
-                        $estadoTexto = 'Aprobado';
-                        break;
-                    case 'cancelado':
-                        $estadoColor = 'label-danger';
-                        $estadoTexto = 'Cancelado';
-                        break;
-                }
-                
-                $estado = "<span class='label ".$estadoColor."'>".$estadoTexto."</span>";
-
-                // Tipo de solicitud
-                $tipoIcono = $solicitudes[$i]["tipo_solicitud"] == 'stock' ? 'fa-cubes' : 'fa-file-text-o';
-                $tipoTexto = $solicitudes[$i]["tipo_solicitud"] == 'stock' ? 'Stock' : 'Remisión';
-                $tipo = "<i class='fa ".$tipoIcono."'></i> ".$tipoTexto;
-
-                // Información de productos
-                $totalProductos = $solicitudes[$i]["total_productos"];
-                $totalCantidad = $solicitudes[$i]["total_cantidad"];
-                $productos = "<span class='badge bg-blue'>".$totalProductos." prod.</span><br>".
-                            "<small class='text-muted'>".$totalCantidad." unidades</small>";
-
-                // Fechas
-                $fechaSolicitud = date('d/m/Y H:i', strtotime($solicitudes[$i]["fecha_solicitud"]));
-                
-                $aprobadoPor = 'N/A';
-                if($solicitudes[$i]["nombre_usuario_aprobacion"]) {
-                    $aprobadoPor = $solicitudes[$i]["nombre_usuario_aprobacion"];
-                }
-
-                // Botones de acciones
-                $acciones = "<div class='btn-group'>";
-
-                // Botón VER
-                $acciones .= "<button class='btn btn-info btn-xs btnVerSolicitud' ".
-                            "idSolicitud='".$solicitudes[$i]["id"]."' ".
-                            "title='Ver detalles'>".
-                            "<i class='fa fa-eye'></i>".
-                            "</button>";
-
-                // Botones según perfil
-                if(($_SESSION["perfil"] == "Transportador" || $_SESSION["perfil"] == "Administrador") && 
-                   $solicitudes[$i]["estado"] == "pendiente") {
-                    
-                    $acciones .= "<button class='btn btn-success btn-xs btnAprobarSolicitud' ".
-                                "idSolicitud='".$solicitudes[$i]["id"]."' ".
-                                "title='Aprobar'>".
-                                "<i class='fa fa-check'></i>".
-                                "</button>";
-                    
-                    $acciones .= "<button class='btn btn-warning btn-xs btnCancelarSolicitud' ".
-                                "idSolicitud='".$solicitudes[$i]["id"]."' ".
-                                "title='Cancelar'>".
-                                "<i class='fa fa-times'></i>".
-                                "</button>";
-                }
-
-                if($_SESSION["perfil"] == "Administrador") {
-                    $acciones .= "<button class='btn btn-danger btn-xs btnEliminarSolicitud' ".
-                                "idSolicitud='".$solicitudes[$i]["id"]."' ".
-                                "title='Eliminar'>".
-                                "<i class='fa fa-trash'></i>".
-                                "</button>";
-                }
-
-                $acciones .= "</div>";
-
-                $datosJson .='[
-                    "'.($i+1).'",
-                    "'.addslashes($solicitudes[$i]["numero_solicitud"]).'",
-                    "'.addslashes($solicitudes[$i]["nombre_sucursal_solicitante"]).'",
-                    "'.addslashes($solicitudes[$i]["nombre_usuario_solicitante"]).'",
-                    "'.$tipo.'",
-                    "'.$productos.'",
-                    "'.$estado.'",
-                    "'.$fechaSolicitud.'",
-                    "'.addslashes($aprobadoPor).'",
-                    "'.$acciones.'"
-                ],';
-            }
-
-            $datosJson = substr($datosJson, 0, -1);
-            $datosJson .= '] }';
-            
-            echo $datosJson;
-            
-        } catch (Exception $e) {
-            echo json_encode([
-                "error" => "Error en DataTable: " . $e->getMessage()
-            ]);
-        }
+try {
+    // TEST 1: Verificar conexión LOCAL (usuarios)
+    $conexionLocal = Conexion::conectar();
+    if (!$conexionLocal) {
+        echo json_encode(["error" => "No hay conexión LOCAL"]);
+        exit;
     }
-}
 
-// ✅ NO VERIFICAR USUARIOS - EJECUTAR DIRECTAMENTE
-$activarSolicitudesStock = new TablaSolicitudesStock();
-$activarSolicitudesStock->mostrarTablaSolicitudesStock();
+    // TEST 2: Verificar conexión CENTRAL (solicitudes)
+    $conexionCentral = ConexionCentral::conectar();
+    if (!$conexionCentral) {
+        echo json_encode(["error" => "No hay conexión CENTRAL"]);
+        exit;
+    }
+
+    // TEST 3: Verificar tabla usuarios en base LOCAL
+    $stmt = $conexionLocal->prepare("SHOW TABLES LIKE 'usuarios'");
+    $stmt->execute();
+    $tabla_usuarios = $stmt->fetch();
+    
+    if (!$tabla_usuarios) {
+        echo json_encode(["error" => "Tabla usuarios no existe en base LOCAL"]);
+        exit;
+    }
+
+    // TEST 4: Verificar tabla solicitudes en base CENTRAL
+    $stmt = $conexionCentral->prepare("SHOW TABLES LIKE 'solicitudes_stock'");
+    $stmt->execute();
+    $tabla_solicitudes = $stmt->fetch();
+    
+    if (!$tabla_solicitudes) {
+        echo json_encode(["error" => "Tabla solicitudes_stock no existe en base CENTRAL"]);
+        exit;
+    }
+
+    // TEST 5: Verificar usuario actual en base LOCAL
+    $stmt = $conexionLocal->prepare("SELECT id, nombre, perfil FROM usuarios WHERE id = :id");
+    $stmt->bindParam(":id", $_SESSION["id"], PDO::PARAM_INT);
+    $stmt->execute();
+    $usuario_actual = $stmt->fetch();
+    
+    if (!$usuario_actual) {
+        echo json_encode(["error" => "Usuario actual no encontrado en base LOCAL"]);
+        exit;
+    }
+
+    // TEST 6: Contar solicitudes en base CENTRAL
+    $stmt = $conexionCentral->prepare("SELECT COUNT(*) as total FROM solicitudes_stock");
+    $stmt->execute();
+    $resultado = $stmt->fetch();
+    $total_solicitudes = $resultado['total'];
+
+    // TEST 7: Si hay solicitudes, obtenerlas de base CENTRAL
+    if($total_solicitudes > 0) {
+        $stmt = $conexionCentral->prepare("SELECT * FROM solicitudes_stock ORDER BY fecha_solicitud DESC");
+        $stmt->execute();
+        $solicitudes = $stmt->fetchAll();
+        
+        // Crear JSON para DataTable usando datos de AMBAS bases
+        $data = [];
+        foreach($solicitudes as $solicitud) {
+            
+            // Datos de SOLICITUD (base central)
+            $estado = $solicitud["estado"];
+            $estadoClass = $estado == 'pendiente' ? 'label-warning' : ($estado == 'aprobado' ? 'label-success' : 'label-danger');
+            $estadoHtml = "<span class='label {$estadoClass}'>".ucfirst($estado)."</span>";
+            
+            // Botones según perfil del USUARIO (base local)
+            $acciones = "<button class='btn btn-info btn-xs' title='Ver'><i class='fa fa-eye'></i></button>";
+            
+            if($usuario_actual["perfil"] == "Transportador" || $usuario_actual["perfil"] == "Administrador") {
+                if($estado == "pendiente") {
+                    $acciones .= " <button class='btn btn-success btn-xs' title='Aprobar'><i class='fa fa-check'></i></button>";
+                    $acciones .= " <button class='btn btn-warning btn-xs' title='Cancelar'><i class='fa fa-times'></i></button>";
+                }
+            }
+            
+            if($usuario_actual["perfil"] == "Administrador") {
+                $acciones .= " <button class='btn btn-danger btn-xs' title='Eliminar'><i class='fa fa-trash'></i></button>";
+            }
+            
+            $data[] = [
+                $solicitud["id"],
+                $solicitud["numero_solicitud"],
+                $solicitud["nombre_sucursal_solicitante"],
+                $solicitud["nombre_usuario_solicitante"], // Ya guardado en base central
+                $solicitud["tipo_solicitud"],
+                $solicitud["total_productos"] . " productos",
+                $estadoHtml,
+                date('d/m/Y H:i', strtotime($solicitud["fecha_solicitud"])),
+                $solicitud["nombre_usuario_aprobacion"] ?: "N/A",
+                $acciones
+            ];
+        }
+        
+        echo json_encode([
+            "data" => $data,
+            "debug_info" => [
+                "usuario_local" => $usuario_actual["nombre"] . " (" . $usuario_actual["perfil"] . ")",
+                "solicitudes_central" => $total_solicitudes,
+                "conexiones" => "LOCAL ✓ CENTRAL ✓"
+            ]
+        ]);
+        
+    } else {
+        // No hay solicitudes, mostrar tabla vacía con info de debug
+        echo json_encode([
+            "data" => [],
+            "debug_info" => [
+                "mensaje" => "No hay solicitudes registradas",
+                "usuario_local" => $usuario_actual["nombre"] . " (" . $usuario_actual["perfil"] . ")",
+                "conexiones" => "LOCAL ✓ CENTRAL ✓"
+            ]
+        ]);
+    }
+
+} catch (Exception $e) {
+    echo json_encode([
+        "error" => "Error en test dual: " . $e->getMessage(),
+        "trace" => $e->getTraceAsString()
+    ]);
+}
