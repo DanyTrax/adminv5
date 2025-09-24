@@ -12,7 +12,7 @@ class TablaSolicitudesStock {
     public function mostrarTablaSolicitudesStock(){
         
         try {
-            // Obtener solicitudes directamente del modelo SIN usar controlador
+            // ✅ OBTENER SOLICITUDES DIRECTAMENTE DEL MODELO (NO DEL CONTROLADOR)
             $solicitudes = ModeloSolicitudesStock::mdlMostrarSolicitudesCompletas("solicitudes_stock");
             
             if(count($solicitudes) == 0){
@@ -103,14 +103,14 @@ class TablaSolicitudesStock {
 
                 $datosJson .='[
                     "'.($i+1).'",
-                    "'.$solicitudes[$i]["numero_solicitud"].'",
-                    "'.$solicitudes[$i]["nombre_sucursal_solicitante"].'",
-                    "'.$solicitudes[$i]["nombre_usuario_solicitante"].'",
+                    "'.addslashes($solicitudes[$i]["numero_solicitud"]).'",
+                    "'.addslashes($solicitudes[$i]["nombre_sucursal_solicitante"]).'",
+                    "'.addslashes($solicitudes[$i]["nombre_usuario_solicitante"]).'",
                     "'.$tipo.'",
                     "'.$productos.'",
                     "'.$estado.'",
                     "'.$fechaSolicitud.'",
-                    "'.$aprobadoPor.'",
+                    "'.addslashes($aprobadoPor).'",
                     "'.$acciones.'"
                 ],';
             }
@@ -128,5 +128,6 @@ class TablaSolicitudesStock {
     }
 }
 
+// ✅ NO VERIFICAR USUARIOS - EJECUTAR DIRECTAMENTE
 $activarSolicitudesStock = new TablaSolicitudesStock();
 $activarSolicitudesStock->mostrarTablaSolicitudesStock();
