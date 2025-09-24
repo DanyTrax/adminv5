@@ -108,19 +108,78 @@
                 echo '    </a>
                       </li>';
                 
-            // Opción "Nueva Solicitud" - Solo para NO transportadores
-            if ($_SESSION["perfil"] != "Transportador") {
-                echo '<li>
-                        <a href="crear-solicitud-stock">
-                        <i class="fa fa-plus"></i>
-                        <span>Nueva Solicitud</span>
-                        </a>
-                    </li>';
-            }
+        // Opción "Nueva Solicitud" - Solo para NO transportadores
+        if ($_SESSION["perfil"] != "Transportador") {
+            echo '<li>
+                    <a href="crear-solicitud-stock">
+                    <i class="fa fa-plus"></i>
+                    <span>Nueva Solicitud</span>
+                    </a>
+                </li>';
+        }
                 
                 echo '</ul>
                 </li>';
-            }            
+            }
+            // ✅ NUEVO MENÚ DE STOCK EN TRÁNSITO Y DESPACHOS
+if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor" || $_SESSION["perfil"] == "Contador" || $_SESSION["perfil"] == "Transportador") {
+    
+    echo '<li class="treeview">
+          <a href="#">
+            <i class="fa fa-truck"></i>
+            <span>Stock en Tránsito</span>';
+    
+    // Mostrar contador de productos en tránsito para todos los perfiles
+    echo '<small class="label pull-right bg-blue" id="contadorStockTransito" style="display: none;">0</small>';
+    
+    echo '<span class="pull-right-container">
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+          </a>
+          <ul class="treeview-menu">';
+    
+    // OPCIÓN "DESPACHOS" - Para todos menos Transportador
+    if ($_SESSION["perfil"] != "Transportador") {
+        echo '<li>
+                <a href="despachos">
+                  <i class="fa fa-list-alt"></i>
+                  <span>Gestión de Despachos</span>
+                </a>
+              </li>';
+        
+        echo '<li>
+                <a href="crear-despacho">
+                  <i class="fa fa-plus-circle"></i>
+                  <span>Crear Despacho</span>
+                </a>
+              </li>';
+    }
+    
+    // OPCIÓN "STOCK EN TRÁNSITO" - Para todos los perfiles
+    echo '<li>
+            <a href="stock-transito">
+              <i class="fa fa-cubes"></i>
+              <span>Stock en Tránsito</span>';
+    
+    // Badge específico para transportadores (sus productos)
+    if ($_SESSION["perfil"] == "Transportador") {
+        echo '<small class="label pull-right bg-green" id="badgeStockPropio" style="display: none;">0</small>';
+    }
+    
+    echo '    </a>
+          </li>';
+    
+    // OPCIÓN "HISTÓRICO DE MOVIMIENTOS" - Para todos los perfiles
+    echo '<li>
+            <a href="historico-transito">
+              <i class="fa fa-history"></i>
+              <span>Histórico de Movimientos</span>
+            </a>
+          </li>';
+    
+    echo '</ul>
+        </li>';
+}            
 
             if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor" || $_SESSION["perfil"] == "Contador") {
 
@@ -341,7 +400,7 @@ $(document).ready(function() {
     // Solo para transportadores y administradores
     <?php if($_SESSION["perfil"] == "Transportador" || $_SESSION["perfil"] == "Administrador"): ?>
     
-    // Función para actualizar contadores del menú
+    // Función para actualizar contadores del menú (EXISTENTE - ya está)
     function actualizarContadoresMenu() {
         $.ajax({
             url: 'ajax/notificaciones-solicitudes.ajax.php',
@@ -366,13 +425,75 @@ $(document).ready(function() {
         });
     }
     
+    // ✅ NUEVA FUNCIÓN PARA STOCK EN TRÁNSITO
+    function actualizarContadoresStockTransito() {
+        $.ajax({
+            url: 'ajax/datatable-stock-transito.ajax.php',
+            method: 'POST',
+            data: { resumen: 'dashboard' },
+            dataType: 'json',
+            success: function(response) {
+                if(response.total_productos > 0) {
+                    $('#contadorStockTransito').text(response.total_productos).show();
+                } else {
+                    $('#contadorStockTransito').hide();
+                }
+                
+                // Para transportadores, mostrar su stock específico
+                <?php if($_SESSION["perfil"] == "Transportador"): ?>
+                if(response.total_unidades > 0) {
+                    $('#badgeStockPropio').text(response.total_unidades).show();
+                } else {
+                    $('#badgeStockPropio').hide();
+                }
+                <?php endif; ?>
+            },
+            error: function() {
+                console.log('Error al actualizar contadores de stock en tránsito');
+            }
+        });
+    }
+    
     // Actualizar al cargar
     actualizarContadoresMenu();
+    actualizarContadoresStockTransito();
     
     // Actualizar cada 30 segundos
-    setInterval(actualizarContadoresMenu, 30000);
+    setInterval(function() {
+        actualizarContadoresMenu();
+        actualizarContadoresStockTransito();
+    }, 30000);
     
     <?php endif; ?>
     
+    // ✅ PARA TODOS LOS DEMÁS PERFILES - SOLO STOCK EN TRÁNSITO
+    <?php if($_SESSION["perfil"] == "Vendedor" || $_SESSION["perfil"] == "Contador" || $_SESSION["perfil"] == "Especial"): ?>
+    
+    function actualizarContadoresStockTransito() {
+        $.ajax({
+            url: 'ajax/datatable-stock-transito.ajax.php',
+            method: 'POST',
+            data: { resumen: 'dashboard' },
+            dataType: 'json',
+            success: function(response) {
+                if(response.total_productos > 0) {
+                    $('#contadorStockTransito').text(response.total_productos).show();
+                } else {
+                    $('#contadorStockTransito').hide();
+                }
+            },
+            error: function() {
+                console.log('Error al actualizar contadores de stock en tránsito');
+            }
+        });
+    }
+    
+    // Actualizar al cargar
+    actualizarContadoresStockTransito();
+    
+    // Actualizar cada 60 segundos (menos frecuente para usuarios normales)
+    setInterval(actualizarContadoresStockTransito, 60000);
+    
+    <?php endif; ?>
 });
 </script>

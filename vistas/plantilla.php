@@ -155,6 +155,11 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "editar-cotizacion" => ["Administrador", "Vendedor", "Contador"],
         "medios-pago" => ["Administrador"],
         "sucursales" => ["Administrador"], 
+        "despachos" => ["Administrador", "Vendedor", "Contador", "Transportador"],
+        "crear-despacho" => ["Administrador", "Vendedor", "Contador"],
+        "editar-despacho" => ["Administrador", "Vendedor", "Contador"],
+        "stock-transito" => ["Administrador", "Vendedor", "Contador", "Transportador"],
+        "historico-transito" => ["Administrador", "Vendedor", "Contador", "Transportador"],
         "salir" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"]
       ];
 
@@ -197,6 +202,10 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
   <script src="<?php echo $url; ?>vistas/js/solicitudes-stock.js"></script>
   <script src="<?php echo $url; ?>vistas/js/crear-solicitud-stock.js"></script>  
   <script src="<?php echo $url; ?>vistas/js/catalogo-maestro.js"></script>
+  <script src="<?php echo $url; ?>vistas/js/despachos.js"></script>
+  <script src="<?php echo $url; ?>vistas/js/crear-despacho.js"></script>
+  <script src="<?php echo $url; ?>vistas/js/stock-transito.js"></script>
+  <script src="<?php echo $url; ?>vistas/js/historico-transito.js"></script>
 </html>
 </body>
 
