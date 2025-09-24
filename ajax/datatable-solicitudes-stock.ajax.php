@@ -69,31 +69,55 @@ try {
         // Crear JSON para DataTable usando datos de AMBAS bases
         $data = [];
         foreach($solicitudes as $solicitud) {
-            
+    
             // Datos de SOLICITUD (base central)
             $estado = $solicitud["estado"];
             $estadoClass = $estado == 'pendiente' ? 'label-warning' : ($estado == 'aprobado' ? 'label-success' : 'label-danger');
             $estadoHtml = "<span class='label {$estadoClass}'>".ucfirst($estado)."</span>";
             
-            // Botones según perfil del USUARIO (base local)
-            $acciones = "<button class='btn btn-info btn-xs' title='Ver'><i class='fa fa-eye'></i></button>";
+            // ✅ BOTONES CON CLASES Y ATRIBUTOS PARA JAVASCRIPT
+            $acciones = "<div class='btn-group'>";
             
+            // ✅ BOTÓN VER - Todos pueden ver
+            $acciones .= "<button class='btn btn-info btn-xs btnVerSolicitud' 
+                            idSolicitud='{$solicitud["id"]}' 
+                            title='Ver detalles'>
+                            <i class='fa fa-eye'></i>
+                        </button>";
+            
+            // ✅ BOTONES DE ACCIÓN - Solo Transportador/Administrador
             if($usuario_actual["perfil"] == "Transportador" || $usuario_actual["perfil"] == "Administrador") {
                 if($estado == "pendiente") {
-                    $acciones .= " <button class='btn btn-success btn-xs' title='Aprobar'><i class='fa fa-check'></i></button>";
-                    $acciones .= " <button class='btn btn-warning btn-xs' title='Cancelar'><i class='fa fa-times'></i></button>";
+                    $acciones .= " <button class='btn btn-success btn-xs btnAprobarSolicitud' 
+                                    idSolicitud='{$solicitud["id"]}' 
+                                    title='Aprobar solicitud'>
+                                    <i class='fa fa-check'></i>
+                                </button>";
+                                
+                    $acciones .= " <button class='btn btn-warning btn-xs btnCancelarSolicitud' 
+                                    idSolicitud='{$solicitud["id"]}' 
+                                    title='Cancelar solicitud'>
+                                    <i class='fa fa-times'></i>
+                                </button>";
                 }
             }
             
+            // ✅ BOTÓN ELIMINAR - Solo Administrador
             if($usuario_actual["perfil"] == "Administrador") {
-                $acciones .= " <button class='btn btn-danger btn-xs' title='Eliminar'><i class='fa fa-trash'></i></button>";
+                $acciones .= " <button class='btn btn-danger btn-xs btnEliminarSolicitud' 
+                                idSolicitud='{$solicitud["id"]}' 
+                                title='Eliminar solicitud'>
+                                <i class='fa fa-trash'></i>
+                            </button>";
             }
+            
+            $acciones .= "</div>";
             
             $data[] = [
                 $solicitud["id"],
                 $solicitud["numero_solicitud"],
                 $solicitud["nombre_sucursal_solicitante"],
-                $solicitud["nombre_usuario_solicitante"], // Ya guardado en base central
+                $solicitud["nombre_usuario_solicitante"],
                 $solicitud["tipo_solicitud"],
                 $solicitud["total_productos"] . " productos",
                 $estadoHtml,

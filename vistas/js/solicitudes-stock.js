@@ -482,16 +482,54 @@ $(document).on('keydown', '#cantidadProductoModal', function(e) {
         e.preventDefault();
     }
 });
+
 /*=============================================
 VER DETALLES DE SOLICITUD
 =============================================*/
 $(document).on('click', '.btnVerSolicitud', function() {
     
     var idSolicitud = $(this).attr('idSolicitud');
-    console.log("Ver solicitud ID:", idSolicitud);
+    console.log("✅ Ver solicitud ID:", idSolicitud);
     
-    // Aquí agregar lógica para mostrar modal con detalles
-    alert('Ver solicitud: ' + idSolicitud);
+    // ✅ MOSTRAR LOADING
+    $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+    
+    // ✅ OBTENER DETALLES VIA AJAX
+    $.ajax({
+        url: 'ajax/solicitudes-stock.ajax.php',
+        type: 'POST',
+        data: {
+            accion: 'ver_detalle',
+            id_solicitud: idSolicitud
+        },
+        dataType: 'json',
+        success: function(response) {
+            if(response.success) {
+                mostrarModalDetalleSolicitud(response.data);
+            } else {
+                swal({
+                    title: 'Error',
+                    text: response.message,
+                    type: 'error',
+                    confirmButtonText: 'Cerrar'
+                });
+            }
+        },
+        error: function() {
+            swal({
+                title: 'Error',
+                text: 'Error de conexión al obtener detalles',
+                type: 'error',
+                confirmButtonText: 'Cerrar'
+            });
+        },
+        complete: function() {
+            // ✅ RESTAURAR BOTÓN
+            $('.btnVerSolicitud[idSolicitud="' + idSolicitud + '"]')
+                .prop('disabled', false)
+                .html('<i class="fa fa-eye"></i>');
+        }
+    });
 });
 
 /*=============================================
@@ -500,11 +538,11 @@ APROBAR SOLICITUD
 $(document).on('click', '.btnAprobarSolicitud', function() {
     
     var idSolicitud = $(this).attr('idSolicitud');
-    console.log("Aprobar solicitud ID:", idSolicitud);
+    console.log("✅ Aprobar solicitud ID:", idSolicitud);
     
     swal({
         title: '¿Aprobar esta solicitud?',
-        text: "La solicitud será marcada como aprobada",
+        text: "La solicitud será marcada como aprobada y lista para procesar",
         type: 'question',
         showCancelButton: true,
         confirmButtonColor: '#28a745',
@@ -513,8 +551,7 @@ $(document).on('click', '.btnAprobarSolicitud', function() {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.value) {
-            // Aquí agregar lógica para aprobar
-            alert('Aprobando solicitud: ' + idSolicitud);
+            aprobarSolicitud(idSolicitud);
         }
     });
 });
@@ -525,21 +562,27 @@ CANCELAR SOLICITUD
 $(document).on('click', '.btnCancelarSolicitud', function() {
     
     var idSolicitud = $(this).attr('idSolicitud');
-    console.log("Cancelar solicitud ID:", idSolicitud);
+    console.log("✅ Cancelar solicitud ID:", idSolicitud);
     
     swal({
         title: '¿Cancelar esta solicitud?',
         text: "La solicitud será marcada como cancelada",
         type: 'warning',
+        input: 'textarea',
+        inputPlaceholder: 'Escriba el motivo de la cancelación...',
         showCancelButton: true,
-        confirmButtonColor: '#dc3545',
+        confirmButtonColor: '#ffc107',
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Sí, cancelar',
-        cancelButtonText: 'No cancelar'
+        cancelButtonText: 'No cancelar',
+        inputValidator: (value) => {
+            if (!value || value.trim().length < 5) {
+                return 'Debe escribir un motivo de al menos 5 caracteres';
+            }
+        }
     }).then((result) => {
         if (result.value) {
-            // Aquí agregar lógica para cancelar
-            alert('Cancelando solicitud: ' + idSolicitud);
+            cancelarSolicitud(idSolicitud, result.value);
         }
     });
 });
@@ -550,7 +593,7 @@ ELIMINAR SOLICITUD
 $(document).on('click', '.btnEliminarSolicitud', function() {
     
     var idSolicitud = $(this).attr('idSolicitud');
-    console.log("Eliminar solicitud ID:", idSolicitud);
+    console.log("✅ Eliminar solicitud ID:", idSolicitud);
     
     swal({
         title: '¿Eliminar esta solicitud?',
@@ -563,8 +606,174 @@ $(document).on('click', '.btnEliminarSolicitud', function() {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.value) {
-            // Aquí agregar lógica para eliminar
-            alert('Eliminando solicitud: ' + idSolicitud);
+            eliminarSolicitud(idSolicitud);
         }
     });
 });
+
+/*=============================================
+FUNCIÓN PARA APROBAR SOLICITUD
+=============================================*/
+function aprobarSolicitud(idSolicitud) {
+    
+    $.ajax({
+        url: 'ajax/solicitudes-stock.ajax.php',
+        type: 'POST',
+        data: {
+            accion: 'aprobar',
+            id_solicitud: idSolicitud
+        },
+        dataType: 'json',
+        success: function(response) {
+            if(response.success) {
+                swal({
+                    title: '¡Solicitud aprobada!',
+                    text: response.message,
+                    type: 'success',
+                    confirmButtonText: 'Cerrar'
+                }).then(() => {
+                    // Recargar tabla
+                    $('.tablaSolicitudesStock').DataTable().ajax.reload();
+                });
+            } else {
+                swal({
+                    title: 'Error',
+                    text: response.message,
+                    type: 'error',
+                    confirmButtonText: 'Cerrar'
+                });
+            }
+        },
+        error: function() {
+            swal({
+                title: 'Error',
+                text: 'Error de conexión al aprobar solicitud',
+                type: 'error',
+                confirmButtonText: 'Cerrar'
+            });
+        }
+    });
+}
+
+/*=============================================
+FUNCIÓN PARA CANCELAR SOLICITUD
+=============================================*/
+function cancelarSolicitud(idSolicitud, motivo) {
+    
+    $.ajax({
+        url: 'ajax/solicitudes-stock.ajax.php',
+        type: 'POST',
+        data: {
+            accion: 'cancelar',
+            id_solicitud: idSolicitud,
+            motivo: motivo
+        },
+        dataType: 'json',
+        success: function(response) {
+            if(response.success) {
+                swal({
+                    title: '¡Solicitud cancelada!',
+                    text: response.message,
+                    type: 'success',
+                    confirmButtonText: 'Cerrar'
+                }).then(() => {
+                    // Recargar tabla
+                    $('.tablaSolicitudesStock').DataTable().ajax.reload();
+                });
+            } else {
+                swal({
+                    title: 'Error',
+                    text: response.message,
+                    type: 'error',
+                    confirmButtonText: 'Cerrar'
+                });
+            }
+        },
+        error: function() {
+            swal({
+                title: 'Error',
+                text: 'Error de conexión al cancelar solicitud',
+                type: 'error',
+                confirmButtonText: 'Cerrar'
+            });
+        }
+    });
+}
+
+/*=============================================
+FUNCIÓN PARA ELIMINAR SOLICITUD
+=============================================*/
+function eliminarSolicitud(idSolicitud) {
+    
+    $.ajax({
+        url: 'ajax/solicitudes-stock.ajax.php',
+        type: 'POST',
+        data: {
+            accion: 'eliminar',
+            id_solicitud: idSolicitud
+        },
+        dataType: 'json',
+        success: function(response) {
+            if(response.success) {
+                swal({
+                    title: '¡Solicitud eliminada!',
+                    text: response.message,
+                    type: 'success',
+                    confirmButtonText: 'Cerrar'
+                }).then(() => {
+                    // Recargar tabla
+                    $('.tablaSolicitudesStock').DataTable().ajax.reload();
+                });
+            } else {
+                swal({
+                    title: 'Error',
+                    text: response.message,
+                    type: 'error',
+                    confirmButtonText: 'Cerrar'
+                });
+            }
+        },
+        error: function() {
+            swal({
+                title: 'Error',
+                text: 'Error de conexión al eliminar solicitud',
+                type: 'error',
+                confirmButtonText: 'Cerrar'
+            });
+        }
+    });
+}
+
+/*=============================================
+MOSTRAR MODAL CON DETALLES DE SOLICITUD
+=============================================*/
+function mostrarModalDetalleSolicitud(solicitud) {
+    
+    // ✅ POR AHORA MOSTRAR ALERTA CON INFORMACIÓN BÁSICA
+    // Después podemos crear un modal más elaborado
+    
+    var info = "📋 SOLICITUD: " + solicitud.numero_solicitud + "\n\n";
+    info += "🏢 SUCURSAL: " + solicitud.nombre_sucursal_solicitante + "\n";
+    info += "👤 SOLICITANTE: " + solicitud.nombre_usuario_solicitante + "\n";
+    info += "📅 FECHA: " + solicitud.fecha_solicitud + "\n";
+    info += "📦 TIPO: " + solicitud.tipo_solicitud.toUpperCase() + "\n";
+    info += "🔢 PRODUCTOS: " + solicitud.total_productos + " productos\n";
+    info += "📊 ESTADO: " + solicitud.estado.toUpperCase() + "\n\n";
+    
+    if(solicitud.detalle_adicional) {
+        info += "📝 DETALLE: " + solicitud.detalle_adicional + "\n\n";
+    }
+    
+    info += "🛍️ PRODUCTOS SOLICITADOS:\n";
+    var productos = JSON.parse(solicitud.productos_solicitados);
+    productos.forEach(function(producto, index) {
+        info += (index + 1) + ". " + producto.codigo + " - " + producto.descripcion + " (Cant: " + producto.cantidad + ")\n";
+    });
+    
+    swal({
+        title: '📋 Detalles de la Solicitud',
+        text: info,
+        type: 'info',
+        confirmButtonText: 'Cerrar'
+    });
+}
