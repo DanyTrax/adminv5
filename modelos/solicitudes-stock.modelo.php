@@ -15,12 +15,25 @@ if (file_exists("api-transferencias/conexion-central.php")) {
 
 class ModeloSolicitudesStock {
 
-    /*=============================================
-    CREAR SOLICITUD DE STOCK - EN BASE CENTRAL
-    =============================================*/
-    static public function mdlCrearSolicitud($tabla, $datos) {
+/*=============================================
+CREAR SOLICITUD DE STOCK - EN BASE CENTRAL
+=============================================*/
+static public function mdlCrearSolicitud($tabla, $datos) {
 
-        $stmt = ConexionCentral::conectar()->prepare("INSERT INTO $tabla(
+    try {
+        // ✅ DEBUG: Log antes del INSERT
+        error_log("=== DEBUG MODELO - CREAR SOLICITUD ===");
+        error_log("Tabla: " . $tabla);
+        error_log("Datos a insertar: " . json_encode($datos));
+        
+        // ✅ VERIFICAR CONEXIÓN CENTRAL
+        $conexion = ConexionCentral::conectar();
+        if(!$conexion) {
+            error_log("ERROR: No se pudo conectar a la base central");
+            return "error_conexion";
+        }
+        
+        $stmt = $conexion->prepare("INSERT INTO $tabla(
             numero_solicitud, 
             codigo_sucursal_solicitante, 
             nombre_sucursal_solicitante, 
@@ -48,6 +61,7 @@ class ModeloSolicitudesStock {
             :total_cantidad
         )");
 
+        // ✅ BIND PARAMETERS CON VERIFICACIÓN DE TIPOS
         $stmt->bindParam(":numero_solicitud", $datos["numero_solicitud"], PDO::PARAM_STR);
         $stmt->bindParam(":codigo_sucursal_solicitante", $datos["codigo_sucursal_solicitante"], PDO::PARAM_STR);
         $stmt->bindParam(":nombre_sucursal_solicitante", $datos["nombre_sucursal_solicitante"], PDO::PARAM_STR);
@@ -55,21 +69,36 @@ class ModeloSolicitudesStock {
         $stmt->bindParam(":nombre_usuario_solicitante", $datos["nombre_usuario_solicitante"], PDO::PARAM_STR);
         $stmt->bindParam(":productos_solicitados", $datos["productos_solicitados"], PDO::PARAM_STR);
         $stmt->bindParam(":tipo_solicitud", $datos["tipo_solicitud"], PDO::PARAM_STR);
-        $stmt->bindParam(":codigo_remision", $datos["codigo_remision"], PDO::PARAM_STR);
-        $stmt->bindParam(":nombre_cliente_remision", $datos["nombre_cliente_remision"], PDO::PARAM_STR);
-        $stmt->bindParam(":detalle_adicional", $datos["detalle_adicional"], PDO::PARAM_STR);
+        
+        // ✅ MANEJAR VALORES NULOS CORRECTAMENTE
+        $codigo_remision = $datos["codigo_remision"] ?: null;
+        $nombre_cliente_remision = $datos["nombre_cliente_remision"] ?: null;
+        $detalle_adicional = $datos["detalle_adicional"] ?: null;
+        
+        $stmt->bindParam(":codigo_remision", $codigo_remision, PDO::PARAM_STR);
+        $stmt->bindParam(":nombre_cliente_remision", $nombre_cliente_remision, PDO::PARAM_STR);
+        $stmt->bindParam(":detalle_adicional", $detalle_adicional, PDO::PARAM_STR);
         $stmt->bindParam(":total_productos", $datos["total_productos"], PDO::PARAM_INT);
         $stmt->bindParam(":total_cantidad", $datos["total_cantidad"], PDO::PARAM_INT);
 
+        // ✅ EJECUTAR Y VERIFICAR
         if($stmt->execute()){
+            $insertId = $conexion->lastInsertId();
+            error_log("SUCCESS: Solicitud creada con ID: " . $insertId);
             return "ok";
         } else {
-            return "error";
+            $errorInfo = $stmt->errorInfo();
+            error_log("ERROR SQL: " . json_encode($errorInfo));
+            return "error_sql: " . $errorInfo[2];
         }
 
-        $stmt->close();
-        $stmt = null;
+    } catch(Exception $e) {
+        error_log("EXCEPCIÓN en mdlCrearSolicitud: " . $e->getMessage());
+        return "error_excepcion: " . $e->getMessage();
     }
+
+    $stmt = null;
+}
 
     /*=============================================
     MOSTRAR SOLICITUDES - DESDE BASE CENTRAL

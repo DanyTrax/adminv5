@@ -13,8 +13,24 @@ class ControladorSolicitudesStock {
             error_log("=== DEBUG CREAR SOLICITUD ===");
             error_log("Productos recibidos: " . $_POST["productos_solicitados"]);
             error_log("Tipo solicitud: " . (isset($_POST["tipo_solicitud"]) ? $_POST["tipo_solicitud"] : 'NO_DEFINIDO'));
-            error_log("Usuario ID: " . $_SESSION["id"]);
-            error_log("Usuario nombre: " . $_SESSION["nombre"]);
+            
+            // ✅ OBTENER DATOS DE LA SUCURSAL DESDE BD LOCAL
+            $datosSucursal = self::obtenerDatosSucursalLocal();
+            
+            if(!$datosSucursal) {
+                echo '<script>
+                    swal({
+                        type: "error",
+                        title: "Error",
+                        text: "No se pudieron obtener los datos de la sucursal",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                </script>';
+                return;
+            }
+
+            error_log("Datos de sucursal obtenidos: " . json_encode($datosSucursal));
             
             // ✅ VALIDAR QUE HAYA PRODUCTOS
             $productos = json_decode($_POST["productos_solicitados"], true);
@@ -49,7 +65,6 @@ class ControladorSolicitudesStock {
             // ✅ GENERAR NÚMERO DE SOLICITUD
             $numeroSolicitud = ModeloSolicitudesStock::mdlGenerarNumeroSolicitud("solicitudes_stock");
             
-            // ✅ DEBUG: Verificar número generado
             error_log("Número de solicitud generado: " . $numeroSolicitud);
             
             if(empty($numeroSolicitud)) {
@@ -65,11 +80,11 @@ class ControladorSolicitudesStock {
                 return;
             }
 
-            // ✅ PREPARAR DATOS
+            // ✅ PREPARAR DATOS CON INFORMACIÓN DE SUCURSAL DESDE BD LOCAL
             $datos = array(
                 "numero_solicitud" => $numeroSolicitud,
-                "codigo_sucursal_solicitante" => CODIGO_SUCURSAL,
-                "nombre_sucursal_solicitante" => NOMBRE_SUCURSAL,
+                "codigo_sucursal_solicitante" => $datosSucursal["codigo_sucursal"],
+                "nombre_sucursal_solicitante" => $datosSucursal["nombre"],
                 "usuario_solicitante" => $_SESSION["id"],
                 "nombre_usuario_solicitante" => $_SESSION["nombre"],
                 "productos_solicitados" => $_POST["productos_solicitados"],
@@ -113,13 +128,41 @@ class ControladorSolicitudesStock {
                     swal({
                         type: "error",
                         title: "Error",
-                        text: "Error al crear la solicitud: ' . $respuesta . '",
+                        text: "Error al crear la solicitud. Revise los logs del servidor.",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
                     });
                 </script>';
 
             }
+        }
+    }
+
+    /*=============================================
+    OBTENER DATOS DE LA SUCURSAL DESDE BD LOCAL
+    =============================================*/
+    static public function obtenerDatosSucursalLocal() {
+        
+        try {
+            // ✅ USAR CONEXIÓN LOCAL PARA OBTENER DATOS DE SUCURSAL
+            $stmt = Conexion::conectar()->prepare("SELECT codigo_sucursal, nombre FROM sucursal_local LIMIT 1");
+            $stmt->execute();
+            
+            $sucursal = $stmt->fetch();
+            
+            if($sucursal) {
+                return array(
+                    "codigo_sucursal" => $sucursal["codigo_sucursal"],
+                    "nombre" => $sucursal["nombre"]
+                );
+            } else {
+                error_log("ERROR: No se encontraron datos en la tabla sucursal_local");
+                return false;
+            }
+            
+        } catch(Exception $e) {
+            error_log("ERROR obteniendo datos de sucursal: " . $e->getMessage());
+            return false;
         }
     }
 

@@ -2,26 +2,26 @@
 
 session_start();
 require_once "config.php";
-require_once "api-transferencias/conexion-central.php";
+require_once "modelos/conexion.php";
 
-echo "<h2>🔍 PRUEBA DE CONEXIÓN Y CREACIÓN DE SOLICITUD</h2>";
+echo "<h2>🔍 VERIFICAR TABLA SUCURSAL_LOCAL</h2>";
 
 try {
-    // ✅ PROBAR CONEXIÓN CENTRAL
-    $conexionCentral = ConexionCentral::conectar();
+    // ✅ VERIFICAR CONEXIÓN LOCAL
+    $conexionLocal = Conexion::conectar();
     
-    if($conexionCentral) {
-        echo "<p>✅ <strong>Conexión central exitosa</strong></p>";
+    if($conexionLocal) {
+        echo "<p>✅ <strong>Conexión local exitosa</strong></p>";
         
-        // ✅ VERIFICAR TABLA
-        $stmt = $conexionCentral->prepare("SHOW TABLES LIKE 'solicitudes_stock'");
+        // ✅ VERIFICAR SI TABLA EXISTE
+        $stmt = $conexionLocal->prepare("SHOW TABLES LIKE 'sucursal_local'");
         $stmt->execute();
         
         if($stmt->fetch()) {
-            echo "<p>✅ <strong>Tabla solicitudes_stock existe</strong></p>";
+            echo "<p>✅ <strong>Tabla sucursal_local existe</strong></p>";
             
             // ✅ VERIFICAR ESTRUCTURA
-            $stmt = $conexionCentral->prepare("DESCRIBE solicitudes_stock");
+            $stmt = $conexionLocal->prepare("DESCRIBE sucursal_local");
             $stmt->execute();
             $columnas = $stmt->fetchAll();
             
@@ -32,98 +32,80 @@ try {
             }
             echo "</ul>";
             
-            // ✅ CONTAR REGISTROS ACTUALES
-            $stmt = $conexionCentral->prepare("SELECT COUNT(*) as total FROM solicitudes_stock");
+            // ✅ VERIFICAR DATOS
+            $stmt = $conexionLocal->prepare("SELECT * FROM sucursal_local");
             $stmt->execute();
-            $total = $stmt->fetch();
-            echo "<p>✅ <strong>Total de solicitudes actuales:</strong> {$total['total']}</p>";
+            $sucursales = $stmt->fetchAll();
             
-            // ✅ PROBAR INSERT DE PRUEBA
-            $numeroTest = "TEST" . date('YmdHis');
-            
-            $stmt = $conexionCentral->prepare("INSERT INTO solicitudes_stock (
-                numero_solicitud,
-                codigo_sucursal_solicitante,
-                nombre_sucursal_solicitante,
-                usuario_solicitante,
-                nombre_usuario_solicitante,
-                productos_solicitados,
-                tipo_solicitud,
-                detalle_adicional,
-                total_productos,
-                total_cantidad
-            ) VALUES (
-                :numero_solicitud,
-                :codigo_sucursal,
-                :nombre_sucursal,
-                1,
-                'Usuario Test',
-                '[{\"codigo\":\"TEST001\",\"descripcion\":\"Producto Test\",\"cantidad\":1}]',
-                'stock',
-                'Solicitud de prueba',
-                1,
-                1
-            )");
-            
-            $stmt->bindParam(":numero_solicitud", $numeroTest);
-            $stmt->bindParam(":codigo_sucursal", CODIGO_SUCURSAL);
-            $stmt->bindParam(":nombre_sucursal", NOMBRE_SUCURSAL);
-            
-            if($stmt->execute()) {
-                echo "<p>✅ <strong>INSERT de prueba exitoso:</strong> {$numeroTest}</p>";
-                
-                // Eliminar registro de prueba
-                $stmtDelete = $conexionCentral->prepare("DELETE FROM solicitudes_stock WHERE numero_solicitud = :numero");
-                $stmtDelete->bindParam(":numero", $numeroTest);
-                $stmtDelete->execute();
-                echo "<p>✅ <strong>Registro de prueba eliminado</strong></p>";
-                
+            echo "<p>✅ <strong>Datos en la tabla:</strong></p>";
+            if(count($sucursales) > 0) {
+                echo "<table border='1' style='border-collapse: collapse;'>";
+                echo "<tr><th>ID</th><th>Código Sucursal</th><th>Nombre</th><th>Otros campos...</th></tr>";
+                foreach($sucursales as $sucursal) {
+                    echo "<tr>";
+                    foreach($sucursal as $campo => $valor) {
+                        if(!is_numeric($campo)) { // Solo mostrar campos con nombre
+                            echo "<td>{$valor}</td>";
+                        }
+                    }
+                    echo "</tr>";
+                }
+                echo "</table>";
             } else {
-                echo "<p>❌ <strong>Error en INSERT de prueba</strong></p>";
-                print_r($stmt->errorInfo());
+                echo "<p>❌ <strong>No hay datos en la tabla sucursal_local</strong></p>";
+                
+                // ✅ INSERTAR DATOS DE EJEMPLO
+                echo "<p>🔧 <strong>Insertando datos de ejemplo...</strong></p>";
+                
+                $stmt = $conexionLocal->prepare("INSERT INTO sucursal_local (codigo_sucursal, nombre) VALUES ('SUC001', 'Sucursal Principal')");
+                
+                if($stmt->execute()) {
+                    echo "<p>✅ <strong>Datos de ejemplo insertados</strong></p>";
+                } else {
+                    echo "<p>❌ <strong>Error insertando datos de ejemplo:</strong></p>";
+                    print_r($stmt->errorInfo());
+                }
             }
             
         } else {
-            echo "<p>❌ <strong>Tabla solicitudes_stock NO existe</strong></p>";
+            echo "<p>❌ <strong>Tabla sucursal_local NO existe</strong></p>";
             
             // ✅ CREAR TABLA SI NO EXISTE
-            $sqlCrear = "
-            CREATE TABLE solicitudes_stock (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                numero_solicitud VARCHAR(50) NOT NULL UNIQUE,
-                codigo_sucursal_solicitante VARCHAR(20) NOT NULL,
-                nombre_sucursal_solicitante VARCHAR(100) NOT NULL,
-                usuario_solicitante INT NOT NULL,
-                nombre_usuario_solicitante VARCHAR(100) NOT NULL,
-                productos_solicitados JSON NOT NULL,
-                tipo_solicitud ENUM('stock', 'remision') NOT NULL DEFAULT 'stock',
-                codigo_remision VARCHAR(50) NULL,
-                nombre_cliente_remision VARCHAR(200) NULL,
-                detalle_adicional TEXT NULL,
-                estado ENUM('pendiente', 'aprobado', 'cancelado') NOT NULL DEFAULT 'pendiente',
-                fecha_solicitud TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                usuario_aprobacion INT NULL,
-                nombre_usuario_aprobacion VARCHAR(100) NULL,
-                fecha_aprobacion TIMESTAMP NULL,
-                motivo_cancelacion TEXT NULL,
-                total_productos INT NOT NULL DEFAULT 0,
-                total_cantidad INT NOT NULL DEFAULT 0,
-                observaciones_aprobacion TEXT NULL,
-                INDEX idx_sucursal (codigo_sucursal_solicitante),
-                INDEX idx_estado (estado),
-                INDEX idx_fecha (fecha_solicitud)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+            echo "<p>🔧 <strong>Creando tabla sucursal_local...</strong></p>";
             
-            if($conexionCentral->exec($sqlCrear)) {
-                echo "<p>✅ <strong>Tabla solicitudes_stock creada exitosamente</strong></p>";
+            $sqlCrear = "
+            CREATE TABLE sucursal_local (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                codigo_sucursal VARCHAR(20) NOT NULL UNIQUE,
+                nombre VARCHAR(100) NOT NULL,
+                direccion VARCHAR(200) NULL,
+                telefono VARCHAR(50) NULL,
+                email VARCHAR(100) NULL,
+                activo TINYINT(1) DEFAULT 1,
+                fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+            
+            if($conexionLocal->exec($sqlCrear)) {
+                echo "<p>✅ <strong>Tabla sucursal_local creada</strong></p>";
+                
+                // Insertar datos de ejemplo
+                $stmt = $conexionLocal->prepare("INSERT INTO sucursal_local (codigo_sucursal, nombre) VALUES ('SUC001', 'Sucursal Principal')");
+                
+                if($stmt->execute()) {
+                    echo "<p>✅ <strong>Datos de ejemplo insertados</strong></p>";
+                } else {
+                    echo "<p>❌ <strong>Error insertando datos:</strong></p>";
+                    print_r($stmt->errorInfo());
+                }
+                
             } else {
-                echo "<p>❌ <strong>Error creando tabla solicitudes_stock</strong></p>";
-                print_r($conexionCentral->errorInfo());
+                echo "<p>❌ <strong>Error creando tabla:</strong></p>";
+                print_r($conexionLocal->errorInfo());
             }
         }
         
     } else {
-        echo "<p>❌ <strong>Error de conexión central</strong></p>";
+        echo "<p>❌ <strong>Error de conexión local</strong></p>";
     }
     
 } catch(Exception $e) {
@@ -132,4 +114,4 @@ try {
 
 echo "<hr>";
 echo "<p><a href='crear-solicitud-stock'>← Volver a crear solicitud</a></p>";
-echo "<p><a href='solicitudes-stock'>← Ver solicitudes</a></p>";
+echo "<p><a href='test-solicitud.php'>← Probar solicitud completa</a></p>";
