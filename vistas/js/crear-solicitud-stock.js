@@ -121,12 +121,13 @@ $(document).ready(function() {
 });
 
 /*=============================================
-CREAR SOLICITUD VIA AJAX - CORREGIDO
+CREAR SOLICITUD CON DEBUG COMPLETO
 =============================================*/
 function crearSolicitud() {
     
-    // ✅ VALIDAR NUEVAMENTE ANTES DE ENVIAR
+    // ✅ VALIDAR ANTES DE ENVIAR
     if(!$('input[name="tipo_solicitud"]:checked').length) {
+        $('#errorTipoSolicitud').show();
         mostrarAlerta('error', 'Debe seleccionar un tipo de solicitud');
         return false;
     }
@@ -136,34 +137,54 @@ function crearSolicitud() {
         return false;
     }
     
-    // ✅ ACTUALIZAR CAMPO HIDDEN CON PRODUCTOS
+    // ✅ DEBUG: Ver datos antes de enviar
+    console.log("=== DEBUG JAVASCRIPT ===");
+    console.log("Productos seleccionados:", productosSeleccionados);
+    console.log("Tipo de solicitud:", $('input[name="tipo_solicitud"]:checked').val());
+    console.log("Detalle adicional:", $('#detalleAdicional').val());
+    
+    // ✅ ACTUALIZAR CAMPO HIDDEN
     $('#productosJsonInput').val(JSON.stringify(productosSeleccionados));
+    console.log("JSON de productos:", $('#productosJsonInput').val());
     
-    // Crear FormData del formulario
-    var formData = new FormData($('.formularioCrearSolicitud')[0]);
-    
-    // ✅ NO AGREGAR 'crear_solicitud' - El controlador busca 'productos_solicitados'
-    // formData.append('crear_solicitud', 'true'); // ❌ ELIMINAR ESTA LÍNEA
-    
-    // Deshabilitar botón y mostrar loading
+    // ✅ MOSTRAR LOADING
     $('#btnCrearSolicitudFinal').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Creando solicitud...');
     
+    // ✅ CREAR FormData Y VERIFICAR CONTENIDO
+    var formData = new FormData($('.formularioCrearSolicitud')[0]);
+    
+    // ✅ DEBUG: Ver todos los datos que se envían
+    console.log("=== DATOS DEL FORMULARIO ===");
+    for (var pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+    }
+    
+    // ✅ ENVIAR VIA AJAX CON DEBUG COMPLETO
     $.ajax({
-        url: window.location.href, // Enviar a la misma página
+        url: window.location.href,
         type: 'POST',
         data: formData,
         processData: false,
         contentType: false,
         success: function(response) {
+            console.log("=== RESPUESTA DEL SERVIDOR ===");
+            console.log("Respuesta completa:", response);
+            console.log("Longitud de respuesta:", response.length);
             
-            // ✅ BUSCAR EL SCRIPT DE RESPUESTA EN EL HTML RETORNADO
+            // ✅ BUSCAR SCRIPT DE SWEETALERT EN LA RESPUESTA
             if(response.indexOf('swal') > -1) {
+                console.log("✅ SweetAlert encontrado en respuesta");
                 
                 if(response.indexOf('success') > -1) {
-                    // Solicitud creada exitosamente
+                    console.log("✅ Respuesta de éxito detectada");
+                    
+                    // ✅ EXTRAER EL NÚMERO DE SOLICITUD DE LA RESPUESTA
+                    var match = response.match(/solicitud ([A-Z0-9]+) se ha creado/);
+                    var numeroSolicitud = match ? match[1] : 'desconocida';
+                    
                     swal({
                         title: '¡Solicitud creada!',
-                        text: 'La solicitud se ha creado correctamente',
+                        text: 'La solicitud ' + numeroSolicitud + ' se ha creado correctamente',
                         type: 'success',
                         confirmButtonText: 'Ver solicitudes'
                     }).then((result) => {
@@ -173,10 +194,15 @@ function crearSolicitud() {
                     });
                     
                 } else if(response.indexOf('error') > -1) {
-                    // Error en la creación
+                    console.log("❌ Respuesta de error detectada");
+                    
+                    // ✅ EXTRAER MENSAJE DE ERROR
+                    var errorMatch = response.match(/text: "([^"]+)"/);
+                    var mensajeError = errorMatch ? errorMatch[1] : 'Error desconocido';
+                    
                     swal({
                         title: 'Error',
-                        text: 'Error al crear la solicitud. Revise los datos e intente nuevamente.',
+                        text: mensajeError,
                         type: 'error',
                         confirmButtonText: 'Cerrar'
                     });
@@ -184,35 +210,28 @@ function crearSolicitud() {
                 }
                 
             } else {
-                // Si no hay script SweetAlert, asumir éxito y redirigir
-                swal({
-                    title: '¡Solicitud creada!',
-                    text: 'La solicitud se ha procesado correctamente',
-                    type: 'success',
-                    confirmButtonText: 'Ver solicitudes'
-                }).then((result) => {
-                    if (result.value) {
-                        window.location.href = 'solicitudes-stock';
-                    }
-                });
+                console.log("❌ No se encontró SweetAlert en la respuesta");
+                console.log("Primeros 500 caracteres:", response.substring(0, 500));
+                
+                // ✅ MOSTRAR RESPUESTA COMPLETA PARA DEBUG
+                $('body').append('<div id="debug-response" style="display:none;">' + response + '</div>');
+                console.log("Respuesta guardada en #debug-response para inspección");
+                
+                mostrarAlerta('warning', 'Respuesta inesperada del servidor. Revise la consola para más detalles.');
+                $('#btnCrearSolicitudFinal').prop('disabled', false).html('<i class="fa fa-save"></i> Crear Solicitud');
             }
         },
         error: function(xhr, status, error) {
-            console.log('Error al crear solicitud:', error);
-            swal({
-                title: 'Error de conexión',
-                text: 'Error de conexión. Intente nuevamente.',
-                type: 'error',
-                confirmButtonText: 'Cerrar'
-            });
+            console.log("=== ERROR DE AJAX ===");
+            console.log("Status:", status);
+            console.log("Error:", error);
+            console.log("Response text:", xhr.responseText);
+            
+            mostrarAlerta('error', 'Error de conexión: ' + error);
             $('#btnCrearSolicitudFinal').prop('disabled', false).html('<i class="fa fa-save"></i> Crear Solicitud');
         }
     });
 }
-
-/*=============================================
-RESTO DE FUNCIONES (IGUAL QUE ANTES)
-=============================================*/
 
 /*=============================================
 AGREGAR PRODUCTO DESDE CATÁLOGO

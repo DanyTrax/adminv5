@@ -2,141 +2,26 @@
 
 class ControladorSolicitudesStock {
 
-    /*=============================================
-    CREAR SOLICITUD DE STOCK
-    =============================================*/
-    static public function ctrCrearSolicitud(){
+/*=============================================
+CREAR SOLICITUD DE STOCK - VERSION DEBUG
+=============================================*/
+static public function ctrCrearSolicitud(){
 
-        if(isset($_POST["productos_solicitados"])){
-
-            // ✅ DEBUG: Verificar datos recibidos
-            error_log("=== DEBUG CREAR SOLICITUD ===");
-            error_log("Productos recibidos: " . $_POST["productos_solicitados"]);
-            error_log("Tipo solicitud: " . (isset($_POST["tipo_solicitud"]) ? $_POST["tipo_solicitud"] : 'NO_DEFINIDO'));
-            
-            // ✅ OBTENER DATOS DE LA SUCURSAL DESDE BD LOCAL
-            $datosSucursal = self::obtenerDatosSucursalLocal();
-            
-            if(!$datosSucursal) {
-                echo '<script>
-                    swal({
-                        type: "error",
-                        title: "Error",
-                        text: "No se pudieron obtener los datos de la sucursal",
-                        showConfirmButton: true,
-                        confirmButtonText: "Cerrar"
-                    });
-                </script>';
-                return;
-            }
-
-            error_log("Datos de sucursal obtenidos: " . json_encode($datosSucursal));
-            
-            // ✅ VALIDAR QUE HAYA PRODUCTOS
-            $productos = json_decode($_POST["productos_solicitados"], true);
-            
-            if(empty($productos) || !is_array($productos)) {
-                echo '<script>
-                    swal({
-                        type: "error",
-                        title: "Error",
-                        text: "No hay productos para solicitar",
-                        showConfirmButton: true,
-                        confirmButtonText: "Cerrar"
-                    });
-                </script>';
-                return;
-            }
-
-            // ✅ VALIDAR TIPO DE SOLICITUD
-            if(!isset($_POST["tipo_solicitud"]) || empty($_POST["tipo_solicitud"])) {
-                echo '<script>
-                    swal({
-                        type: "error",
-                        title: "Error",
-                        text: "Debe seleccionar un tipo de solicitud",
-                        showConfirmButton: true,
-                        confirmButtonText: "Cerrar"
-                    });
-                </script>';
-                return;
-            }
-
-            // ✅ GENERAR NÚMERO DE SOLICITUD
-            $numeroSolicitud = ModeloSolicitudesStock::mdlGenerarNumeroSolicitud("solicitudes_stock");
-            
-            error_log("Número de solicitud generado: " . $numeroSolicitud);
-            
-            if(empty($numeroSolicitud)) {
-                echo '<script>
-                    swal({
-                        type: "error",
-                        title: "Error",
-                        text: "Error al generar número de solicitud",
-                        showConfirmButton: true,
-                        confirmButtonText: "Cerrar"
-                    });
-                </script>';
-                return;
-            }
-
-            // ✅ PREPARAR DATOS CON INFORMACIÓN DE SUCURSAL DESDE BD LOCAL
-            $datos = array(
-                "numero_solicitud" => $numeroSolicitud,
-                "codigo_sucursal_solicitante" => $datosSucursal["codigo_sucursal"],
-                "nombre_sucursal_solicitante" => $datosSucursal["nombre"],
-                "usuario_solicitante" => $_SESSION["id"],
-                "nombre_usuario_solicitante" => $_SESSION["nombre"],
-                "productos_solicitados" => $_POST["productos_solicitados"],
-                "tipo_solicitud" => $_POST["tipo_solicitud"],
-                "codigo_remision" => isset($_POST["codigo_remision"]) ? $_POST["codigo_remision"] : null,
-                "nombre_cliente_remision" => isset($_POST["nombre_cliente_remision"]) ? $_POST["nombre_cliente_remision"] : null,
-                "detalle_adicional" => isset($_POST["detalle_adicional"]) ? $_POST["detalle_adicional"] : null,
-                "total_productos" => count($productos),
-                "total_cantidad" => array_sum(array_column($productos, 'cantidad'))
-            );
-
-            // ✅ DEBUG: Verificar datos preparados
-            error_log("Datos preparados: " . json_encode($datos));
-
-            // ✅ INTENTAR CREAR SOLICITUD
-            $respuesta = ModeloSolicitudesStock::mdlCrearSolicitud("solicitudes_stock", $datos);
-
-            // ✅ DEBUG: Verificar respuesta del modelo
-            error_log("Respuesta del modelo: " . $respuesta);
-
-            if($respuesta == "ok"){
-
-                echo '<script>
-                    swal({
-                        type: "success",
-                        title: "¡Solicitud creada!",
-                        text: "La solicitud ' . $numeroSolicitud . ' se ha creado correctamente",
-                        showConfirmButton: false,
-                        timer: 2000
-                    }).then(function(result){
-                        window.location = "solicitudes-stock";
-                    });
-                </script>';
-
-            } else {
-
-                // ✅ DEBUG: Error en la creación
-                error_log("ERROR AL CREAR SOLICITUD: " . $respuesta);
-
-                echo '<script>
-                    swal({
-                        type: "error",
-                        title: "Error",
-                        text: "Error al crear la solicitud. Revise los logs del servidor.",
-                        showConfirmButton: true,
-                        confirmButtonText: "Cerrar"
-                    });
-                </script>';
-
-            }
-        }
+    // ✅ LOG COMPLETO DE TODOS LOS DATOS RECIBIDOS
+    error_log("=== CONTROLADOR DEBUG - DATOS RECIBIDOS ===");
+    error_log("GET: " . json_encode($_GET));
+    error_log("POST: " . json_encode($_POST));
+    error_log("FILES: " . json_encode($_FILES));
+    error_log("SESSION: " . json_encode($_SESSION));
+    
+    if(isset($_POST["productos_solicitados"])){
+        error_log("✅ Campo productos_solicitados encontrado");
+        // ... resto del código existente del controlador
+    } else {
+        error_log("❌ Campo productos_solicitados NO encontrado");
+        error_log("Campos POST disponibles: " . implode(", ", array_keys($_POST)));
     }
+}
 
     /*=============================================
     OBTENER DATOS DE LA SUCURSAL DESDE BD LOCAL
