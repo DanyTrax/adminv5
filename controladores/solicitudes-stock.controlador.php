@@ -5,141 +5,120 @@ class ControladorSolicitudesStock {
     /*=============================================
     CREAR SOLICITUD DE STOCK
     =============================================*/
-    static public function ctrCrearSolicitud() {
-        
-        if(isset($_POST["productos_solicitados"])) {
+    static public function ctrCrearSolicitud(){
+
+        if(isset($_POST["productos_solicitados"])){
+
+            // ✅ DEBUG: Verificar datos recibidos
+            error_log("=== DEBUG CREAR SOLICITUD ===");
+            error_log("Productos recibidos: " . $_POST["productos_solicitados"]);
+            error_log("Tipo solicitud: " . (isset($_POST["tipo_solicitud"]) ? $_POST["tipo_solicitud"] : 'NO_DEFINIDO'));
+            error_log("Usuario ID: " . $_SESSION["id"]);
+            error_log("Usuario nombre: " . $_SESSION["nombre"]);
             
-            if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s\[\]{}",.:;-]+$/', $_POST["detalle_adicional"]) ||
-               $_POST["detalle_adicional"] == "") {
-                
-                // Obtener información de la sucursal local
-                $sucursalLocal = ControladorSucursales::ctrObtenerConfiguracionLocal();
-                
-                if(!$sucursalLocal) {
-                    echo '<script>
-                        swal({
-                            type: "error",
-                            title: "Error de configuración",
-                            text: "No se pudo obtener la información de la sucursal local",
-                            showConfirmButton: true,
-                            confirmButtonText: "Cerrar"
-                        }).then(function(result){
-                            if(result.value){
-                                window.location = "solicitudes-stock";
-                            }
-                        });
-                    </script>';
-                    return;
-                }
-                
-                // ✅ OBTENER USUARIO DE BASE LOCAL (NO CENTRAL)
-                $usuario = ControladorUsuarios::ctrMostrarUsuarios("id", $_SESSION["id"]);
-                
-                if(!$usuario) {
-                    echo '<script>
-                        swal({
-                            type: "error",
-                            title: "Error de usuario",
-                            text: "No se pudo obtener la información del usuario",
-                            showConfirmButton: true,
-                            confirmButtonText: "Cerrar"
-                        });
-                    </script>';
-                    return;
-                }
-                
-                // Generar número de solicitud
-                $tabla = "solicitudes_stock";
-                $numeroSolicitud = ModeloSolicitudesStock::mdlGenerarNumeroSolicitud($tabla);
-                
-                // Procesar productos solicitados
-                $productosJson = $_POST["productos_solicitados"];
-                $productos = json_decode($productosJson, true);
-                
-                $totalProductos = count($productos);
-                $totalCantidad = 0;
-                
-                foreach($productos as $producto) {
-                    $totalCantidad += intval($producto["cantidad"]);
-                }
-                
-                // Preparar datos para inserción
-                $datos = array(
-                    "numero_solicitud" => $numeroSolicitud,
-                    "codigo_sucursal_solicitante" => $sucursalLocal["codigo"],
-                    "nombre_sucursal_solicitante" => $sucursalLocal["nombre"],
-                    "usuario_solicitante" => $_SESSION["id"],
-                    "nombre_usuario_solicitante" => $usuario["nombre"],
-                    "productos_solicitados" => $productosJson,
-                    "tipo_solicitud" => $_POST["tipo_solicitud"],
-                    "codigo_remision" => $_POST["codigo_remision"] ?? null,
-                    "nombre_cliente_remision" => $_POST["nombre_cliente_remision"] ?? null,
-                    "detalle_adicional" => $_POST["detalle_adicional"],
-                    "total_productos" => $totalProductos,
-                    "total_cantidad" => $totalCantidad
-                );
-                
-                $respuesta = ModeloSolicitudesStock::mdlCrearSolicitud($tabla, $datos);
-                
-                if($respuesta == "ok") {
-                    
-                    // Registrar en el log
-                    $datosLog = array(
-                        "solicitud_id" => null,
-                        "usuario_id" => $_SESSION["id"],
-                        "accion" => "creada",
-                        "estado_anterior" => null,
-                        "estado_nuevo" => "pendiente",
-                        "comentario" => "Solicitud creada desde sucursal: " . $sucursalLocal["nombre"],
-                        "ip_usuario" => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
-                    );
-                    
-                    ModeloSolicitudesStock::mdlRegistrarLog($datosLog);
-                    
-                    echo '<script>
-                        swal({
-                            type: "success",
-                            title: "¡Solicitud creada correctamente!",
-                            text: "Número de solicitud: ' . $numeroSolicitud . '",
-                            showConfirmButton: true,
-                            confirmButtonText: "Cerrar"
-                        }).then(function(result){
-                            if(result.value){
-                                window.location = "solicitudes-stock";
-                            }
-                        });
-                    </script>';
-                    
-                } else {
-                    echo '<script>
-                        swal({
-                            type: "error",
-                            title: "Error al crear la solicitud",
-                            text: "Intente nuevamente o contacte al administrador",
-                            showConfirmButton: true,
-                            confirmButtonText: "Cerrar"
-                        }).then(function(result){
-                            if(result.value){
-                                window.location = "solicitudes-stock";
-                            }
-                        });
-                    </script>';
-                }
-                
-            } else {
+            // ✅ VALIDAR QUE HAYA PRODUCTOS
+            $productos = json_decode($_POST["productos_solicitados"], true);
+            
+            if(empty($productos) || !is_array($productos)) {
                 echo '<script>
                     swal({
                         type: "error",
-                        title: "¡Error en los datos!",
-                        text: "El detalle no puede contener caracteres especiales",
+                        title: "Error",
+                        text: "No hay productos para solicitar",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
-                    }).then(function(result){
-                        if(result.value){
-                            window.location = "solicitudes-stock";
-                        }
                     });
                 </script>';
+                return;
+            }
+
+            // ✅ VALIDAR TIPO DE SOLICITUD
+            if(!isset($_POST["tipo_solicitud"]) || empty($_POST["tipo_solicitud"])) {
+                echo '<script>
+                    swal({
+                        type: "error",
+                        title: "Error",
+                        text: "Debe seleccionar un tipo de solicitud",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                </script>';
+                return;
+            }
+
+            // ✅ GENERAR NÚMERO DE SOLICITUD
+            $numeroSolicitud = ModeloSolicitudesStock::mdlGenerarNumeroSolicitud("solicitudes_stock");
+            
+            // ✅ DEBUG: Verificar número generado
+            error_log("Número de solicitud generado: " . $numeroSolicitud);
+            
+            if(empty($numeroSolicitud)) {
+                echo '<script>
+                    swal({
+                        type: "error",
+                        title: "Error",
+                        text: "Error al generar número de solicitud",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                </script>';
+                return;
+            }
+
+            // ✅ PREPARAR DATOS
+            $datos = array(
+                "numero_solicitud" => $numeroSolicitud,
+                "codigo_sucursal_solicitante" => CODIGO_SUCURSAL,
+                "nombre_sucursal_solicitante" => NOMBRE_SUCURSAL,
+                "usuario_solicitante" => $_SESSION["id"],
+                "nombre_usuario_solicitante" => $_SESSION["nombre"],
+                "productos_solicitados" => $_POST["productos_solicitados"],
+                "tipo_solicitud" => $_POST["tipo_solicitud"],
+                "codigo_remision" => isset($_POST["codigo_remision"]) ? $_POST["codigo_remision"] : null,
+                "nombre_cliente_remision" => isset($_POST["nombre_cliente_remision"]) ? $_POST["nombre_cliente_remision"] : null,
+                "detalle_adicional" => isset($_POST["detalle_adicional"]) ? $_POST["detalle_adicional"] : null,
+                "total_productos" => count($productos),
+                "total_cantidad" => array_sum(array_column($productos, 'cantidad'))
+            );
+
+            // ✅ DEBUG: Verificar datos preparados
+            error_log("Datos preparados: " . json_encode($datos));
+
+            // ✅ INTENTAR CREAR SOLICITUD
+            $respuesta = ModeloSolicitudesStock::mdlCrearSolicitud("solicitudes_stock", $datos);
+
+            // ✅ DEBUG: Verificar respuesta del modelo
+            error_log("Respuesta del modelo: " . $respuesta);
+
+            if($respuesta == "ok"){
+
+                echo '<script>
+                    swal({
+                        type: "success",
+                        title: "¡Solicitud creada!",
+                        text: "La solicitud ' . $numeroSolicitud . ' se ha creado correctamente",
+                        showConfirmButton: false,
+                        timer: 2000
+                    }).then(function(result){
+                        window.location = "solicitudes-stock";
+                    });
+                </script>';
+
+            } else {
+
+                // ✅ DEBUG: Error en la creación
+                error_log("ERROR AL CREAR SOLICITUD: " . $respuesta);
+
+                echo '<script>
+                    swal({
+                        type: "error",
+                        title: "Error",
+                        text: "Error al crear la solicitud: ' . $respuesta . '",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                </script>';
+
             }
         }
     }
