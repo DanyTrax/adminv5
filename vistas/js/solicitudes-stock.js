@@ -1033,110 +1033,223 @@ function formatearHora(fecha) {
 }
 
 /*=============================================
-CONFIGURAR BOTONES DE EXPORTACIÓN - SIMPLIFICADO PARA PRUEBAS
+CONFIGURAR BOTONES DE EXPORTACIÓN - FUNCIONAL
 =============================================*/
 function configurarBotonesExportacion(solicitud) {
     
-    // ✅ BOTÓN PDF - Por ahora solo mostrar alert
+    console.log("✅ Configurando botones de exportación para solicitud:", solicitud.numero_solicitud);
+    
+    // ✅ BOTÓN PDF - Ahora funcional
     $('#btnExportarPDF').off('click').on('click', function(e) {
         e.preventDefault();
-        swal({
-            title: 'Exportar PDF',
-            text: 'Funcionalidad de PDF en desarrollo para solicitud: ' + solicitud.numero_solicitud,
-            type: 'info',
-            confirmButtonText: 'Entendido'
-        });
+        exportarSolicitudPDF(solicitud);
     });
     
-    // ✅ BOTÓN EXCEL - Por ahora solo mostrar alert
+    // ✅ BOTÓN EXCEL - Ahora funcional
     $('#btnExportarExcel').off('click').on('click', function(e) {
         e.preventDefault();
-        swal({
-            title: 'Exportar Excel',
-            text: 'Funcionalidad de Excel en desarrollo para solicitud: ' + solicitud.numero_solicitud,
-            type: 'info',
-            confirmButtonText: 'Entendido'
-        });
+        exportarSolicitudExcel(solicitud);
     });
-    
-    console.log("✅ Botones de exportación configurados");
 }
 
 /*=============================================
-EXPORTAR SOLICITUD A PDF
+EXPORTAR SOLICITUD A PDF - FUNCIONAL
 =============================================*/
 function exportarSolicitudPDF(solicitud) {
     
-    var ventana = window.open(
-        'extensiones/tcpdf/pdf/solicitud-stock.php?id=' + solicitud.id,
-        '_blank',
-        'width=800,height=600'
-    );
+    console.log("🔄 Exportando a PDF solicitud:", solicitud.numero_solicitud);
     
-    if(!ventana) {
+    try {
+        // ✅ CONSTRUIR URL PARA EL PDF
+        var urlPDF = 'extensiones/tcpdf/pdf/solicitud-stock.php?id=' + solicitud.id;
+        
+        // ✅ ABRIR EN NUEVA VENTANA
+        var ventana = window.open(urlPDF, '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes');
+        
+        if(!ventana || ventana.closed || typeof ventana.closed == 'undefined') {
+            // Si la ventana no se abre (popup bloqueado)
+            swal({
+                title: 'Popup bloqueado',
+                text: 'Permita ventanas emergentes para visualizar el PDF o haga clic en "Descargar" para descarga directa',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Descargar PDF',
+                cancelButtonText: 'Cerrar',
+                confirmButtonColor: '#d33'
+            }).then((result) => {
+                if (result.value) {
+                    // ✅ DESCARGAR DIRECTAMENTE
+                    var link = document.createElement('a');
+                    link.href = urlPDF;
+                    link.download = 'Solicitud_' + solicitud.numero_solicitud + '.pdf';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            });
+        } else {
+            // ✅ PDF abierto exitosamente
+            console.log("✅ PDF abierto en nueva ventana");
+            
+            // Mostrar notificación de éxito
+            swal({
+                title: '¡PDF Generado!',
+                text: 'El reporte se ha abierto en una nueva ventana',
+                type: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+        
+    } catch(error) {
+        console.error("❌ Error exportando PDF:", error);
+        
         swal({
-            title: 'Popup bloqueado',
-            text: 'Permita ventanas emergentes para descargar el PDF',
-            type: 'warning',
-            confirmButtonText: 'Entendido'
+            title: 'Error',
+            text: 'Error al generar el PDF: ' + error.message,
+            type: 'error',
+            confirmButtonText: 'Cerrar'
         });
     }
 }
 
 /*=============================================
-EXPORTAR SOLICITUD A EXCEL
+EXPORTAR SOLICITUD A EXCEL - FUNCIONAL CON SHEETJS
 =============================================*/
 function exportarSolicitudExcel(solicitud) {
     
-    // ✅ CREAR DATOS PARA EXCEL
-    var productos = JSON.parse(solicitud.productos_solicitados);
+    console.log("🔄 Exportando a Excel solicitud:", solicitud.numero_solicitud);
     
-    var datosExcel = [];
-    
-    // Encabezados
-    datosExcel.push([
-        'SOLICITUD DE STOCK - ' + solicitud.numero_solicitud,
-        '', '', '', ''
-    ]);
-    datosExcel.push(['']); // Línea vacía
-    
-    // Información general
-    datosExcel.push(['Sucursal:', solicitud.nombre_sucursal_solicitante, '', '', '']);
-    datosExcel.push(['Solicitante:', solicitud.nombre_usuario_solicitante, '', '', '']);
-    datosExcel.push(['Fecha:', formatearFecha(solicitud.fecha_solicitud), '', '', '']);
-    datosExcel.push(['Tipo:', solicitud.tipo_solicitud.toUpperCase(), '', '', '']);
-    datosExcel.push(['Estado:', solicitud.estado.toUpperCase(), '', '', '']);
-    datosExcel.push(['']); // Línea vacía
-    
-    // Encabezados de productos
-    datosExcel.push(['#', 'CÓDIGO', 'DESCRIPCIÓN', 'CANTIDAD', 'OBSERVACIONES']);
-    
-    // Productos
-    productos.forEach(function(producto, index) {
-        datosExcel.push([
-            index + 1,
-            producto.codigo || '',
-            producto.descripcion || '',
-            producto.cantidad || 0,
-            producto.observacion || ''
-        ]);
-    });
-    
-    // Total
-    datosExcel.push(['']); // Línea vacía
-    datosExcel.push([
-        'TOTAL PRODUCTOS:',
-        solicitud.total_productos,
-        'TOTAL CANTIDAD:',
-        solicitud.total_cantidad,
-        ''
-    ]);
-    
-    // ✅ GENERAR Y DESCARGAR EXCEL
-    var ws = XLSX.utils.aoa_to_sheet(datosExcel);
-    var wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Solicitud " + solicitud.numero_solicitud);
-    
-    // Descargar archivo
-    XLSX.writeFile(wb, 'Solicitud_' + solicitud.numero_solicitud + '.xlsx');
+    try {
+        // ✅ VERIFICAR QUE SHEETJS ESTÉ DISPONIBLE
+        if(typeof XLSX === 'undefined') {
+            swal({
+                title: 'Error',
+                text: 'La librería de Excel no está disponible. Contacte al administrador.',
+                type: 'error',
+                confirmButtonText: 'Cerrar'
+            });
+            return;
+        }
+        
+        // ✅ PROCESAR PRODUCTOS
+        var productos = [];
+        try {
+            productos = JSON.parse(solicitud.productos_solicitados);
+        } catch(e) {
+            console.warn("Error parseando productos:", e);
+            productos = [];
+        }
+        
+        // ✅ CREAR DATOS PARA EXCEL
+        var datosExcel = [];
+        
+        // ENCABEZADO PRINCIPAL
+        datosExcel.push(['SOLICITUD DE STOCK', '', '', '', '', '']);
+        datosExcel.push([solicitud.numero_solicitud, '', '', '', '', '']);
+        datosExcel.push(['']); // Línea vacía
+        
+        // INFORMACIÓN GENERAL
+        datosExcel.push(['INFORMACIÓN GENERAL', '', '', '', '', '']);
+        datosExcel.push(['Sucursal:', solicitud.nombre_sucursal_solicitante, '', 'Estado:', solicitud.estado.toUpperCase(), '']);
+        datosExcel.push(['Usuario:', solicitud.nombre_usuario_solicitante, '', 'Total Productos:', solicitud.total_productos, '']);
+        datosExcel.push(['Fecha:', formatearFecha(solicitud.fecha_solicitud), '', 'Total Cantidad:', solicitud.total_cantidad, '']);
+        datosExcel.push(['Tipo:', solicitud.tipo_solicitud.toUpperCase(), '', 'Aprobado por:', solicitud.nombre_usuario_aprobacion || 'Sin aprobar', '']);
+        datosExcel.push(['']); // Línea vacía
+        
+        // INFORMACIÓN DE REMISIÓN (si aplica)
+        if(solicitud.tipo_solicitud === 'remision' && solicitud.codigo_remision) {
+            datosExcel.push(['INFORMACIÓN DE REMISIÓN', '', '', '', '', '']);
+            datosExcel.push(['Código Remisión:', solicitud.codigo_remision, '', '', '', '']);
+            datosExcel.push(['Cliente:', solicitud.nombre_cliente_remision || 'No especificado', '', '', '', '']);
+            datosExcel.push(['']); // Línea vacía
+        }
+        
+        // DETALLE ADICIONAL (si existe)
+        if(solicitud.detalle_adicional && solicitud.detalle_adicional.trim() !== '') {
+            datosExcel.push(['DETALLE ADICIONAL', '', '', '', '', '']);
+            datosExcel.push([solicitud.detalle_adicional, '', '', '', '', '']);
+            datosExcel.push(['']); // Línea vacía
+        }
+        
+        // PRODUCTOS SOLICITADOS
+        datosExcel.push(['PRODUCTOS SOLICITADOS', '', '', '', '', '']);
+        datosExcel.push(['#', 'CÓDIGO', 'DESCRIPCIÓN', 'CANTIDAD', 'OBSERVACIONES', '']);
+        
+        // Agregar productos
+        if(productos && productos.length > 0) {
+            productos.forEach(function(producto, index) {
+                datosExcel.push([
+                    index + 1,
+                    producto.codigo || 'N/A',
+                    producto.descripcion || 'Sin descripción',
+                    producto.cantidad || 0,
+                    producto.observacion || 'Sin observaciones',
+                    ''
+                ]);
+            });
+        } else {
+            datosExcel.push(['No hay productos registrados', '', '', '', '', '']);
+        }
+        
+        // TOTAL
+        datosExcel.push(['']); // Línea vacía
+        datosExcel.push(['TOTAL:', '', '', solicitud.total_cantidad, solicitud.total_productos + ' productos', '']);
+        
+        // MOTIVO DE CANCELACIÓN (si aplica)
+        if(solicitud.estado === 'cancelado' && solicitud.motivo_cancelacion) {
+            datosExcel.push(['']); // Línea vacía
+            datosExcel.push(['MOTIVO DE CANCELACIÓN', '', '', '', '', '']);
+            datosExcel.push([solicitud.motivo_cancelacion, '', '', '', '', '']);
+        }
+        
+        // INFORMACIÓN DE GENERACIÓN
+        datosExcel.push(['']); // Línea vacía
+        datosExcel.push(['INFORMACIÓN DEL REPORTE', '', '', '', '', '']);
+        datosExcel.push(['Generado por:', $('#usuarioSolicitante').text() || 'Usuario actual', '', 'Fecha:', new Date().toLocaleString('es-ES'), '']);
+        
+        // ✅ CREAR LIBRO DE EXCEL
+        var ws = XLSX.utils.aoa_to_sheet(datosExcel);
+        var wb = XLSX.utils.book_new();
+        
+        // ✅ CONFIGURAR ANCHOS DE COLUMNA
+        ws['!cols'] = [
+            {wch: 20}, // Columna A
+            {wch: 30}, // Columna B
+            {wch: 40}, // Columna C
+            {wch: 15}, // Columna D
+            {wch: 30}, // Columna E
+            {wch: 10}  // Columna F
+        ];
+        
+        // ✅ AGREGAR HOJA AL LIBRO
+        XLSX.utils.book_append_sheet(wb, ws, "Solicitud " + solicitud.numero_solicitud);
+        
+        // ✅ GENERAR Y DESCARGAR ARCHIVO
+        var nombreArchivo = 'Solicitud_' + solicitud.numero_solicitud + '_' + 
+                           new Date().toISOString().slice(0,10) + '.xlsx';
+        
+        XLSX.writeFile(wb, nombreArchivo);
+        
+        console.log("✅ Excel generado:", nombreArchivo);
+        
+        // ✅ MOSTRAR CONFIRMACIÓN
+        swal({
+            title: '¡Excel Generado!',
+            text: 'El archivo ' + nombreArchivo + ' se ha descargado correctamente',
+            type: 'success',
+            timer: 3000,
+            showConfirmButton: false
+        });
+        
+    } catch(error) {
+        console.error("❌ Error exportando Excel:", error);
+        
+        swal({
+            title: 'Error',
+            text: 'Error al generar el Excel: ' + error.message,
+            type: 'error',
+            confirmButtonText: 'Cerrar'
+        });
+    }
 }
