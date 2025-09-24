@@ -745,92 +745,157 @@ function eliminarSolicitud(idSolicitud) {
 }
 
 /*=============================================
-MOSTRAR MODAL CON DETALLES DE SOLICITUD - NUEVO DISEÑO
+MOSTRAR MODAL CON DETALLES DE SOLICITUD - VERSIÓN CORREGIDA
 =============================================*/
 function mostrarModalDetalleSolicitud(solicitud) {
     
-    console.log("Mostrando detalles de solicitud:", solicitud);
+    console.log("=== DATOS RECIBIDOS EN MODAL ===");
+    console.log(solicitud);
     
-    // ✅ INFORMACIÓN GENERAL
-    $('#numeroSolicitudModal').text(solicitud.numero_solicitud);
-    $('#sucursalSolicitante').text(solicitud.nombre_sucursal_solicitante);
-    $('#usuarioSolicitante').text(solicitud.nombre_usuario_solicitante);
-    $('#fechaSolicitud').text(formatearFecha(solicitud.fecha_solicitud));
-    $('#tipoSolicitud').text(solicitud.tipo_solicitud.toUpperCase());
-    $('#totalProductos').text(solicitud.total_productos + ' productos');
-    
-    // ✅ ESTADO CON COLOR
-    var estadoTexto = solicitud.estado.charAt(0).toUpperCase() + solicitud.estado.slice(1);
-    $('#estadoSolicitud').text(estadoTexto);
-    
-    // Cambiar color del icono según estado
-    var $estadoIcon = $('#estadoIcon');
-    $estadoIcon.removeClass('bg-red bg-green bg-yellow bg-gray');
-    
-    switch(solicitud.estado) {
-        case 'pendiente':
-            $estadoIcon.addClass('bg-yellow').find('i').removeClass().addClass('fa fa-clock-o');
-            break;
-        case 'aprobado':
-            $estadoIcon.addClass('bg-green').find('i').removeClass().addClass('fa fa-check');
-            break;
-        case 'cancelado':
-            $estadoIcon.addClass('bg-red').find('i').removeClass().addClass('fa fa-times');
-            break;
-        default:
-            $estadoIcon.addClass('bg-gray').find('i').removeClass().addClass('fa fa-question');
+    // ✅ VERIFICAR QUE EXISTAN LOS ELEMENTOS DEL MODAL
+    if($('#modalVerSolicitud').length === 0) {
+        console.error("El modal #modalVerSolicitud no existe en el DOM");
+        swal({
+            title: 'Error',
+            text: 'El modal de detalles no está disponible',
+            type: 'error',
+            confirmButtonText: 'Cerrar'
+        });
+        return;
     }
     
-    // ✅ INFORMACIÓN DE REMISIÓN (si aplica)
-    if(solicitud.tipo_solicitud === 'remision' && solicitud.codigo_remision) {
-        $('#codigoRemision').text(solicitud.codigo_remision);
-        $('#clienteRemision').text(solicitud.nombre_cliente_remision || 'No especificado');
-        $('#infoRemision').show();
-    } else {
-        $('#infoRemision').hide();
+    try {
+        
+        // ✅ INFORMACIÓN GENERAL - con verificaciones
+        if($('#numeroSolicitudModal').length) {
+            $('#numeroSolicitudModal').text(solicitud.numero_solicitud || 'N/A');
+        }
+        
+        if($('#sucursalSolicitante').length) {
+            $('#sucursalSolicitante').text(solicitud.nombre_sucursal_solicitante || 'N/A');
+        }
+        
+        if($('#usuarioSolicitante').length) {
+            $('#usuarioSolicitante').text(solicitud.nombre_usuario_solicitante || 'N/A');
+        }
+        
+        if($('#fechaSolicitud').length) {
+            $('#fechaSolicitud').text(formatearFecha(solicitud.fecha_solicitud) || 'N/A');
+        }
+        
+        if($('#tipoSolicitud').length) {
+            $('#tipoSolicitud').text((solicitud.tipo_solicitud || 'N/A').toUpperCase());
+        }
+        
+        if($('#totalProductos').length) {
+            $('#totalProductos').text((solicitud.total_productos || 0) + ' productos');
+        }
+        
+        // ✅ ESTADO CON COLOR
+        if($('#estadoSolicitud').length) {
+            var estadoTexto = (solicitud.estado || 'desconocido').charAt(0).toUpperCase() + (solicitud.estado || 'desconocido').slice(1);
+            $('#estadoSolicitud').text(estadoTexto);
+        }
+        
+        // ✅ Cambiar color del icono según estado
+        if($('#estadoIcon').length) {
+            var $estadoIcon = $('#estadoIcon');
+            $estadoIcon.removeClass('bg-red bg-green bg-yellow bg-gray');
+            
+            switch(solicitud.estado) {
+                case 'pendiente':
+                    $estadoIcon.addClass('bg-yellow').find('i').removeClass().addClass('fa fa-clock-o');
+                    break;
+                case 'aprobado':
+                    $estadoIcon.addClass('bg-green').find('i').removeClass().addClass('fa fa-check');
+                    break;
+                case 'cancelado':
+                    $estadoIcon.addClass('bg-red').find('i').removeClass().addClass('fa fa-times');
+                    break;
+                default:
+                    $estadoIcon.addClass('bg-gray').find('i').removeClass().addClass('fa fa-question');
+            }
+        }
+        
+        // ✅ INFORMACIÓN DE REMISIÓN (si aplica)
+        if(solicitud.tipo_solicitud === 'remision' && solicitud.codigo_remision) {
+            $('#codigoRemision').text(solicitud.codigo_remision || 'N/A');
+            $('#clienteRemision').text(solicitud.nombre_cliente_remision || 'No especificado');
+            $('#infoRemision').show();
+        } else {
+            $('#infoRemision').hide();
+        }
+        
+        // ✅ DETALLE ADICIONAL (si aplica)
+        if(solicitud.detalle_adicional && solicitud.detalle_adicional.trim() !== '') {
+            $('#detalleAdicional').text(solicitud.detalle_adicional);
+            $('#detalleAdicionalContainer').show();
+        } else {
+            $('#detalleAdicionalContainer').hide();
+        }
+        
+        // ✅ CARGAR PRODUCTOS
+        cargarProductosEnModal(solicitud.productos_solicitados);
+        
+        // ✅ CARGAR HISTORIAL
+        cargarHistorialEnModal(solicitud);
+        
+        // ✅ CONFIGURAR BOTONES DE EXPORTACIÓN
+        configurarBotonesExportacion(solicitud);
+        
+        // ✅ MOSTRAR MODAL
+        $('#modalVerSolicitud').modal('show');
+        
+        console.log("✅ Modal cargado correctamente");
+        
+    } catch(error) {
+        console.error("Error cargando datos en modal:", error);
+        swal({
+            title: 'Error',
+            text: 'Error al cargar los detalles de la solicitud',
+            type: 'error',
+            confirmButtonText: 'Cerrar'
+        });
     }
-    
-    // ✅ DETALLE ADICIONAL (si aplica)
-    if(solicitud.detalle_adicional && solicitud.detalle_adicional.trim() !== '') {
-        $('#detalleAdicional').text(solicitud.detalle_adicional);
-        $('#detalleAdicionalContainer').show();
-    } else {
-        $('#detalleAdicionalContainer').hide();
-    }
-    
-    // ✅ CARGAR PRODUCTOS
-    cargarProductosEnModal(solicitud.productos_solicitados);
-    
-    // ✅ CARGAR HISTORIAL
-    cargarHistorialEnModal(solicitud);
-    
-    // ✅ CONFIGURAR BOTONES DE EXPORTACIÓN
-    configurarBotonesExportacion(solicitud);
-    
-    // ✅ MOSTRAR MODAL
-    $('#modalVerSolicitud').modal('show');
 }
 
 /*=============================================
-CARGAR PRODUCTOS EN EL MODAL
+CARGAR PRODUCTOS EN EL MODAL - VERSIÓN CORREGIDA
 =============================================*/
 function cargarProductosEnModal(productosJson) {
     
+    console.log("=== CARGANDO PRODUCTOS ===");
+    console.log("JSON recibido:", productosJson);
+    
     try {
-        var productos = JSON.parse(productosJson);
+        var productos = [];
+        
+        // ✅ PARSEAR JSON si es string
+        if(typeof productosJson === 'string') {
+            productos = JSON.parse(productosJson);
+        } else if(Array.isArray(productosJson)) {
+            productos = productosJson;
+        } else {
+            console.error("Formato de productos no reconocido:", typeof productosJson);
+            productos = [];
+        }
+        
+        console.log("Productos parseados:", productos);
+        
         var html = '';
         var totalCantidad = 0;
         
         if(productos && productos.length > 0) {
             productos.forEach(function(producto, index) {
-                totalCantidad += parseInt(producto.cantidad) || 0;
+                var cantidad = parseInt(producto.cantidad) || 0;
+                totalCantidad += cantidad;
                 
                 html += '<tr>';
                 html += '<td class="text-center"><strong>' + (index + 1) + '</strong></td>';
                 html += '<td><code>' + (producto.codigo || 'N/A') + '</code></td>';
                 html += '<td>' + (producto.descripcion || 'Sin descripción') + '</td>';
                 html += '<td class="text-center">';
-                html += '<span class="badge bg-blue">' + (producto.cantidad || 0) + '</span>';
+                html += '<span class="badge bg-blue">' + cantidad + '</span>';
                 html += '</td>';
                 html += '<td>';
                 if(producto.observacion && producto.observacion.trim() !== '') {
@@ -848,75 +913,153 @@ function cargarProductosEnModal(productosJson) {
         $('#productosModalBody').html(html);
         $('#totalCantidadProductos').text(totalCantidad);
         
+        console.log("✅ Productos cargados en tabla");
+        
     } catch(e) {
         console.error('Error cargando productos:', e);
-        $('#productosModalBody').html('<tr><td colspan="5" class="text-center text-danger">Error cargando productos</td></tr>');
+        $('#productosModalBody').html('<tr><td colspan="5" class="text-center text-danger">Error cargando productos: ' + e.message + '</td></tr>');
     }
 }
 
 /*=============================================
-CARGAR HISTORIAL EN EL MODAL
+CARGAR HISTORIAL EN EL MODAL - VERSIÓN CORREGIDA
 =============================================*/
 function cargarHistorialEnModal(solicitud) {
     
-    // ✅ CREACIÓN
-    $('#fechaCreacion').html('<i class="fa fa-plus-circle"></i> ' + formatearFecha(solicitud.fecha_solicitud, true));
-    $('#horaCreacion').text(formatearHora(solicitud.fecha_solicitud));
-    $('#usuarioCreacion').text(solicitud.nombre_usuario_solicitante);
-    $('#numeroCreacion').text(solicitud.numero_solicitud);
+    console.log("=== CARGANDO HISTORIAL ===");
     
-    // ✅ APROBACIÓN/CANCELACIÓN
-    if(solicitud.estado !== 'pendiente' && solicitud.fecha_aprobacion) {
-        $('#timelineAprobacion').show();
+    try {
+        // ✅ CREACIÓN
+        $('#fechaCreacion').html('<i class="fa fa-plus-circle"></i> ' + formatearFecha(solicitud.fecha_solicitud, true));
+        $('#horaCreacion').text(formatearHora(solicitud.fecha_solicitud));
+        $('#usuarioCreacion').text(solicitud.nombre_usuario_solicitante || 'N/A');
+        $('#numeroCreacion').text(solicitud.numero_solicitud || 'N/A');
         
-        var $labelAprobacion = $('#labelAprobacion');
-        var $iconAprobacion = $('#iconAprobacion');
-        var $accionAprobacion = $('#accionAprobacion');
-        
-        if(solicitud.estado === 'aprobado') {
-            $labelAprobacion.removeClass('bg-red bg-yellow').addClass('bg-green')
-                .html('<i class="fa fa-check"></i> Aprobación');
-            $iconAprobacion.removeClass('fa-times bg-red').addClass('fa-check bg-green');
-            $accionAprobacion.text('Aprobada');
-        } else if(solicitud.estado === 'cancelado') {
-            $labelAprobacion.removeClass('bg-green bg-yellow').addClass('bg-red')
-                .html('<i class="fa fa-times"></i> Cancelación');
-            $iconAprobacion.removeClass('fa-check bg-green').addClass('fa-times bg-red');
-            $accionAprobacion.text('Cancelada');
-        }
-        
-        $('#horaAprobacion').text(formatearHora(solicitud.fecha_aprobacion));
-        $('#usuarioAprobacion').text(solicitud.nombre_usuario_aprobacion || 'Sistema');
-        
-        // Mostrar motivo si es cancelación
-        if(solicitud.estado === 'cancelado' && solicitud.motivo_cancelacion) {
-            $('#motivoAprobacion').text(solicitud.motivo_cancelacion);
-            $('#motivoContainer').show();
+        // ✅ APROBACIÓN/CANCELACIÓN
+        if(solicitud.estado !== 'pendiente' && solicitud.fecha_aprobacion) {
+            $('#timelineAprobacion').show();
+            
+            var $labelAprobacion = $('#labelAprobacion');
+            var $iconAprobacion = $('#iconAprobacion');
+            var $accionAprobacion = $('#accionAprobacion');
+            
+            if(solicitud.estado === 'aprobado') {
+                $labelAprobacion.removeClass('bg-red bg-yellow').addClass('bg-green')
+                    .html('<i class="fa fa-check"></i> Aprobación');
+                $iconAprobacion.removeClass('fa-times bg-red').addClass('fa-check bg-green');
+                $accionAprobacion.text('Aprobada');
+            } else if(solicitud.estado === 'cancelado') {
+                $labelAprobacion.removeClass('bg-green bg-yellow').addClass('bg-red')
+                    .html('<i class="fa fa-times"></i> Cancelación');
+                $iconAprobacion.removeClass('fa-check bg-green').addClass('fa-times bg-red');
+                $accionAprobacion.text('Cancelada');
+            }
+            
+            $('#horaAprobacion').text(formatearHora(solicitud.fecha_aprobacion));
+            $('#usuarioAprobacion').text(solicitud.nombre_usuario_aprobacion || 'Sistema');
+            
+            // Mostrar motivo si es cancelación
+            if(solicitud.estado === 'cancelado' && solicitud.motivo_cancelacion) {
+                $('#motivoAprobacion').text(solicitud.motivo_cancelacion);
+                $('#motivoContainer').show();
+            } else {
+                $('#motivoContainer').hide();
+            }
+            
         } else {
-            $('#motivoContainer').hide();
+            $('#timelineAprobacion').hide();
         }
         
-    } else {
-        $('#timelineAprobacion').hide();
+        console.log("✅ Historial cargado");
+        
+    } catch(error) {
+        console.error("Error cargando historial:", error);
     }
 }
 
 /*=============================================
-CONFIGURAR BOTONES DE EXPORTACIÓN
+FUNCIONES AUXILIARES PARA FORMATEO - MEJORADAS
+=============================================*/
+function formatearFecha(fecha, conDia = false) {
+    
+    if(!fecha) return 'Fecha no disponible';
+    
+    try {
+        var date = new Date(fecha);
+        
+        // Verificar que la fecha sea válida
+        if(isNaN(date.getTime())) {
+            return fecha; // Devolver la fecha original si no se puede parsear
+        }
+        
+        var opciones = { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit' 
+        };
+        
+        if(conDia) {
+            opciones.weekday = 'long';
+        }
+        
+        return date.toLocaleDateString('es-ES', opciones);
+        
+    } catch(error) {
+        console.error('Error formateando fecha:', error);
+        return fecha;
+    }
+}
+
+function formatearHora(fecha) {
+    
+    if(!fecha) return '--:--';
+    
+    try {
+        var date = new Date(fecha);
+        
+        if(isNaN(date.getTime())) {
+            return '--:--';
+        }
+        
+        return date.toLocaleTimeString('es-ES', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
+    } catch(error) {
+        console.error('Error formateando hora:', error);
+        return '--:--';
+    }
+}
+
+/*=============================================
+CONFIGURAR BOTONES DE EXPORTACIÓN - SIMPLIFICADO PARA PRUEBAS
 =============================================*/
 function configurarBotonesExportacion(solicitud) {
     
-    // ✅ BOTÓN PDF
+    // ✅ BOTÓN PDF - Por ahora solo mostrar alert
     $('#btnExportarPDF').off('click').on('click', function(e) {
         e.preventDefault();
-        exportarSolicitudPDF(solicitud);
+        swal({
+            title: 'Exportar PDF',
+            text: 'Funcionalidad de PDF en desarrollo para solicitud: ' + solicitud.numero_solicitud,
+            type: 'info',
+            confirmButtonText: 'Entendido'
+        });
     });
     
-    // ✅ BOTÓN EXCEL
+    // ✅ BOTÓN EXCEL - Por ahora solo mostrar alert
     $('#btnExportarExcel').off('click').on('click', function(e) {
         e.preventDefault();
-        exportarSolicitudExcel(solicitud);
+        swal({
+            title: 'Exportar Excel',
+            text: 'Funcionalidad de Excel en desarrollo para solicitud: ' + solicitud.numero_solicitud,
+            type: 'info',
+            confirmButtonText: 'Entendido'
+        });
     });
+    
+    console.log("✅ Botones de exportación configurados");
 }
 
 /*=============================================
@@ -996,30 +1139,4 @@ function exportarSolicitudExcel(solicitud) {
     
     // Descargar archivo
     XLSX.writeFile(wb, 'Solicitud_' + solicitud.numero_solicitud + '.xlsx');
-}
-
-/*=============================================
-FUNCIONES AUXILIARES PARA FORMATEO
-=============================================*/
-function formatearFecha(fecha, conDia = false) {
-    var date = new Date(fecha);
-    var opciones = { 
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit' 
-    };
-    
-    if(conDia) {
-        opciones.weekday = 'long';
-    }
-    
-    return date.toLocaleDateString('es-ES', opciones);
-}
-
-function formatearHora(fecha) {
-    var date = new Date(fecha);
-    return date.toLocaleTimeString('es-ES', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-    });
 }
