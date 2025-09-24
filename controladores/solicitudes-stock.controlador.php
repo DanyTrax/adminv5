@@ -3,18 +3,17 @@
 class ControladorSolicitudesStock {
 
 /*=============================================
-CREAR SOLICITUD DE STOCK - VERSION COMPLETA Y CORREGIDA
+CREAR SOLICITUD DE STOCK - SOLO AL RECIBIR POST
 =============================================*/
 static public function ctrCrearSolicitud(){
 
-    // ✅ LOG COMPLETO DE TODOS LOS DATOS RECIBIDOS
-    error_log("=== CONTROLADOR DEBUG - DATOS RECIBIDOS ===");
-    error_log("GET: " . json_encode($_GET));
-    error_log("POST: " . json_encode($_POST));
-    error_log("SESSION ID: " . (isset($_SESSION["id"]) ? $_SESSION["id"] : 'NO_SESSION'));
-    
-    if(isset($_POST["productos_solicitados"])){
-        error_log("✅ Campo productos_solicitados encontrado");
+    // ✅ SOLO EJECUTAR SI SE RECIBIÓ UN POST CON productos_solicitados
+    if(isset($_POST["productos_solicitados"]) && $_SERVER['REQUEST_METHOD'] === 'POST'){
+
+        // ✅ LOG COMPLETO DE TODOS LOS DATOS RECIBIDOS
+        error_log("=== CONTROLADOR DEBUG - CREANDO SOLICITUD ===");
+        error_log("POST: " . json_encode($_POST));
+        error_log("SESSION ID: " . (isset($_SESSION["id"]) ? $_SESSION["id"] : 'NO_SESSION'));
         
         // ✅ DEBUG ESPECÍFICO PARA REMISIÓN
         error_log("Tipo de solicitud recibido: " . (isset($_POST["tipo_solicitud"]) ? $_POST["tipo_solicitud"] : 'NO_DEFINIDO'));
@@ -168,20 +167,8 @@ static public function ctrCrearSolicitud(){
 
         }
         
-    } else {
-        error_log("❌ Campo productos_solicitados NO encontrado");
-        error_log("Campos POST disponibles: " . implode(", ", array_keys($_POST)));
-        
-        echo '<script>
-            swal({
-                type: "error",
-                title: "Error",
-                text: "No se recibieron datos de productos para la solicitud",
-                showConfirmButton: true,
-                confirmButtonText: "Cerrar"
-            });
-        </script>';
     }
+    // ✅ SI NO HAY POST, NO HACER NADA (no mostrar errores)
 }
 
 /*=============================================
