@@ -33,15 +33,17 @@ $(document).ready(function() {
             },
             "columnDefs": [
                 { "orderable": false, "targets": [0, 4] },
-                { "width": "80px", "targets": 0 },
-                { "width": "100px", "targets": 3 },
-                { "width": "120px", "targets": 4 }
+                { "width": "60px", "targets": 0 },
+                { "width": "80px", "targets": 3 },
+                { "width": "80px", "targets": 4 }
             ]
         });
     }
 
-    // Eventos de tipo de solicitud
+    // ✅ VALIDAR TIPO DE SOLICITUD EN TIEMPO REAL
     $('input[name="tipo_solicitud"]').change(function() {
+        $('#errorTipoSolicitud').hide();
+        
         if($(this).val() === 'remision') {
             $('.campoRemision').slideDown();
         } else {
@@ -69,16 +71,27 @@ $(document).ready(function() {
         }
     });
 
-    // Envío del formulario
-    $('.formularioCrearSolicitud').submit(function(e) {
+    // ✅ VALIDAR Y CREAR SOLICITUD
+    $('#btnCrearSolicitudFinal').click(function(e) {
         e.preventDefault();
         
+        // ✅ VALIDAR TIPO DE SOLICITUD OBLIGATORIO
+        if(!$('input[name="tipo_solicitud"]:checked').length) {
+            $('#errorTipoSolicitud').show();
+            mostrarAlerta('error', 'Debe seleccionar un tipo de solicitud');
+            $('html, body').animate({
+                scrollTop: $('input[name="tipo_solicitud"]').first().offset().top - 100
+            }, 500);
+            return false;
+        }
+
+        // ✅ VALIDAR QUE HAYA PRODUCTOS
         if(productosSeleccionados.length === 0) {
             mostrarAlerta('warning', 'Debe seleccionar al menos un producto');
             return false;
         }
 
-        // Confirmar antes de crear
+        // ✅ CONFIRMAR ANTES DE CREAR
         swal({
             title: '¿Crear esta solicitud?',
             text: "Se creará la solicitud con " + productosSeleccionados.length + " productos",
@@ -108,36 +121,74 @@ $(document).ready(function() {
 });
 
 /*=============================================
-CREAR SOLICITUD
+CREAR SOLICITUD - CORREGIDO
 =============================================*/
 function crearSolicitud() {
+    
+    // ✅ VALIDAR NUEVAMENTE ANTES DE ENVIAR
+    if(!$('input[name="tipo_solicitud"]:checked').length) {
+        mostrarAlerta('error', 'Debe seleccionar un tipo de solicitud');
+        return false;
+    }
+
+    if(productosSeleccionados.length === 0) {
+        mostrarAlerta('error', 'Debe agregar al menos un producto');
+        return false;
+    }
     
     // Actualizar campo hidden con productos
     $('#productosJsonInput').val(JSON.stringify(productosSeleccionados));
     
-    // Crear FormData
+    // Crear FormData del formulario
     var formData = new FormData($('.formularioCrearSolicitud')[0]);
     
-    // Deshabilitar botón
-    $('#btnCrearSolicitudFinal').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Creando...');
+    // ✅ AGREGAR DATOS ADICIONALES AL FormData
+    formData.append('crear_solicitud', 'true');
+    
+    // Deshabilitar botón y mostrar loading
+    $('#btnCrearSolicitudFinal').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Creando solicitud...');
     
     $.ajax({
-        url: 'index.php?ruta=crear-solicitud-stock',
+        url: window.location.href, // ✅ ENVIAR A LA MISMA PÁGINA
         type: 'POST',
         data: formData,
         processData: false,
         contentType: false,
         success: function(response) {
-            // Redireccionar a la lista de solicitudes
-            window.location = 'solicitudes-stock';
+            
+            // ✅ VERIFICAR SI LA RESPUESTA CONTIENE ÉXITO
+            if(response.indexOf('swal') > -1 && response.indexOf('success') > -1) {
+                // Solicitud creada exitosamente
+                swal({
+                    title: '¡Solicitud creada!',
+                    text: 'La solicitud se ha creado correctamente',
+                    type: 'success',
+                    confirmButtonText: 'Ver solicitudes'
+                }).then((result) => {
+                    if (result.value) {
+                        window.location.href = 'solicitudes-stock';
+                    }
+                });
+            } else if(response.indexOf('swal') > -1 && response.indexOf('error') > -1) {
+                // Error en la creación
+                mostrarAlerta('error', 'Error al crear la solicitud. Revise los datos e intente nuevamente.');
+                $('#btnCrearSolicitudFinal').prop('disabled', false).html('<i class="fa fa-save"></i> Crear Solicitud');
+            } else {
+                // Respuesta inesperada - asumir éxito y redirigir
+                window.location.href = 'solicitudes-stock';
+            }
         },
         error: function(xhr, status, error) {
             console.log('Error al crear solicitud:', error);
-            mostrarAlerta('error', 'Error al crear la solicitud. Intente nuevamente.');
+            mostrarAlerta('error', 'Error de conexión. Intente nuevamente.');
             $('#btnCrearSolicitudFinal').prop('disabled', false).html('<i class="fa fa-save"></i> Crear Solicitud');
         }
     });
 }
+
+/*=============================================
+RESTO DE FUNCIONES (IGUAL QUE ANTES)
+=============================================*/
 
 /*=============================================
 AGREGAR PRODUCTO DESDE CATÁLOGO
@@ -208,9 +259,8 @@ function agregarProductoALista() {
     actualizarContadorProductos();
     habilitarBotonCrear();
 
-    // Cerrar modales
+    // Cerrar modal
     $('#modalCantidadProducto').modal('hide');
-    $('#modalCatalogoProductos').modal('hide');
 
     mostrarAlerta('success', 'Producto agregado: ' + producto.codigo + ' (Cantidad: ' + cantidad + ')');
 }

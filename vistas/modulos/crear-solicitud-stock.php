@@ -19,14 +19,15 @@
 
     <div class="row">
 
-      <!-- FORMULARIO DE SOLICITUD -->
-      <div class="col-md-5">
+      <!-- COLUMNA IZQUIERDA: INFORMACIÓN + PRODUCTOS SELECCIONADOS -->
+      <div class="col-md-6">
 
+        <!-- FORMULARIO DE SOLICITUD -->
         <div class="box box-success">
           
           <div class="box-header with-border">
             <h3 class="box-title">
-              <i class="fa fa-plus-circle"></i> Nueva Solicitud
+              <i class="fa fa-plus-circle"></i> Información de la Solicitud
             </h3>
           </div>
 
@@ -34,7 +35,7 @@
 
             <div class="box-body">
 
-              <!-- TIPO DE SOLICITUD -->
+              <!-- TIPO DE SOLICITUD (OBLIGATORIO) -->
               <div class="form-group">
                 <label>
                   <i class="fa fa-tags"></i> Tipo de Solicitud: <span class="text-danger">*</span>
@@ -51,6 +52,9 @@
                     <i class="fa fa-file-text-o"></i> Por Remisión (Basado en una venta)
                   </label>
                 </div>
+                <small class="help-block text-danger" id="errorTipoSolicitud" style="display: none;">
+                  <i class="fa fa-exclamation-triangle"></i> Debe seleccionar un tipo de solicitud
+                </small>
               </div>
 
               <!-- CAMPOS DE REMISIÓN -->
@@ -100,45 +104,14 @@
 
             </div>
 
-            <div class="box-footer">
-              
-              <div class="row">
-                <div class="col-xs-6">
-                  <a href="solicitudes-stock" class="btn btn-default btn-block">
-                    <i class="fa fa-arrow-left"></i> Cancelar
-                  </a>
-                </div>
-                <div class="col-xs-6">
-                  <button type="submit" 
-                          class="btn btn-success btn-block" 
-                          id="btnCrearSolicitudFinal"
-                          disabled>
-                    <i class="fa fa-save"></i> Crear Solicitud
-                  </button>
-                </div>
-              </div>
-
-              <!-- CAMPO OCULTO PARA PRODUCTOS -->
-              <input type="hidden" name="productos_solicitados" id="productosJsonInput">
-
-            </div>
+            <!-- CAMPO OCULTO PARA PRODUCTOS -->
+            <input type="hidden" name="productos_solicitados" id="productosJsonInput">
 
           </form>
 
-          <?php
-
-          $crearSolicitud = new ControladorSolicitudesStock();
-          $crearSolicitud->ctrCrearSolicitud();
-
-          ?>
-
         </div>
 
-      </div>
-
-      <!-- LISTA DE PRODUCTOS SELECCIONADOS -->
-      <div class="col-md-7">
-
+        <!-- PRODUCTOS SELECCIONADOS (DEBAJO DEL FORMULARIO) -->
         <div class="box box-info">
           
           <div class="box-header with-border">
@@ -155,8 +128,8 @@
                 <thead>
                   <tr class="bg-light">
                     <th>Producto</th>
-                    <th class="text-center" width="100px">Cantidad</th>
-                    <th class="text-center" width="80px">Acción</th>
+                    <th class="text-center" width="80px">Cantidad</th>
+                    <th class="text-center" width="60px">Acción</th>
                   </tr>
                 </thead>
                 <tbody id="productosSeleccionados">
@@ -173,22 +146,58 @@
 
         </div>
 
-        <!-- BOTÓN PARA AGREGAR PRODUCTOS -->
+        <!-- BOTONES DE ACCIÓN -->
+        <div class="box box-default">
+          <div class="box-body">
+            
+            <div class="row">
+              <div class="col-xs-6">
+                <a href="solicitudes-stock" class="btn btn-default btn-block">
+                  <i class="fa fa-arrow-left"></i> Cancelar
+                </a>
+              </div>
+              <div class="col-xs-6">
+                <button type="button" 
+                        class="btn btn-success btn-block" 
+                        id="btnCrearSolicitudFinal"
+                        disabled>
+                  <i class="fa fa-save"></i> Crear Solicitud
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- COLUMNA DERECHA: CATÁLOGO DE PRODUCTOS -->
+      <div class="col-md-6">
+
         <div class="box box-primary">
           
           <div class="box-header with-border">
             <h3 class="box-title">
-              <i class="fa fa-plus"></i> Agregar Productos
+              <i class="fa fa-search"></i> Catálogo de Productos
             </h3>
           </div>
 
-          <div class="box-body">
-            <button type="button" 
-                    class="btn btn-primary btn-block" 
-                    data-toggle="modal" 
-                    data-target="#modalCatalogoProductos">
-              <i class="fa fa-plus-circle"></i> Buscar y Agregar Productos
-            </button>
+          <div class="box-body" style="padding: 0;">
+            
+            <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+              <table class="table table-bordered table-condensed tablaProductosCatalogo">
+                <thead style="position: sticky; top: 0; background: white; z-index: 1;">
+                  <tr class="bg-primary text-white">
+                    <th width="60px">Imagen</th>
+                    <th>Código</th>
+                    <th>Descripción</th>
+                    <th width="80px">Stock</th>
+                    <th width="80px">Acción</th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+
           </div>
 
         </div>
@@ -199,44 +208,6 @@
 
   </section>
 
-</div>
-
-<!-- MODAL PARA CATÁLOGO DE PRODUCTOS -->
-<div class="modal fade" id="modalCatalogoProductos" tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-        <h4 class="modal-title">
-          <i class="fa fa-search"></i> Catálogo de Productos
-        </h4>
-      </div>
-      <div class="modal-body">
-        
-        <div class="table-responsive">
-          <table class="table table-bordered table-condensed tablaProductosCatalogo">
-            <thead>
-              <tr class="bg-primary text-white">
-                <th>Imagen</th>
-                <th>Código</th>
-                <th>Descripción</th>
-                <th>Stock</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">
-          <i class="fa fa-times"></i> Cerrar
-        </button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- MODAL PARA CANTIDAD DE PRODUCTO -->
@@ -300,3 +271,11 @@
     </div>
   </div>
 </div>
+
+<?php
+
+// ✅ PROCESAR LA CREACIÓN DE SOLICITUD
+$crearSolicitud = new ControladorSolicitudesStock();
+$crearSolicitud->ctrCrearSolicitud();
+
+?>
