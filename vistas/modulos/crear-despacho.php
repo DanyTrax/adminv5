@@ -1,6 +1,6 @@
 <?php
 
-if($_SESSION["perfil"] == "Limitado"){
+if($_SESSION["perfil"] == "Limitado" || $_SESSION["perfil"] == "Transportador"){
     echo '<script>
         window.location = "inicio";
     </script>';
@@ -10,10 +10,11 @@ if($_SESSION["perfil"] == "Limitado"){
 ?>
 
 <div class="content-wrapper">
+
     <section class="content-header">
         <h1>
             Crear Despacho
-            <small>Nuevo despacho de mercancía</small>
+            <small>Generar nuevo despacho de mercancía</small>
         </h1>
         <ol class="breadcrumb">
             <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
@@ -23,395 +24,366 @@ if($_SESSION["perfil"] == "Limitado"){
     </section>
 
     <section class="content">
-        
-        <form role="form" method="post" id="formCrearDespacho">
-            
-            <div class="row">
-                
-                <!-- COLUMNA IZQUIERDA - INFORMACIÓN GENERAL -->
-                <div class="col-md-5">
+
+        <div class="row">
+
+            <!-- COLUMNA IZQUIERDA: INFORMACIÓN + PRODUCTOS SELECCIONADOS -->
+            <div class="col-md-6">
+
+                <!-- FORMULARIO DE DESPACHO -->
+                <div class="box box-primary">
                     
-                    <div class="box box-primary">
-                        <div class="box-header with-border">
-                            <h3 class="box-title">
-                                <i class="fa fa-info-circle"></i> Información del Despacho
-                            </h3>
-                        </div>
-                        <div class="box-body">
-                            
-                            <!-- INFORMACIÓN BÁSICA -->
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>N° Despacho:</label>
-                                        <input type="text" class="form-control" id="numeroDespacho" 
-                                               value="Se genera automáticamente" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Fecha:</label>
-                                        <input type="text" class="form-control" 
-                                               value="<?php echo date('d/m/Y H:i'); ?>" readonly>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label>Sucursal Origen:</label>
-                                        <?php
-                                        require_once "controladores/sucursales.controlador.php";
-                                        $sucursalLocal = ControladorSucursales::ctrObtenerConfiguracionLocal();
-                                        $nombreSucursal = $sucursalLocal ? $sucursalLocal['nombre'] : 'Sucursal Local';
-                                        ?>
-                                        <input type="text" class="form-control" 
-                                               value="<?php echo $nombreSucursal; ?>" readonly>
-                                        <input type="hidden" name="nombreSucursalOrigen" value="<?php echo $nombreSucursal; ?>">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Usuario Creador:</label>
-                                <input type="text" class="form-control" 
-                                       value="<?php echo $_SESSION['nombre']; ?>" readonly>
-                                <input type="hidden" name="idUsuarioCreador" value="<?php echo $_SESSION['id']; ?>">
-                                <input type="hidden" name="nombreUsuarioCreador" value="<?php echo $_SESSION['nombre']; ?>">
-                            </div>
-                            
-                        </div>
+                    <div class="box-header with-border">
+                        <h3 class="box-title">
+                            <i class="fa fa-truck"></i> Información del Despacho
+                        </h3>
                     </div>
-                    
-                    <!-- BUSCAR SOLICITUD -->
-                    <div class="box box-success">
-                        <div class="box-header with-border">
-                            <h3 class="box-title">
-                                <i class="fa fa-search"></i> Buscar Solicitud de Stock
-                            </h3>
-                            <div class="box-tools pull-right">
-                                <button type="button" class="btn btn-box-tool" data-widget="collapse">
-                                    <i class="fa fa-minus"></i>
-                                </button>
-                            </div>
-                        </div>
+
+                    <form role="form" method="post" id="formCrearDespacho" novalidate>
+
                         <div class="box-body">
-                            
+
+                            <!-- NÚMERO DE DESPACHO (AUTO-GENERADO) -->
                             <div class="form-group">
-                                <label>Número de Solicitud:</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="numeroSolicitudBuscar" 
-                                           placeholder="Ej: SOL000001">
-                                    <span class="input-group-btn">
-                                        <button type="button" class="btn btn-success" onclick="buscarSolicitud()">
-                                            <i class="fa fa-search"></i> Buscar
-                                        </button>
-                                    </span>
-                                </div>
-                                <small class="text-muted">
-                                    <i class="fa fa-info-circle"></i> 
-                                    Los productos de la solicitud se agregarán automáticamente
+                                <label>
+                                    <i class="fa fa-barcode"></i> Número de Despacho:
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="numeroDespacho" 
+                                       value="<?php echo 'DESP-' . date('Ymd') . '-' . str_pad(rand(1,999), 3, '0', STR_PAD_LEFT); ?>" 
+                                       readonly
+                                       style="background-color: #f4f4f4;">
+                                <small class="help-block">
+                                    <i class="fa fa-info-circle"></i> Se genera automáticamente
                                 </small>
                             </div>
-                            
-                            <!-- INFORMACIÓN DE SOLICITUD ENCONTRADA -->
-                            <div id="infoSolicitudEncontrada" style="display: none;">
-                                <div class="alert alert-success">
-                                    <h4><i class="fa fa-check"></i> Solicitud Encontrada</h4>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <strong>Número:</strong> <span id="numeroSolicitudInfo"></span><br>
-                                            <strong>Sucursal:</strong> <span id="sucursalSolicitudInfo"></span><br>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <strong>Productos:</strong> <span id="totalProductosSolicitudInfo"></span><br>
-                                            <strong>Cantidad:</strong> <span id="totalCantidadSolicitudInfo"></span><br>
-                                        </div>
-                                    </div>
-                                    <div class="row" style="margin-top: 10px;">
-                                        <div class="col-md-12">
-                                            <button type="button" class="btn btn-success btn-sm" onclick="agregarProductosSolicitud()">
-                                                <i class="fa fa-plus"></i> Agregar Productos de esta Solicitud
-                                            </button>
-                                            <button type="button" class="btn btn-default btn-sm" onclick="limpiarSolicitud()">
-                                                <i class="fa fa-times"></i> Limpiar
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                        </div>
-                    </div>
-                    
-                    <!-- AGREGAR PRODUCTO MANUAL -->
-                    <div class="box box-warning">
-                        <div class="box-header with-border">
-                            <h3 class="box-title">
-                                <i class="fa fa-plus"></i> Agregar Producto Manual
-                            </h3>
-                            <div class="box-tools pull-right">
-                                <button type="button" class="btn btn-box-tool" data-widget="collapse">
-                                    <i class="fa fa-minus"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="box-body">
-                            
+
+                            <!-- ORIGEN DE LA SOLICITUD (OPCIONAL) -->
                             <div class="form-group">
-                                <label>Buscar Producto:</label>
+                                <label>
+                                    <i class="fa fa-search"></i> Basado en Solicitud de Stock:
+                                </label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" id="buscarProductoInput" 
-                                           placeholder="Código o descripción del producto">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="numeroSolicitudBuscar"
+                                           placeholder="Número de solicitud (opcional)">
                                     <span class="input-group-btn">
-                                        <button type="button" class="btn btn-warning" onclick="mostrarListaProductos()">
-                                            <i class="fa fa-list"></i> Lista
+                                        <button type="button" class="btn btn-info" onclick="buscarSolicitud()">
+                                            <i class="fa fa-search"></i>
                                         </button>
                                     </span>
                                 </div>
-                                <div id="resultadosBusquedaProducto" class="list-group" style="display: none; max-height: 200px; overflow-y: auto; margin-top: 5px;">
-                                    <!-- Resultados de búsqueda se cargan aquí -->
+                                
+                                <!-- INFORMACIÓN DE SOLICITUD ENCONTRADA -->
+                                <div id="infoSolicitudEncontrada" class="alert alert-info" style="display: none; margin-top: 10px;">
+                                    <h5><i class="fa fa-info-circle"></i> Solicitud Encontrada:</h5>
+                                    <div id="datosSolicitudEncontrada"></div>
+                                    <button type="button" class="btn btn-xs btn-success" onclick="cargarProductosDeSolicitud()">
+                                        <i class="fa fa-download"></i> Cargar Productos de la Solicitud
+                                    </button>
                                 </div>
+                                
+                                <small class="help-block">
+                                    <i class="fa fa-lightbulb-o"></i> Opcional: Puede cargar productos desde una solicitud existente
+                                </small>
                             </div>
-                            
-                            <div id="productoSeleccionadoInfo" style="display: none;">
-                                <div class="alert alert-info">
-                                    <h4><i class="fa fa-cube"></i> Producto Seleccionado</h4>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <strong>Código:</strong> <span id="codigoProductoSeleccionado"></span><br>
-                                            <strong>Stock Actual:</strong> <span id="stockProductoSeleccionado" class="text-bold text-green"></span><br>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <strong>Descripción:</strong><br>
-                                            <span id="descripcionProductoSeleccionado"></span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row" style="margin-top: 15px;">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Cantidad a Despachar:</label>
-                                                <input type="number" class="form-control" id="cantidadProductoDespachar" 
-                                                       min="1" value="1">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Observaciones:</label>
-                                                <input type="text" class="form-control" id="observacionProductoDespachar" 
-                                                       placeholder="Opcional">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <button type="button" class="btn btn-warning" onclick="agregarProductoADespacho()">
-                                                <i class="fa fa-plus"></i> Agregar al Despacho
-                                            </button>
-                                            <button type="button" class="btn btn-default" onclick="limpiarProductoSeleccionado()">
-                                                <i class="fa fa-times"></i> Limpiar
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                        </div>
-                    </div>
-                    
-                    <!-- OBSERVACIONES GENERALES -->
-                    <div class="box box-info">
-                        <div class="box-header with-border">
-                            <h3 class="box-title">
-                                <i class="fa fa-comment"></i> Observaciones Generales
-                            </h3>
-                        </div>
-                        <div class="box-body">
+
+                            <!-- DETALLE ADICIONAL -->
                             <div class="form-group">
-                                <textarea class="form-control" name="detalleAdicional" rows="4" 
-                                         placeholder="Observaciones adicionales sobre este despacho (opcional)..."></textarea>
+                                <label>
+                                    <i class="fa fa-comment"></i> Detalle Adicional:
+                                </label>
+                                <textarea class="form-control" 
+                                          name="detalleAdicional" 
+                                          id="detalleAdicional" 
+                                          rows="3" 
+                                          maxlength="500"
+                                          placeholder="Describa detalles del despacho, destino, instrucciones especiales, etc."></textarea>
+                                <small class="help-block">
+                                    <i class="fa fa-info-circle"></i> Máximo 500 caracteres
+                                </small>
                             </div>
+
+                        </div>
+
+                        <!-- CAMPOS OCULTOS PARA ENVÍO -->
+                        <input type="hidden" name="productosDespacho" id="productosDespachoHidden">
+                        <input type="hidden" name="totalProductos" id="totalProductosHidden">
+                        <input type="hidden" name="totalCantidad" id="totalCantidadHidden">
+                        <input type="hidden" name="idSolicitudOrigen" id="idSolicitudOrigenHidden">
+                        <input type="hidden" name="crearDespacho" value="1">
+
+                    </form>
+
+                </div>
+
+                <!-- PRODUCTOS SELECCIONADOS (DEBAJO DEL FORMULARIO) -->
+                <div class="box box-success">
+                    
+                    <div class="box-header with-border">
+                        <h3 class="box-title">
+                            <i class="fa fa-list"></i> Productos para Despachar
+                            <span class="badge bg-green" id="contadorProductosDespacho">0</span>
+                        </h3>
+                        <div class="box-tools pull-right">
+                            <button type="button" class="btn btn-box-tool" onclick="validarStockProductos()">
+                                <i class="fa fa-check-circle" data-toggle="tooltip" title="Validar Stock"></i>
+                            </button>
                         </div>
                     </div>
-                    
-                </div>
-                
-                <!-- COLUMNA DERECHA - PRODUCTOS DEL DESPACHO -->
-                <div class="col-md-7">
-                    
-                    <div class="box box-primary">
-                        <div class="box-header with-border">
-                            <h3 class="box-title">
-                                <i class="fa fa-list"></i> Productos a Despachar
-                            </h3>
-                            <div class="box-tools pull-right">
-                                <span class="label label-primary" id="contadorProductos">0 productos</span>
-                                <span class="label label-success" id="contadorCantidad">0 unidades</span>
-                            </div>
+
+                    <div class="box-body">
+
+                        <!-- ALERTA DE VALIDACIÓN DE STOCK -->
+                        <div id="alertaValidacionStock" class="alert alert-warning" style="display: none;">
+                            <h5><i class="fa fa-exclamation-triangle"></i> Problemas de Stock Detectados:</h5>
+                            <ul id="listaProblemasStock"></ul>
+                            <button type="button" class="btn btn-xs btn-info" onclick="validarStockProductos()">
+                                <i class="fa fa-refresh"></i> Revalidar Stock
+                            </button>
                         </div>
-                        <div class="box-body">
-                            
-                            <!-- TABLA DE PRODUCTOS -->
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped" id="tablaProductosDespacho">
-                                    <thead class="bg-primary">
-                                        <tr>
-                                            <th width="50px">#</th>
-                                            <th width="100px">Código</th>
-                                            <th>Descripción</th>
-                                            <th width="80px">Cantidad</th>
-                                            <th width="60px">Stock</th>
-                                            <th>Observación</th>
-                                            <th width="80px">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="listaProductosDespacho">
-                                        <tr id="filaVaciaProductos">
-                                            <td colspan="7" class="text-center text-muted">
-                                                <i class="fa fa-info-circle"></i>
-                                                No hay productos agregados al despacho
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                    <tfoot id="totalDespacho" style="display: none;">
-                                        <tr class="bg-light">
-                                            <td colspan="3"><strong>TOTALES:</strong></td>
-                                            <td class="text-center"><strong id="totalCantidadDespacho">0</strong></td>
-                                            <td></td>
-                                            <td></td>
-                                            <td><strong id="totalProductosDespacho">0</strong></td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                            
-                            <!-- ALERTA DE VALIDACIÓN -->
-                            <div id="alertaValidacionStock" class="alert alert-danger" style="display: none;">
-                                <h4><i class="fa fa-exclamation-triangle"></i> Problemas de Stock</h4>
-                                <ul id="listaProblemasStock"></ul>
-                            </div>
-                            
+
+                        <div class="table-responsive">
+                            <table class="table table-condensed" id="tablaProductosDespacho">
+                                <thead>
+                                    <tr class="bg-light">
+                                        <th>Producto</th>
+                                        <th class="text-center" width="80px">Cantidad</th>
+                                        <th class="text-center" width="80px">Stock</th>
+                                        <th class="text-center" width="80px">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productosDespachoSeleccionados">
+                                    <tr id="sinProductosDespacho">
+                                        <td colspan="4" class="text-center text-muted">
+                                            <i class="fa fa-info-circle"></i> No hay productos agregados al despacho
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="box-footer">
-                            
+
+                        <!-- RESUMEN -->
+                        <div id="resumenDespacho" style="display: none;">
+                            <hr>
                             <div class="row">
-                                <div class="col-md-6">
-                                    <a href="despachos" class="btn btn-default">
-                                        <i class="fa fa-times"></i> Cancelar
-                                    </a>
-                                    <button type="button" class="btn btn-info" onclick="validarStockCompleto()">
-                                        <i class="fa fa-check"></i> Validar Stock
-                                    </button>
+                                <div class="col-xs-6">
+                                    <strong>Total Productos:</strong> <span id="totalProductosResumen">0</span>
                                 </div>
-                                <div class="col-md-6 text-right">
-                                    <button type="submit" name="crearDespacho" class="btn btn-primary btn-lg" id="btnCrearDespacho" disabled>
-                                        <i class="fa fa-save"></i> Crear Despacho
-                                    </button>
+                                <div class="col-xs-6">
+                                    <strong>Total Unidades:</strong> <span id="totalUnidadesResumen">0</span>
                                 </div>
                             </div>
-                            
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- BOTONES DE ACCIÓN -->
+                <div class="box box-default">
+                    <div class="box-body">
+                        
+                        <div class="row">
+                            <div class="col-xs-6">
+                                <a href="despachos" class="btn btn-default btn-block">
+                                    <i class="fa fa-arrow-left"></i> Cancelar
+                                </a>
+                            </div>
+                            <div class="col-xs-6">
+                                <button type="button" 
+                                        class="btn btn-primary btn-block" 
+                                        id="btnCrearDespacho"
+                                        onclick="enviarFormularioDespacho()"
+                                        disabled>
+                                    <i class="fa fa-truck"></i> Crear Despacho
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- COLUMNA DERECHA: CATÁLOGO DE PRODUCTOS LOCALES -->
+            <div class="col-md-6">
+
+                <div class="box box-info">
+                    
+                    <div class="box-header with-border">
+                        <h3 class="box-title">
+                            <i class="fa fa-cubes"></i> Inventario Local
+                        </h3>
+                        <div class="box-tools pull-right">
+                            <button type="button" class="btn btn-box-tool" onclick="actualizarInventarioLocal()">
+                                <i class="fa fa-refresh" data-toggle="tooltip" title="Actualizar inventario"></i>
+                            </button>
                         </div>
                     </div>
-                    
+
+                    <div class="box-body" style="padding: 0;">
+                        
+                        <!-- FILTRO DE BÚSQUEDA -->
+                        <div style="padding: 15px; border-bottom: 1px solid #f4f4f4;">
+                            <div class="input-group">
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="filtroProductosLocal"
+                                       placeholder="Buscar por código o descripción...">
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" onclick="limpiarFiltroLocal()">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                            <table class="table table-bordered table-condensed" id="tablaInventarioLocal">
+                                <thead style="position: sticky; top: 0; background: white; z-index: 1;">
+                                    <tr class="bg-info text-white">
+                                        <th width="60px">Imagen</th>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th width="80px">Stock</th>
+                                        <th width="80px">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaProductosLocal">
+                                    <tr>
+                                        <td colspan="5" class="text-center">
+                                            <i class="fa fa-spinner fa-spin"></i> Cargando inventario local...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+
                 </div>
-                
+
             </div>
-            
-            <!-- CAMPOS OCULTOS -->
-            <input type="hidden" name="productosDespacho" id="productosDespachoHidden">
-            <input type="hidden" name="totalProductos" id="totalProductosHidden" value="0">
-            <input type="hidden" name="totalCantidad" id="totalCantidadHidden" value="0">
-            <input type="hidden" name="idSolicitudOrigen" id="idSolicitudOrigenHidden">
-            
-        </form>
-        
+
+        </div>
+
     </section>
+
 </div>
 
-<!-- MODAL LISTA DE PRODUCTOS -->
-<div class="modal fade" id="modalListaProductos" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" role="document">
+<!-- MODAL PARA CANTIDAD DE PRODUCTO -->
+<div class="modal fade" id="modalCantidadProductoDespacho" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
                 <h4 class="modal-title">
-                    <i class="fa fa-list"></i> Seleccionar Producto del Inventario
+                    <i class="fa fa-plus-circle text-primary"></i> Agregar al Despacho
                 </h4>
             </div>
             <div class="modal-body">
                 
                 <div class="form-group">
-                    <label>Filtrar productos:</label>
-                    <input type="text" class="form-control" id="filtroProductosModal" 
-                           placeholder="Buscar por código o descripción...">
+                    <label><strong>Producto:</strong></label>
+                    <p id="nombreProductoDespachoModal" class="text-primary"></p>
+                    <p><strong>Stock disponible:</strong> <span id="stockProductoDespachoModal" class="text-success"></span> unidades</p>
                 </div>
                 
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped" id="tablaProductosModal">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Descripción</th>
-                                <th>Stock</th>
-                                <th>Precio</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Se carga dinámicamente -->
-                        </tbody>
-                    </table>
+                <div class="form-group">
+                    <label for="cantidadProductoDespachoModal">
+                        <i class="fa fa-calculator"></i> Cantidad a despachar: <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" 
+                           class="form-control text-center" 
+                           id="cantidadProductoDespachoModal" 
+                           min="1" 
+                           value="1" 
+                           placeholder="Ingrese cantidad">
+                    <small class="help-block" id="ayudaCantidadDespacho">
+                        <i class="fa fa-info-circle"></i> Máximo: <span id="maximoCantidadDespacho">0</span> unidades
+                    </small>
                 </div>
                 
+                <div class="form-group">
+                    <label for="observacionProductoDespachoModal">
+                        <i class="fa fa-comment"></i> Observación (opcional):
+                    </label>
+                    <textarea class="form-control" 
+                              id="observacionProductoDespachoModal" 
+                              rows="2" 
+                              maxlength="200"
+                              placeholder="Detalles especiales, instrucciones, etc."></textarea>
+                    <small class="help-block text-muted">
+                        <i class="fa fa-info-circle"></i> Máximo 200 caracteres
+                    </small>
+                </div>
+
+                <!-- CAMPOS OCULTOS DEL PRODUCTO -->
+                <input type="hidden" id="codigoProductoDespachoModal">
+                <input type="hidden" id="descripcionProductoDespachoModal">
+                <input type="hidden" id="stockActualProductoDespachoModal">
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">
-                    <i class="fa fa-times"></i> Cerrar
+                    <i class="fa fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmarAgregarProductoDespacho">
+                    <i class="fa fa-check"></i> Agregar al Despacho
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MODAL EDITAR CANTIDAD -->
-<div class="modal fade" id="modalEditarCantidad" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
+<!-- MODAL PARA EDITAR CANTIDAD -->
+<div class="modal fade" id="modalEditarCantidadDespacho" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
                 <h4 class="modal-title">
-                    <i class="fa fa-edit"></i> Editar Cantidad
+                    <i class="fa fa-edit text-warning"></i> Editar Cantidad
                 </h4>
             </div>
             <div class="modal-body">
                 
-                <div class="alert alert-info">
-                    <strong>Producto:</strong> <span id="productoEditarInfo"></span><br>
-                    <strong>Stock Disponible:</strong> <span id="stockDisponibleEditar"></span> unidades
+                <div class="form-group">
+                    <label><strong>Producto:</strong></label>
+                    <p id="nombreProductoEditarModal" class="text-primary"></p>
+                    <p><strong>Stock disponible:</strong> <span id="stockDisponibleEditar" class="text-success"></span> unidades</p>
                 </div>
                 
                 <div class="form-group">
-                    <label>Nueva Cantidad:</label>
-                    <input type="number" class="form-control" id="nuevaCantidadEditar" min="1">
+                    <label for="nuevaCantidadEditar">
+                        <i class="fa fa-calculator"></i> Nueva cantidad:
+                    </label>
+                    <input type="number" 
+                           class="form-control text-center" 
+                           id="nuevaCantidadEditar" 
+                           min="1">
+                    <small class="help-block" id="ayudaEditarCantidad">
+                        <i class="fa fa-info-circle"></i> Stock disponible más cantidad actual
+                    </small>
                 </div>
-                
-                <div class="form-group">
-                    <label>Observaciones:</label>
-                    <input type="text" class="form-control" id="nuevaObservacionEditar" placeholder="Opcional">
-                </div>
-                
+
+                <!-- CAMPOS OCULTOS -->
                 <input type="hidden" id="indiceProductoEditar">
-                
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">
                     <i class="fa fa-times"></i> Cancelar
                 </button>
-                <button type="button" class="btn btn-primary" onclick="guardarEdicionCantidad()">
-                    <i class="fa fa-save"></i> Guardar Cambios
+                <button type="button" class="btn btn-warning" onclick="confirmarEditarCantidad()">
+                    <i class="fa fa-check"></i> Actualizar
                 </button>
             </div>
         </div>
@@ -420,53 +392,85 @@ if($_SESSION["perfil"] == "Limitado"){
 
 <!-- ESTILOS CSS -->
 <style>
-.list-group-item:hover {
-    background-color: #f5f5f5;
-    cursor: pointer;
+/* Productos en la tabla */
+.producto-agregado {
+    background-color: #d4edda !important;
+    animation: fadeIn 0.5s;
+}
+
+.producto-problema-stock {
+    background-color: #f8d7da !important;
 }
 
 .producto-sin-stock {
-    background-color: #f2dede !important;
-    color: #a94442;
+    background-color: #fff3cd !important;
 }
 
-.producto-stock-bajo {
-    background-color: #fcf8e3 !important;
-    color: #8a6d3b;
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
-.producto-stock-ok {
-    background-color: #dff0d8 !important;
-    color: #3c763d;
-}
-
-.box-tools .label {
-    margin-left: 5px;
-    font-size: 11px;
-}
-
-#tablaProductosDespacho tbody tr {
-    transition: all 0.3s ease;
-}
-
+/* Validación de cantidades */
 .cantidad-editando {
-    background-color: #fff3cd;
-    border-color: #ffeeba;
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25) !important;
 }
 
-.alert-dismissible {
-    position: relative;
+.cantidad-valida {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
 }
 
-.btn-group-xs > .btn, .btn-xs {
-    padding: 1px 5px;
-    font-size: 12px;
-    line-height: 1.5;
-    border-radius: 3px;
+.cantidad-invalida {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
 }
 
-.text-bold {
+/* Tabla de inventario */
+#tablaInventarioLocal tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+.stock-disponible {
+    color: #28a745;
     font-weight: bold;
+}
+
+.stock-bajo {
+    color: #ffc107;
+    font-weight: bold;
+}
+
+.stock-agotado {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Búsqueda */
+.producto-encontrado {
+    background-color: #fff3cd;
+    animation: highlight 2s;
+}
+
+@keyframes highlight {
+    from { background-color: #fff3cd; }
+    to { background-color: transparent; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .col-md-6 {
+        margin-bottom: 20px;
+    }
+    
+    #tablaInventarioLocal {
+        font-size: 12px;
+    }
+    
+    .modal-sm {
+        width: 95%;
+    }
 }
 </style>
 
