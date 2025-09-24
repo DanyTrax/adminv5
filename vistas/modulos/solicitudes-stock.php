@@ -115,7 +115,7 @@
               <i class="fa fa-list"></i> Productos Solicitados
             </a>
           </li>
-          <li role="presentation">
+          <li role="presentation" class="active">
             <a href="#tabHistorial" role="tab" data-toggle="tab">
               <i class="fa fa-history"></i> Historial
             </a>
