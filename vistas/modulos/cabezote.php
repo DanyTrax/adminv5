@@ -161,7 +161,7 @@
 	line-height: 20px;
 }
 
-/* ✅ ESTILOS PARA NOTIFICACIONES - CORREGIDOS */
+/* ✅ ESTILOS PARA NOTIFICACIONES - VERSIÓN CORREGIDA */
 .notifications-menu .label {
 	position: absolute;
 	top: 9px;
@@ -177,67 +177,148 @@
 }
 
 .notifications-menu .dropdown-menu {
-	width: 280px !important;
-	max-width: 280px !important;
+	width: 320px !important;
+	max-width: 320px !important;
 	left: auto !important;
 	right: 0 !important;
-	padding: 0;
+	padding: 0 !important;
+	border-radius: 4px;
+	box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
 .notifications-menu .dropdown-menu .menu {
-	max-height: 300px;
+	max-height: 350px;
 	overflow-y: auto;
-	padding: 0;
+	padding: 0 !important;
+	margin: 0 !important;
+	list-style: none !important;
+}
+
+.notifications-menu .dropdown-menu .menu li {
+	border-bottom: 1px solid #f0f0f0;
 	margin: 0;
+	padding: 0;
 	list-style: none;
 }
 
+.notifications-menu .dropdown-menu .menu li:last-child {
+	border-bottom: none;
+}
+
 .notifications-menu .dropdown-menu .menu li a {
-	display: block;
-	padding: 10px;
-	border-bottom: 1px solid #f0f0f0;
-	text-decoration: none;
-	color: #333;
-	white-space: normal;
-	word-wrap: break-word;
+	display: block !important;
+	padding: 12px 15px !important;
+	text-decoration: none !important;
+	color: #333 !important;
+	white-space: normal !important;
+	word-wrap: break-word !important;
+	font-size: 13px !important;
+	line-height: 1.4 !important;
+	border: none !important;
+	background: white !important;
+	position: relative;
+	overflow: visible !important;
+	text-overflow: initial !important;
 }
 
 .notifications-menu .dropdown-menu .menu li a:hover {
-	background-color: #f5f5f5;
-	text-decoration: none;
-	color: #333;
+	background-color: #f8f9fa !important;
+	text-decoration: none !important;
+	color: #333 !important;
 }
 
-.notifications-menu .dropdown-menu .menu li:last-child a {
-	border-bottom: none;
+.notifications-menu .dropdown-menu .menu li a:focus,
+.notifications-menu .dropdown-menu .menu li a:active {
+	background-color: #f8f9fa !important;
+	color: #333 !important;
+	text-decoration: none !important;
 }
 
 .notifications-menu .dropdown-menu .header {
 	background-color: #3c8dbc !important;
 	color: white !important;
-	padding: 10px !important;
+	padding: 12px 15px !important;
 	text-align: center !important;
-	font-weight: bold;
-	border-radius: 0;
-	margin: 0;
+	font-weight: bold !important;
+	font-size: 13px !important;
+	border-radius: 4px 4px 0 0;
+	margin: 0 !important;
+	border: none !important;
 }
 
 .notifications-menu .dropdown-menu .footer {
 	background-color: #f4f4f4 !important;
 	text-align: center !important;
-	padding: 5px !important;
-	border-top: 1px solid #ddd;
+	padding: 8px 15px !important;
+	border-top: 1px solid #ddd !important;
+	border-radius: 0 0 4px 4px;
+	margin: 0 !important;
 }
 
 .notifications-menu .dropdown-menu .footer a {
-	color: #337ab7;
-	text-decoration: none;
-	font-size: 12px;
+	color: #337ab7 !important;
+	text-decoration: none !important;
+	font-size: 12px !important;
+	font-weight: normal !important;
 }
 
 .notifications-menu .dropdown-menu .footer a:hover {
-	color: #23527c;
-	text-decoration: underline;
+	color: #23527c !important;
+	text-decoration: underline !important;
+}
+
+/* ✅ ESTILOS ESPECÍFICOS PARA EL CONTENIDO DE NOTIFICACIONES */
+.notif-solicitud-numero {
+	font-weight: bold !important;
+	color: #337ab7 !important;
+	font-size: 14px !important;
+	display: inline-block !important;
+	margin-right: 5px !important;
+}
+
+.notif-productos-count {
+	background-color: #f39c12 !important;
+	color: white !important;
+	font-size: 10px !important;
+	padding: 2px 6px !important;
+	border-radius: 10px !important;
+	font-weight: bold !important;
+	float: right !important;
+	margin-top: 2px;
+}
+
+.notif-sucursal-nombre {
+	display: block !important;
+	color: #666 !important;
+	font-size: 12px !important;
+	margin: 3px 0 !important;
+	font-weight: normal !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	white-space: nowrap !important;
+	max-width: 200px !important;
+}
+
+.notif-tiempo-transcurrido {
+	display: block !important;
+	color: #999 !important;
+	font-size: 11px !important;
+	margin-top: 5px !important;
+	font-weight: normal !important;
+}
+
+.notif-icono-tipo {
+	font-size: 16px !important;
+	color: #f39c12 !important;
+	margin-right: 10px !important;
+	float: left !important;
+	margin-top: 5px;
+}
+
+.notif-contenido {
+	margin-left: 30px !important;
+	display: block !important;
+	overflow: visible !important;
 }
 
 /* ANIMACIÓN PARA EL CONTADOR */
@@ -258,39 +339,26 @@
 	position: relative;
 }
 
-.notif-item-nueva::before {
-	content: '';
-	position: absolute;
-	top: 50%;
-	right: 8px;
-	transform: translateY(-50%);
-	width: 8px;
-	height: 8px;
-	background-color: #f39c12;
-	border-radius: 50%;
-	box-shadow: 0 0 6px rgba(243, 156, 18, 0.6);
-}
-
 /* RESPONSIVE */
 @media (max-width: 768px) {
 	.notifications-menu .dropdown-menu {
-		width: 250px !important;
+		width: 280px !important;
 		right: 10px !important;
 	}
 	
-	.notifications-menu .dropdown-menu .menu li a {
-		padding: 8px;
-		font-size: 12px;
-	}
-	
-	.hidden-xs {
-		display: none;
+	.notif-sucursal-nombre {
+		max-width: 160px !important;
 	}
 }
 
 @media (max-width: 480px) {
 	.notifications-menu .dropdown-menu {
-		width: 220px !important;
+		width: 250px !important;
+		right: 5px !important;
+	}
+	
+	.notif-sucursal-nombre {
+		max-width: 140px !important;
 	}
 }
 </style>
@@ -423,6 +491,7 @@ function actualizarContadorSeguro(contador) {
 }
 
 // ✅ ACTUALIZAR LISTA DE FORMA SEGURA
+// ✅ ACTUALIZAR LISTA DE FORMA SEGURA - VERSIÓN MEJORADA
 function actualizarListaSegura(solicitudes) {
 	const $header = $('#headerNotificaciones');
 	const $lista = $('#listaSolicitudesNotificaciones');
@@ -437,10 +506,10 @@ function actualizarListaSegura(solicitudes) {
 		$header.html('<i class="fa fa-check text-success"></i> No hay solicitudes pendientes');
 		$lista.html(`
 			<li>
-				<a href="#" style="text-align: center; color: #28a745; padding: 20px;">
-					<i class="fa fa-check-circle" style="font-size: 20px;"></i><br>
-					<strong>¡Todo al día!</strong><br>
-					<small>No hay solicitudes pendientes</small>
+				<a href="solicitudes-stock" style="text-align: center; color: #28a745; padding: 20px; display: block;">
+					<i class="fa fa-check-circle" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+					<strong style="display: block; font-size: 14px;">¡Todo al día!</strong>
+					<small style="display: block; font-size: 12px; color: #666;">No hay solicitudes pendientes</small>
 				</a>
 			</li>
 		`);
@@ -452,9 +521,9 @@ function actualizarListaSegura(solicitudes) {
 	const texto = solicitudes.length === 1 ? 
 		'Tienes 1 solicitud pendiente' : 
 		`Tienes ${solicitudes.length} solicitudes pendientes`;
-	$header.html(`<i class="fa fa-bell text-yellow"></i> ${texto}`);
+	$header.html(`<i class="fa fa-bell"></i> ${texto}`);
 	
-	// Generar lista
+	// Generar lista con estructura HTML mejorada
 	let html = '';
 	solicitudes.forEach(function(solicitud, index) {
 		if(index < 8) {
@@ -462,42 +531,42 @@ function actualizarListaSegura(solicitudes) {
 			const icono = solicitud.tipo_solicitud === 'remision' ? 'fa-file-text' : 'fa-cubes';
 			const sucursal = solicitud.nombre_sucursal_solicitante || 'Sin sucursal';
 			const sucursalCorta = sucursal.length > 25 ? sucursal.substring(0, 22) + '...' : sucursal;
+			const numeroSolicitud = solicitud.numero_solicitud || 'N/A';
+			const totalProductos = solicitud.total_productos || 0;
 			
 			html += `
 				<li>
-					<a href="solicitudes-stock" title="Ver solicitud ${solicitud.numero_solicitud}">
-						<i class="fa ${icono} text-yellow" style="margin-right: 8px;"></i>
-						<div style="display: inline-block; width: calc(100% - 20px);">
-							<strong style="color: #337ab7;">${solicitud.numero_solicitud}</strong>
-							<span class="pull-right text-muted" style="font-size: 10px;">
-								${solicitud.total_productos}p
-							</span>
-							<br>
-							<span title="${sucursal}">${sucursalCorta}</span>
-							<br>
-							<small style="color: #999;">
+					<a href="solicitudes-stock" title="Ver solicitud ${numeroSolicitud}">
+						<i class="fa ${icono} notif-icono-tipo"></i>
+						<div class="notif-contenido">
+							<span class="notif-solicitud-numero">${numeroSolicitud}</span>
+							<span class="notif-productos-count">${totalProductos}p</span>
+							<span class="notif-sucursal-nombre" title="${sucursal}">${sucursalCorta}</span>
+							<span class="notif-tiempo-transcurrido">
 								<i class="fa fa-clock-o"></i> ${tiempo}
-							</small>
+							</span>
 						</div>
+						<div style="clear: both;"></div>
 					</a>
 				</li>
 			`;
 		}
 	});
 	
+	// Agregar link para ver más si hay más de 8
 	if(solicitudes.length > 8) {
 		html += `
 			<li>
-				<a href="solicitudes-stock" style="text-align: center; background-color: #f8f9fa; font-style: italic;">
-					<i class="fa fa-plus-circle"></i> 
-					Ver ${solicitudes.length - 8} solicitudes más...
+				<a href="solicitudes-stock" style="text-align: center; background-color: #f8f9fa; font-style: italic; padding: 10px; display: block;">
+					<i class="fa fa-plus-circle" style="margin-right: 5px;"></i>
+					<span style="font-size: 12px; color: #666;">Ver ${solicitudes.length - 8} solicitudes más...</span>
 				</a>
 			</li>
 		`;
 	}
 	
 	$lista.html(html);
-	console.log("✅ Lista actualizada con", solicitudes.length, "solicitudes");
+	console.log("✅ Lista actualizada con estructura mejorada:", solicitudes.length, "solicitudes");
 }
 
 // ✅ MANEJAR ERRORES
