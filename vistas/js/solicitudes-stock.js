@@ -150,23 +150,57 @@ AGREGAR PRODUCTO A LA LISTA (SIN VALIDAR STOCK)
 function agregarProductoALista() {
     
     var producto = $('#modalCantidadProducto').data('producto');
-    var cantidad = parseInt($('#cantidadProductoModal').val());
+    var cantidad = $('#cantidadProductoModal').val();
     var observacion = $('#observacionProductoModal').val().trim();
 
-    // ✅ VALIDACIONES SIMPLES (SIN STOCK)
-    if(isNaN(cantidad) || cantidad <= 0) {
-        mostrarAlerta('error', 'La cantidad debe ser un número mayor a 0');
+    // ✅ VALIDACIONES ESTRICTAS
+    
+    // Validar que cantidad no esté vacía
+    if(!cantidad || cantidad === '') {
+        mostrarAlerta('error', 'Debe ingresar una cantidad');
+        $('#cantidadProductoModal').focus();
+        return;
+    }
+    
+    // Convertir a número
+    cantidad = parseInt(cantidad);
+    
+    // Validar que sea un número válido
+    if(isNaN(cantidad)) {
+        mostrarAlerta('error', 'La cantidad debe ser un número válido');
+        $('#cantidadProductoModal').focus().select();
+        return;
+    }
+    
+    // Validar que sea mayor a 0
+    if(cantidad <= 0) {
+        mostrarAlerta('error', 'La cantidad debe ser mayor a 0');
+        $('#cantidadProductoModal').val(1).focus().select();
+        return;
+    }
+    
+    // Validar que no exceda el máximo
+    if(cantidad > 9999) {
+        mostrarAlerta('error', 'La cantidad máxima es 9,999');
+        $('#cantidadProductoModal').val(9999).focus().select();
+        return;
+    }
+    
+    // Validar longitud de observación
+    if(observacion.length > 200) {
+        mostrarAlerta('error', 'La observación no puede exceder 200 caracteres');
+        $('#observacionProductoModal').focus();
         return;
     }
 
     // ✅ VERIFICAR SI YA ESTÁ EN LA LISTA
     var yaSeleccionado = productosSeleccionados.find(p => p.codigo === producto.codigo);
     if(yaSeleccionado) {
-        mostrarAlerta('warning', 'Este producto ya está en la lista de solicitud');
+        mostrarAlerta('warning', 'Este producto ya está en la lista. Si desea cambiar la cantidad, elimínelo primero.');
         return;
     }
 
-    // ✅ AGREGAR SIN VALIDAR STOCK
+    // ✅ AGREGAR PRODUCTO (SIN VALIDAR STOCK)
     var nuevoProducto = {
         id: producto.id,
         codigo: producto.codigo,
@@ -185,8 +219,42 @@ function agregarProductoALista() {
     // Cerrar modal
     $('#modalCantidadProducto').modal('hide');
 
-    mostrarAlerta('success', 'Producto agregado a la solicitud');
+    mostrarAlerta('success', 'Producto agregado: ' + producto.codigo + ' (Cantidad: ' + cantidad + ')');
 }
+
+// ✅ VALIDACIÓN EN TIEMPO REAL PARA EL INPUT DE CANTIDAD
+$(document).on('input', '#cantidadProductoModal', function() {
+    var valor = $(this).val();
+    var numero = parseInt(valor);
+    
+    // Remover caracteres no numéricos
+    $(this).val(valor.replace(/[^0-9]/g, ''));
+    
+    // Validar rango
+    if(numero > 9999) {
+        $(this).val(9999);
+        mostrarAlerta('warning', 'Cantidad máxima: 9,999');
+    }
+});
+
+// ✅ EVITAR NÚMEROS NEGATIVOS Y DECIMALES
+$(document).on('keydown', '#cantidadProductoModal', function(e) {
+    // Permitir: backspace, delete, tab, escape, enter
+    if ($.inArray(e.keyCode, [46, 8, 9, 27, 13]) !== -1 ||
+        // Permitir: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+        (e.keyCode === 65 && e.ctrlKey === true) ||
+        (e.keyCode === 67 && e.ctrlKey === true) ||
+        (e.keyCode === 86 && e.ctrlKey === true) ||
+        (e.keyCode === 88 && e.ctrlKey === true) ||
+        // Permitir: home, end, left, right
+        (e.keyCode >= 35 && e.keyCode <= 39)) {
+        return;
+    }
+    // Asegurar que sea un dígito
+    if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+        e.preventDefault();
+    }
+});
 
 /*=============================================
 ACTUALIZAR LISTA DE PRODUCTOS SELECCIONADOS

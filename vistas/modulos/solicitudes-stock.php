@@ -252,49 +252,65 @@
   </div>
 </div>
 
-<!-- MODAL CANTIDAD PRODUCTO -->
-<div id="modalCantidadProducto" class="modal fade" role="dialog">
-  <div class="modal-dialog modal-sm">
-    <div class="modal-content">
-      <div class="modal-header" style="background:#00a65a; color:white">
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title">
-          <i class="fa fa-plus"></i>
-          Agregar Producto
-        </h4>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Producto:</label>
-          <p id="nombreProductoModal" class="form-control-static"></p>
+<!-- Modal para ingresar cantidad de producto -->
+<div class="modal fade" id="modalCantidadProducto" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">
+                    <i class="fa fa-plus-circle text-success"></i> Agregar Producto
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label><strong>Producto:</strong></label>
+                    <p id="nombreProductoModal" class="text-primary"></p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cantidadProductoModal">
+                        <i class="fa fa-calculator"></i> Cantidad a solicitar: <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" 
+                           class="form-control text-center" 
+                           id="cantidadProductoModal" 
+                           min="1" 
+                           max="9999" 
+                           value="1" 
+                           placeholder="Ingrese cantidad">
+                    <small class="help-block text-muted">
+                        <i class="fa fa-info-circle"></i> Cantidad debe ser entre 1 y 9,999
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="observacionProductoModal">
+                        <i class="fa fa-comment"></i> Observación (opcional):
+                    </label>
+                    <textarea class="form-control" 
+                              id="observacionProductoModal" 
+                              rows="2" 
+                              maxlength="200"
+                              placeholder="Ej: Urgente, color específico, medidas especiales..."></textarea>
+                    <small class="help-block text-muted">
+                        <i class="fa fa-info-circle"></i> Máximo 200 caracteres
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="confirmarAgregarProducto">
+                    <i class="fa fa-check"></i> Agregar a Solicitud
+                </button>
+            </div>
         </div>
-        <div class="form-group">
-          <label>Cantidad a solicitar:</label>
-          <div class="input-group">
-            <span class="input-group-addon"><i class="fa fa-sort-numeric-asc"></i></span>
-            <input type="number" class="form-control" id="cantidadProductoModal" 
-                   min="1" max="999" value="1" required>
-          </div>
-          <small class="text-muted">Stock disponible: <span id="stockDisponible"></span></small>
-        </div>
-        <div class="form-group">
-          <label>Observación (opcional):</label>
-          <input type="text" class="form-control" id="observacionProductoModal" 
-                 placeholder="Especificaciones adicionales...">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">
-          <i class="fa fa-times"></i> Cancelar
-        </button>
-        <button type="button" class="btn btn-success" id="confirmarAgregarProducto">
-          <i class="fa fa-check"></i> Agregar
-        </button>
-      </div>
     </div>
-  </div>
 </div>
-
 <!-- MODAL VER DETALLES DE SOLICITUD -->
 <div id="modalVerSolicitud" class="modal fade" role="dialog">
   <div class="modal-dialog modal-lg">

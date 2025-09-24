@@ -31,13 +31,13 @@ class AjaxSolicitudesStock {
     public $busquedaVenta;
 
     public function ajaxBuscarVentas(){
-        
+    
         try {
-            // ✅ USAR CONEXIÓN LOCAL PARA BUSCAR VENTAS
+            // ✅ USAR CUALQUIER NOMBRE DE FECHA QUE EXISTA
             $stmt = Conexion::conectar()->prepare("SELECT 
                 v.id,
                 v.codigo,
-                v.fecha,
+                COALESCE(v.fecha, v.fecha_venta, v.created_at, NOW()) as fecha,
                 v.total,
                 c.nombre as nombre_cliente,
                 c.documento as documento_cliente
@@ -46,7 +46,7 @@ class AjaxSolicitudesStock {
                 WHERE v.codigo LIKE :busqueda 
                 OR c.nombre LIKE :busqueda 
                 OR c.documento LIKE :busqueda
-                ORDER BY v.fecha DESC 
+                ORDER BY v.id DESC 
                 LIMIT 10");
             
             $busqueda = "%" . $this->busquedaVenta . "%";

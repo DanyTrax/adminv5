@@ -34,7 +34,7 @@ class TablaProductosCatalogo {
             $imagen .= "</div>";
 
             /*=============================================
-            STOCK CON COLORES
+            STOCK CON COLORES (INFORMATIVO ÚNICAMENTE)
             =============================================*/
             $stock = intval($productos[$i]["stock"]);
             
@@ -47,21 +47,23 @@ class TablaProductosCatalogo {
             }
 
             /*=============================================
-            BOTÓN DE ACCIÓN
+            BOTÓN DE ACCIÓN - SIEMPRE HABILITADO (SIN IMPORTAR STOCK)
             =============================================*/
-            if($stock > 0) {
-                $boton = "<button class='btn btn-primary btn-xs btnAgregarProducto' ".
-                        "idProducto='".$productos[$i]["id"]."' ".
-                        "codigoProducto='".$productos[$i]["codigo"]."' ".
-                        "descripcionProducto='".htmlspecialchars($productos[$i]["descripcion"], ENT_QUOTES)."' ".
-                        "stockProducto='".$productos[$i]["stock"]."' ".
-                        "title='Agregar a solicitud'>".
-                        "<i class='fa fa-plus'></i> Agregar".
-                        "</button>";
-            } else {
-                $boton = "<button class='btn btn-default btn-xs' disabled title='Sin stock'>".
-                        "<i class='fa fa-ban'></i> Sin stock".
-                        "</button>";
+            // ✅ SIEMPRE MOSTRAR BOTÓN AGREGAR - NO IMPORTA EL STOCK
+            $boton = "<button class='btn btn-success btn-xs btnAgregarProducto' ".
+                    "idProducto='".$productos[$i]["id"]."' ".
+                    "codigoProducto='".$productos[$i]["codigo"]."' ".
+                    "descripcionProducto='".htmlspecialchars($productos[$i]["descripcion"], ENT_QUOTES)."' ".
+                    "stockProducto='".$productos[$i]["stock"]."' ".
+                    "title='Agregar a solicitud (sin restricción de stock)'>".
+                    "<i class='fa fa-plus'></i> Agregar".
+                    "</button>";
+
+            // ✅ OPCIONAL: Agregar indicador visual de stock
+            if($stock <= 0) {
+                $boton .= "<br><small class='text-muted'><i class='fa fa-info-circle'></i> Sin stock actual</small>";
+            } elseif($stock <= 10) {
+                $boton .= "<br><small class='text-warning'><i class='fa fa-warning'></i> Stock bajo</small>";
             }
 
             $datosJson .='[
