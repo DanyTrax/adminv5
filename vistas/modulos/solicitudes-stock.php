@@ -467,6 +467,290 @@
     </div>
 </div>
 
+<!-- MODAL VER DETALLES DE SOLICITUD -->
+<div class="modal fade" id="modalVerSolicitud" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      
+      <!-- HEADER -->
+      <div class="modal-header bg-primary">
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title text-white">
+          <i class="fa fa-file-text-o"></i> Detalles de la Solicitud
+          <span id="numeroSolicitudModal" class="label label-default"></span>
+        </h4>
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body" style="padding: 0;">
+        
+        <!-- TABS DE NAVEGACIÓN -->
+        <ul class="nav nav-tabs" role="tablist" style="margin: 0; background: #f4f4f4;">
+          <li role="presentation" class="active">
+            <a href="#tabInformacion" role="tab" data-toggle="tab">
+              <i class="fa fa-info-circle"></i> Información General
+            </a>
+          </li>
+          <li role="presentation">
+            <a href="#tabProductos" role="tab" data-toggle="tab">
+              <i class="fa fa-list"></i> Productos Solicitados
+            </a>
+          </li>
+          <li role="presentation">
+            <a href="#tabHistorial" role="tab" data-toggle="tab">
+              <i class="fa fa-history"></i> Historial
+            </a>
+          </li>
+        </ul>
+
+        <!-- CONTENIDO DE LOS TABS -->
+        <div class="tab-content" style="padding: 20px;">
+          
+          <!-- TAB 1: INFORMACIÓN GENERAL -->
+          <div role="tabpanel" class="tab-pane fade in active" id="tabInformacion">
+            
+            <div class="row">
+              
+              <!-- COLUMNA IZQUIERDA -->
+              <div class="col-md-6">
+                
+                <div class="info-box">
+                  <span class="info-box-icon bg-blue">
+                    <i class="fa fa-building"></i>
+                  </span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">Sucursal Solicitante</span>
+                    <span class="info-box-number" id="sucursalSolicitante">-</span>
+                  </div>
+                </div>
+
+                <div class="info-box">
+                  <span class="info-box-icon bg-green">
+                    <i class="fa fa-user"></i>
+                  </span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">Usuario Solicitante</span>
+                    <span class="info-box-number" id="usuarioSolicitante">-</span>
+                  </div>
+                </div>
+
+                <div class="info-box">
+                  <span class="info-box-icon bg-yellow">
+                    <i class="fa fa-calendar"></i>
+                  </span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">Fecha de Solicitud</span>
+                    <span class="info-box-number" id="fechaSolicitud">-</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- COLUMNA DERECHA -->
+              <div class="col-md-6">
+                
+                <div class="info-box">
+                  <span class="info-box-icon bg-purple">
+                    <i class="fa fa-tag"></i>
+                  </span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">Tipo de Solicitud</span>
+                    <span class="info-box-number" id="tipoSolicitud">-</span>
+                  </div>
+                </div>
+
+                <div class="info-box">
+                  <span class="info-box-icon bg-orange">
+                    <i class="fa fa-cubes"></i>
+                  </span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">Total de Productos</span>
+                    <span class="info-box-number" id="totalProductos">-</span>
+                  </div>
+                </div>
+
+                <div class="info-box">
+                  <span class="info-box-icon bg-red" id="estadoIcon">
+                    <i class="fa fa-clock-o"></i>
+                  </span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">Estado</span>
+                    <span class="info-box-number" id="estadoSolicitud">-</span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- INFORMACIÓN ADICIONAL -->
+            <div class="row" style="margin-top: 20px;">
+              
+              <!-- REMISIÓN (si aplica) -->
+              <div class="col-md-12" id="infoRemision" style="display: none;">
+                <div class="box box-info">
+                  <div class="box-header with-border">
+                    <h4 class="box-title">
+                      <i class="fa fa-file-text"></i> Información de Remisión
+                    </h4>
+                  </div>
+                  <div class="box-body">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <strong>Código de Remisión:</strong>
+                        <span id="codigoRemision">-</span>
+                      </div>
+                      <div class="col-md-6">
+                        <strong>Cliente:</strong>
+                        <span id="clienteRemision">-</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- DETALLE ADICIONAL -->
+              <div class="col-md-12" id="detalleAdicionalContainer" style="display: none;">
+                <div class="box box-success">
+                  <div class="box-header with-border">
+                    <h4 class="box-title">
+                      <i class="fa fa-comment"></i> Detalle Adicional
+                    </h4>
+                  </div>
+                  <div class="box-body">
+                    <p id="detalleAdicional" class="text-justify"></p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- TAB 2: PRODUCTOS SOLICITADOS -->
+          <div role="tabpanel" class="tab-pane fade" id="tabProductos">
+            
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped" id="tablaProductosSolicitados">
+                <thead class="bg-primary">
+                  <tr>
+                    <th width="80px">#</th>
+                    <th width="120px">Código</th>
+                    <th>Descripción del Producto</th>
+                    <th width="100px" class="text-center">Cantidad</th>
+                    <th>Observaciones</th>
+                  </tr>
+                </thead>
+                <tbody id="productosModalBody">
+                  <!-- Productos se cargan dinámicamente -->
+                </tbody>
+                <tfoot>
+                  <tr class="bg-light">
+                    <td colspan="3"><strong>TOTAL:</strong></td>
+                    <td class="text-center"><strong id="totalCantidadProductos">0</strong></td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+          </div>
+
+          <!-- TAB 3: HISTORIAL -->
+          <div role="tabpanel" class="tab-pane fade" id="tabHistorial">
+            
+            <div class="timeline">
+              
+              <!-- CREACIÓN -->
+              <div class="time-label">
+                <span class="bg-blue" id="fechaCreacion">
+                  <i class="fa fa-plus-circle"></i> Creación
+                </span>
+              </div>
+              <div>
+                <i class="fa fa-file-o bg-blue"></i>
+                <div class="timeline-item">
+                  <span class="time">
+                    <i class="fa fa-clock-o"></i> <span id="horaCreacion">-</span>
+                  </span>
+                  <h3 class="timeline-header">
+                    Solicitud creada por <span id="usuarioCreacion">-</span>
+                  </h3>
+                  <div class="timeline-body">
+                    Solicitud <span id="numeroCreacion">-</span> creada exitosamente.
+                  </div>
+                </div>
+              </div>
+
+              <!-- APROBACIÓN/CANCELACIÓN -->
+              <div id="timelineAprobacion" style="display: none;">
+                <div class="time-label">
+                  <span id="labelAprobacion" class="bg-green">
+                    <i class="fa fa-check"></i> Aprobación
+                  </span>
+                </div>
+                <div>
+                  <i id="iconAprobacion" class="fa fa-check bg-green"></i>
+                  <div class="timeline-item">
+                    <span class="time">
+                      <i class="fa fa-clock-o"></i> <span id="horaAprobacion">-</span>
+                    </span>
+                    <h3 class="timeline-header">
+                      <span id="accionAprobacion">Aprobada</span> por <span id="usuarioAprobacion">-</span>
+                    </h3>
+                    <div class="timeline-body" id="motivoContainer" style="display: none;">
+                      <strong>Motivo:</strong> <span id="motivoAprobacion">-</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- FIN TIMELINE -->
+              <div>
+                <i class="fa fa-clock-o bg-gray"></i>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- FOOTER CON BOTONES -->
+      <div class="modal-footer">
+        
+        <div class="btn-group dropup">
+          <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-download"></i> Exportar <span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <a href="#" id="btnExportarPDF">
+                <i class="fa fa-file-pdf-o text-red"></i> Exportar a PDF
+              </a>
+            </li>
+            <li>
+              <a href="#" id="btnExportarExcel">
+                <i class="fa fa-file-excel-o text-green"></i> Exportar a Excel
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <button type="button" class="btn btn-default" data-dismiss="modal">
+          <i class="fa fa-times"></i> Cerrar
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <!-- JavaScript personalizado -->
 <script>
 $(document).ready(function() {

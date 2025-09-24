@@ -52,6 +52,7 @@ $url = $protocol . $host . $script_name;
   <script src="<?php echo $url; ?>vistas/bower_components/datatables.net-bs/js/responsive.bootstrap.min.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/sweetalert2/sweetalert2.all.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/core-js/2.4.1/core.js"></script>
+  <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/iCheck/icheck.min.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/input-mask/jquery.inputmask.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>

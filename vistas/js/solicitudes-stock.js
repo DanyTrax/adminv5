@@ -745,35 +745,281 @@ function eliminarSolicitud(idSolicitud) {
 }
 
 /*=============================================
-MOSTRAR MODAL CON DETALLES DE SOLICITUD
+MOSTRAR MODAL CON DETALLES DE SOLICITUD - NUEVO DISEÑO
 =============================================*/
 function mostrarModalDetalleSolicitud(solicitud) {
     
-    // ✅ POR AHORA MOSTRAR ALERTA CON INFORMACIÓN BÁSICA
-    // Después podemos crear un modal más elaborado
+    console.log("Mostrando detalles de solicitud:", solicitud);
     
-    var info = "📋 SOLICITUD: " + solicitud.numero_solicitud + "\n\n";
-    info += "🏢 SUCURSAL: " + solicitud.nombre_sucursal_solicitante + "\n";
-    info += "👤 SOLICITANTE: " + solicitud.nombre_usuario_solicitante + "\n";
-    info += "📅 FECHA: " + solicitud.fecha_solicitud + "\n";
-    info += "📦 TIPO: " + solicitud.tipo_solicitud.toUpperCase() + "\n";
-    info += "🔢 PRODUCTOS: " + solicitud.total_productos + " productos\n";
-    info += "📊 ESTADO: " + solicitud.estado.toUpperCase() + "\n\n";
+    // ✅ INFORMACIÓN GENERAL
+    $('#numeroSolicitudModal').text(solicitud.numero_solicitud);
+    $('#sucursalSolicitante').text(solicitud.nombre_sucursal_solicitante);
+    $('#usuarioSolicitante').text(solicitud.nombre_usuario_solicitante);
+    $('#fechaSolicitud').text(formatearFecha(solicitud.fecha_solicitud));
+    $('#tipoSolicitud').text(solicitud.tipo_solicitud.toUpperCase());
+    $('#totalProductos').text(solicitud.total_productos + ' productos');
     
-    if(solicitud.detalle_adicional) {
-        info += "📝 DETALLE: " + solicitud.detalle_adicional + "\n\n";
+    // ✅ ESTADO CON COLOR
+    var estadoTexto = solicitud.estado.charAt(0).toUpperCase() + solicitud.estado.slice(1);
+    $('#estadoSolicitud').text(estadoTexto);
+    
+    // Cambiar color del icono según estado
+    var $estadoIcon = $('#estadoIcon');
+    $estadoIcon.removeClass('bg-red bg-green bg-yellow bg-gray');
+    
+    switch(solicitud.estado) {
+        case 'pendiente':
+            $estadoIcon.addClass('bg-yellow').find('i').removeClass().addClass('fa fa-clock-o');
+            break;
+        case 'aprobado':
+            $estadoIcon.addClass('bg-green').find('i').removeClass().addClass('fa fa-check');
+            break;
+        case 'cancelado':
+            $estadoIcon.addClass('bg-red').find('i').removeClass().addClass('fa fa-times');
+            break;
+        default:
+            $estadoIcon.addClass('bg-gray').find('i').removeClass().addClass('fa fa-question');
     }
     
-    info += "🛍️ PRODUCTOS SOLICITADOS:\n";
-    var productos = JSON.parse(solicitud.productos_solicitados);
-    productos.forEach(function(producto, index) {
-        info += (index + 1) + ". " + producto.codigo + " - " + producto.descripcion + " (Cant: " + producto.cantidad + ")\n";
+    // ✅ INFORMACIÓN DE REMISIÓN (si aplica)
+    if(solicitud.tipo_solicitud === 'remision' && solicitud.codigo_remision) {
+        $('#codigoRemision').text(solicitud.codigo_remision);
+        $('#clienteRemision').text(solicitud.nombre_cliente_remision || 'No especificado');
+        $('#infoRemision').show();
+    } else {
+        $('#infoRemision').hide();
+    }
+    
+    // ✅ DETALLE ADICIONAL (si aplica)
+    if(solicitud.detalle_adicional && solicitud.detalle_adicional.trim() !== '') {
+        $('#detalleAdicional').text(solicitud.detalle_adicional);
+        $('#detalleAdicionalContainer').show();
+    } else {
+        $('#detalleAdicionalContainer').hide();
+    }
+    
+    // ✅ CARGAR PRODUCTOS
+    cargarProductosEnModal(solicitud.productos_solicitados);
+    
+    // ✅ CARGAR HISTORIAL
+    cargarHistorialEnModal(solicitud);
+    
+    // ✅ CONFIGURAR BOTONES DE EXPORTACIÓN
+    configurarBotonesExportacion(solicitud);
+    
+    // ✅ MOSTRAR MODAL
+    $('#modalVerSolicitud').modal('show');
+}
+
+/*=============================================
+CARGAR PRODUCTOS EN EL MODAL
+=============================================*/
+function cargarProductosEnModal(productosJson) {
+    
+    try {
+        var productos = JSON.parse(productosJson);
+        var html = '';
+        var totalCantidad = 0;
+        
+        if(productos && productos.length > 0) {
+            productos.forEach(function(producto, index) {
+                totalCantidad += parseInt(producto.cantidad) || 0;
+                
+                html += '<tr>';
+                html += '<td class="text-center"><strong>' + (index + 1) + '</strong></td>';
+                html += '<td><code>' + (producto.codigo || 'N/A') + '</code></td>';
+                html += '<td>' + (producto.descripcion || 'Sin descripción') + '</td>';
+                html += '<td class="text-center">';
+                html += '<span class="badge bg-blue">' + (producto.cantidad || 0) + '</span>';
+                html += '</td>';
+                html += '<td>';
+                if(producto.observacion && producto.observacion.trim() !== '') {
+                    html += '<small class="text-muted"><i class="fa fa-comment"></i> ' + producto.observacion + '</small>';
+                } else {
+                    html += '<small class="text-muted">Sin observaciones</small>';
+                }
+                html += '</td>';
+                html += '</tr>';
+            });
+        } else {
+            html = '<tr><td colspan="5" class="text-center text-muted">No hay productos registrados</td></tr>';
+        }
+        
+        $('#productosModalBody').html(html);
+        $('#totalCantidadProductos').text(totalCantidad);
+        
+    } catch(e) {
+        console.error('Error cargando productos:', e);
+        $('#productosModalBody').html('<tr><td colspan="5" class="text-center text-danger">Error cargando productos</td></tr>');
+    }
+}
+
+/*=============================================
+CARGAR HISTORIAL EN EL MODAL
+=============================================*/
+function cargarHistorialEnModal(solicitud) {
+    
+    // ✅ CREACIÓN
+    $('#fechaCreacion').html('<i class="fa fa-plus-circle"></i> ' + formatearFecha(solicitud.fecha_solicitud, true));
+    $('#horaCreacion').text(formatearHora(solicitud.fecha_solicitud));
+    $('#usuarioCreacion').text(solicitud.nombre_usuario_solicitante);
+    $('#numeroCreacion').text(solicitud.numero_solicitud);
+    
+    // ✅ APROBACIÓN/CANCELACIÓN
+    if(solicitud.estado !== 'pendiente' && solicitud.fecha_aprobacion) {
+        $('#timelineAprobacion').show();
+        
+        var $labelAprobacion = $('#labelAprobacion');
+        var $iconAprobacion = $('#iconAprobacion');
+        var $accionAprobacion = $('#accionAprobacion');
+        
+        if(solicitud.estado === 'aprobado') {
+            $labelAprobacion.removeClass('bg-red bg-yellow').addClass('bg-green')
+                .html('<i class="fa fa-check"></i> Aprobación');
+            $iconAprobacion.removeClass('fa-times bg-red').addClass('fa-check bg-green');
+            $accionAprobacion.text('Aprobada');
+        } else if(solicitud.estado === 'cancelado') {
+            $labelAprobacion.removeClass('bg-green bg-yellow').addClass('bg-red')
+                .html('<i class="fa fa-times"></i> Cancelación');
+            $iconAprobacion.removeClass('fa-check bg-green').addClass('fa-times bg-red');
+            $accionAprobacion.text('Cancelada');
+        }
+        
+        $('#horaAprobacion').text(formatearHora(solicitud.fecha_aprobacion));
+        $('#usuarioAprobacion').text(solicitud.nombre_usuario_aprobacion || 'Sistema');
+        
+        // Mostrar motivo si es cancelación
+        if(solicitud.estado === 'cancelado' && solicitud.motivo_cancelacion) {
+            $('#motivoAprobacion').text(solicitud.motivo_cancelacion);
+            $('#motivoContainer').show();
+        } else {
+            $('#motivoContainer').hide();
+        }
+        
+    } else {
+        $('#timelineAprobacion').hide();
+    }
+}
+
+/*=============================================
+CONFIGURAR BOTONES DE EXPORTACIÓN
+=============================================*/
+function configurarBotonesExportacion(solicitud) {
+    
+    // ✅ BOTÓN PDF
+    $('#btnExportarPDF').off('click').on('click', function(e) {
+        e.preventDefault();
+        exportarSolicitudPDF(solicitud);
     });
     
-    swal({
-        title: '📋 Detalles de la Solicitud',
-        text: info,
-        type: 'info',
-        confirmButtonText: 'Cerrar'
+    // ✅ BOTÓN EXCEL
+    $('#btnExportarExcel').off('click').on('click', function(e) {
+        e.preventDefault();
+        exportarSolicitudExcel(solicitud);
+    });
+}
+
+/*=============================================
+EXPORTAR SOLICITUD A PDF
+=============================================*/
+function exportarSolicitudPDF(solicitud) {
+    
+    var ventana = window.open(
+        'extensiones/tcpdf/pdf/solicitud-stock.php?id=' + solicitud.id,
+        '_blank',
+        'width=800,height=600'
+    );
+    
+    if(!ventana) {
+        swal({
+            title: 'Popup bloqueado',
+            text: 'Permita ventanas emergentes para descargar el PDF',
+            type: 'warning',
+            confirmButtonText: 'Entendido'
+        });
+    }
+}
+
+/*=============================================
+EXPORTAR SOLICITUD A EXCEL
+=============================================*/
+function exportarSolicitudExcel(solicitud) {
+    
+    // ✅ CREAR DATOS PARA EXCEL
+    var productos = JSON.parse(solicitud.productos_solicitados);
+    
+    var datosExcel = [];
+    
+    // Encabezados
+    datosExcel.push([
+        'SOLICITUD DE STOCK - ' + solicitud.numero_solicitud,
+        '', '', '', ''
+    ]);
+    datosExcel.push(['']); // Línea vacía
+    
+    // Información general
+    datosExcel.push(['Sucursal:', solicitud.nombre_sucursal_solicitante, '', '', '']);
+    datosExcel.push(['Solicitante:', solicitud.nombre_usuario_solicitante, '', '', '']);
+    datosExcel.push(['Fecha:', formatearFecha(solicitud.fecha_solicitud), '', '', '']);
+    datosExcel.push(['Tipo:', solicitud.tipo_solicitud.toUpperCase(), '', '', '']);
+    datosExcel.push(['Estado:', solicitud.estado.toUpperCase(), '', '', '']);
+    datosExcel.push(['']); // Línea vacía
+    
+    // Encabezados de productos
+    datosExcel.push(['#', 'CÓDIGO', 'DESCRIPCIÓN', 'CANTIDAD', 'OBSERVACIONES']);
+    
+    // Productos
+    productos.forEach(function(producto, index) {
+        datosExcel.push([
+            index + 1,
+            producto.codigo || '',
+            producto.descripcion || '',
+            producto.cantidad || 0,
+            producto.observacion || ''
+        ]);
+    });
+    
+    // Total
+    datosExcel.push(['']); // Línea vacía
+    datosExcel.push([
+        'TOTAL PRODUCTOS:',
+        solicitud.total_productos,
+        'TOTAL CANTIDAD:',
+        solicitud.total_cantidad,
+        ''
+    ]);
+    
+    // ✅ GENERAR Y DESCARGAR EXCEL
+    var ws = XLSX.utils.aoa_to_sheet(datosExcel);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Solicitud " + solicitud.numero_solicitud);
+    
+    // Descargar archivo
+    XLSX.writeFile(wb, 'Solicitud_' + solicitud.numero_solicitud + '.xlsx');
+}
+
+/*=============================================
+FUNCIONES AUXILIARES PARA FORMATEO
+=============================================*/
+function formatearFecha(fecha, conDia = false) {
+    var date = new Date(fecha);
+    var opciones = { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+    };
+    
+    if(conDia) {
+        opciones.weekday = 'long';
+    }
+    
+    return date.toLocaleDateString('es-ES', opciones);
+}
+
+function formatearHora(fecha) {
+    var date = new Date(fecha);
+    return date.toLocaleTimeString('es-ES', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
     });
 }
