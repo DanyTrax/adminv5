@@ -569,15 +569,15 @@ function validarCantidadModal() {
 }
 
 /*=============================================
-CONFIRMAR AGREGAR PRODUCTO
+CONFIRMAR AGREGAR PRODUCTO - VERSIÓN CORREGIDA
 =============================================*/
 function confirmarAgregarProducto() {
     
     var codigo = $("#codigoProductoDespachoModal").val();
     var descripcion = $("#descripcionProductoDespachoModal").val();
-    var cantidad = parseInt($("#cantidadProductoDespachoModal").val());
+    var cantidadNueva = parseInt($("#cantidadProductoDespachoModal").val());
     var stock = parseInt($("#stockActualProductoDespachoModal").val());
-    var observacion = $("#observacionProductoDespachoModal").val();
+    var observacionNueva = $("#observacionProductoDespachoModal").val();
     
     // Validar que no exista ya el producto
     var existente = productosDespacho.find(function(p) {
@@ -585,27 +585,96 @@ function confirmarAgregarProducto() {
     });
     
     if(existente) {
+        // Producto existe: SUMAR cantidades y CONCATENAR observaciones
+        
+        var cantidadAnterior = existente.cantidad;
+        var cantidadTotal = cantidadAnterior + cantidadNueva;
+        
+        // Verificar que no exceda el stock disponible
+        if(cantidadTotal > stock) {
+            swal({
+                title: "Stock insuficiente",
+                text: `No se puede agregar ${cantidadNueva} unidades.\n\nActual en despacho: ${cantidadAnterior}\nStock disponible: ${stock}\nMáximo a agregar: ${stock - cantidadAnterior}`,
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonText: `Agregar ${stock - cantidadAnterior} (máximo)`,
+                cancelButtonText: "Cancelar"
+            }).then(function(result) {
+                if(result.value) {
+                    // Agregar cantidad máxima disponible
+                    var cantidadMaxima = stock - cantidadAnterior;
+                    if(cantidadMaxima > 0) {
+                        existente.cantidad = stock;
+                        
+                        // Concatenar observaciones
+                        var observacionAnterior = existente.observacion || "";
+                        var nuevaObservacionCompleta = "";
+                        
+                        if(observacionAnterior.length > 0 && observacionNueva.length > 0) {
+                            nuevaObservacionCompleta = `${observacionAnterior}, ${cantidadMaxima} (${observacionNueva})`;
+                        } else if(observacionAnterior.length > 0) {
+                            nuevaObservacionCompleta = `${observacionAnterior}, +${cantidadMaxima}`;
+                        } else if(observacionNueva.length > 0) {
+                            nuevaObservacionCompleta = `${cantidadMaxima} (${observacionNueva})`;
+                        } else {
+                            nuevaObservacionCompleta = `+${cantidadMaxima}`;
+                        }
+                        
+                        existente.observacion = nuevaObservacionCompleta;
+                        
+                        actualizarVistaProductosDespacho();
+                        $("#modalCantidadProductoDespacho").modal("hide");
+                        
+                        swal({
+                            title: "¡Cantidad actualizada!",
+                            text: `Se agregaron ${cantidadMaxima} unidades de ${descripcion}\nTotal en despacho: ${existente.cantidad}`,
+                            type: "success",
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    }
+                }
+            });
+            return;
+        }
+        
+        // Stock suficiente: preguntar si desea sumar
         swal({
-            title: "Producto duplicado",
-            text: "Este producto ya está en el despacho. ¿Desea actualizar la cantidad?",
+            title: "Producto ya existe",
+            text: `Este producto ya está en el despacho con ${cantidadAnterior} unidades.\n\n¿Desea agregar ${cantidadNueva} unidades más?\n\nTotal final: ${cantidadTotal} unidades`,
             type: "question",
             showCancelButton: true,
-            confirmButtonText: "Sí, actualizar",
+            confirmButtonText: `Sí, sumar (${cantidadTotal} total)`,
             cancelButtonText: "Cancelar"
         }).then(function(result) {
             if(result.value) {
-                // Actualizar cantidad existente
-                existente.cantidad = cantidad;
-                existente.observacion = observacion;
+                // Sumar cantidades
+                existente.cantidad = cantidadTotal;
+                
+                // Concatenar observaciones
+                var observacionAnterior = existente.observacion || "";
+                var nuevaObservacionCompleta = "";
+                
+                if(observacionAnterior.length > 0 && observacionNueva.length > 0) {
+                    nuevaObservacionCompleta = `${observacionAnterior}, +${cantidadNueva} (${observacionNueva})`;
+                } else if(observacionAnterior.length > 0) {
+                    nuevaObservacionCompleta = `${observacionAnterior}, +${cantidadNueva}`;
+                } else if(observacionNueva.length > 0) {
+                    nuevaObservacionCompleta = `${cantidadNueva} (${observacionNueva})`;
+                } else {
+                    nuevaObservacionCompleta = existente.observacion; // Mantener observación anterior
+                }
+                
+                existente.observacion = nuevaObservacionCompleta;
                 
                 actualizarVistaProductosDespacho();
                 $("#modalCantidadProductoDespacho").modal("hide");
                 
                 swal({
-                    title: "¡Cantidad actualizada!",
-                    text: `Se actualizó la cantidad de ${descripcion}`,
+                    title: "¡Cantidad sumada!",
+                    text: `Se agregaron ${cantidadNueva} unidades de ${descripcion}\nTotal en despacho: ${cantidadTotal}`,
                     type: "success",
-                    timer: 2000,
+                    timer: 3000,
                     showConfirmButton: false
                 });
             }
@@ -613,13 +682,17 @@ function confirmarAgregarProducto() {
         return;
     }
     
-    // Agregar nuevo producto
+    // Producto nuevo: agregar al despacho
+    var observacionFinal = observacionNueva.length > 0 ? 
+                          `${cantidadNueva} (${observacionNueva})` : 
+                          "";
+    
     productosDespacho.push({
         codigo: codigo,
         descripcion: descripcion,
-        cantidad: cantidad,
+        cantidad: cantidadNueva,
         stock_disponible: stock,
-        observacion: observacion
+        observacion: observacionFinal
     });
     
     actualizarVistaProductosDespacho();
@@ -627,7 +700,7 @@ function confirmarAgregarProducto() {
     
     swal({
         title: "¡Producto agregado!",
-        text: `Se agregó ${cantidad} unidades de ${descripcion} al despacho`,
+        text: `Se agregaron ${cantidadNueva} unidades de ${descripcion} al despacho`,
         type: "success",
         timer: 2000,
         showConfirmButton: false
@@ -724,7 +797,7 @@ function actualizarVistaProductosDespacho() {
 }
 
 /*=============================================
-ACTUALIZAR CANTIDAD DE PRODUCTO
+ACTUALIZAR CANTIDAD DE PRODUCTO - VERSIÓN MEJORADA
 =============================================*/
 function actualizarCantidadProducto(indice, nuevaCantidad) {
     
@@ -734,12 +807,18 @@ function actualizarCantidadProducto(indice, nuevaCantidad) {
     if(cantidad <= 0) {
         swal({
             title: "Cantidad inválida",
-            text: "La cantidad debe ser mayor a 0",
-            type: "error",
-            confirmButtonText: "Cerrar"
-        }).then(function() {
-            // Restaurar cantidad anterior
-            $(`#productosDespachoSeleccionados tr:eq(${indice}) input`).val(producto.cantidad);
+            text: "La cantidad debe ser mayor a 0. ¿Desea eliminar este producto del despacho?",
+            type: "question",
+            showCancelButton: true,
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "No, mantener"
+        }).then(function(result) {
+            if(result.value) {
+                eliminarProductoDespacho(indice);
+            } else {
+                // Restaurar cantidad anterior
+                $(`#productosDespachoSeleccionados tr:eq(${indice}) input`).val(producto.cantidad);
+            }
         });
         return;
     }
@@ -758,7 +837,19 @@ function actualizarCantidadProducto(indice, nuevaCantidad) {
     }
     
     // Actualizar cantidad
+    var cantidadAnterior = producto.cantidad;
     productosDespacho[indice].cantidad = cantidad;
+    
+    // Si cambió la cantidad y hay observación, actualizar observación para reflejar el cambio
+    if(producto.observacion && producto.observacion.length > 0) {
+        var diferencia = cantidad - cantidadAnterior;
+        if(diferencia !== 0) {
+            var textoAdicional = diferencia > 0 ? ` (+${diferencia} ajustado)` : ` (${diferencia} ajustado)`;
+            if(!producto.observacion.includes("ajustado")) {
+                productosDespacho[indice].observacion += textoAdicional;
+            }
+        }
+    }
     
     // Actualizar vista
     actualizarVistaProductosDespacho();
