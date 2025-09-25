@@ -491,36 +491,52 @@ function cargarProductosDeSolicitud() {
             }
         });
         
-        // CREAR NOTA GENERAL PARA OBSERVACIONES DEL DESPACHO
-        var notaGeneral = "";
-        var tieneProblemas = productosSinStock.length > 0 || productosConFaltantes.length > 0;
+// CREAR NOTA GENERAL PARA OBSERVACIONES DEL DESPACHO
+var notaGeneral = "";
+var tieneProblemas = productosSinStock.length > 0 || productosConFaltantes.length > 0;
+
+if(tieneProblemas) {
+    var detallesFaltantes = [];
+    
+    // Agregar productos sin stock
+    if(productosSinStock.length > 0) {
+        productosSinStock.forEach(function(codigo) {
+            detallesFaltantes.push(codigo + "(sin stock)");
+        });
+    }
+    
+    // Agregar productos con faltantes
+    if(productosConFaltantes.length > 0) {
+        productosConFaltantes.forEach(function(item) {
+            detallesFaltantes.push(item.codigo + "(" + item.faltantes + " faltantes)");
+        });
+    }
+    
+    notaGeneral = `FALTANTES ${solicitudSeleccionada.numero_solicitud}: ${detallesFaltantes.join(', ')}`;
+    
+    // CORRECCIÓN: Buscar el campo de observaciones con múltiples selectores
+    var $campoObservaciones = $("#observacionesDespacho").length > 0 ? $("#observacionesDespacho") :
+                             $("#observaciones").length > 0 ? $("#observaciones") :
+                             $("#detalleAdicional").length > 0 ? $("#detalleAdicional") :
+                             $("textarea[name*='observacion']").first();
+    
+    if($campoObservaciones.length > 0) {
+// Agregar al campo observaciones del despacho (CORREGIDO)
+var observacionesActuales = $("#detalleAdicional").val() || "";
+var nuevasObservaciones = observacionesActuales.length > 0 ? 
+                        `${observacionesActuales}\n${notaGeneral}` : 
+                        notaGeneral;
+$("#detalleAdicional").val(nuevasObservaciones);
+
+console.log("✅ Nota agregada al campo detalleAdicional:", notaGeneral);
         
-        if(tieneProblemas) {
-            var detallesFaltantes = [];
-            
-            // Agregar productos sin stock
-            if(productosSinStock.length > 0) {
-                productosSinStock.forEach(function(codigo) {
-                    detallesFaltantes.push(codigo + "(sin stock)");
-                });
-            }
-            
-            // Agregar productos con faltantes
-            if(productosConFaltantes.length > 0) {
-                productosConFaltantes.forEach(function(item) {
-                    detallesFaltantes.push(item.codigo + "(" + item.faltantes + " faltantes)");
-                });
-            }
-            
-            notaGeneral = `FALTANTES ${solicitudSeleccionada.numero_solicitud}: ${detallesFaltantes.join(', ')}`;
-            
-            // Agregar al campo observaciones del despacho
-            var observacionesActuales = $("#observacionesDespacho").val();
-            var nuevasObservaciones = observacionesActuales.length > 0 ? 
-                                    `${observacionesActuales}\n${notaGeneral}` : 
-                                    notaGeneral;
-            $("#observacionesDespacho").val(nuevasObservaciones);
-        }
+    } else {
+        console.warn("⚠️ No se encontró campo de observaciones. Nota generada:", notaGeneral);
+        
+        // Mostrar la nota en la consola para que puedas verla
+        console.log("📝 NOTA PARA OBSERVACIONES:", notaGeneral);
+    }
+}
         
         // Actualizar vista
         actualizarVistaProductosDespacho();
