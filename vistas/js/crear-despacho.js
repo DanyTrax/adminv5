@@ -253,15 +253,18 @@ function buscarSolicitudesStock(termino) {
 }
 
 /*=============================================
-MOSTRAR RESULTADOS DE SOLICITUDES
+MOSTRAR RESULTADOS DE SOLICITUDES - CORREGIDO
 =============================================*/
 function mostrarResultadosSolicitudes(solicitudes) {
+    
+    // NUEVA LÍNEA: Eliminar resultados anteriores
+    ocultarResultadosSolicitudes();
     
     var html = '<div class="list-group" style="max-height: 200px; overflow-y: auto;">';
     
     solicitudes.forEach(function(solicitud) {
         var fecha = new Date(solicitud.fecha_solicitud).toLocaleDateString();
-        var estadoClass = solicitud.estado === 'aprobada' ? 'success' : 'warning';
+        var estadoClass = solicitud.estado === 'aprobado' ? 'success' : 'warning';
         
         html += `
             <a href="#" 
@@ -270,15 +273,15 @@ function mostrarResultadosSolicitudes(solicitudes) {
                style="padding: 8px 12px;">
                 <div class="d-flex w-100 justify-content-between">
                     <h6 class="mb-1">
-                        <code>${solicitud.codigo_solicitud}</code>
+                        <code>${solicitud.numero_solicitud}</code>
                         <span class="label label-${estadoClass}">${solicitud.estado.toUpperCase()}</span>
                     </h6>
                     <small>${fecha}</small>
                 </div>
                 <p class="mb-1">
                     <strong>Usuario:</strong> ${solicitud.nombre_usuario_solicitante}<br>
-                    <strong>Productos:</strong> ${solicitud.cantidad_productos} 
-                    (<strong>${solicitud.cantidad_total}</strong> unidades)
+                    <strong>Productos:</strong> ${solicitud.total_productos} 
+                    (<strong>${solicitud.total_cantidad}</strong> unidades)
                 </p>
             </a>
         `;
@@ -295,7 +298,7 @@ function mostrarResultadosSolicitudes(solicitudes) {
 }
 
 /*=============================================
-SELECCIONAR SOLICITUD
+SELECCIONAR SOLICITUD - CORREGIDO
 =============================================*/
 function seleccionarSolicitud(idSolicitud) {
     
@@ -314,14 +317,14 @@ function seleccionarSolicitud(idSolicitud) {
                 solicitudSeleccionada = respuesta.solicitud;
                 
                 // Mostrar información de la solicitud
-                $("#numeroSolicitudBuscar").val(solicitudSeleccionada.codigo_solicitud);
+                $("#numeroSolicitudBuscar").val(solicitudSeleccionada.numero_solicitud);
                 
                 var infoHtml = `
-                    <strong>Código:</strong> ${solicitudSeleccionada.codigo_solicitud}<br>
+                    <strong>Código:</strong> ${solicitudSeleccionada.numero_solicitud}<br>
                     <strong>Usuario:</strong> ${solicitudSeleccionada.nombre_usuario_solicitante}<br>
-                    <strong>Origen:</strong> ${solicitudSeleccionada.sucursal_origen}<br>
-                    <strong>Estado:</strong> <span class="label label-${solicitudSeleccionada.estado === 'aprobada' ? 'success' : 'warning'}">${solicitudSeleccionada.estado.toUpperCase()}</span><br>
-                    <strong>Productos:</strong> ${solicitudSeleccionada.cantidad_productos} (${solicitudSeleccionada.cantidad_total} unidades)
+                    <strong>Origen:</strong> ${solicitudSeleccionada.nombre_sucursal_solicitante}<br>
+                    <strong>Estado:</strong> <span class="label label-${solicitudSeleccionada.estado === 'aprobado' ? 'success' : 'warning'}">${solicitudSeleccionada.estado.toUpperCase()}</span><br>
+                    <strong>Productos:</strong> ${solicitudSeleccionada.total_productos} (${solicitudSeleccionada.total_cantidad} unidades)
                 `;
                 
                 $("#datosSolicitudEncontrada").html(infoHtml);
@@ -352,7 +355,7 @@ function seleccionarSolicitud(idSolicitud) {
 }
 
 /*=============================================
-CARGAR PRODUCTOS DE SOLICITUD
+CARGAR PRODUCTOS DE SOLICITUD - CORREGIDO
 =============================================*/
 function cargarProductosDeSolicitud() {
     
@@ -367,7 +370,7 @@ function cargarProductosDeSolicitud() {
     }
     
     try {
-        var productos = JSON.parse(solicitudSeleccionada.productos_solicitud);
+        var productos = JSON.parse(solicitudSeleccionada.productos_solicitados);
         
         // Limpiar productos actuales
         productosDespacho = [];
@@ -391,7 +394,7 @@ function cargarProductosDeSolicitud() {
                         descripcion: producto.descripcion,
                         cantidad: producto.cantidad,
                         stock_disponible: productoInventario.stock,
-                        observacion: "Cargado desde solicitud: " + solicitudSeleccionada.codigo_solicitud
+                        observacion: "Cargado desde solicitud: " + solicitudSeleccionada.numero_solicitud
                     });
                     
                     productosAgregados++;
@@ -692,9 +695,11 @@ function actualizarCantidadProducto(indice, nuevaCantidad) {
     actualizarVistaProductosDespacho();
     
     // Mostrar confirmación
-    toastr.success(`Cantidad actualizada: ${cantidad} unidades`, "✅ Actualizado", {
-        timeOut: 2000
-    });
+    if(typeof toastr !== 'undefined') {
+        toastr.success(`Cantidad actualizada: ${cantidad} unidades`, "✅ Actualizado", {
+            timeOut: 2000
+        });
+    }
 }
 
 /*=============================================
@@ -862,9 +867,11 @@ function actualizarInventarioLocal() {
         $boton.find("i").attr("class", iconoOriginal);
         $boton.prop("disabled", false);
         
-        toastr.success("Inventario actualizado", "✅ Actualizado", {
-            timeOut: 2000
-        });
+        if(typeof toastr !== 'undefined') {
+            toastr.success("Inventario actualizado", "✅ Actualizado", {
+                timeOut: 2000
+            });
+        }
     }, 1000);
 }
 
@@ -876,60 +883,41 @@ function enviarFormularioDespacho() {
     if(productosDespacho.length === 0) {
         swal({
             title: "No hay productos",
-            text: "Debe agregar al menos un producto al despacho",
+            text: "Agregue productos al despacho antes de crear",
             type: "warning",
             confirmButtonText: "Entendido"
         });
-        return;
+        return false;
     }
     
-    // Validar stock antes de enviar
-    var hayProblemas = false;
-    productosDespacho.forEach(function(producto) {
-        if(producto.cantidad > producto.stock_disponible) {
-            hayProblemas = true;
-        }
-    });
+    // Validar campos obligatorios
+    var observaciones = $("#observacionesDespacho").val();
+    var tipoDespacho = $("input[name='tipoDespacho']:checked").val();
     
-    if(hayProblemas) {
+    if(!tipoDespacho) {
         swal({
-            title: "⚠️ Problemas de stock",
-            text: "Hay productos con problemas de stock. ¿Desea validar antes de continuar?",
+            title: "Tipo de despacho requerido",
+            text: "Seleccione si es despacho libre o desde solicitud",
             type: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Validar Stock",
-            cancelButtonText: "Continuar de todas formas"
-        }).then(function(result) {
-            if(result.value) {
-                validarStockProductos();
-            } else {
-                confirmarEnvioDespacho();
-            }
+            confirmButtonText: "Entendido"
         });
-        return;
+        return false;
     }
     
-    confirmarEnvioDespacho();
-}
-
-/*=============================================
-CONFIRMAR ENVÍO DE DESPACHO
-=============================================*/
-function confirmarEnvioDespacho() {
+    // Mostrar confirmación
+    var mensaje = `
+        Se creará un despacho con:
+        • ${productosDespacho.length} productos diferentes
+        • ${productosDespacho.reduce((total, p) => total + p.cantidad, 0)} unidades totales
+        • Tipo: ${tipoDespacho === 'libre' ? 'Despacho libre' : 'Desde solicitud'}
+    `;
     
-    var totalProductos = productosDespacho.length;
-    var totalUnidades = productosDespacho.reduce(function(sum, p) { return sum + p.cantidad; }, 0);
-    
-    var mensaje = `¿Confirma la creación del despacho con:\n\n`;
-    mensaje += `• ${totalProductos} productos diferentes\n`;
-    mensaje += `• ${totalUnidades} unidades totales\n`;
-    
-    if(solicitudSeleccionada) {
-        mensaje += `• Basado en solicitud: ${solicitudSeleccionada.codigo_solicitud}`;
+    if(solicitudSeleccionada && tipoDespacho === 'solicitud') {
+        mensaje += `\n• Solicitud origen: ${solicitudSeleccionada.numero_solicitud}`;
     }
     
     swal({
-        title: "Confirmar creación",
+        title: "¿Crear despacho?",
         text: mensaje,
         type: "question",
         showCancelButton: true,
@@ -937,18 +925,111 @@ function confirmarEnvioDespacho() {
         cancelButtonText: "Cancelar"
     }).then(function(result) {
         if(result.value) {
-            
-            // Deshabilitar botón y mostrar carga
-            var $boton = $("#btnCrearDespacho");
-            var textoOriginal = $boton.html();
-            
-            $boton.prop("disabled", true)
-                  .html('<i class="fa fa-spinner fa-spin"></i> Creando despacho...');
-            
-            // Enviar formulario
-            $("#formCrearDespacho").submit();
+            procesarCreacionDespacho();
         }
     });
+    
+    return false; // Evitar envío normal del formulario
+}
+
+/*=============================================
+PROCESAR CREACIÓN DE DESPACHO
+=============================================*/
+function procesarCreacionDespacho() {
+    
+    // Mostrar loading
+    $("#btnCrearDespacho").prop("disabled", true).html('<i class="fa fa-spinner fa-spin"></i> Creando despacho...');
+    
+    // Preparar datos
+    var datosDespacho = {
+        crearDespacho: true,
+        productos_despacho: JSON.stringify(productosDespacho),
+        total_productos: productosDespacho.length,
+        total_cantidad: productosDespacho.reduce((total, p) => total + p.cantidad, 0),
+        tipo_despacho: $("input[name='tipoDespacho']:checked").val(),
+        observaciones: $("#observacionesDespacho").val(),
+        id_solicitud_origen: solicitudSeleccionada ? solicitudSeleccionada.id : null
+    };
+    
+    // Enviar datos
+    $.ajax({
+        url: "index.php?ruta=despachos",
+        method: "POST",
+        data: datosDespacho,
+        dataType: "json",
+        success: function(respuesta) {
+            
+            $("#btnCrearDespacho").prop("disabled", false).html('<i class="fa fa-truck"></i> Crear despacho');
+            
+            if(respuesta.success) {
+                
+                swal({
+                    title: "¡Despacho creado!",
+                    text: `Se creó el despacho: ${respuesta.numero_despacho}`,
+                    type: "success",
+                    confirmButtonText: "Ver despachos"
+                }).then(function() {
+                    window.location.href = "index.php?ruta=despachos";
+                });
+                
+            } else {
+                swal({
+                    title: "Error al crear despacho",
+                    text: respuesta.error || "Error desconocido",
+                    type: "error",
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            
+            $("#btnCrearDespacho").prop("disabled", false).html('<i class="fa fa-truck"></i> Crear despacho');
+            
+            console.error("Error AJAX:", error);
+            console.error("Response:", xhr.responseText);
+            
+            swal({
+                title: "Error de conexión",
+                text: "No se pudo crear el despacho. Verifique su conexión.",
+                type: "error",
+                confirmButtonText: "Cerrar"
+            });
+        }
+    });
+}
+
+/*=============================================
+MOSTRAR SIN RESULTADOS DE SOLICITUDES
+=============================================*/
+function mostrarSinResultadosSolicitudes() {
+    
+    ocultarResultadosSolicitudes();
+    
+    $("#numeroSolicitudBuscar").after(`
+        <div id="resultadosBusquedaSolicitudes" class="dropdown-menu" 
+             style="display: block; position: relative; width: 100%; margin-top: 5px;">
+            <div class="list-group-item text-center text-muted">
+                <i class="fa fa-search"></i> No se encontraron solicitudes con ese criterio
+            </div>
+        </div>
+    `);
+}
+
+/*=============================================
+MOSTRAR ERROR BÚSQUEDA SOLICITUDES
+=============================================*/
+function mostrarErrorBusquedaSolicitudes() {
+    
+    ocultarResultadosSolicitudes();
+    
+    $("#numeroSolicitudBuscar").after(`
+        <div id="resultadosBusquedaSolicitudes" class="dropdown-menu" 
+             style="display: block; position: relative; width: 100%; margin-top: 5px;">
+            <div class="list-group-item text-center text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Error buscando solicitudes
+            </div>
+        </div>
+    `);
 }
 
 /*=============================================
@@ -959,39 +1040,26 @@ function ocultarResultadosSolicitudes() {
 }
 
 /*=============================================
-MOSTRAR SIN RESULTADOS SOLICITUDES
+LIMPIAR SOLICITUD SELECCIONADA
 =============================================*/
-function mostrarSinResultadosSolicitudes() {
-    $("#numeroSolicitudBuscar").after(`
-        <div id="resultadosBusquedaSolicitudes" class="alert alert-info" 
-             style="margin-top: 5px; padding: 10px;">
-            <i class="fa fa-info-circle"></i> No se encontraron solicitudes con ese criterio
-        </div>
-    `);
+function limpiarSolicitudSeleccionada() {
     
-    setTimeout(function() {
-        $("#resultadosBusquedaSolicitudes").fadeOut(function() {
-            $(this).remove();
-        });
-    }, 3000);
-}
-
-/*=============================================
-MOSTRAR ERROR BÚSQUEDA SOLICITUDES
-=============================================*/
-function mostrarErrorBusquedaSolicitudes() {
-    $("#numeroSolicitudBuscar").after(`
-        <div id="resultadosBusquedaSolicitudes" class="alert alert-danger" 
-             style="margin-top: 5px; padding: 10px;">
-            <i class="fa fa-exclamation-triangle"></i> Error al buscar solicitudes
-        </div>
-    `);
+    solicitudSeleccionada = null;
+    $("#numeroSolicitudBuscar").val("");
+    $("#infoSolicitudEncontrada").hide();
+    $("#idSolicitudOrigenHidden").val("");
+    ocultarResultadosSolicitudes();
     
-    setTimeout(function() {
-        $("#resultadosBusquedaSolicitudes").fadeOut(function() {
-            $(this).remove();
-        });
-    }, 3000);
+    // Limpiar tipo de despacho
+    $("input[name='tipoDespacho']").prop("checked", false);
+    
+    swal({
+        title: "Solicitud limpiada",
+        text: "Se limpió la solicitud seleccionada",
+        type: "info",
+        timer: 1500,
+        showConfirmButton: false
+    });
 }
 
 /*=============================================
@@ -999,90 +1067,189 @@ CONFIGURAR FILTRO DE PRODUCTOS
 =============================================*/
 function configurarFiltroProductos() {
     
-    // Filtro en tiempo real con debounce
+    // Configurar filtro con delay
     var timeoutFiltro;
     
-    $("#filtroProductosLocal").on("keyup", function() {
+    $("#filtroProductosLocal").on("input", function() {
+        var $input = $(this);
+        
         clearTimeout(timeoutFiltro);
-        var termino = $(this).val();
         
         timeoutFiltro = setTimeout(function() {
-            filtrarProductosLocal(termino);
+            filtrarProductosLocal($input.val());
         }, 300);
     });
     
-    // Limpiar con ESC
+    // Limpiar filtro con Escape
     $("#filtroProductosLocal").on("keydown", function(e) {
-        if(e.which === 27) { // ESC
+        if(e.keyCode === 27) { // Escape
             $(this).val("");
-            mostrarProductosInventario(inventarioLocal);
+            filtrarProductosLocal("");
         }
     });
 }
 
 /*=============================================
-ATAJOS DE TECLADO
+EXPORTAR LISTA DE PRODUCTOS DESPACHO
 =============================================*/
-$(document).on("keydown", function(e) {
+function exportarListaProductosDespacho() {
     
-    // Ctrl + F para enfocar filtro
-    if(e.ctrlKey && e.which === 70) {
-        $("#filtroProductosLocal").focus();
-        e.preventDefault();
-    }
-    
-    // ESC para cerrar modales
-    if(e.which === 27) {
-        $(".modal").modal("hide");
-        ocultarResultadosSolicitudes();
+    if(productosDespacho.length === 0) {
+        swal({
+            title: "No hay productos",
+            text: "No hay productos en el despacho para exportar",
+            type: "info",
+            confirmButtonText: "Entendido"
+        });
+        return;
     }
     
-    // Enter en modal de cantidad
-    if(e.which === 13 && $("#modalCantidadProductoDespacho").hasClass("in")) {
-        if(!$("#confirmarAgregarProductoDespacho").prop("disabled")) {
-            confirmarAgregarProducto();
-        }
-        e.preventDefault();
-    }
-});
-
-/*=============================================
-CLEANUP AL SALIR
-=============================================*/
-$(window).on('beforeunload', function(e) {
-    if(productosDespacho.length > 0) {
-        var mensaje = 'Hay productos agregados al despacho. ¿Está seguro de salir?';
-        e.returnValue = mensaje;
-        return mensaje;
-    }
-});
-
-/*=============================================
-CONFIGURAR TOASTR (NOTIFICACIONES)
-=============================================*/
-if(typeof toastr !== 'undefined') {
-    toastr.options = {
-        "closeButton": true,
-        "debug": false,
-        "newestOnTop": true,
-        "progressBar": true,
-        "positionClass": "toast-top-right",
-        "preventDuplicates": true,
-        "onclick": null,
-        "showDuration": "300",
-        "hideDuration": "1000",
-        "timeOut": "3000",
-        "extendedTimeOut": "1000",
-        "showEasing": "swing",
-        "hideEasing": "linear",
-        "showMethod": "fadeIn",
-        "hideMethod": "fadeOut"
-    };
+    // Crear CSV
+    var csv = "Código,Descripción,Cantidad,Stock Disponible,Observación\n";
+    
+    productosDespacho.forEach(function(producto) {
+        csv += `"${producto.codigo}","${producto.descripcion}","${producto.cantidad}","${producto.stock_disponible}","${producto.observacion || ''}"\n`;
+    });
+    
+    // Descargar archivo
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    var link = document.createElement("a");
+    var url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `productos-despacho-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    swal({
+        title: "¡Exportado!",
+        text: "Se descargó la lista de productos en formato CSV",
+        type: "success",
+        timer: 2000,
+        showConfirmButton: false
+    });
 }
 
 /*=============================================
-LOG DE INICIALIZACIÓN
+IMPRIMIR LISTA DE PRODUCTOS DESPACHO
 =============================================*/
-console.log("✅ JavaScript de crear despacho cargado completamente");
-console.log("🚛 Productos en despacho:", productosDespacho.length);
-console.log("📦 Inventario local:", inventarioLocal.length);
+function imprimirListaProductosDespacho() {
+    
+    if(productosDespacho.length === 0) {
+        swal({
+            title: "No hay productos",
+            text: "No hay productos en el despacho para imprimir",
+            type: "info",
+            confirmButtonText: "Entendido"
+        });
+        return;
+    }
+    
+    var fechaActual = new Date().toLocaleDateString();
+    var horaActual = new Date().toLocaleTimeString();
+    
+    var contenidoImprimir = `
+        <html>
+        <head>
+            <title>Lista de Productos - Despacho</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .info { margin-bottom: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+                th { background-color: #f2f2f2; font-weight: bold; }
+                .text-center { text-align: center; }
+                .total-row { background-color: #f9f9f9; font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h2>LISTA DE PRODUCTOS PARA DESPACHO</h2>
+                <p>Fecha: ${fechaActual} - Hora: ${horaActual}</p>
+            </div>
+            
+            <div class="info">
+                <p><strong>Total de productos:</strong> ${productosDespacho.length}</p>
+                <p><strong>Total de unidades:</strong> ${productosDespacho.reduce((total, p) => total + p.cantidad, 0)}</p>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th class="text-center">Cantidad</th>
+                        <th class="text-center">Stock Disponible</th>
+                        <th>Observación</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    productosDespacho.forEach(function(producto) {
+        contenidoImprimir += `
+            <tr>
+                <td><strong>${producto.codigo}</strong></td>
+                <td>${producto.descripcion}</td>
+                <td class="text-center">${producto.cantidad}</td>
+                <td class="text-center">${producto.stock_disponible}</td>
+                <td>${producto.observacion || '-'}</td>
+            </tr>
+        `;
+    });
+    
+    contenidoImprimir += `
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `;
+    
+    var ventanaImprimir = window.open('', '_blank');
+    ventanaImprimir.document.write(contenidoImprimir);
+    ventanaImprimir.document.close();
+    ventanaImprimir.focus();
+    ventanaImprimir.print();
+}
+
+/*=============================================
+EVENTOS ESPECIALES
+=============================================*/
+$(document).ready(function() {
+    
+    // Cerrar resultados al hacer clic fuera
+    $(document).on("click", function(e) {
+        if (!$(e.target).closest("#numeroSolicitudBuscar, #resultadosBusquedaSolicitudes").length) {
+            ocultarResultadosSolicitudes();
+        }
+    });
+    
+    // Atajo de teclado para limpiar filtro (Ctrl + L)
+    $(document).on("keydown", function(e) {
+        if(e.ctrlKey && e.keyCode === 76) {
+            e.preventDefault();
+            $("#filtroProductosLocal").val("").focus();
+            filtrarProductosLocal("");
+        }
+    });
+    
+    // Atajo para validar stock (Ctrl + V)
+    $(document).on("keydown", function(e) {
+        if(e.ctrlKey && e.keyCode === 86) {
+            e.preventDefault();
+            validarStockProductos();
+        }
+    });
+    
+    // Prevenir envío del formulario con Enter en campos de texto
+    $("#numeroSolicitudBuscar, #filtroProductosLocal").on("keydown", function(e) {
+        if(e.keyCode === 13) {
+            e.preventDefault();
+        }
+    });
+    
+});
