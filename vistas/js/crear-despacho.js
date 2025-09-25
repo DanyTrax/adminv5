@@ -1132,31 +1132,63 @@ function enviarFormularioDespacho() {
         return false;
     }
     
-    // Validar campos obligatorios
-    var observaciones = $("#observacionesDespacho").val();
-    var tipoDespacho = $("input[name='tipoDespacho']:checked").val();
-    
-    if(!tipoDespacho) {
-        swal({
-            title: "Tipo de despacho requerido",
-            text: "Seleccione si es despacho libre o desde solicitud",
-            type: "warning",
-            confirmButtonText: "Entendido"
-        });
-        return false;
+// Validar campos obligatorios y auto-detectar tipo
+var observaciones = $("#detalleAdicional").val();
+
+// AUTO-DETECCIÓN INTELIGENTE DEL TIPO DE DESPACHO
+var tipoDespacho = "libre"; // Por defecto
+var tieneSolicitudes = false;
+var tieneProductosLibres = false;
+
+// Verificar si hay productos agregados desde solicitudes
+productosDespacho.forEach(function(producto) {
+    if(producto.observacion && producto.observacion.includes("SOL")) {
+        tieneSolicitudes = true;
+    } else {
+        tieneProductosLibres = true;
     }
+});
+
+// Determinar tipo según el contenido
+if(tieneSolicitudes && tieneProductosLibres) {
+    tipoDespacho = "hibrido"; // NUEVO: Despacho combinado
+} else if(tieneSolicitudes) {
+    tipoDespacho = "solicitud"; // Solo desde solicitudes
+} else {
+    tipoDespacho = "libre"; // Solo productos manuales
+}
+
+console.log("🎯 Tipo de despacho detectado:", tipoDespacho);
+console.log("📋 Análisis:", {
+    tieneSolicitudes: tieneSolicitudes,
+    tieneProductosLibres: tieneProductosLibres,
+    totalProductos: productosDespacho.length
+});
     
-    // Mostrar confirmación
-    var mensaje = `
-        Se creará un despacho con:
-        • ${productosDespacho.length} productos diferentes
-        • ${productosDespacho.reduce((total, p) => total + p.cantidad, 0)} unidades totales
-        • Tipo: ${tipoDespacho === 'libre' ? 'Despacho libre' : 'Desde solicitud'}
-    `;
-    
-    if(solicitudSeleccionada && tipoDespacho === 'solicitud') {
-        mensaje += `\n• Solicitud origen: ${solicitudSeleccionada.numero_solicitud}`;
-    }
+// Mostrar confirmación
+var tipoTexto = "";
+switch(tipoDespacho) {
+    case "libre":
+        tipoTexto = "Despacho libre (productos seleccionados manualmente)";
+        break;
+    case "solicitud":
+        tipoTexto = "Despacho desde solicitud";
+        break;
+    case "hibrido":
+        tipoTexto = "Despacho híbrido (solicitudes + productos manuales)";
+        break;
+}
+
+var mensaje = `
+    Se creará un despacho con:
+    • ${productosDespacho.length} productos diferentes
+    • ${productosDespacho.reduce((total, p) => total + p.cantidad, 0)} unidades totales
+    • Tipo: ${tipoTexto}
+`;
+
+if(solicitudSeleccionada && (tipoDespacho === 'solicitud' || tipoDespacho === 'hibrido')) {
+    mensaje += `\n• Última solicitud procesada: ${solicitudSeleccionada.numero_solicitud}`;
+}
     
     swal({
         title: "¿Crear despacho?",
@@ -1182,16 +1214,16 @@ function procesarCreacionDespacho() {
     // Mostrar loading
     $("#btnCrearDespacho").prop("disabled", true).html('<i class="fa fa-spinner fa-spin"></i> Creando despacho...');
     
-    // Preparar datos
-    var datosDespacho = {
-        crearDespacho: true,
-        productos_despacho: JSON.stringify(productosDespacho),
-        total_productos: productosDespacho.length,
-        total_cantidad: productosDespacho.reduce((total, p) => total + p.cantidad, 0),
-        tipo_despacho: $("input[name='tipoDespacho']:checked").val(),
-        observaciones: $("#observacionesDespacho").val(),
-        id_solicitud_origen: solicitudSeleccionada ? solicitudSeleccionada.id : null
-    };
+// Preparar datos
+var datosDespacho = {
+    crearDespacho: true,
+    productos_despacho: JSON.stringify(productosDespacho),
+    total_productos: productosDespacho.length,
+    total_cantidad: productosDespacho.reduce((total, p) => total + p.cantidad, 0),
+    tipo_despacho: tipoDespacho, // Ahora puede ser: libre, solicitud, hibrido
+    observaciones: $("#detalleAdicional").val(),
+    id_solicitud_origen: solicitudSeleccionada ? solicitudSeleccionada.id : null
+};
     
     // Enviar datos
     $.ajax({
