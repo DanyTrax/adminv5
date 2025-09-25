@@ -44,57 +44,57 @@ public function ajaxObtenerInventarioLocal() {
     }
 }
 
-    /*=============================================
-    BUSCAR SOLICITUDES DE STOCK
-    =============================================*/
-    public function ajaxBuscarSolicitudes() {
+/*=============================================
+BUSCAR SOLICITUDES DE STOCK - CORREGIDO
+=============================================*/
+public function ajaxBuscarSolicitudes() {
+    
+    if(isset($_POST["termino"])) {
         
-        if(isset($_POST["termino"])) {
+        $termino = $_POST["termino"];
+        
+        try {
+            require_once "../api-transferencias/conexion-central.php";
             
-            $termino = $_POST["termino"];
+            $stmt = ConexionCentral::conectar()->prepare("
+                SELECT 
+                    id,
+                    codigo_solicitud,
+                    nombre_usuario_solicitante,
+                    nombre_sucursal_solicitante,
+                    total_productos,
+                    total_cantidad,
+                    estado,
+                    fecha_solicitud,
+                    productos_solicitados
+                FROM solicitudes_stock 
+                WHERE estado IN ('aprobado', 'pendiente')
+                AND (codigo_solicitud LIKE :termino 
+                     OR nombre_usuario_solicitante LIKE :termino)
+                ORDER BY fecha_solicitud DESC
+                LIMIT 20
+            ");
             
-            try {
-                require_once "../api-transferencias/conexion-central.php";
-                
-                $stmt = ConexionCentral::conectar()->prepare("
-                    SELECT 
-                        id,
-                        codigo_solicitud,
-                        nombre_usuario_solicitante,
-                        sucursal_origen,
-                        cantidad_productos,
-                        cantidad_total,
-                        estado,
-                        fecha_solicitud,
-                        productos_solicitud
-                    FROM solicitudes_stock 
-                    WHERE estado IN ('aprobada', 'pendiente')
-                    AND (codigo_solicitud LIKE :termino 
-                         OR nombre_usuario_solicitante LIKE :termino)
-                    ORDER BY fecha_solicitud DESC
-                    LIMIT 20
-                ");
-                
-                $terminoBusqueda = "%" . $termino . "%";
-                $stmt->bindParam(":termino", $terminoBusqueda, PDO::PARAM_STR);
-                $stmt->execute();
-                
-                $solicitudes = $stmt->fetchAll();
-                
-                echo json_encode([
-                    "success" => true,
-                    "solicitudes" => $solicitudes,
-                    "total" => count($solicitudes)
-                ]);
-                
-            } catch(Exception $e) {
-                echo json_encode([
-                    "success" => false,
-                    "error" => "Error buscando solicitudes: " . $e->getMessage()
-                ]);
-            }
+            $terminoBusqueda = "%" . $termino . "%";
+            $stmt->bindParam(":termino", $terminoBusqueda, PDO::PARAM_STR);
+            $stmt->execute();
+            
+            $solicitudes = $stmt->fetchAll();
+            
+            echo json_encode([
+                "success" => true,
+                "solicitudes" => $solicitudes,
+                "total" => count($solicitudes)
+            ]);
+            
+        } catch(Exception $e) {
+            echo json_encode([
+                "success" => false,
+                "error" => "Error buscando solicitudes: " . $e->getMessage()
+            ]);
         }
     }
+}
 
     /*=============================================
     OBTENER DETALLE DE SOLICITUD
