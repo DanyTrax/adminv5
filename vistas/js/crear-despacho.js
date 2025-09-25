@@ -257,7 +257,7 @@ MOSTRAR RESULTADOS DE SOLICITUDES - CORREGIDO
 =============================================*/
 function mostrarResultadosSolicitudes(solicitudes) {
     
-    // NUEVA LÍNEA: Eliminar resultados anteriores
+    // Eliminar resultados anteriores
     ocultarResultadosSolicitudes();
     
     var html = '<div class="list-group" style="max-height: 200px; overflow-y: auto;">';

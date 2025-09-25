@@ -76,14 +76,24 @@ if($_SESSION["perfil"] == "Limitado" || $_SESSION["perfil"] == "Transportador"){
                                     </span>
                                 </div>
                                 
-                                <!-- INFORMACIÓN DE SOLICITUD ENCONTRADA -->
-                                <div id="infoSolicitudEncontrada" class="alert alert-info" style="display: none; margin-top: 10px;">
-                                    <h5><i class="fa fa-info-circle"></i> Solicitud Encontrada:</h5>
-                                    <div id="datosSolicitudEncontrada"></div>
-                                    <button type="button" class="btn btn-xs btn-success" onclick="cargarProductosDeSolicitud()">
-                                        <i class="fa fa-download"></i> Cargar Productos de la Solicitud
-                                    </button>
-                                </div>
+<!-- INFO SOLICITUD ENCONTRADA CON BOTÓN CERRAR -->
+<div id="infoSolicitudEncontrada" class="alert alert-info" style="display: none;">
+    <div class="row">
+        <div class="col-xs-10">
+            <strong><i class="fa fa-check-circle"></i> Solicitud Encontrada:</strong>
+            <div id="datosSolicitudEncontrada" class="mt-2"></div>
+        </div>
+        <div class="col-xs-2 text-right">
+            <button type="button" 
+                    class="btn btn-danger btn-xs" 
+                    onclick="limpiarSolicitudSeleccionada()"
+                    data-toggle="tooltip" 
+                    title="Limpiar solicitud seleccionada">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+    </div>
+</div>
                                 
                                 <small class="help-block">
                                     <i class="fa fa-lightbulb-o"></i> Opcional: Puede cargar productos desde una solicitud existente

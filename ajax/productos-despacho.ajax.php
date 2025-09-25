@@ -45,7 +45,7 @@ public function ajaxObtenerInventarioLocal() {
 }
 
 /*=============================================
-BUSCAR SOLICITUDES DE STOCK - CORREGIDO
+BUSCAR SOLICITUDES DE STOCK - CORREGIDO PARA NUMERO_SOLICITUD
 =============================================*/
 public function ajaxBuscarSolicitudes() {
     
@@ -59,7 +59,7 @@ public function ajaxBuscarSolicitudes() {
             $stmt = ConexionCentral::conectar()->prepare("
                 SELECT 
                     id,
-                    codigo_solicitud,
+                    numero_solicitud,
                     nombre_usuario_solicitante,
                     nombre_sucursal_solicitante,
                     total_productos,
@@ -69,8 +69,9 @@ public function ajaxBuscarSolicitudes() {
                     productos_solicitados
                 FROM solicitudes_stock 
                 WHERE estado IN ('aprobado', 'pendiente')
-                AND (codigo_solicitud LIKE :termino 
-                     OR nombre_usuario_solicitante LIKE :termino)
+                AND (numero_solicitud LIKE :termino 
+                     OR nombre_usuario_solicitante LIKE :termino
+                     OR nombre_sucursal_solicitante LIKE :termino)
                 ORDER BY fecha_solicitud DESC
                 LIMIT 20
             ");
