@@ -7,43 +7,42 @@ require_once "../modelos/productos.modelo.php";
 
 class AjaxProductosDespacho {
 
-    /*=============================================
-    OBTENER INVENTARIO LOCAL PARA DESPACHO
-    =============================================*/
-    public function ajaxObtenerInventarioLocal() {
+/*=============================================
+OBTENER INVENTARIO LOCAL PARA DESPACHO - CORREGIDO
+=============================================*/
+public function ajaxObtenerInventarioLocal() {
+    
+    try {
+        require_once "../modelos/conexion.php";
         
-        try {
-            require_once "../modelos/conexion.php";
-            
-            $stmt = Conexion::conectar()->prepare("
-                SELECT 
-                    codigo,
-                    descripcion,
-                    stock,
-                    precio_venta,
-                    imagen
-                FROM productos 
-                WHERE estado = 1 
-                AND stock > 0
-                ORDER BY descripcion ASC
-            ");
-            
-            $stmt->execute();
-            $productos = $stmt->fetchAll();
-            
-            echo json_encode([
-                "success" => true,
-                "productos" => $productos,
-                "total" => count($productos)
-            ]);
-            
-        } catch(Exception $e) {
-            echo json_encode([
-                "success" => false,
-                "error" => "Error cargando inventario: " . $e->getMessage()
-            ]);
-        }
+        $stmt = Conexion::conectar()->prepare("
+            SELECT 
+                codigo,
+                descripcion,
+                stock,
+                precio_venta,
+                imagen
+            FROM productos 
+            WHERE stock > 0
+            ORDER BY descripcion ASC
+        ");
+        
+        $stmt->execute();
+        $productos = $stmt->fetchAll();
+        
+        echo json_encode([
+            "success" => true,
+            "productos" => $productos,
+            "total" => count($productos)
+        ]);
+        
+    } catch(Exception $e) {
+        echo json_encode([
+            "success" => false,
+            "error" => "Error cargando inventario: " . $e->getMessage()
+        ]);
     }
+}
 
     /*=============================================
     BUSCAR SOLICITUDES DE STOCK
@@ -141,7 +140,7 @@ class AjaxProductosDespacho {
     }
 
     /*=============================================
-    VALIDAR STOCK DE PRODUCTO
+    VALIDAR STOCK DE PRODUCTO - CORREGIDO
     =============================================*/
     public function ajaxValidarStock() {
         
@@ -155,7 +154,7 @@ class AjaxProductosDespacho {
                 
                 $stmt = Conexion::conectar()->prepare("
                     SELECT stock FROM productos 
-                    WHERE codigo = :codigo AND estado = 1
+                    WHERE codigo = :codigo
                 ");
                 
                 $stmt->bindParam(":codigo", $codigoProducto, PDO::PARAM_STR);
@@ -172,8 +171,8 @@ class AjaxProductosDespacho {
                         "cantidad_solicitada" => $cantidad,
                         "valido" => $cantidad <= $stockDisponible && $cantidad > 0,
                         "mensaje" => $cantidad > $stockDisponible ? 
-                                   "Stock insuficiente. Disponible: " . $stockDisponible : 
-                                   "Stock suficiente"
+                                "Stock insuficiente. Disponible: " . $stockDisponible : 
+                                "Stock suficiente"
                     ]);
                 } else {
                     echo json_encode([
