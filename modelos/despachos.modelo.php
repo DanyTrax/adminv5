@@ -5,80 +5,68 @@ require_once "conexion.php";
 class ModeloDespachos {
 
 /*=============================================
-CREAR DESPACHO CON MANEJO DE CONCURRENCIA
+CREAR DESPACHO - SQL CORREGIDO PARA TABLA REAL
 =============================================*/
 static public function mdlCrearDespacho($tabla, $datos) {
     
     try {
+        // Usar conexión central
         require_once "../api-transferencias/conexion-central.php";
         $conexion = ConexionCentral::conectar();
         
-        // ✅ INICIAR TRANSACCIÓN PARA TODA LA OPERACIÓN
-        $conexion->beginTransaction();
-        
-        try {
-            $stmt = $conexion->prepare("
-                INSERT INTO $tabla (
-                    numero_despacho, 
-                    id_solicitud_origen,
-                    nombre_sucursal_origen, 
-                    id_usuario_creador,
-                    nombre_usuario_creador,
-                    productos_despacho, 
-                    total_productos,
-                    total_cantidad,
-                    detalle_adicional,
-                    estado,
-                    fecha_creacion
-                ) VALUES (
-                    :numero_despacho,
-                    :id_solicitud_origen,
-                    :nombre_sucursal_origen,
-                    :id_usuario_creador,
-                    :nombre_usuario_creador,
-                    :productos_despacho,
-                    :total_productos,
-                    :total_cantidad,
-                    :detalle_adicional,
-                    'pendiente',
-                    NOW()
-                )
-            ");
+        $stmt = $conexion->prepare("
+            INSERT INTO $tabla (
+                numero_despacho, 
+                id_solicitud_origen,
+                sucursal_origen, 
+                sucursal_creador,
+                usuario_creador,
+                nombre_usuario_creador,
+                productos_despacho, 
+                total_productos,
+                total_cantidad,
+                detalle_adicional,
+                estado,
+                fecha_creacion
+            ) VALUES (
+                :numero_despacho,
+                :id_solicitud_origen,
+                :sucursal_origen,
+                :sucursal_creador,
+                :usuario_creador,
+                :nombre_usuario_creador,
+                :productos_despacho,
+                :total_productos,
+                :total_cantidad,
+                :detalle_adicional,
+                'pendiente',
+                NOW()
+            )
+        ");
 
-            $stmt->bindParam(":numero_despacho", $datos["numero_despacho"], PDO::PARAM_STR);
-            $stmt->bindParam(":id_solicitud_origen", $datos["id_solicitud_origen"], PDO::PARAM_INT);
-            $stmt->bindParam(":nombre_sucursal_origen", $datos["nombre_sucursal_origen"], PDO::PARAM_STR);
-            $stmt->bindParam(":id_usuario_creador", $datos["id_usuario_creador"], PDO::PARAM_INT);
-            $stmt->bindParam(":nombre_usuario_creador", $datos["nombre_usuario_creador"], PDO::PARAM_STR);
-            $stmt->bindParam(":productos_despacho", $datos["productos_despacho"], PDO::PARAM_STR);
-            $stmt->bindParam(":total_productos", $datos["total_productos"], PDO::PARAM_INT);
-            $stmt->bindParam(":total_cantidad", $datos["total_cantidad"], PDO::PARAM_INT);
-            $stmt->bindParam(":detalle_adicional", $datos["detalle_adicional"], PDO::PARAM_STR);
+        $stmt->bindParam(":numero_despacho", $datos["numero_despacho"], PDO::PARAM_STR);
+        $stmt->bindParam(":id_solicitud_origen", $datos["id_solicitud_origen"], PDO::PARAM_INT);
+        $stmt->bindParam(":sucursal_origen", $datos["nombre_sucursal_origen"], PDO::PARAM_STR);
+        $stmt->bindParam(":sucursal_creador", $datos["nombre_sucursal_origen"], PDO::PARAM_STR); // ✅ AGREGADO
+        $stmt->bindParam(":usuario_creador", $datos["id_usuario_creador"], PDO::PARAM_INT);
+        $stmt->bindParam(":nombre_usuario_creador", $datos["nombre_usuario_creador"], PDO::PARAM_STR);
+        $stmt->bindParam(":productos_despacho", $datos["productos_despacho"], PDO::PARAM_STR);
+        $stmt->bindParam(":total_productos", $datos["total_productos"], PDO::PARAM_INT);
+        $stmt->bindParam(":total_cantidad", $datos["total_cantidad"], PDO::PARAM_INT);
+        $stmt->bindParam(":detalle_adicional", $datos["detalle_adicional"], PDO::PARAM_STR);
 
-            error_log("🔍 Intentando insertar despacho: " . $datos["numero_despacho"]);
+        // Debug: Log SQL y parámetros
+        error_log("🔍 SQL INSERT FINAL: " . $stmt->queryString);
+        error_log("🔍 Datos a insertar: " . print_r($datos, true));
 
-            if($stmt->execute()) {
-                $insertId = $conexion->lastInsertId();
-                
-                // ✅ CONFIRMAR TRANSACCIÓN SOLO SI TODO SALIÓ BIEN
-                $conexion->commit();
-                
-                error_log("✅ Despacho creado exitosamente. ID: " . $insertId);
-                return $insertId;
-                
-            } else {
-                $errorInfo = $stmt->errorInfo();
-                error_log("❌ Error en INSERT: " . print_r($errorInfo, true));
-                
-                // ✅ CANCELAR TRANSACCIÓN
-                $conexion->rollBack();
-                return "error: " . $errorInfo[2];
-            }
-
-        } catch(Exception $e) {
-            // ✅ CANCELAR TRANSACCIÓN EN CASO DE ERROR
-            $conexion->rollBack();
-            throw $e;
+        if($stmt->execute()) {
+            $insertId = $conexion->lastInsertId();
+            error_log("✅ INSERT exitoso. ID generado: " . $insertId);
+            return $insertId;
+        } else {
+            $errorInfo = $stmt->errorInfo();
+            error_log("❌ Error en INSERT: " . print_r($errorInfo, true));
+            return "error";
         }
 
     } catch(Exception $e) {
