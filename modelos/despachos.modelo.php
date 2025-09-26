@@ -5,14 +5,16 @@ require_once "conexion.php";
 class ModeloDespachos {
 
     /*=============================================
-    CREAR DESPACHO
+    CREAR DESPACHO - VERSIÓN CORREGIDA
     =============================================*/
     static public function mdlCrearDespacho($tabla, $datos) {
         
         try {
             // Usar conexión central
             require_once "../api-transferencias/conexion-central.php";
-            $stmt = ConexionCentral::conectar()->prepare("
+            $conexion = ConexionCentral::conectar(); // ✅ GUARDAR LA CONEXIÓN
+            
+            $stmt = $conexion->prepare("
                 INSERT INTO $tabla (
                     numero_despacho, 
                     id_solicitud_origen,
@@ -22,7 +24,9 @@ class ModeloDespachos {
                     productos_despacho, 
                     total_productos,
                     total_cantidad,
-                    detalle_adicional
+                    detalle_adicional,
+                    estado,
+                    fecha_creacion
                 ) VALUES (
                     :numero_despacho,
                     :id_solicitud_origen,
@@ -32,7 +36,9 @@ class ModeloDespachos {
                     :productos_despacho,
                     :total_productos,
                     :total_cantidad,
-                    :detalle_adicional
+                    :detalle_adicional,
+                    'pendiente',
+                    NOW()
                 )
             ");
 
@@ -46,13 +52,22 @@ class ModeloDespachos {
             $stmt->bindParam(":total_cantidad", $datos["total_cantidad"], PDO::PARAM_INT);
             $stmt->bindParam(":detalle_adicional", $datos["detalle_adicional"], PDO::PARAM_STR);
 
+            // Debug: Log SQL y parámetros
+            error_log("🔍 SQL INSERT: " . $stmt->queryString);
+            error_log("🔍 Datos a insertar: " . print_r($datos, true));
+
             if($stmt->execute()) {
-                return ConexionCentral::conectar()->lastInsertId();
+                $insertId = $conexion->lastInsertId(); // ✅ USAR LA MISMA CONEXIÓN
+                error_log("✅ INSERT exitoso. ID generado: " . $insertId);
+                return $insertId;
             } else {
+                $errorInfo = $stmt->errorInfo();
+                error_log("❌ Error en INSERT: " . print_r($errorInfo, true));
                 return "error";
             }
 
         } catch(Exception $e) {
+            error_log("❌ Excepción en mdlCrearDespacho: " . $e->getMessage());
             return "error: " . $e->getMessage();
         }
     }

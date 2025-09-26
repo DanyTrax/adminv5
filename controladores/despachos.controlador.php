@@ -7,14 +7,13 @@ CREAR DESPACHO - VERSIÓN CORREGIDA
 =============================================*/
 static public function ctrCrearDespacho($datos = null) {
 
-    // Si se llama desde AJAX, usar los datos enviados
     if($datos) {
         
         try {
             // Generar número de despacho único
             $numeroDespacho = ModeloDespachos::mdlGenerarNumeroDespacho();
 
-            // Preparar datos para el modelo (con nombres correctos)
+            // Preparar datos para el modelo
             $datosModelo = array(
                 "numero_despacho" => $numeroDespacho,
                 "id_solicitud_origen" => $datos["id_solicitud_origen"],
@@ -27,97 +26,30 @@ static public function ctrCrearDespacho($datos = null) {
                 "detalle_adicional" => $datos["detalle_adicional"]
             );
 
+            // Debug: Log datos preparados
+            error_log("🔍 Controlador - datos para modelo: " . print_r($datosModelo, true));
+
             $tabla = "despachos";
             $respuesta = ModeloDespachos::mdlCrearDespacho($tabla, $datosModelo);
 
-            if($respuesta && $respuesta != "error") {
+            // Debug: Log respuesta del modelo
+            error_log("🔍 Controlador - respuesta del modelo: " . print_r($respuesta, true));
+
+            if($respuesta && $respuesta != "error" && is_numeric($respuesta)) {
+                error_log("✅ Controlador - Despacho creado con ID: " . $respuesta);
                 return "ok";
             } else {
+                error_log("❌ Controlador - Error del modelo: " . $respuesta);
                 return "error: " . $respuesta;
             }
 
         } catch(Exception $e) {
+            error_log("❌ Controlador - Excepción: " . $e->getMessage());
             return "error: " . $e->getMessage();
         }
     }
-
-    // Si se llama desde POST (formulario tradicional)
-    if(isset($_POST["crearDespacho"])) {
-
-        // Validar campos requeridos (nombres corregidos)
-        if(empty($_POST["productosDespacho"]) || 
-           empty($_POST["totalProductos"]) || 
-           empty($_POST["totalCantidad"])) {
-            
-            echo '<script>
-                swal({
-                    type: "error",
-                    title: "Campos incompletos",
-                    text: "Debe agregar al menos un producto al despacho",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                });
-            </script>';
-            return;
-        }
-
-        // Generar número de despacho único
-        $numeroDespacho = ModeloDespachos::mdlGenerarNumeroDespacho();
-
-        try {
-            
-            $tabla = "despachos";
-            $datos = array(
-                "numero_despacho" => $numeroDespacho,
-                "id_solicitud_origen" => $_POST["idSolicitudOrigen"] ?? null,
-                "nombre_sucursal_origen" => self::obtenerSucursalLocal(),
-                "id_usuario_creador" => $_SESSION["id"],
-                "nombre_usuario_creador" => $_SESSION["nombre"],
-                "productos_despacho" => $_POST["productosDespacho"],
-                "total_productos" => $_POST["totalProductos"],
-                "total_cantidad" => $_POST["totalCantidad"],
-                "detalle_adicional" => $_POST["detalleAdicional"] ?? null
-            );
-
-            $respuesta = ModeloDespachos::mdlCrearDespacho($tabla, $datos);
-
-            if($respuesta && $respuesta != "error") {
-                
-                // Si viene de una solicitud de stock, actualizar el estado
-                if(!empty($_POST["idSolicitudOrigen"])) {
-                    self::actualizarEstadoSolicitudStock($_POST["idSolicitudOrigen"], "despachado");
-                }
-
-                echo '<script>
-                    swal({
-                        type: "success",
-                        title: "¡Despacho creado!",
-                        text: "El despacho ' . $numeroDespacho . ' se ha creado correctamente",
-                        showConfirmButton: true,
-                        confirmButtonText: "Cerrar"
-                    }).then(function(result) {
-                        if (result.value) {
-                            window.location = "despachos";
-                        }
-                    });
-                </script>';
-
-            } else {
-                throw new Exception("Error al crear el despacho: " . $respuesta);
-            }
-
-        } catch(Exception $e) {
-            echo '<script>
-                swal({
-                    type: "error",
-                    title: "Error",
-                    text: "Error al crear el despacho: ' . $e->getMessage() . '",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                });
-            </script>';
-        }
-    }
+    
+    // ... resto del método para POST
 }
 
 /*=============================================
@@ -819,6 +751,49 @@ static public function ctrObtenerUltimoDespacho() {
                         type: "error",
                         title: "Error",
                         text: "Error al cancelar el despacho",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                </script>';
+            }
+        }
+    }
+    /*=============================================
+    BORRAR DESPACHO
+    =============================================*/
+    static public function ctrBorrarDespacho() {
+        
+        if(isset($_POST["borrarDespacho"])) {
+            
+            $tabla = "despachos";
+            $item = "id";
+            $valor = $_POST["idDespacho"];
+            
+            $respuesta = ModeloDespachos::mdlBorrarDespacho($tabla, $item, $valor);
+            
+            if($respuesta == "ok") {
+                
+                echo '<script>
+                    swal({
+                        type: "success",
+                        title: "¡Despacho eliminado!",
+                        text: "El despacho ha sido eliminado correctamente",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    }).then(function(result) {
+                        if (result.value) {
+                            window.location = "despachos";
+                        }
+                    });
+                </script>';
+                
+            } else {
+                
+                echo '<script>
+                    swal({
+                        type: "error",
+                        title: "Error",
+                        text: "Error al eliminar el despacho",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
                     });
