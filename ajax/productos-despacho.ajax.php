@@ -190,6 +190,55 @@ public function ajaxBuscarSolicitudes() {
             }
         }
     }
+    /*=============================================
+    OBTENER STOCK ACTUAL DE PRODUCTOS - NUEVA FUNCIÓN
+    =============================================*/
+    public function ajaxObtenerStockActual() {
+        
+        if(isset($_POST["obtenerStockActual"])) {
+            
+            try {
+                require_once "../modelos/conexion.php";
+                
+                $codigos = $_POST["codigos"];
+                
+                if(!is_array($codigos) || empty($codigos)) {
+                    throw new Exception("Lista de códigos inválida");
+                }
+                
+                error_log("🔍 Obteniendo stock para códigos: " . implode(", ", $codigos));
+                
+                // Crear placeholders para la consulta
+                $placeholders = str_repeat('?,', count($codigos) - 1) . '?';
+                
+                $stmt = Conexion::conectar()->prepare("
+                    SELECT codigo, descripcion, stock 
+                    FROM productos 
+                    WHERE codigo IN ($placeholders) AND estado = 1
+                    ORDER BY descripcion ASC
+                ");
+                
+                $stmt->execute($codigos);
+                $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                error_log("✅ Stock obtenido para " . count($productos) . " productos");
+                
+                echo json_encode([
+                    "success" => true,
+                    "productos" => $productos,
+                    "total" => count($productos),
+                    "codigos_buscados" => $codigos
+                ]);
+                
+            } catch(Exception $e) {
+                error_log("❌ Error obteniendo stock actual: " . $e->getMessage());
+                echo json_encode([
+                    "success" => false,
+                    "error" => $e->getMessage()
+                ]);
+            }
+        }
+    }
 }
 
 /*=============================================
@@ -214,5 +263,8 @@ if(isset($_POST["validarStock"])) {
     $validar = new AjaxProductosDespacho();
     $validar->ajaxValidarStock();
 }
-
+if(isset($_POST["obtenerStockActual"])) {
+    $stockActual = new AjaxProductosDespacho();
+    $stockActual->ajaxObtenerStockActual();
+}
 ?>
