@@ -4,192 +4,158 @@ session_start();
 
 require_once "../api-transferencias/conexion-central.php";
 
-class TablaDespachos {
-
-/*=============================================
-MOSTRAR LA TABLA DE DESPACHOS - VERSIÓN CORREGIDA
-=============================================*/
-public function mostrarTablaDespachos() {
-
-    try {
-        $stmt = ConexionCentral::conectar()->prepare("
-            SELECT 
-                d.*,
-                CASE 
-                    WHEN d.estado = 'pendiente' THEN 0
-                    WHEN d.estado = 'aceptado' THEN 1
-                    WHEN d.estado = 'en_transito' THEN 2
-                    WHEN d.estado = 'finalizado' THEN 3
-                    ELSE 4
-                END as orden_estado
-            FROM despachos d 
-            ORDER BY orden_estado ASC, d.fecha_creacion DESC
-        ");
-
-        $stmt->execute();
-        $despachos = $stmt->fetchAll();
-
-        if(count($despachos) == 0) {
-            echo '{"data": []}';
-            return;
-        }
-
-        $datosJson = '{
-            "data": [';
-
-        foreach($despachos as $key => $value) {
-
-            /*=============================================
-            BOTONES DE ACCIONES SEGÚN PERFIL
-            =============================================*/
-            $botones = $this->generarBotonesAccion($value);
-
-            /*=============================================
-            ESTADO CON COLOR
-            =============================================*/
-            $estado = $this->formatearEstado($value["estado"]);
-
-            /*=============================================
-            FECHA FORMATEADA
-            =============================================*/
-            $fechaCreacion = date('d/m/Y H:i', strtotime($value["fecha_creacion"]));
-
-            /*=============================================
-            TRANSPORTADOR
-            =============================================*/
-            $transportador = $value["nombre_transportador"] ?: 'Sin asignar'; // ✅ CORREGIDO NOMBRE COLUMNA
-
-            /*=============================================
-            NOMBRE SUCURSAL (CORREGIR SI ES NECESARIO)
-            =============================================*/
-            $sucursalOrigen = $value["sucursal_origen"] ?: 'Sucursal no especificada'; // ✅ CORREGIDO NOMBRE COLUMNA
-
-            /*=============================================
-            CONSTRUIR FILA JSON
-            =============================================*/
-            $datosJson .= '[
-                "' . ($key + 1) . '",
-                "' . $value["numero_despacho"] . '",
-                "' . $sucursalOrigen . '",
-                "' . $value["nombre_usuario_creador"] . '",
-                "' . $estado . '",
-                "' . $value["total_productos"] . '",
-                "' . number_format($value["total_cantidad"]) . '",
-                "' . $transportador . '",
-                "' . $fechaCreacion . '",
-                "' . $botones . '"
-            ],';
-        }
-
-        $datosJson = substr($datosJson, 0, -1);
-        $datosJson .= ']}';
-
-        echo $datosJson;
-
-    } catch(Exception $e) {
-        echo '{"data": [], "error": "' . $e->getMessage() . '"}';
-    }
-}
+class AjaxTablaDespachos {
 
     /*=============================================
-    GENERAR BOTONES DE ACCIÓN SEGÚN PERFIL
+    MOSTRAR LA TABLA DE DESPACHOS - VERSIÓN CORREGIDA
     =============================================*/
-    private function generarBotonesAccion($despacho) {
+    public function mostrarTablaDespachos() {
 
-        $botones = '<div class="btn-group">';
+        try {
+            $stmt = ConexionCentral::conectar()->prepare("
+                SELECT 
+                    d.*,
+                    CASE 
+                        WHEN d.estado = 'pendiente' THEN 0
+                        WHEN d.estado = 'aceptado' THEN 1
+                        WHEN d.estado = 'en_transito' THEN 2
+                        WHEN d.estado = 'finalizado' THEN 3
+                        ELSE 4
+                    END as orden_estado
+                FROM despachos d 
+                ORDER BY orden_estado ASC, d.fecha_creacion DESC
+            ");
 
-        // BOTÓN VER DETALLES - TODOS LOS PERFILES
-        $botones .= '<button class="btn btn-info btn-xs btnVerDespacho" 
-                            data-toggle="tooltip" 
-                            title="Ver detalles" 
-                            idDespacho="' . $despacho["id"] . '">
-                        <i class="fa fa-eye"></i>
-                    </button>';
+            $stmt->execute();
+            $despachos = $stmt->fetchAll();
 
-        // BOTONES SEGÚN ESTADO Y PERFIL
-        if($despacho["estado"] == "pendiente") {
-
-            // TRANSPORTADORES Y ADMINISTRADORES PUEDEN ACEPTAR
-            if($_SESSION["perfil"] == "Transportador" || $_SESSION["perfil"] == "Administrador") {
-                $botones .= '<button class="btn btn-success btn-xs btnAceptarDespacho" 
-                                    data-toggle="tooltip" 
-                                    title="Aceptar despacho" 
-                                    idDespacho="' . $despacho["id"] . '">
-                                <i class="fa fa-check"></i>
-                            </button>';
+            if(count($despachos) == 0) {
+                echo '{"data": []}';
+                return;
             }
 
-            // SOLO ADMINISTRADOR PUEDE EDITAR Y ELIMINAR DESPACHOS PENDIENTES
-            if($_SESSION["perfil"] == "Administrador") {
-                $botones .= '<button class="btn btn-warning btn-xs btnEditarDespacho" 
-                                    data-toggle="tooltip" 
-                                    title="Editar despacho" 
-                                    idDespacho="' . $despacho["id"] . '">
-                                <i class="fa fa-edit"></i>
-                            </button>';
+            $datosJson = '{
+                "data": [';
 
-                $botones .= '<button class="btn btn-danger btn-xs btnEliminarDespacho" 
-                                    data-toggle="tooltip" 
-                                    title="Eliminar despacho" 
-                                    idDespacho="' . $despacho["id"] . '"
-                                    numeroDespacho="' . $despacho["numero_despacho"] . '">
-                                <i class="fa fa-trash"></i>
-                            </button>';
+            foreach($despachos as $key => $value) {
+
+                /*=============================================
+                BOTONES DE ACCIONES SEGÚN PERFIL
+                =============================================*/
+                $botones = $this->generarBotonesAccion($value);
+
+                /*=============================================
+                ESTADO CON COLOR
+                =============================================*/
+                $estado = $this->formatearEstado($value["estado"]);
+
+                /*=============================================
+                FECHA FORMATEADA
+                =============================================*/
+                $fechaCreacion = date('d/m/Y H:i', strtotime($value["fecha_creacion"]));
+
+                /*=============================================
+                TRANSPORTADOR
+                =============================================*/
+                $transportador = $value["nombre_transportador"] ?: 'Sin asignar';
+
+                /*=============================================
+                SUCURSAL ORIGEN
+                =============================================*/
+                $sucursalOrigen = $value["sucursal_origen"] ?: 'Sucursal no especificada';
+
+                /*=============================================
+                CONSTRUIR FILA JSON - SIN SALTOS DE LÍNEA
+                =============================================*/
+                $datosJson .= '[
+                    "' . ($key + 1) . '",
+                    "' . htmlspecialchars($value["numero_despacho"]) . '",
+                    "' . htmlspecialchars($sucursalOrigen) . '",
+                    "' . htmlspecialchars($value["nombre_usuario_creador"]) . '",
+                    "' . $estado . '",
+                    "' . $value["total_productos"] . '",
+                    "' . number_format($value["total_cantidad"]) . '",
+                    "' . htmlspecialchars($transportador) . '",
+                    "' . $fechaCreacion . '",
+                    "' . $botones . '"
+                ],';
             }
+
+            $datosJson = substr($datosJson, 0, -1);
+            $datosJson .= ']}';
+
+            echo $datosJson;
+
+        } catch(Exception $e) {
+            echo '{"data": [], "error": "' . $e->getMessage() . '"}';
         }
-
-        // BOTÓN CANCELAR PARA ADMINISTRADOR Y TRANSPORTADOR ASIGNADO
-        if($despacho["estado"] != "finalizado" && $despacho["estado"] != "cancelado") {
-            
-            $puedeCancelar = ($_SESSION["perfil"] == "Administrador") || 
-                           ($_SESSION["perfil"] == "Transportador" && $despacho["id_transportador_asignado"] == $_SESSION["id"]);
-            
-            if($puedeCancelar) {
-                $botones .= '<button class="btn btn-danger btn-xs btnCancelarDespacho" 
-                                    data-toggle="tooltip" 
-                                    title="Cancelar despacho" 
-                                    idDespacho="' . $despacho["id"] . '"
-                                    estadoDespacho="' . $despacho["estado"] . '">
-                                <i class="fa fa-ban"></i>
-                            </button>';
-            }
-        }
-
-        $botones .= '</div>';
-
-        return $botones;
     }
 
+    /*=============================================
+    GENERAR BOTONES DE ACCIÓN
+    =============================================*/
+    private function generarBotonesAccion($despacho) {
+        
+        $botones = '';
+        $perfil = $_SESSION["perfil"];
+        $estado = $despacho["estado"];
+        
+        // Botón Ver detalles
+        $botones .= '<button class=\"btn btn-info btn-xs btnVerDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Ver detalles\"><i class=\"fa fa-eye\"></i></button>';
+        
+        if($perfil == "Administrador" || $perfil == "Transportador") {
+            
+            // Botón Editar (solo si está pendiente)
+            if($estado == "pendiente") {
+                $botones .= ' <button class=\"btn btn-warning btn-xs btnEditarDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Editar despacho\"><i class=\"fa fa-pencil\"></i></button>';
+            }
+            
+            // Botón Aceptar (solo transportadores y si está pendiente)
+            if($perfil == "Transportador" && $estado == "pendiente") {
+                $botones .= ' <button class=\"btn btn-success btn-xs btnAceptarDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Aceptar despacho\"><i class=\"fa fa-check\"></i></button>';
+            }
+            
+            // Botón Cancelar (solo si está pendiente)
+            if($estado == "pendiente") {
+                $botones .= ' <button class=\"btn btn-danger btn-xs btnCancelarDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Cancelar despacho\"><i class=\"fa fa-times\"></i></button>';
+            }
+            
+            // Botón Eliminar (solo administrador)
+            if($perfil == "Administrador" && $estado == "pendiente") {
+                $botones .= ' <button class=\"btn btn-danger btn-xs btnEliminarDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Eliminar despacho\"><i class=\"fa fa-trash\"></i></button>';
+            }
+        }
+        
+        return $botones;
+    }
+    
     /*=============================================
     FORMATEAR ESTADO CON COLOR
     =============================================*/
     private function formatearEstado($estado) {
-
-        $colores = [
-            'pendiente' => 'label-warning',
-            'aceptado' => 'label-success',
-            'en_transito' => 'label-info',
-            'finalizado' => 'label-default',
-            'cancelado' => 'label-danger'
-        ];
-
-        $textos = [
-            'pendiente' => 'PENDIENTE',
-            'aceptado' => 'ACEPTADO',
-            'en_transito' => 'EN TRÁNSITO',
-            'finalizado' => 'FINALIZADO',
-            'cancelado' => 'CANCELADO'
-        ];
-
-        $colorClass = $colores[$estado] ?? 'label-default';
-        $textoEstado = $textos[$estado] ?? strtoupper($estado);
-
-        return '<span class="label ' . $colorClass . '">' . $textoEstado . '</span>';
+        
+        switch(strtolower($estado)) {
+            case 'pendiente':
+                return '<span class=\"label label-warning\">PENDIENTE</span>';
+            case 'aceptado':
+                return '<span class=\"label label-info\">ACEPTADO</span>';
+            case 'en_transito':
+                return '<span class=\"label label-primary\">EN TRÁNSITO</span>';
+            case 'finalizado':
+            case 'entregado':
+                return '<span class=\"label label-success\">ENTREGADO</span>';
+            case 'cancelado':
+                return '<span class=\"label label-danger\">CANCELADO</span>';
+            default:
+                return '<span class=\"label label-default\">' . strtoupper($estado) . '</span>';
+        }
     }
 }
 
 /*=============================================
-ACTIVAR TABLA DE DESPACHOS
+INSTANCIAR CLASE Y MOSTRAR TABLA
 =============================================*/
-$activarDespachos = new TablaDespachos();
-$activarDespachos->mostrarTablaDespachos();
+$tablaDespachos = new AjaxTablaDespachos();
+$tablaDespachos->mostrarTablaDespachos();
+
+?>
