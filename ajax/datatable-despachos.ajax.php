@@ -6,86 +6,90 @@ require_once "../api-transferencias/conexion-central.php";
 
 class TablaDespachos {
 
-    /*=============================================
-    MOSTRAR LA TABLA DE DESPACHOS
-    =============================================*/
-    public function mostrarTablaDespachos() {
+/*=============================================
+MOSTRAR LA TABLA DE DESPACHOS - VERSIÓN CORREGIDA
+=============================================*/
+public function mostrarTablaDespachos() {
 
-        try {
-            $stmt = ConexionCentral::conectar()->prepare("
-                SELECT 
-                    d.*,
-                    CASE 
-                        WHEN d.estado = 'pendiente' THEN 0
-                        WHEN d.estado = 'aceptado' THEN 1
-                        WHEN d.estado = 'en_transito' THEN 2
-                        WHEN d.estado = 'finalizado' THEN 3
-                        ELSE 4
-                    END as orden_estado
-                FROM despachos d 
-                WHERE d.eliminado = 0
-                ORDER BY orden_estado ASC, d.fecha_creacion DESC
-            ");
+    try {
+        $stmt = ConexionCentral::conectar()->prepare("
+            SELECT 
+                d.*,
+                CASE 
+                    WHEN d.estado = 'pendiente' THEN 0
+                    WHEN d.estado = 'aceptado' THEN 1
+                    WHEN d.estado = 'en_transito' THEN 2
+                    WHEN d.estado = 'finalizado' THEN 3
+                    ELSE 4
+                END as orden_estado
+            FROM despachos d 
+            ORDER BY orden_estado ASC, d.fecha_creacion DESC
+        ");
 
-            $stmt->execute();
-            $despachos = $stmt->fetchAll();
+        $stmt->execute();
+        $despachos = $stmt->fetchAll();
 
-            if(count($despachos) == 0) {
-                echo '{"data": []}';
-                return;
-            }
-
-            $datosJson = '{
-                "data": [';
-
-            foreach($despachos as $key => $value) {
-
-                /*=============================================
-                BOTONES DE ACCIONES SEGÚN PERFIL
-                =============================================*/
-                $botones = $this->generarBotonesAccion($value);
-
-                /*=============================================
-                ESTADO CON COLOR
-                =============================================*/
-                $estado = $this->formatearEstado($value["estado"]);
-
-                /*=============================================
-                FECHA FORMATEADA
-                =============================================*/
-                $fechaCreacion = date('d/m/Y H:i', strtotime($value["fecha_creacion"]));
-
-                /*=============================================
-                TRANSPORTADOR
-                =============================================*/
-                $transportador = $value["nombre_transportador_asignado"] ?: 'Sin asignar';
-
-                /*=============================================
-                CONSTRUIR FILA JSON
-                =============================================*/
-                $datosJson .= '[
-                    "' . ($key + 1) . '",
-                    "' . $value["numero_despacho"] . '",
-                    "' . $value["nombre_sucursal_origen"] . '",
-                    "' . $value["nombre_usuario_creador"] . '",
-                    "' . $estado . '",
-                    "' . $value["total_productos"] . '",
-                    "' . number_format($value["total_cantidad"]) . '",
-                    "' . $transportador . '",
-                    "' . $fechaCreacion . '",
-                    "' . $botones . '"
-                ],';
-            }
-
-            $datosJson = substr($datosJson, 0, -1);
-            $datosJson .= ']}';
-
-            echo $datosJson;
-
-        } catch(Exception $e) {
-            echo '{"data": [], "error": "' . $e->getMessage() . '"}';
+        if(count($despachos) == 0) {
+            echo '{"data": []}';
+            return;
         }
+
+        $datosJson = '{
+            "data": [';
+
+        foreach($despachos as $key => $value) {
+
+            /*=============================================
+            BOTONES DE ACCIONES SEGÚN PERFIL
+            =============================================*/
+            $botones = $this->generarBotonesAccion($value);
+
+            /*=============================================
+            ESTADO CON COLOR
+            =============================================*/
+            $estado = $this->formatearEstado($value["estado"]);
+
+            /*=============================================
+            FECHA FORMATEADA
+            =============================================*/
+            $fechaCreacion = date('d/m/Y H:i', strtotime($value["fecha_creacion"]));
+
+            /*=============================================
+            TRANSPORTADOR
+            =============================================*/
+            $transportador = $value["nombre_transportador"] ?: 'Sin asignar'; // ✅ CORREGIDO NOMBRE COLUMNA
+
+            /*=============================================
+            NOMBRE SUCURSAL (CORREGIR SI ES NECESARIO)
+            =============================================*/
+            $sucursalOrigen = $value["sucursal_origen"] ?: 'Sucursal no especificada'; // ✅ CORREGIDO NOMBRE COLUMNA
+
+            /*=============================================
+            CONSTRUIR FILA JSON
+            =============================================*/
+            $datosJson .= '[
+                "' . ($key + 1) . '",
+                "' . $value["numero_despacho"] . '",
+                "' . $sucursalOrigen . '",
+                "' . $value["nombre_usuario_creador"] . '",
+                "' . $estado . '",
+                "' . $value["total_productos"] . '",
+                "' . number_format($value["total_cantidad"]) . '",
+                "' . $transportador . '",
+                "' . $fechaCreacion . '",
+                "' . $botones . '"
+            ],';
+        }
+
+        $datosJson = substr($datosJson, 0, -1);
+        $datosJson .= ']}';
+
+        echo $datosJson;
+
+    } catch(Exception $e) {
+        echo '{"data": [], "error": "' . $e->getMessage() . '"}';
     }
+}
 
     /*=============================================
     GENERAR BOTONES DE ACCIÓN SEGÚN PERFIL
