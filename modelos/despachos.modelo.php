@@ -100,7 +100,7 @@ static public function mdlCrearDespacho($tabla, $datos) {
     }
 
 /*=============================================
-GENERAR NÚMERO DE DESPACHO ÚNICO CON BLOQUEO - VERSIÓN MULTI-USUARIO
+GENERAR NÚMERO DE DESPACHO CON SELECT FOR UPDATE - VERSIÓN SIMPLE
 =============================================*/
 static public function mdlGenerarNumeroDespacho() {
     
@@ -108,87 +108,44 @@ static public function mdlGenerarNumeroDespacho() {
         require_once "../api-transferencias/conexion-central.php";
         $conexion = ConexionCentral::conectar();
         
-        // ✅ INICIAR TRANSACCIÓN PARA BLOQUEAR TABLA
+        // ✅ INICIAR TRANSACCIÓN
         $conexion->beginTransaction();
         
         try {
-            // ✅ BLOQUEAR TABLA PARA EVITAR CONCURRENCIA
-            $lockStmt = $conexion->prepare("LOCK TABLES despachos WRITE");
-            $lockStmt->execute();
-            
-            // Obtener el último número de despacho DENTRO DEL BLOQUEO
+            // ✅ OBTENER SIGUIENTE NÚMERO CON BLOQUEO
             $stmt = $conexion->prepare("
-                SELECT numero_despacho 
+                SELECT COALESCE(MAX(CAST(SUBSTRING(numero_despacho, 5) AS UNSIGNED)), 0) + 1 as siguiente_numero
                 FROM despachos 
-                WHERE numero_despacho LIKE 'DESP%' 
-                ORDER BY id DESC 
-                LIMIT 1
+                WHERE numero_despacho REGEXP '^DESP[0-9]{6}$'
                 FOR UPDATE
             ");
             
             $stmt->execute();
-            $ultimoDespacho = $stmt->fetch();
+            $resultado = $stmt->fetch();
+            $siguienteNumero = $resultado["siguiente_numero"];
             
-            if($ultimoDespacho) {
-                // Extraer el número del último despacho (ejemplo: DESP000001 -> 1)
-                $ultimoNumero = (int) substr($ultimoDespacho["numero_despacho"], 4);
-                $nuevoNumero = $ultimoNumero + 1;
-            } else {
-                // Si no hay despachos previos, empezar desde 1
-                $nuevoNumero = 1;
-            }
-            
-            // Formatear con ceros a la izquierda (6 dígitos)
-            $numeroDespacho = "DESP" . str_pad($nuevoNumero, 6, "0", STR_PAD_LEFT);
-            
-            // ✅ VERIFICAR QUE NO EXISTE (DOBLE VERIFICACIÓN)
-            $verificarStmt = $conexion->prepare("
-                SELECT COUNT(*) as existe 
-                FROM despachos 
-                WHERE numero_despacho = :numero
-            ");
-            $verificarStmt->bindParam(":numero", $numeroDespacho);
-            $verificarStmt->execute();
-            $existe = $verificarStmt->fetch();
-            
-            if($existe["existe"] > 0) {
-                // Si existe, generar con timestamp como respaldo
-                $numeroDespacho = "DESP" . date("YmdHis") . rand(100, 999);
-                error_log("⚠️ Número duplicado detectado, usando respaldo: " . $numeroDespacho);
-            }
-            
-            // ✅ DESBLOQUEAR TABLA
-            $unlockStmt = $conexion->prepare("UNLOCK TABLES");
-            $unlockStmt->execute();
+            // Formatear número
+            $numeroDespacho = "DESP" . str_pad($siguienteNumero, 6, "0", STR_PAD_LEFT);
             
             // ✅ CONFIRMAR TRANSACCIÓN
             $conexion->commit();
             
-            // Debug: Log del número generado
-            error_log("🔢 Número de despacho generado (multi-usuario): " . $numeroDespacho);
-            error_log("🔍 Último número encontrado: " . ($ultimoDespacho ? $ultimoDespacho["numero_despacho"] : "ninguno"));
-            error_log("🔢 Nuevo número calculado: " . $nuevoNumero);
+            error_log("🔢 Número generado con bloqueo: " . $numeroDespacho);
             
             return $numeroDespacho;
             
         } catch(Exception $e) {
-            // ✅ EN CASO DE ERROR, DESBLOQUEAR Y CANCELAR TRANSACCIÓN
-            try {
-                $conexion->prepare("UNLOCK TABLES")->execute();
-                $conexion->rollBack();
-            } catch(Exception $rollbackError) {
-                error_log("❌ Error en rollback: " . $rollbackError->getMessage());
-            }
-            
-            throw $e; // Re-lanzar la excepción original
+            // ✅ CANCELAR TRANSACCIÓN EN CASO DE ERROR
+            $conexion->rollBack();
+            throw $e;
         }
         
     } catch(Exception $e) {
-        error_log("❌ Error generando número de despacho (multi-usuario): " . $e->getMessage());
+        error_log("❌ Error en generación con bloqueo: " . $e->getMessage());
         
-        // ✅ GENERAR NÚMERO DE RESPALDO ÚNICO BASADO EN TIMESTAMP + PROCESO
-        $numeroRespaldo = "DESP" . date("YmdHis") . getmypid() . rand(10, 99);
-        error_log("🔄 Usando número de respaldo único: " . $numeroRespaldo);
+        // ✅ RESPALDO: TIMESTAMP + ÚNICO
+        $numeroRespaldo = "DESP" . date("YmdHis") . str_pad(rand(1, 999), 3, "0", STR_PAD_LEFT);
+        error_log("🔄 Número de respaldo: " . $numeroRespaldo);
         
         return $numeroRespaldo;
     }
