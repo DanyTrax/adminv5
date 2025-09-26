@@ -397,39 +397,48 @@ private function agregarStockTransito($despacho, $producto) {
     
     $stmt = ConexionCentral::conectar()->prepare("
         INSERT INTO stock_transito (
-            numero_despacho,
             codigo_producto,
             descripcion_producto,
-            cantidad,
-            sucursal_origen,
+            cantidad_disponible,
             transportador_id,
-            transportador_nombre,
-            fecha_cargue,
-            estado
+            nombre_transportador,
+            sucursal_origen,
+            id_despacho_origen,
+            numero_despacho_origen,
+            fecha_carga,
+            observaciones
         ) VALUES (
-            :numero_despacho,
             :codigo_producto,
             :descripcion_producto,
-            :cantidad,
-            :sucursal_origen,
+            :cantidad_disponible,
             :transportador_id,
-            :transportador_nombre,
+            :nombre_transportador,
+            :sucursal_origen,
+            :id_despacho_origen,
+            :numero_despacho_origen,
             NOW(),
-            'en_transito'
+            :observaciones
         )
     ");
     
-    $stmt->bindParam(":numero_despacho", $despacho["numero_despacho"]);
     $stmt->bindParam(":codigo_producto", $producto["codigo"]);
     $stmt->bindParam(":descripcion_producto", $producto["descripcion"]);
-    $stmt->bindParam(":cantidad", $producto["cantidad"]);
-    $stmt->bindParam(":sucursal_origen", $despacho["sucursal_origen"]);
+    $stmt->bindParam(":cantidad_disponible", $producto["cantidad"]);
     $stmt->bindParam(":transportador_id", $_SESSION["id"]);
-    $stmt->bindParam(":transportador_nombre", $_SESSION["nombre"]);
+    $stmt->bindParam(":nombre_transportador", $_SESSION["nombre"]);
+    $stmt->bindParam(":sucursal_origen", $despacho["sucursal_origen"]);
+    $stmt->bindParam(":id_despacho_origen", $despacho["id"]);
+    $stmt->bindParam(":numero_despacho_origen", $despacho["numero_despacho"]);
+    $observaciones = $producto["observacion"] ?? "Producto agregado desde despacho " . $despacho["numero_despacho"];
+    $stmt->bindParam(":observaciones", $observaciones);
     
     if(!$stmt->execute()) {
-        throw new Exception("Error al agregar producto al stock en tránsito");
+        $errorInfo = $stmt->errorInfo();
+        error_log("❌ Error SQL en stock_transito: " . print_r($errorInfo, true));
+        throw new Exception("Error al agregar producto al stock en tránsito: " . $producto["codigo"]);
     }
+    
+    error_log("✅ Producto agregado al stock en tránsito: " . $producto["codigo"]);
 }
 }
 
