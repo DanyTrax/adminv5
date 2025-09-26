@@ -601,3 +601,222 @@ $("#formCancelarDespacho").on("submit", function(e) {
     var botonSubmit = $(this).find('button[type="submit"]');
     botonSubmit.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Cancelando...');
 });
+/*=============================================
+ACEPTAR DESPACHO - AJAX
+=============================================*/
+$(document).on("click", ".btnAceptarDespacho", function(e) {
+    e.preventDefault(); // Evitar recarga de página
+    
+    var idDespacho = $(this).attr("idDespacho");
+    var boton = $(this);
+    
+    swal({
+        title: "¿Aceptar despacho?",
+        text: "Al aceptar este despacho, los productos se descontarán del stock local y se agregarán al stock en tránsito.",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3c8dbc",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sí, aceptar",
+        cancelButtonText: "Cancelar"
+    }).then(function(result) {
+        
+        if(result.value) {
+            
+            boton.prop("disabled", true).html('<i class="fa fa-spinner fa-spin"></i>');
+            
+            var datos = new FormData();
+            datos.append("aceptarDespacho", true);
+            datos.append("idDespacho", idDespacho);
+            
+            $.ajax({
+                url: "ajax/despachos.ajax.php",
+                method: "POST",
+                data: datos,
+                cache: false,
+                contentType: false,
+                processData: false,
+                dataType: "json",
+                success: function(respuesta) {
+                    
+                    boton.prop("disabled", false).html('<i class="fa fa-check"></i>');
+                    
+                    if(respuesta.success) {
+                        swal({
+                            title: "¡Despacho aceptado!",
+                            text: respuesta.message,
+                            type: "success",
+                            confirmButtonText: "Cerrar"
+                        }).then(function() {
+                            // Recargar tabla
+                            $(".tablaDespachos").DataTable().ajax.reload();
+                        });
+                    } else {
+                        swal({
+                            title: "Error",
+                            text: respuesta.error || "No se pudo aceptar el despacho",
+                            type: "error",
+                            confirmButtonText: "Cerrar"
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    boton.prop("disabled", false).html('<i class="fa fa-check"></i>');
+                    console.error("Error AJAX:", error);
+                    swal({
+                        title: "Error de conexión",
+                        text: "No se pudo aceptar el despacho",
+                        type: "error",
+                        confirmButtonText: "Cerrar"
+                    });
+                }
+            });
+        }
+    });
+});
+
+/*=============================================
+CANCELAR DESPACHO - AJAX CORREGIDO
+=============================================*/
+$(document).on("click", ".btnCancelarDespacho", function(e) {
+    e.preventDefault(); // Evitar recarga de página
+    
+    var idDespacho = $(this).attr("idDespacho");
+    var estadoDespacho = $(this).attr("estadoDespacho");
+    
+    swal({
+        title: "¿Cancelar despacho?",
+        text: "Ingrese el motivo de la cancelación:",
+        type: "warning",
+        input: "textarea",
+        inputPlaceholder: "Motivo de la cancelación...",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3c8dbc",
+        confirmButtonText: "Sí, cancelar",
+        cancelButtonText: "No cancelar",
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Debe ingresar un motivo de cancelación'
+            }
+        }
+    }).then(function(result) {
+        
+        if(result.value) {
+            
+            var datos = new FormData();
+            datos.append("cancelarDespacho", true);
+            datos.append("idDespacho", idDespacho);
+            datos.append("motivoCancelacion", result.value);
+            
+            $.ajax({
+                url: "ajax/despachos.ajax.php",
+                method: "POST",
+                data: datos,
+                cache: false,
+                contentType: false,
+                processData: false,
+                dataType: "json",
+                success: function(respuesta) {
+                    
+                    if(respuesta.success) {
+                        swal({
+                            title: "¡Despacho cancelado!",
+                            text: respuesta.message,
+                            type: "success",
+                            confirmButtonText: "Cerrar"
+                        }).then(function() {
+                            // Recargar tabla
+                            $(".tablaDespachos").DataTable().ajax.reload();
+                        });
+                    } else {
+                        swal({
+                            title: "Error",
+                            text: respuesta.error || "No se pudo cancelar el despacho",
+                            type: "error",
+                            confirmButtonText: "Cerrar"
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error AJAX:", error);
+                    swal({
+                        title: "Error de conexión",
+                        text: "No se pudo cancelar el despacho",
+                        type: "error",
+                        confirmButtonText: "Cerrar"
+                    });
+                }
+            });
+        }
+    });
+});
+
+/*=============================================
+ELIMINAR DESPACHO - AJAX CORREGIDO
+=============================================*/
+$(document).on("click", ".btnEliminarDespacho", function(e) {
+    e.preventDefault(); // Evitar recarga de página
+    
+    var idDespacho = $(this).attr("idDespacho");
+    var numeroDespacho = $(this).attr("numeroDespacho");
+    
+    swal({
+        title: "¿Eliminar despacho " + numeroDespacho + "?",
+        text: "¡Esta acción no se puede deshacer!",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3c8dbc",
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar"
+    }).then(function(result) {
+        
+        if(result.value) {
+            
+            var datos = new FormData();
+            datos.append("eliminarDespacho", true);
+            datos.append("idDespacho", idDespacho);
+            
+            $.ajax({
+                url: "ajax/despachos.ajax.php",
+                method: "POST",
+                data: datos,
+                cache: false,
+                contentType: false,
+                processData: false,
+                dataType: "json",
+                success: function(respuesta) {
+                    
+                    if(respuesta.success) {
+                        swal({
+                            title: "¡Despacho eliminado!",
+                            text: respuesta.message,
+                            type: "success",
+                            confirmButtonText: "Cerrar"
+                        }).then(function() {
+                            // Recargar tabla
+                            $(".tablaDespachos").DataTable().ajax.reload();
+                        });
+                    } else {
+                        swal({
+                            title: "Error",
+                            text: respuesta.error || "No se pudo eliminar el despacho",
+                            type: "error",
+                            confirmButtonText: "Cerrar"
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error AJAX:", error);
+                    swal({
+                        title: "Error de conexión",
+                        text: "No se pudo eliminar el despacho",
+                        type: "error",
+                        confirmButtonText: "Cerrar"
+                    });
+                }
+            });
+        }
+    });
+});
