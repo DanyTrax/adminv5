@@ -320,66 +320,11 @@ function configurarBotonesModalDespacho(despacho) {
 }
 
 /*=============================================
-ACEPTAR DESPACHO
-=============================================*/
-function aceptarDespacho(idDespacho) {
-    
-    $("#idDespachoAceptar").val(idDespacho);
-    $("#modalVerDespacho").modal("hide");
-    $("#modalAceptarDespacho").modal("show");
-}
-
-$(document).on("click", ".btnAceptarDespacho", function(){
-    var idDespacho = $(this).attr("idDespacho");
-    aceptarDespacho(idDespacho);
-});
-
-/*=============================================
-CANCELAR DESPACHO
-=============================================*/
-function cancelarDespacho(idDespacho, estadoActual) {
-    
-    $("#idDespachoCancelar").val(idDespacho);
-    
-    // Mostrar alerta de devolución de stock si ya fue aceptado
-    if(estadoActual === 'aceptado' || estadoActual === 'en_transito') {
-        $("#alertaDevolucionStock").show();
-    } else {
-        $("#alertaDevolucionStock").hide();
-    }
-    
-    $("#modalVerDespacho").modal("hide");
-    $("#modalCancelarDespacho").modal("show");
-}
-
-$(document).on("click", ".btnCancelarDespacho", function(){
-    var idDespacho = $(this).attr("idDespacho");
-    var estadoDespacho = $(this).attr("estadoDespacho");
-    cancelarDespacho(idDespacho, estadoDespacho);
-});
-
-/*=============================================
 EDITAR DESPACHO
 =============================================*/
 function editarDespacho(idDespacho) {
     window.location = "crear-despacho?editar=" + idDespacho;
 }
-
-/*=============================================
-ELIMINAR DESPACHO
-=============================================*/
-function eliminarDespacho(idDespacho, numeroDespacho) {
-    
-    $("#idDespachoEliminar").val(idDespacho);
-    $("#modalVerDespacho").modal("hide");
-    $("#modalEliminarDespacho").modal("show");
-}
-
-$(document).on("click", ".btnEliminarDespacho", function(){
-    var idDespacho = $(this).attr("idDespacho");
-    var numeroDespacho = $(this).attr("numeroDespacho");
-    eliminarDespacho(idDespacho, numeroDespacho);
-});
 
 /*=============================================
 CONFIRMAR ELIMINACIÓN DE DESPACHO
@@ -602,14 +547,14 @@ $("#formCancelarDespacho").on("submit", function(e) {
     botonSubmit.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Cancelando...');
 });
 /*=============================================
-ACEPTAR DESPACHO - AJAX
+ACEPTAR DESPACHO
 =============================================*/
-$(document).on("click", ".btnAceptarDespacho", function(e) {
-    e.preventDefault(); // Evitar recarga de página
+function aceptarDespacho(idDespacho) {
     
-    var idDespacho = $(this).attr("idDespacho");
-    var boton = $(this);
+    $("#idDespachoAceptar").val(idDespacho);
+    $("#modalVerDespacho").modal("hide");
     
+    // Usar SweetAlert en lugar de modal
     swal({
         title: "¿Aceptar despacho?",
         text: "Al aceptar este despacho, los productos se descontarán del stock local y se agregarán al stock en tránsito.",
@@ -622,8 +567,6 @@ $(document).on("click", ".btnAceptarDespacho", function(e) {
     }).then(function(result) {
         
         if(result.value) {
-            
-            boton.prop("disabled", true).html('<i class="fa fa-spinner fa-spin"></i>');
             
             var datos = new FormData();
             datos.append("aceptarDespacho", true);
@@ -639,8 +582,6 @@ $(document).on("click", ".btnAceptarDespacho", function(e) {
                 dataType: "json",
                 success: function(respuesta) {
                     
-                    boton.prop("disabled", false).html('<i class="fa fa-check"></i>');
-                    
                     if(respuesta.success) {
                         swal({
                             title: "¡Despacho aceptado!",
@@ -648,7 +589,6 @@ $(document).on("click", ".btnAceptarDespacho", function(e) {
                             type: "success",
                             confirmButtonText: "Cerrar"
                         }).then(function() {
-                            // Recargar tabla
                             $(".tablaDespachos").DataTable().ajax.reload();
                         });
                     } else {
@@ -661,7 +601,6 @@ $(document).on("click", ".btnAceptarDespacho", function(e) {
                     }
                 },
                 error: function(xhr, status, error) {
-                    boton.prop("disabled", false).html('<i class="fa fa-check"></i>');
                     console.error("Error AJAX:", error);
                     swal({
                         title: "Error de conexión",
@@ -673,17 +612,14 @@ $(document).on("click", ".btnAceptarDespacho", function(e) {
             });
         }
     });
-});
+}
 
 /*=============================================
-CANCELAR DESPACHO - AJAX CORREGIDO
+CANCELAR DESPACHO
 =============================================*/
-$(document).on("click", ".btnCancelarDespacho", function(e) {
-    e.preventDefault(); // Evitar recarga de página
+function cancelarDespacho(idDespacho, estadoActual) {
     
-    var idDespacho = $(this).attr("idDespacho");
-    var estadoDespacho = $(this).attr("estadoDespacho");
-    
+    // Usar SweetAlert para pedir motivo
     swal({
         title: "¿Cancelar despacho?",
         text: "Ingrese el motivo de la cancelación:",
@@ -726,7 +662,6 @@ $(document).on("click", ".btnCancelarDespacho", function(e) {
                             type: "success",
                             confirmButtonText: "Cerrar"
                         }).then(function() {
-                            // Recargar tabla
                             $(".tablaDespachos").DataTable().ajax.reload();
                         });
                     } else {
@@ -750,16 +685,12 @@ $(document).on("click", ".btnCancelarDespacho", function(e) {
             });
         }
     });
-});
+}
 
 /*=============================================
-ELIMINAR DESPACHO - AJAX CORREGIDO
+ELIMINAR DESPACHO
 =============================================*/
-$(document).on("click", ".btnEliminarDespacho", function(e) {
-    e.preventDefault(); // Evitar recarga de página
-    
-    var idDespacho = $(this).attr("idDespacho");
-    var numeroDespacho = $(this).attr("numeroDespacho");
+function eliminarDespacho(idDespacho, numeroDespacho) {
     
     swal({
         title: "¿Eliminar despacho " + numeroDespacho + "?",
@@ -795,7 +726,6 @@ $(document).on("click", ".btnEliminarDespacho", function(e) {
                             type: "success",
                             confirmButtonText: "Cerrar"
                         }).then(function() {
-                            // Recargar tabla
                             $(".tablaDespachos").DataTable().ajax.reload();
                         });
                     } else {
@@ -819,4 +749,4 @@ $(document).on("click", ".btnEliminarDespacho", function(e) {
             });
         }
     });
-});
+}
