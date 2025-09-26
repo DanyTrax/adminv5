@@ -834,6 +834,101 @@ function actualizarCantidadProductoDespacho(input, indice) {
     
     console.log("✅ Cantidad actualizada:", productosDespacho[indice].codigo, "Nueva cantidad:", nuevaCantidad);
 }
+/*=============================================
+FUNCIÓN: ENVIAR FORMULARIO DE DESPACHO
+=============================================*/
+function enviarFormularioDespacho() {
+    
+    console.log("🚀 Enviando formulario de despacho...");
+    
+    // Verificar si hay productos
+    if(productosDespacho.length === 0) {
+        swal({
+            title: "Sin productos",
+            text: "Debe agregar al menos un producto al despacho",
+            type: "warning",
+            confirmButtonText: "Entendido"
+        });
+        return false;
+    }
+    
+    // Actualizar campos ocultos antes de enviar
+    $("#productosDespachoHidden").val(JSON.stringify(productosDespacho));
+    $("#totalProductosHidden").val(productosDespacho.length);
+    
+    var totalCantidad = productosDespacho.reduce(function(sum, producto) {
+        return sum + parseInt(producto.cantidad);
+    }, 0);
+    $("#totalCantidadHidden").val(totalCantidad);
+    
+    // Verificar si es modo edición
+    var esEdicion = $("#formCrearDespacho input[name='editarDespacho']").length > 0;
+    
+    if(esEdicion) {
+        console.log("📝 Modo EDICIÓN - Datos a enviar:");
+        console.log("- idDespachoEditar:", $("input[name='idDespachoEditar']").val());
+        console.log("- editarDespacho:", $("input[name='editarDespacho']").val());
+        console.log("- productosDespacho:", $("#productosDespachoHidden").val());
+        console.log("- totalProductos:", $("#totalProductosHidden").val());
+        console.log("- totalCantidad:", $("#totalCantidadHidden").val());
+        console.log("- detalleAdicional:", $("#detalleAdicional").val());
+        
+        // Confirmar edición
+        swal({
+            title: "¿Guardar cambios?",
+            text: "Se actualizarán " + productosDespacho.length + " productos en el despacho",
+            type: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#3c8dbc",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sí, guardar cambios",
+            cancelButtonText: "Cancelar"
+        }).then(function(result) {
+            if(result.value) {
+                // Enviar formulario
+                $("#formCrearDespacho")[0].submit();
+            }
+        });
+        
+    } else {
+        console.log("📝 Modo CREACIÓN - Datos a enviar:");
+        console.log("- productosDespacho:", $("#productosDespachoHidden").val());
+        console.log("- totalProductos:", $("#totalProductosHidden").val());
+        console.log("- totalCantidad:", $("#totalCantidadHidden").val());
+        
+        // Confirmar creación
+        swal({
+            title: "¿Crear despacho?",
+            text: "Se creará un nuevo despacho con " + productosDespacho.length + " productos",
+            type: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#3c8dbc",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sí, crear despacho",
+            cancelButtonText: "Cancelar"
+        }).then(function(result) {
+            if(result.value) {
+                // Enviar formulario
+                $("#formCrearDespacho")[0].submit();
+            }
+        });
+    }
+}
+// DEBUG: Interceptar envío del formulario
+$("#formCrearDespacho").on("submit", function(e) {
+    console.log("📨 FORMULARIO ENVIÁNDOSE...");
+    console.log("🔍 Datos del formulario:");
+    
+    // Obtener todos los datos del formulario
+    var formData = new FormData(this);
+    
+    for (var pair of formData.entries()) {
+        console.log("- " + pair[0] + ": " + pair[1]);
+    }
+    
+    // Permitir envío normal
+    return true;
+});
 </script>
 <?php
 // EJECUTAR CONTROLADOR
