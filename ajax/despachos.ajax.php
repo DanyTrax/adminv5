@@ -207,7 +207,7 @@ public function ajaxVerDespacho() {
 }
 
 /*=============================================
-ACEPTAR DESPACHO - VERSIÓN CON MÁS DEBUG
+ACEPTAR DESPACHO - VERSIÓN FINAL CORREGIDA
 =============================================*/
 public function ajaxAceptarDespacho() {
     
@@ -229,7 +229,7 @@ public function ajaxAceptarDespacho() {
                 throw new Exception("Despacho no encontrado");
             }
             
-            error_log("🔍 Despacho encontrado: " . $despacho["numero_despacho"] . " - Estado: " . $despacho["estado"]);
+            error_log("🔍 Despacho encontrado: " . $despacho["numero_despacho"]);
             
             // 2. Verificar que esté pendiente
             if($despacho["estado"] != "pendiente") {
@@ -262,13 +262,13 @@ public function ajaxAceptarDespacho() {
                     $this->agregarStockTransito($despacho, $producto);
                 }
                 
-                // 6. Actualizar estado del despacho - MÉTODO DIRECTO
-                error_log("🔍 Actualizando estado del despacho a 'aceptado'...");
+                // 6. Actualizar estado del despacho - CORREGIDO
+                error_log("🔍 Actualizando estado del despacho a 'en_transito'...");
                 
                 $stmtUpdate = $conexion->prepare("
                     UPDATE despachos SET 
-                        estado = 'aceptado',
-                        fecha_aceptacion = NOW(),
+                        estado = 'en_transito',
+                        fecha_actualizacion = NOW(),
                         transportador_id = :transportador_id,
                         nombre_transportador = :nombre_transportador
                     WHERE id = :id
@@ -280,24 +280,20 @@ public function ajaxAceptarDespacho() {
                 
                 if(!$stmtUpdate->execute()) {
                     $errorInfo = $stmtUpdate->errorInfo();
-                    throw new Exception("Error al actualizar estado del despacho: " . print_r($errorInfo, true));
+                    throw new Exception("Error al actualizar estado: " . print_r($errorInfo, true));
                 }
                 
                 $filasAfectadas = $stmtUpdate->rowCount();
                 error_log("✅ Filas afectadas en UPDATE: " . $filasAfectadas);
                 
-                if($filasAfectadas == 0) {
-                    throw new Exception("No se actualizó ninguna fila. Verificar ID del despacho.");
-                }
-                
                 // 7. Confirmar transacción
                 $conexion->commit();
                 
-                error_log("✅ Despacho aceptado exitosamente - ID: " . $idDespacho);
+                error_log("✅ Despacho aceptado exitosamente - Nuevo estado: en_transito");
                 
                 echo json_encode([
                     "success" => true,
-                    "message" => "Despacho aceptado exitosamente. Los productos se han movido al stock en tránsito y el estado ha sido actualizado."
+                    "message" => "Despacho aceptado exitosamente. Estado cambiado a 'En Tránsito' y productos movidos al stock en tránsito."
                 ]);
                 
             } catch(Exception $e) {

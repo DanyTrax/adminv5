@@ -7,6 +7,73 @@ if($_SESSION["perfil"] == "Limitado" || $_SESSION["perfil"] == "Transportador"){
     return;
 }
 
+// LÓGICA DE EDICIÓN
+$modoEdicion = false;
+$despachoEditar = null;
+$productosParaEditar = [];
+
+if(isset($_GET["editar"]) && is_numeric($_GET["editar"])) {
+    
+    $modoEdicion = true;
+    $idDespacho = $_GET["editar"];
+    
+    // Obtener datos del despacho desde BD central
+    try {
+        require_once "api-transferencias/conexion-central.php";
+        
+        $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM despachos WHERE id = :id");
+        $stmt->bindParam(":id", $idDespacho);
+        $stmt->execute();
+        $despachoEditar = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if(!$despachoEditar) {
+            echo '<script>
+                swal({
+                    title: "Error",
+                    text: "Despacho no encontrado",
+                    type: "error",
+                    confirmButtonText: "Cerrar"
+                }).then(function() {
+                    window.location = "despachos";
+                });
+            </script>';
+            exit;
+        }
+        
+        if($despachoEditar["estado"] != "pendiente") {
+            echo '<script>
+                swal({
+                    title: "No editable",
+                    text: "Solo se pueden editar despachos pendientes. Estado actual: ' . $despachoEditar["estado"] . '",
+                    type: "warning",
+                    confirmButtonText: "Cerrar"
+                }).then(function() {
+                    window.location = "despachos";
+                });
+            </script>';
+            exit;
+        }
+        
+        // Parsear productos
+        $productosParaEditar = json_decode($despachoEditar["productos_despacho"], true);
+        if(!$productosParaEditar) {
+            $productosParaEditar = [];
+        }
+        
+    } catch(Exception $e) {
+        echo '<script>
+            swal({
+                title: "Error de conexión",
+                text: "No se pudo cargar el despacho: ' . $e->getMessage() . '",
+                type: "error",
+                confirmButtonText: "Cerrar"
+            }).then(function() {
+                window.location = "despachos";
+            });
+        </script>';
+        exit;
+    }
+}
 ?>
 
 <div class="content-wrapper">
@@ -490,7 +557,125 @@ if($_SESSION["perfil"] == "Limitado" || $_SESSION["perfil"] == "Transportador"){
     }
 }
 </style>
-
+<script>
+$(document).ready(function() {
+    
+    <?php if($modoEdicion && $despachoEditar): ?>
+    
+    console.log("🔄 MODO EDICIÓN ACTIVADO");
+    console.log("📦 Despacho a editar:", <?php echo json_encode($despachoEditar); ?>);
+    
+    // Cambiar título y textos
+    $("h1").html('<i class="fa fa-edit"></i> Editar Despacho <small>Modificar despacho <?php echo $despachoEditar["numero_despacho"]; ?></small>');
+    $("#btnCrearDespacho").html('<i class="fa fa-save"></i> Guardar Cambios');
+    
+    // Cargar número de despacho
+    $("#numeroDespacho").val("<?php echo $despachoEditar["numero_despacho"]; ?>");
+    
+    // Cargar detalle adicional
+    <?php if($despachoEditar["detalle_adicional"]): ?>
+    $("#detalleAdicional").val("<?php echo htmlspecialchars($despachoEditar["detalle_adicional"]); ?>");
+    <?php endif; ?>
+    
+    // Cargar ID de solicitud origen si existe
+    <?php if($despachoEditar["id_solicitud_origen"]): ?>
+    $("#idSolicitudOrigenHidden").val("<?php echo $despachoEditar["id_solicitud_origen"]; ?>");
+    <?php endif; ?>
+    
+    // Agregar campo oculto para ID del despacho
+    $("#formCrearDespacho").append('<input type="hidden" name="idDespachoEditar" value="<?php echo $idDespacho; ?>">');
+    
+    // Cambiar action del form
+    $("#formCrearDespacho").append('<input type="hidden" name="editarDespacho" value="1">');
+    $("#formCrearDespacho input[name='crearDespacho']").remove();
+    
+    // Cargar productos después de que se cargue el inventario
+    setTimeout(function() {
+        cargarProductosDespachoEdicion();
+    }, 2000);
+    
+    function cargarProductosDespachoEdicion() {
+        console.log("📋 Cargando productos del despacho...");
+        
+        var productos = <?php echo json_encode($productosParaEditar); ?>;
+        
+        if(productos && productos.length > 0) {
+            
+            // Limpiar productos actuales
+            productosDespachoArray = [];
+            $("#productosDespachoSeleccionados").empty();
+            $("#sinProductosDespacho").remove();
+            
+            // Agregar cada producto
+            productos.forEach(function(producto, index) {
+                
+                console.log("➕ Agregando producto:", producto);
+                
+                // Crear objeto del producto
+                var productoObj = {
+                    codigo: producto.codigo,
+                    descripcion: producto.descripcion,
+                    cantidad: parseInt(producto.cantidad),
+                    stock_disponible: producto.stock_disponible || producto.cantidad, // Fallback
+                    observacion: producto.observacion || ''
+                };
+                
+                // Agregar al array
+                productosDespachoArray.push(productoObj);
+                
+                // Crear fila en la tabla
+                var stockClass = productoObj.stock_disponible >= productoObj.cantidad ? 'stock-disponible' : 'stock-bajo';
+                
+                var fila = `
+                    <tr class="producto-agregado" data-codigo="${productoObj.codigo}">
+                        <td>
+                            <div>
+                                <strong>${productoObj.codigo}</strong>
+                                <br>
+                                <small class="text-muted">${productoObj.descripcion}</small>
+                                ${productoObj.observacion ? '<br><em class="text-info">' + productoObj.observacion + '</em>' : ''}
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <input type="number" 
+                                   class="form-control input-sm text-center cantidad-producto" 
+                                   value="${productoObj.cantidad}" 
+                                   min="1" 
+                                   max="${productoObj.stock_disponible}"
+                                   data-indice="${index}"
+                                   onchange="actualizarCantidadProducto(this, ${index})"
+                                   style="width: 60px;">
+                        </td>
+                        <td class="text-center">
+                            <span class="${stockClass}">${productoObj.stock_disponible}</span>
+                        </td>
+                        <td class="text-center">
+                            <button type="button" 
+                                    class="btn btn-danger btn-xs" 
+                                    onclick="eliminarProductoDespacho(${index})"
+                                    data-toggle="tooltip" 
+                                    title="Eliminar producto">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                
+                $("#productosDespachoSeleccionados").append(fila);
+            });
+            
+            // Actualizar contadores y habilitar botón
+            actualizarResumenDespacho();
+            $("#btnCrearDespacho").prop("disabled", false);
+            
+            console.log("✅ Productos cargados correctamente:", productosDespachoArray.length);
+        }
+    }
+    
+    <?php endif; ?>
+    
+});
+</script>
 <?php
 // EJECUTAR CONTROLADOR
 $crearDespacho = new ControladorDespachos();
