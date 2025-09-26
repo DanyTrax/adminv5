@@ -11,7 +11,7 @@ class ModeloDespachos {
         
         try {
             // Usar conexión central
-            require_once "api-transferencias/conexion-central.php";
+            require_once "../api-transferencias/conexion-central.php";
             $stmt = ConexionCentral::conectar()->prepare("
                 INSERT INTO $tabla (
                     numero_despacho, 
@@ -63,7 +63,7 @@ class ModeloDespachos {
     static public function mdlMostrarDespachos($tabla, $item, $valor) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once "../api-transferencias/conexion-central.php";
             
             if($item != null) {
                 $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item ORDER BY fecha_creacion DESC");
@@ -87,7 +87,7 @@ class ModeloDespachos {
     static public function mdlGenerarNumeroDespacho() {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once "../api-transferencias/conexion-central.php";
             
             // Actualizar secuencia
             $stmt = ConexionCentral::conectar()->prepare("
@@ -118,7 +118,7 @@ class ModeloDespachos {
     static public function mdlActualizarEstadoDespacho($tabla, $datos) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once "../api-transferencias/conexion-central.php";
             
             $stmt = ConexionCentral::conectar()->prepare("
                 UPDATE $tabla 
@@ -205,7 +205,7 @@ BORRAR DESPACHO
 static public function mdlBorrarDespacho($tabla, $id) {
     
     try {
-        require_once "api-transferencias/conexion-central.php";
+        require_once "../api-transferencias/conexion-central.php";
         
         $stmt = ConexionCentral::conectar()->prepare("DELETE FROM $tabla WHERE id = :id");
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
@@ -227,7 +227,7 @@ CANCELAR DESPACHO
 static public function mdlCancelarDespacho($tabla, $datos) {
     
     try {
-        require_once "api-transferencias/conexion-central.php";
+        require_once "../api-transferencias/conexion-central.php";
         
         $stmt = ConexionCentral::conectar()->prepare("
             UPDATE $tabla 
