@@ -5,7 +5,7 @@ require_once "conexion.php";
 class ModeloDespachos {
 
 /*=============================================
-CREAR DESPACHO - VERSIÓN CORREGIDA CON NOMBRES CORRECTOS
+CREAR DESPACHO - SQL CORREGIDO PARA TABLA REAL
 =============================================*/
 static public function mdlCrearDespacho($tabla, $datos) {
     
@@ -19,6 +19,7 @@ static public function mdlCrearDespacho($tabla, $datos) {
                 numero_despacho, 
                 id_solicitud_origen,
                 sucursal_origen, 
+                sucursal_creador,
                 usuario_creador,
                 nombre_usuario_creador,
                 productos_despacho, 
@@ -31,6 +32,7 @@ static public function mdlCrearDespacho($tabla, $datos) {
                 :numero_despacho,
                 :id_solicitud_origen,
                 :sucursal_origen,
+                :sucursal_creador,
                 :usuario_creador,
                 :nombre_usuario_creador,
                 :productos_despacho,
@@ -42,11 +44,11 @@ static public function mdlCrearDespacho($tabla, $datos) {
             )
         ");
 
-        // NOMBRES CORREGIDOS EN LOS BIND:
         $stmt->bindParam(":numero_despacho", $datos["numero_despacho"], PDO::PARAM_STR);
         $stmt->bindParam(":id_solicitud_origen", $datos["id_solicitud_origen"], PDO::PARAM_INT);
-        $stmt->bindParam(":sucursal_origen", $datos["nombre_sucursal_origen"], PDO::PARAM_STR);     // ✅ CORREGIDO
-        $stmt->bindParam(":usuario_creador", $datos["id_usuario_creador"], PDO::PARAM_INT);        // ✅ CORREGIDO
+        $stmt->bindParam(":sucursal_origen", $datos["nombre_sucursal_origen"], PDO::PARAM_STR);
+        $stmt->bindParam(":sucursal_creador", $datos["nombre_sucursal_origen"], PDO::PARAM_STR); // ✅ AGREGADO
+        $stmt->bindParam(":usuario_creador", $datos["id_usuario_creador"], PDO::PARAM_INT);
         $stmt->bindParam(":nombre_usuario_creador", $datos["nombre_usuario_creador"], PDO::PARAM_STR);
         $stmt->bindParam(":productos_despacho", $datos["productos_despacho"], PDO::PARAM_STR);
         $stmt->bindParam(":total_productos", $datos["total_productos"], PDO::PARAM_INT);
@@ -54,7 +56,7 @@ static public function mdlCrearDespacho($tabla, $datos) {
         $stmt->bindParam(":detalle_adicional", $datos["detalle_adicional"], PDO::PARAM_STR);
 
         // Debug: Log SQL y parámetros
-        error_log("🔍 SQL INSERT CORREGIDO: " . $stmt->queryString);
+        error_log("🔍 SQL INSERT FINAL: " . $stmt->queryString);
         error_log("🔍 Datos a insertar: " . print_r($datos, true));
 
         if($stmt->execute()) {
