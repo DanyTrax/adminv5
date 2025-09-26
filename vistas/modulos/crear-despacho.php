@@ -592,92 +592,214 @@ $(document).ready(function() {
     // Cargar productos después de que se cargue el inventario
     setTimeout(function() {
         cargarProductosDespachoEdicion();
-    }, 2000);
+    }, 3000); // Más tiempo para que cargue el inventario
     
     function cargarProductosDespachoEdicion() {
         console.log("📋 Cargando productos del despacho...");
         
-        var productos = <?php echo json_encode($productosParaEditar); ?>;
+        var productosGuardados = <?php echo json_encode($productosParaEditar); ?>;
         
-        if(productos && productos.length > 0) {
+        if(productosGuardados && productosGuardados.length > 0) {
             
-            // Limpiar productos actuales
-            productosDespachoArray = [];
+            // Limpiar productos actuales - USAR LA VARIABLE CORRECTA
+            productosDespacho = []; // Esta es la variable correcta del archivo
             $("#productosDespachoSeleccionados").empty();
             $("#sinProductosDespacho").remove();
             
-            // Agregar cada producto
-            productos.forEach(function(producto, index) {
-                
-                console.log("➕ Agregando producto:", producto);
-                
-                // Crear objeto del producto
-                var productoObj = {
-                    codigo: producto.codigo,
-                    descripcion: producto.descripcion,
-                    cantidad: parseInt(producto.cantidad),
-                    stock_disponible: producto.stock_disponible || producto.cantidad, // Fallback
-                    observacion: producto.observacion || ''
-                };
-                
-                // Agregar al array
-                productosDespachoArray.push(productoObj);
-                
-                // Crear fila en la tabla
-                var stockClass = productoObj.stock_disponible >= productoObj.cantidad ? 'stock-disponible' : 'stock-bajo';
-                
-                var fila = `
-                    <tr class="producto-agregado" data-codigo="${productoObj.codigo}">
-                        <td>
-                            <div>
-                                <strong>${productoObj.codigo}</strong>
-                                <br>
-                                <small class="text-muted">${productoObj.descripcion}</small>
-                                ${productoObj.observacion ? '<br><em class="text-info">' + productoObj.observacion + '</em>' : ''}
-                            </div>
-                        </td>
-                        <td class="text-center">
-                            <input type="number" 
-                                   class="form-control input-sm text-center cantidad-producto" 
-                                   value="${productoObj.cantidad}" 
-                                   min="1" 
-                                   max="${productoObj.stock_disponible}"
-                                   data-indice="${index}"
-                                   onchange="actualizarCantidadProducto(this, ${index})"
-                                   style="width: 60px;">
-                        </td>
-                        <td class="text-center">
-                            <span class="${stockClass}">${productoObj.stock_disponible}</span>
-                        </td>
-                        <td class="text-center">
-                            <button type="button" 
-                                    class="btn btn-danger btn-xs" 
-                                    onclick="eliminarProductoDespacho(${index})"
-                                    data-toggle="tooltip" 
-                                    title="Eliminar producto">
-                                <i class="fa fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                
-                $("#productosDespachoSeleccionados").append(fila);
-            });
-            
-            // Actualizar contadores y habilitar botón
-            actualizarResumenDespacho();
-            $("#btnCrearDespacho").prop("disabled", false);
-            
-            console.log("✅ Productos cargados correctamente:", productosDespachoArray.length);
+            // Obtener stock actual de cada producto de la BD
+            obtenerStockActualProductos(productosGuardados);
         }
+    }
+    
+    // NUEVA FUNCIÓN: Obtener stock actual de la BD
+    function obtenerStockActualProductos(productosGuardados) {
+        
+        console.log("🔄 Obteniendo stock actual de la BD...");
+        
+        $.ajax({
+            url: "ajax/productos-despacho.ajax.php",
+            method: "POST",
+            data: {
+                obtenerStockActual: true,
+                codigos: productosGuardados.map(p => p.codigo)
+            },
+            dataType: "json",
+            success: function(respuesta) {
+                
+                if(respuesta.success) {
+                    
+                    console.log("✅ Stock actual obtenido:", respuesta.productos);
+                    
+                    // Combinar productos guardados con stock actual
+                    productosGuardados.forEach(function(productoGuardado, index) {
+                        
+                        // Buscar el stock actual en la respuesta
+                        var stockActual = 0;
+                        if(respuesta.productos && respuesta.productos.length > 0) {
+                            var productoActual = respuesta.productos.find(p => p.codigo === productoGuardado.codigo);
+                            if(productoActual) {
+                                stockActual = parseInt(productoActual.stock);
+                            }
+                        }
+                        
+                        // Crear objeto del producto con stock actual
+                        var productoObj = {
+                            codigo: productoGuardado.codigo,
+                            descripcion: productoGuardado.descripcion,
+                            cantidad: parseInt(productoGuardado.cantidad),
+                            stock_disponible: stockActual, // STOCK ACTUAL DE LA BD
+                            observacion: productoGuardado.observacion || '',
+                            precio_venta: 0 // Valor por defecto
+                        };
+                        
+                        console.log("➕ Agregando producto con stock actualizado:", productoObj);
+                        
+                        // Agregar al array global - USAR LA FUNCIÓN EXISTENTE
+                        productosDespacho.push(productoObj);
+                        
+                        // Crear fila en la tabla usando la función existente del archivo
+                        agregarFilaProductoDespacho(productoObj, index);
+                    });
+                    
+                    // Actualizar contadores usando la función correcta
+                    actualizarContadorProductos();
+                    actualizarResumenProductos();
+                    
+                    // Habilitar botón guardar
+                    $("#btnCrearDespacho").prop("disabled", false);
+                    
+                    console.log("✅ Productos cargados en modo edición:", productosDespacho.length);
+                    
+                } else {
+                    console.error("Error obteniendo stock actual:", respuesta.error);
+                    // Cargar con stock original como fallback
+                    cargarProductosSinStockActual(productosGuardados);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error AJAX obteniendo stock:", error);
+                // Cargar con stock original como fallback
+                cargarProductosSinStockActual(productosGuardados);
+            }
+        });
+    }
+    
+    // FUNCIÓN FALLBACK: Si no se puede obtener stock actual
+    function cargarProductosSinStockActual(productosGuardados) {
+        console.log("⚠️ Cargando productos sin stock actualizado");
+        
+        productosGuardados.forEach(function(productoGuardado, index) {
+            
+            var productoObj = {
+                codigo: productoGuardado.codigo,
+                descripcion: productoGuardado.descripcion,
+                cantidad: parseInt(productoGuardado.cantidad),
+                stock_disponible: productoGuardado.stock_disponible || 0,
+                observacion: productoGuardado.observacion || '',
+                precio_venta: 0
+            };
+            
+            productosDespacho.push(productoObj);
+            agregarFilaProductoDespacho(productoObj, index);
+        });
+        
+        actualizarContadorProductos();
+        actualizarResumenProductos();
+        $("#btnCrearDespacho").prop("disabled", false);
+    }
+    
+    // FUNCIÓN: Agregar fila a la tabla
+    function agregarFilaProductoDespacho(producto, indice) {
+        
+        var stockClass = producto.stock_disponible >= producto.cantidad ? 'stock-disponible' : 'stock-bajo';
+        
+        var fila = `
+            <tr class="producto-agregado" data-codigo="${producto.codigo}" data-indice="${indice}">
+                <td>
+                    <div>
+                        <strong>${producto.codigo}</strong>
+                        <br>
+                        <small class="text-muted">${producto.descripcion}</small>
+                        ${producto.observacion ? '<br><em class="text-info">' + producto.observacion + '</em>' : ''}
+                    </div>
+                </td>
+                <td class="text-center">
+                    <input type="number" 
+                           class="form-control input-sm text-center cantidad-producto" 
+                           value="${producto.cantidad}" 
+                           min="1" 
+                           data-indice="${indice}"
+                           onchange="actualizarCantidadProductoDespacho(this, ${indice})"
+                           style="width: 70px;">
+                </td>
+                <td class="text-center">
+                    <span class="${stockClass}" id="stock_${indice}">${producto.stock_disponible}</span>
+                </td>
+                <td class="text-center">
+                    <button type="button" 
+                            class="btn btn-warning btn-xs" 
+                            onclick="editarProductoDespacho(${indice})"
+                            data-toggle="tooltip" 
+                            title="Editar producto">
+                        <i class="fa fa-edit"></i>
+                    </button>
+                    <button type="button" 
+                            class="btn btn-danger btn-xs" 
+                            onclick="eliminarProductoDespacho(${indice})"
+                            data-toggle="tooltip" 
+                            title="Eliminar producto">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+        
+        $("#productosDespachoSeleccionados").append(fila);
     }
     
     <?php endif; ?>
     
 });
+
+// FUNCIÓN GLOBAL: Actualizar cantidad de producto en edición
+function actualizarCantidadProductoDespacho(input, indice) {
+    
+    var nuevaCantidad = parseInt($(input).val());
+    var stockDisponible = productosDespacho[indice].stock_disponible;
+    
+    if(nuevaCantidad > stockDisponible) {
+        swal({
+            title: "Stock insuficiente",
+            text: `Solo hay ${stockDisponible} unidades disponibles`,
+            type: "warning",
+            confirmButtonText: "Entendido"
+        });
+        $(input).val(productosDespacho[indice].cantidad);
+        return;
+    }
+    
+    if(nuevaCantidad < 1) {
+        $(input).val(1);
+        nuevaCantidad = 1;
+    }
+    
+    // Actualizar en el array
+    productosDespacho[indice].cantidad = nuevaCantidad;
+    
+    // Actualizar resumen
+    actualizarContadorProductos();
+    actualizarResumenProductos();
+    
+    console.log("✅ Cantidad actualizada:", productosDespacho[indice].codigo, "Nueva cantidad:", nuevaCantidad);
+}
 </script>
 <?php
 // EJECUTAR CONTROLADOR
 $crearDespacho = new ControladorDespachos();
-$crearDespacho->ctrCrearDespacho();
+
+if($modoEdicion) {
+    $crearDespacho->ctrEditarDespacho($_POST);
+} else {
+    $crearDespacho->ctrCrearDespacho();
+}
 ?>

@@ -77,75 +77,70 @@ static public function ctrObtenerUltimoDespacho() {
         return $respuesta;
     }
 
-    /*=============================================
-    EDITAR DESPACHO
-    =============================================*/
-    static public function ctrEditarDespacho() {
-
-        if(isset($_POST["editarDespacho"])) {
-
-            // Solo se pueden editar despachos pendientes
-            $despachoActual = self::ctrMostrarDespachos("id", $_POST["idDespacho"]);
+/*=============================================
+EDITAR DESPACHO
+=============================================*/
+public function ctrEditarDespacho($datos) {
+    
+    if(isset($datos["editarDespacho"])) {
+        
+        try {
+            require_once "../modelos/despachos.modelo.php";
             
-            if($despachoActual["estado"] != "pendiente") {
+            $tabla = "despachos";
+            $idDespacho = $datos["idDespachoEditar"];
+            
+            // Verificar que el despacho existe y está pendiente
+            $despachoActual = ModeloDespachos::mdlMostrarDespachos($tabla, "id", $idDespacho);
+            if(!$despachoActual || $despachoActual["estado"] != "pendiente") {
+                return "error: Solo se pueden editar despachos pendientes";
+            }
+            
+            // Preparar datos actualizados
+            $datosUpdate = array(
+                "productos_despacho" => $datos["productosDespacho"],
+                "total_productos" => $datos["totalProductos"],
+                "total_cantidad" => $datos["totalCantidad"],
+                "detalle_adicional" => $datos["detalleAdicional"],
+                "fecha_actualizacion" => date("Y-m-d H:i:s")
+            );
+            
+            $respuesta = ModeloDespachos::mdlActualizarDespacho($tabla, $datosUpdate, "id", $idDespacho);
+            
+            if($respuesta == "ok") {
                 echo '<script>
                     swal({
-                        type: "error",
-                        title: "No se puede editar",
-                        text: "Solo se pueden editar despachos en estado pendiente",
-                        showConfirmButton: true,
-                        confirmButtonText: "Cerrar"
+                        title: "¡Despacho actualizado!",
+                        text: "Los cambios han sido guardados correctamente",
+                        type: "success",
+                        confirmButtonText: "Ver despachos"
+                    }).then(function() {
+                        window.location = "despachos";
                     });
                 </script>';
-                return;
-            }
-
-            try {
-                
-                $tabla = "despachos";
-                $datos = array(
-                    "id" => $_POST["idDespacho"],
-                    "productos_despacho" => $_POST["productosDespacho"],
-                    "total_productos" => $_POST["totalProductos"],
-                    "total_cantidad" => $_POST["totalCantidad"],
-                    "detalle_adicional" => $_POST["detalleAdicional"] ?? null
-                );
-
-                $respuesta = ModeloDespachos::mdlEditarDespacho($tabla, $datos);
-
-                if($respuesta == "ok") {
-
-                    echo '<script>
-                        swal({
-                            type: "success",
-                            title: "¡Despacho actualizado!",
-                            text: "El despacho se ha actualizado correctamente",
-                            showConfirmButton: true,
-                            confirmButtonText: "Cerrar"
-                        }).then(function(result) {
-                            if (result.value) {
-                                window.location = "despachos";
-                            }
-                        });
-                    </script>';
-
-                } else {
-                    throw new Exception("Error al actualizar el despacho");
-                }
-
-            } catch(Exception $e) {
+            } else {
                 echo '<script>
                     swal({
-                        type: "error",
                         title: "Error",
-                        text: "Error al actualizar el despacho: ' . $e->getMessage() . '",
-                        showConfirmButton: true,
+                        text: "No se pudieron guardar los cambios: ' . $respuesta . '",
+                        type: "error",
                         confirmButtonText: "Cerrar"
                     });
                 </script>';
             }
+            
+        } catch(Exception $e) {
+            echo '<script>
+                swal({
+                    title: "Error",
+                    text: "Excepción: ' . $e->getMessage() . '",
+                    type: "error",
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
         }
     }
+}
 
     /*=============================================
     ELIMINAR DESPACHO
