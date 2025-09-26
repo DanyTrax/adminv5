@@ -5,68 +5,80 @@ require_once "conexion.php";
 class ModeloDespachos {
 
 /*=============================================
-CREAR DESPACHO - SQL CORREGIDO PARA TABLA REAL
+CREAR DESPACHO CON MANEJO DE CONCURRENCIA
 =============================================*/
 static public function mdlCrearDespacho($tabla, $datos) {
     
     try {
-        // Usar conexión central
         require_once "../api-transferencias/conexion-central.php";
         $conexion = ConexionCentral::conectar();
         
-        $stmt = $conexion->prepare("
-            INSERT INTO $tabla (
-                numero_despacho, 
-                id_solicitud_origen,
-                sucursal_origen, 
-                sucursal_creador,
-                usuario_creador,
-                nombre_usuario_creador,
-                productos_despacho, 
-                total_productos,
-                total_cantidad,
-                detalle_adicional,
-                estado,
-                fecha_creacion
-            ) VALUES (
-                :numero_despacho,
-                :id_solicitud_origen,
-                :sucursal_origen,
-                :sucursal_creador,
-                :usuario_creador,
-                :nombre_usuario_creador,
-                :productos_despacho,
-                :total_productos,
-                :total_cantidad,
-                :detalle_adicional,
-                'pendiente',
-                NOW()
-            )
-        ");
+        // ✅ INICIAR TRANSACCIÓN PARA TODA LA OPERACIÓN
+        $conexion->beginTransaction();
+        
+        try {
+            $stmt = $conexion->prepare("
+                INSERT INTO $tabla (
+                    numero_despacho, 
+                    id_solicitud_origen,
+                    nombre_sucursal_origen, 
+                    id_usuario_creador,
+                    nombre_usuario_creador,
+                    productos_despacho, 
+                    total_productos,
+                    total_cantidad,
+                    detalle_adicional,
+                    estado,
+                    fecha_creacion
+                ) VALUES (
+                    :numero_despacho,
+                    :id_solicitud_origen,
+                    :nombre_sucursal_origen,
+                    :id_usuario_creador,
+                    :nombre_usuario_creador,
+                    :productos_despacho,
+                    :total_productos,
+                    :total_cantidad,
+                    :detalle_adicional,
+                    'pendiente',
+                    NOW()
+                )
+            ");
 
-        $stmt->bindParam(":numero_despacho", $datos["numero_despacho"], PDO::PARAM_STR);
-        $stmt->bindParam(":id_solicitud_origen", $datos["id_solicitud_origen"], PDO::PARAM_INT);
-        $stmt->bindParam(":sucursal_origen", $datos["nombre_sucursal_origen"], PDO::PARAM_STR);
-        $stmt->bindParam(":sucursal_creador", $datos["nombre_sucursal_origen"], PDO::PARAM_STR); // ✅ AGREGADO
-        $stmt->bindParam(":usuario_creador", $datos["id_usuario_creador"], PDO::PARAM_INT);
-        $stmt->bindParam(":nombre_usuario_creador", $datos["nombre_usuario_creador"], PDO::PARAM_STR);
-        $stmt->bindParam(":productos_despacho", $datos["productos_despacho"], PDO::PARAM_STR);
-        $stmt->bindParam(":total_productos", $datos["total_productos"], PDO::PARAM_INT);
-        $stmt->bindParam(":total_cantidad", $datos["total_cantidad"], PDO::PARAM_INT);
-        $stmt->bindParam(":detalle_adicional", $datos["detalle_adicional"], PDO::PARAM_STR);
+            $stmt->bindParam(":numero_despacho", $datos["numero_despacho"], PDO::PARAM_STR);
+            $stmt->bindParam(":id_solicitud_origen", $datos["id_solicitud_origen"], PDO::PARAM_INT);
+            $stmt->bindParam(":nombre_sucursal_origen", $datos["nombre_sucursal_origen"], PDO::PARAM_STR);
+            $stmt->bindParam(":id_usuario_creador", $datos["id_usuario_creador"], PDO::PARAM_INT);
+            $stmt->bindParam(":nombre_usuario_creador", $datos["nombre_usuario_creador"], PDO::PARAM_STR);
+            $stmt->bindParam(":productos_despacho", $datos["productos_despacho"], PDO::PARAM_STR);
+            $stmt->bindParam(":total_productos", $datos["total_productos"], PDO::PARAM_INT);
+            $stmt->bindParam(":total_cantidad", $datos["total_cantidad"], PDO::PARAM_INT);
+            $stmt->bindParam(":detalle_adicional", $datos["detalle_adicional"], PDO::PARAM_STR);
 
-        // Debug: Log SQL y parámetros
-        error_log("🔍 SQL INSERT FINAL: " . $stmt->queryString);
-        error_log("🔍 Datos a insertar: " . print_r($datos, true));
+            error_log("🔍 Intentando insertar despacho: " . $datos["numero_despacho"]);
 
-        if($stmt->execute()) {
-            $insertId = $conexion->lastInsertId();
-            error_log("✅ INSERT exitoso. ID generado: " . $insertId);
-            return $insertId;
-        } else {
-            $errorInfo = $stmt->errorInfo();
-            error_log("❌ Error en INSERT: " . print_r($errorInfo, true));
-            return "error";
+            if($stmt->execute()) {
+                $insertId = $conexion->lastInsertId();
+                
+                // ✅ CONFIRMAR TRANSACCIÓN SOLO SI TODO SALIÓ BIEN
+                $conexion->commit();
+                
+                error_log("✅ Despacho creado exitosamente. ID: " . $insertId);
+                return $insertId;
+                
+            } else {
+                $errorInfo = $stmt->errorInfo();
+                error_log("❌ Error en INSERT: " . print_r($errorInfo, true));
+                
+                // ✅ CANCELAR TRANSACCIÓN
+                $conexion->rollBack();
+                return "error: " . $errorInfo[2];
+            }
+
+        } catch(Exception $e) {
+            // ✅ CANCELAR TRANSACCIÓN EN CASO DE ERROR
+            $conexion->rollBack();
+            throw $e;
         }
 
     } catch(Exception $e) {
@@ -99,36 +111,100 @@ static public function mdlCrearDespacho($tabla, $datos) {
         }
     }
 
-    /*=============================================
-    GENERAR NÚMERO DE DESPACHO
-    =============================================*/
-    static public function mdlGenerarNumeroDespacho() {
+/*=============================================
+GENERAR NÚMERO DE DESPACHO ÚNICO CON BLOQUEO - VERSIÓN MULTI-USUARIO
+=============================================*/
+static public function mdlGenerarNumeroDespacho() {
+    
+    try {
+        require_once "../api-transferencias/conexion-central.php";
+        $conexion = ConexionCentral::conectar();
+        
+        // ✅ INICIAR TRANSACCIÓN PARA BLOQUEAR TABLA
+        $conexion->beginTransaction();
         
         try {
-            require_once "../api-transferencias/conexion-central.php";
+            // ✅ BLOQUEAR TABLA PARA EVITAR CONCURRENCIA
+            $lockStmt = $conexion->prepare("LOCK TABLES despachos WRITE");
+            $lockStmt->execute();
             
-            // Actualizar secuencia
-            $stmt = ConexionCentral::conectar()->prepare("
-                UPDATE secuencia_despachos 
-                SET ultimo_numero = ultimo_numero + 1 
-                WHERE id = 1
+            // Obtener el último número de despacho DENTRO DEL BLOQUEO
+            $stmt = $conexion->prepare("
+                SELECT numero_despacho 
+                FROM despachos 
+                WHERE numero_despacho LIKE 'DESP%' 
+                ORDER BY id DESC 
+                LIMIT 1
+                FOR UPDATE
             ");
-            $stmt->execute();
             
-            // Obtener nuevo número
-            $stmt = ConexionCentral::conectar()->prepare("
-                SELECT ultimo_numero FROM secuencia_despachos WHERE id = 1
+            $stmt->execute();
+            $ultimoDespacho = $stmt->fetch();
+            
+            if($ultimoDespacho) {
+                // Extraer el número del último despacho (ejemplo: DESP000001 -> 1)
+                $ultimoNumero = (int) substr($ultimoDespacho["numero_despacho"], 4);
+                $nuevoNumero = $ultimoNumero + 1;
+            } else {
+                // Si no hay despachos previos, empezar desde 1
+                $nuevoNumero = 1;
+            }
+            
+            // Formatear con ceros a la izquierda (6 dígitos)
+            $numeroDespacho = "DESP" . str_pad($nuevoNumero, 6, "0", STR_PAD_LEFT);
+            
+            // ✅ VERIFICAR QUE NO EXISTE (DOBLE VERIFICACIÓN)
+            $verificarStmt = $conexion->prepare("
+                SELECT COUNT(*) as existe 
+                FROM despachos 
+                WHERE numero_despacho = :numero
             ");
-            $stmt->execute();
-            $resultado = $stmt->fetch();
+            $verificarStmt->bindParam(":numero", $numeroDespacho);
+            $verificarStmt->execute();
+            $existe = $verificarStmt->fetch();
             
-            $numero = $resultado['ultimo_numero'];
-            return "DESP" . str_pad($numero, 6, "0", STR_PAD_LEFT);
+            if($existe["existe"] > 0) {
+                // Si existe, generar con timestamp como respaldo
+                $numeroDespacho = "DESP" . date("YmdHis") . rand(100, 999);
+                error_log("⚠️ Número duplicado detectado, usando respaldo: " . $numeroDespacho);
+            }
+            
+            // ✅ DESBLOQUEAR TABLA
+            $unlockStmt = $conexion->prepare("UNLOCK TABLES");
+            $unlockStmt->execute();
+            
+            // ✅ CONFIRMAR TRANSACCIÓN
+            $conexion->commit();
+            
+            // Debug: Log del número generado
+            error_log("🔢 Número de despacho generado (multi-usuario): " . $numeroDespacho);
+            error_log("🔍 Último número encontrado: " . ($ultimoDespacho ? $ultimoDespacho["numero_despacho"] : "ninguno"));
+            error_log("🔢 Nuevo número calculado: " . $nuevoNumero);
+            
+            return $numeroDespacho;
             
         } catch(Exception $e) {
-            return "DESP000001"; // Fallback
+            // ✅ EN CASO DE ERROR, DESBLOQUEAR Y CANCELAR TRANSACCIÓN
+            try {
+                $conexion->prepare("UNLOCK TABLES")->execute();
+                $conexion->rollBack();
+            } catch(Exception $rollbackError) {
+                error_log("❌ Error en rollback: " . $rollbackError->getMessage());
+            }
+            
+            throw $e; // Re-lanzar la excepción original
         }
+        
+    } catch(Exception $e) {
+        error_log("❌ Error generando número de despacho (multi-usuario): " . $e->getMessage());
+        
+        // ✅ GENERAR NÚMERO DE RESPALDO ÚNICO BASADO EN TIMESTAMP + PROCESO
+        $numeroRespaldo = "DESP" . date("YmdHis") . getmypid() . rand(10, 99);
+        error_log("🔄 Usando número de respaldo único: " . $numeroRespaldo);
+        
+        return $numeroRespaldo;
     }
+}
 
     /*=============================================
     ACTUALIZAR ESTADO DESPACHO
