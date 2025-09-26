@@ -178,6 +178,259 @@ class AjaxDespachos {
             }
         }
     }
+    /*=============================================
+VER DETALLES DEL DESPACHO
+=============================================*/
+public function ajaxVerDespacho() {
+    
+    if(isset($_POST["idDespacho"])) {
+        
+        try {
+            require_once "../controladores/despachos.controlador.php";
+            require_once "../modelos/despachos.modelo.php";
+            
+            $item = "id";
+            $valor = $_POST["idDespacho"];
+            
+            $despacho = ControladorDespachos::ctrMostrarDespachos($item, $valor);
+            
+            if($despacho) {
+                echo json_encode($despacho);
+            } else {
+                echo json_encode(["error" => "Despacho no encontrado"]);
+            }
+            
+        } catch(Exception $e) {
+            echo json_encode(["error" => $e->getMessage()]);
+        }
+    }
+}
+
+/*=============================================
+ACEPTAR DESPACHO
+=============================================*/
+public function ajaxAceptarDespacho() {
+    
+    if(isset($_POST["aceptarDespacho"])) {
+        
+        try {
+            require_once "../controladores/despachos.controlador.php";
+            require_once "../modelos/despachos.modelo.php";
+            require_once "../modelos/productos.modelo.php";
+            require_once "../api-transferencias/conexion-central.php";
+            
+            $idDespacho = $_POST["idDespacho"];
+            
+            // 1. Obtener el despacho
+            $despacho = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
+            if(!$despacho) {
+                throw new Exception("Despacho no encontrado");
+            }
+            
+            // 2. Verificar que esté pendiente
+            if($despacho["estado"] != "pendiente") {
+                throw new Exception("El despacho no está en estado pendiente");
+            }
+            
+            // 3. Parsear productos
+            $productos = json_decode($despacho["productos_despacho"], true);
+            if(!$productos) {
+                throw new Exception("Error al leer productos del despacho");
+            }
+            
+            // 4. Iniciar transacción
+            $conexion = ConexionCentral::conectar();
+            $conexion->beginTransaction();
+            
+            try {
+                
+                // 5. Descontar stock local y crear registros de stock en tránsito
+                foreach($productos as $producto) {
+                    
+                    // Descontar del stock local
+                    $this->descontarStockLocal($producto["codigo"], $producto["cantidad"]);
+                    
+                    // Agregar al stock en tránsito
+                    $this->agregarStockTransito($despacho, $producto);
+                }
+                
+                // 6. Actualizar estado del despacho
+                $datosUpdate = array(
+                    "estado" => "aceptado",
+                    "fecha_aceptacion" => date("Y-m-d H:i:s"),
+                    "transportador_id" => $_SESSION["id"],
+                    "nombre_transportador" => $_SESSION["nombre"]
+                );
+                
+                ModeloDespachos::mdlActualizarDespacho("despachos", $datosUpdate, "id", $idDespacho);
+                
+                // 7. Confirmar transacción
+                $conexion->commit();
+                
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Despacho aceptado exitosamente"
+                ]);
+                
+            } catch(Exception $e) {
+                $conexion->rollBack();
+                throw $e;
+            }
+            
+        } catch(Exception $e) {
+            echo json_encode([
+                "success" => false,
+                "error" => $e->getMessage()
+            ]);
+        }
+    }
+}
+
+/*=============================================
+CANCELAR DESPACHO
+=============================================*/
+public function ajaxCancelarDespacho() {
+    
+    if(isset($_POST["cancelarDespacho"])) {
+        
+        try {
+            require_once "../controladores/despachos.controlador.php";
+            require_once "../modelos/despachos.modelo.php";
+            
+            $idDespacho = $_POST["idDespacho"];
+            $motivo = $_POST["motivoCancelacion"] ?? "Sin motivo especificado";
+            
+            // Actualizar estado del despacho
+            $datosUpdate = array(
+                "estado" => "cancelado",
+                "motivo_cancelacion" => $motivo,
+                "fecha_cancelacion" => date("Y-m-d H:i:s"),
+                "usuario_cancelacion" => $_SESSION["nombre"]
+            );
+            
+            $respuesta = ModeloDespachos::mdlActualizarDespacho("despachos", $datosUpdate, "id", $idDespacho);
+            
+            if($respuesta == "ok") {
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Despacho cancelado exitosamente"
+                ]);
+            } else {
+                throw new Exception("Error al cancelar el despacho");
+            }
+            
+        } catch(Exception $e) {
+            echo json_encode([
+                "success" => false,
+                "error" => $e->getMessage()
+            ]);
+        }
+    }
+}
+
+/*=============================================
+ELIMINAR DESPACHO
+=============================================*/
+public function ajaxEliminarDespacho() {
+    
+    if(isset($_POST["eliminarDespacho"])) {
+        
+        try {
+            require_once "../controladores/despachos.controlador.php";
+            require_once "../modelos/despachos.modelo.php";
+            
+            $idDespacho = $_POST["idDespacho"];
+            
+            // Verificar que sea administrador
+            if($_SESSION["perfil"] != "Administrador") {
+                throw new Exception("Solo los administradores pueden eliminar despachos");
+            }
+            
+            $respuesta = ModeloDespachos::mdlBorrarDespacho("despachos", "id", $idDespacho);
+            
+            if($respuesta == "ok") {
+                echo json_encode([
+                    "success" => true,
+                    "message" => "Despacho eliminado exitosamente"
+                ]);
+            } else {
+                throw new Exception("Error al eliminar el despacho");
+            }
+            
+        } catch(Exception $e) {
+            echo json_encode([
+                "success" => false,
+                "error" => $e->getMessage()
+            ]);
+        }
+    }
+}
+
+/*=============================================
+FUNCIONES AUXILIARES
+=============================================*/
+private function descontarStockLocal($codigoProducto, $cantidad) {
+    
+    require_once "../modelos/conexion.php";
+    
+    $stmt = Conexion::conectar()->prepare("
+        UPDATE productos 
+        SET stock = stock - :cantidad 
+        WHERE codigo = :codigo AND stock >= :cantidad
+    ");
+    
+    $stmt->bindParam(":cantidad", $cantidad, PDO::PARAM_INT);
+    $stmt->bindParam(":codigo", $codigoProducto, PDO::PARAM_STR);
+    
+    if(!$stmt->execute()) {
+        throw new Exception("Error al descontar stock del producto: " . $codigoProducto);
+    }
+    
+    if($stmt->rowCount() == 0) {
+        throw new Exception("Stock insuficiente para el producto: " . $codigoProducto);
+    }
+}
+
+private function agregarStockTransito($despacho, $producto) {
+    
+    require_once "../api-transferencias/conexion-central.php";
+    
+    $stmt = ConexionCentral::conectar()->prepare("
+        INSERT INTO stock_transito (
+            numero_despacho,
+            codigo_producto,
+            descripcion_producto,
+            cantidad,
+            sucursal_origen,
+            transportador_id,
+            transportador_nombre,
+            fecha_cargue,
+            estado
+        ) VALUES (
+            :numero_despacho,
+            :codigo_producto,
+            :descripcion_producto,
+            :cantidad,
+            :sucursal_origen,
+            :transportador_id,
+            :transportador_nombre,
+            NOW(),
+            'en_transito'
+        )
+    ");
+    
+    $stmt->bindParam(":numero_despacho", $despacho["numero_despacho"]);
+    $stmt->bindParam(":codigo_producto", $producto["codigo"]);
+    $stmt->bindParam(":descripcion_producto", $producto["descripcion"]);
+    $stmt->bindParam(":cantidad", $producto["cantidad"]);
+    $stmt->bindParam(":sucursal_origen", $despacho["sucursal_origen"]);
+    $stmt->bindParam(":transportador_id", $_SESSION["id"]);
+    $stmt->bindParam(":transportador_nombre", $_SESSION["nombre"]);
+    
+    if(!$stmt->execute()) {
+        throw new Exception("Error al agregar producto al stock en tránsito");
+    }
+}
 }
 
 // MANEJO DE PETICIONES POST
@@ -195,5 +448,24 @@ if(isset($_POST["crearDespacho"])) {
     $ajax = new AjaxDespachos();
     $ajax->ajaxCrearDespacho();
 }
+// MANEJADORES DE PETICIONES POST (agregar al final)
+if(isset($_POST["idDespacho"]) && !isset($_POST["aceptarDespacho"]) && !isset($_POST["cancelarDespacho"]) && !isset($_POST["eliminarDespacho"])) {
+    $ajax = new AjaxDespachos();
+    $ajax->ajaxVerDespacho();
+}
 
+if(isset($_POST["aceptarDespacho"])) {
+    $ajax = new AjaxDespachos();
+    $ajax->ajaxAceptarDespacho();
+}
+
+if(isset($_POST["cancelarDespacho"])) {
+    $ajax = new AjaxDespachos();
+    $ajax->ajaxCancelarDespacho();
+}
+
+if(isset($_POST["eliminarDespacho"])) {
+    $ajax = new AjaxDespachos();
+    $ajax->ajaxEliminarDespacho();
+}
 ?>

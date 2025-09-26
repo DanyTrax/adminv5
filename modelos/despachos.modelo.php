@@ -238,25 +238,59 @@ static public function mdlGenerarNumeroDespacho() {
             return false;
         }
     }
-    /*=============================================
+/*=============================================
 BORRAR DESPACHO
 =============================================*/
-static public function mdlBorrarDespacho($tabla, $id) {
+static public function mdlBorrarDespacho($tabla, $item, $valor) {
     
     try {
         require_once "../api-transferencias/conexion-central.php";
         
-        $stmt = ConexionCentral::conectar()->prepare("DELETE FROM $tabla WHERE id = :id");
-        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+        $stmt = ConexionCentral::conectar()->prepare("DELETE FROM $tabla WHERE $item = :valor");
+        $stmt->bindParam(":valor", $valor, PDO::PARAM_STR);
         
         if($stmt->execute()) {
             return "ok";
         } else {
             return "error";
         }
-
+        
     } catch(Exception $e) {
-        return "error";
+        return "error: " . $e->getMessage();
+    }
+}
+
+/*=============================================
+ACTUALIZAR DESPACHO
+=============================================*/
+static public function mdlActualizarDespacho($tabla, $datos, $item, $valor) {
+    
+    try {
+        require_once "../api-transferencias/conexion-central.php";
+        
+        // Construir SQL dinámicamente
+        $campos = [];
+        foreach($datos as $key => $value) {
+            $campos[] = "$key = :$key";
+        }
+        $sql = "UPDATE $tabla SET " . implode(", ", $campos) . " WHERE $item = :valor_condicion";
+        
+        $stmt = ConexionCentral::conectar()->prepare($sql);
+        
+        // Bind de parámetros
+        foreach($datos as $key => $value) {
+            $stmt->bindParam(":$key", $datos[$key]);
+        }
+        $stmt->bindParam(":valor_condicion", $valor);
+        
+        if($stmt->execute()) {
+            return "ok";
+        } else {
+            return "error";
+        }
+        
+    } catch(Exception $e) {
+        return "error: " . $e->getMessage();
     }
 }
 
