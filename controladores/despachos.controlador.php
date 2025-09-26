@@ -78,36 +78,66 @@ static public function ctrObtenerUltimoDespacho() {
     }
 
 /*=============================================
-EDITAR DESPACHO
+EDITAR DESPACHO - VERSIÓN CORREGIDA
 =============================================*/
-public function ctrEditarDespacho($datos) {
+public function ctrEditarDespacho($datos = null) {
     
-    if(isset($datos["editarDespacho"])) {
+    // Verificar si llegaron datos de edición
+    if($datos && (isset($datos["editarDespacho"]) || isset($datos["idDespachoEditar"]))) {
         
         try {
-            require_once "../modelos/despachos.modelo.php";
+            require_once "modelos/despachos.modelo.php";
+            require_once "api-transferencias/conexion-central.php";
             
-            $tabla = "despachos";
             $idDespacho = $datos["idDespachoEditar"];
             
+            error_log("🔄 EDITANDO DESPACHO ID: " . $idDespacho);
+            error_log("📦 Datos recibidos: " . print_r($datos, true));
+            
             // Verificar que el despacho existe y está pendiente
-            $despachoActual = ModeloDespachos::mdlMostrarDespachos($tabla, "id", $idDespacho);
-            if(!$despachoActual || $despachoActual["estado"] != "pendiente") {
-                return "error: Solo se pueden editar despachos pendientes";
+            $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM despachos WHERE id = :id");
+            $stmt->bindParam(":id", $idDespacho);
+            $stmt->execute();
+            $despachoActual = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if(!$despachoActual) {
+                throw new Exception("Despacho no encontrado");
+            }
+            
+            if($despachoActual["estado"] != "pendiente") {
+                throw new Exception("Solo se pueden editar despachos pendientes. Estado actual: " . $despachoActual["estado"]);
             }
             
             // Preparar datos actualizados
-            $datosUpdate = array(
-                "productos_despacho" => $datos["productosDespacho"],
-                "total_productos" => $datos["totalProductos"],
-                "total_cantidad" => $datos["totalCantidad"],
-                "detalle_adicional" => $datos["detalleAdicional"],
-                "fecha_actualizacion" => date("Y-m-d H:i:s")
-            );
+            $productosDespacho = $datos["productosDespacho"];
+            $totalProductos = intval($datos["totalProductos"]);
+            $totalCantidad = intval($datos["totalCantidad"]);
+            $detalleAdicional = $datos["detalleAdicional"] ?? '';
             
-            $respuesta = ModeloDespachos::mdlActualizarDespacho($tabla, $datosUpdate, "id", $idDespacho);
+            error_log("📊 Productos: " . $totalProductos . " - Cantidad total: " . $totalCantidad);
             
-            if($respuesta == "ok") {
+            // Actualizar directamente en la base de datos
+            $stmtUpdate = ConexionCentral::conectar()->prepare("
+                UPDATE despachos SET 
+                    productos_despacho = :productos_despacho,
+                    total_productos = :total_productos,
+                    total_cantidad = :total_cantidad,
+                    detalle_adicional = :detalle_adicional,
+                    fecha_actualizacion = NOW()
+                WHERE id = :id
+            ");
+            
+            $stmtUpdate->bindParam(":productos_despacho", $productosDespacho);
+            $stmtUpdate->bindParam(":total_productos", $totalProductos);
+            $stmtUpdate->bindParam(":total_cantidad", $totalCantidad);
+            $stmtUpdate->bindParam(":detalle_adicional", $detalleAdicional);
+            $stmtUpdate->bindParam(":id", $idDespacho);
+            
+            if($stmtUpdate->execute()) {
+                
+                $filasAfectadas = $stmtUpdate->rowCount();
+                error_log("✅ Despacho actualizado exitosamente. Filas afectadas: " . $filasAfectadas);
+                
                 echo '<script>
                     swal({
                         title: "¡Despacho actualizado!",
@@ -118,27 +148,27 @@ public function ctrEditarDespacho($datos) {
                         window.location = "despachos";
                     });
                 </script>';
+                
             } else {
-                echo '<script>
-                    swal({
-                        title: "Error",
-                        text: "No se pudieron guardar los cambios: ' . $respuesta . '",
-                        type: "error",
-                        confirmButtonText: "Cerrar"
-                    });
-                </script>';
+                $errorInfo = $stmtUpdate->errorInfo();
+                throw new Exception("Error en la actualización: " . print_r($errorInfo, true));
             }
             
         } catch(Exception $e) {
+            error_log("❌ Error editando despacho: " . $e->getMessage());
+            
             echo '<script>
                 swal({
                     title: "Error",
-                    text: "Excepción: ' . $e->getMessage() . '",
+                    text: "No se pudieron guardar los cambios: ' . htmlspecialchars($e->getMessage()) . '",
                     type: "error",
                     confirmButtonText: "Cerrar"
                 });
             </script>';
         }
+    } else {
+        error_log("⚠️ No se recibieron datos de edición válidos");
+        error_log("📦 POST data: " . print_r($_POST, true));
     }
 }
 

@@ -839,9 +839,15 @@ function actualizarCantidadProductoDespacho(input, indice) {
 // EJECUTAR CONTROLADOR
 $crearDespacho = new ControladorDespachos();
 
-if($modoEdicion) {
+// Verificar si es modo edición por GET o POST
+if($modoEdicion && isset($_POST["editarDespacho"])) {
+    echo "<!-- DEBUG: Ejecutando ctrEditarDespacho -->";
     $crearDespacho->ctrEditarDespacho($_POST);
-} else {
+} else if(!$modoEdicion && isset($_POST["crearDespacho"])) {
+    echo "<!-- DEBUG: Ejecutando ctrCrearDespacho -->";
     $crearDespacho->ctrCrearDespacho();
+} else if(isset($_POST)) {
+    // Debug para ver qué datos están llegando
+    echo "<!-- DEBUG POST DATA: " . print_r($_POST, true) . " -->";
 }
 ?>
