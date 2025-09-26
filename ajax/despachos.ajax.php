@@ -70,13 +70,13 @@ class AjaxDespachos {
                 require_once "../controladores/despachos.controlador.php";
                 require_once "../modelos/despachos.modelo.php";
                 
-                // Validar datos requeridos
-                $productosJson = $_POST["productos_despacho"] ?? '';
-                $totalProductos = $_POST["total_productos"] ?? 0;
-                $totalCantidad = $_POST["total_cantidad"] ?? 0;
-                $tipoDespacho = $_POST["tipo_despacho"] ?? 'libre';
-                $observaciones = $_POST["observaciones"] ?? '';
-                $idSolicitudOrigen = $_POST["id_solicitud_origen"] ?? null;
+                // Validar datos requeridos (NOMBRES CORREGIDOS)
+                $productosJson = $_POST["productosDespacho"] ?? '';           // Sin underscore
+                $totalProductos = $_POST["totalProductos"] ?? 0;             // Sin underscore
+                $totalCantidad = $_POST["totalCantidad"] ?? 0;               // Sin underscore
+                $tipoDespacho = $_POST["tipoDespacho"] ?? 'libre';           // Sin underscore
+                $observaciones = $_POST["detalleAdicional"] ?? '';           // Nombre correcto
+                $idSolicitudOrigen = $_POST["idSolicitudOrigen"] ?? null;    // Sin underscore
                 
                 if(empty($productosJson)) {
                     throw new Exception("No se enviaron productos para el despacho");
