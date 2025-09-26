@@ -160,31 +160,48 @@ public function ajaxCrearDespacho() {
 }
 
 /*=============================================
-OBTENER NOMBRE REAL DE LA SUCURSAL DESDE BD LOCAL
+OBTENER NOMBRE REAL DE LA SUCURSAL - VERSIÓN MEJORADA
 =============================================*/
 private function obtenerNombreSucursalLocal() {
     
     try {
         require_once "../modelos/conexion.php";
         
-        // Obtener el código de sucursal de la sesión o usar un valor por defecto
+        // Obtener el código de sucursal de la sesión
         $codigoSucursal = $_SESSION["codigo_sucursal"] ?? null;
+        $idSucursal = $_SESSION["id_sucursal"] ?? null;
+        
+        error_log("🔍 Buscando sucursal - Código: " . ($codigoSucursal ?? 'null') . " ID: " . ($idSucursal ?? 'null'));
+        
+        $stmt = null;
         
         if($codigoSucursal) {
             // Buscar por código de sucursal
             $stmt = Conexion::conectar()->prepare("
-                SELECT nombre 
+                SELECT id, codigo_sucursal, nombre 
                 FROM sucursal_local 
-                WHERE codigo_sucursal = :codigo_sucursal 
+                WHERE codigo_sucursal = :codigo_sucursal AND activo = 1
                 LIMIT 1
             ");
             $stmt->bindParam(":codigo_sucursal", $codigoSucursal);
-        } else {
-            // Si no hay código, tomar la primera sucursal disponible
+            
+        } elseif($idSucursal) {
+            // Buscar por ID de sucursal
             $stmt = Conexion::conectar()->prepare("
-                SELECT nombre 
+                SELECT id, codigo_sucursal, nombre 
                 FROM sucursal_local 
-                ORDER BY id ASC 
+                WHERE id = :id_sucursal AND activo = 1
+                LIMIT 1
+            ");
+            $stmt->bindParam(":id_sucursal", $idSucursal);
+            
+        } else {
+            // Si no hay datos de sesión, tomar la sucursal principal o la primera activa
+            $stmt = Conexion::conectar()->prepare("
+                SELECT id, codigo_sucursal, nombre 
+                FROM sucursal_local 
+                WHERE activo = 1 
+                ORDER BY es_principal DESC, id ASC 
                 LIMIT 1
             ");
         }
@@ -193,17 +210,29 @@ private function obtenerNombreSucursalLocal() {
         $sucursal = $stmt->fetch();
         
         if($sucursal && isset($sucursal["nombre"])) {
-            error_log("✅ Sucursal encontrada: " . $sucursal["nombre"]);
+            
+            // ACTUALIZAR VARIABLES DE SESIÓN si no están definidas
+            if(!isset($_SESSION["id_sucursal"])) {
+                $_SESSION["id_sucursal"] = $sucursal["id"];
+            }
+            if(!isset($_SESSION["codigo_sucursal"])) {
+                $_SESSION["codigo_sucursal"] = $sucursal["codigo_sucursal"];
+            }
+            if(!isset($_SESSION["nombre_sucursal"])) {
+                $_SESSION["nombre_sucursal"] = $sucursal["nombre"];
+            }
+            
+            error_log("✅ Sucursal encontrada y variables actualizadas: " . $sucursal["nombre"]);
             return $sucursal["nombre"];
+            
         } else {
-            error_log("⚠️ No se encontró sucursal, usando nombre de sesión");
-            return $_SESSION["nombre_sucursal"] ?? 'Sucursal Local';
+            error_log("⚠️ No se encontró sucursal activa, usando fallback");
+            return 'Sucursal Local';
         }
         
     } catch(Exception $e) {
         error_log("❌ Error obteniendo nombre de sucursal: " . $e->getMessage());
-        // Fallback a valor de sesión o por defecto
-        return $_SESSION["nombre_sucursal"] ?? 'Sucursal Local';
+        return 'Sucursal Local';
     }
 }
     /*=============================================
