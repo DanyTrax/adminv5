@@ -144,7 +144,7 @@ private function generarBotonesAccion($despacho) {
         
         // Botón Editar (solo si está pendiente)
         if($estado == "pendiente") {
-            $botones .= ' <button class=\"btn btn-warning btn-xs btnEditarDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Editar despacho\"><i class=\"fa fa-pencil\"></i></button>';
+            $botones .= ' <button class=\"btn btn-warning btn-xs btnEditarDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Editar despacho\" onclick=\"editarDespacho(' . $despacho["id"] . ')\"><i class=\"fa fa-pencil\"></i></button>';
         }
         
         // Botón Cancelar (solo si está pendiente)

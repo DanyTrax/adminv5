@@ -261,7 +261,7 @@ static public function mdlBorrarDespacho($tabla, $item, $valor) {
 }
 
 /*=============================================
-ACTUALIZAR DESPACHO
+ACTUALIZAR DESPACHO - VERSIÓN CORREGIDA
 =============================================*/
 static public function mdlActualizarDespacho($tabla, $datos, $item, $valor) {
     
@@ -270,26 +270,34 @@ static public function mdlActualizarDespacho($tabla, $datos, $item, $valor) {
         
         // Construir SQL dinámicamente
         $campos = [];
+        $valoresArray = [];
+        
         foreach($datos as $key => $value) {
-            $campos[] = "$key = :$key";
+            $campos[] = "`$key` = ?";
+            $valoresArray[] = $value;
         }
-        $sql = "UPDATE $tabla SET " . implode(", ", $campos) . " WHERE $item = :valor_condicion";
+        
+        // Agregar el valor de la condición al final
+        $valoresArray[] = $valor;
+        
+        $sql = "UPDATE `$tabla` SET " . implode(", ", $campos) . " WHERE `$item` = ?";
+        
+        error_log("🔍 SQL UPDATE: " . $sql);
+        error_log("🔍 Valores: " . print_r($valoresArray, true));
         
         $stmt = ConexionCentral::conectar()->prepare($sql);
         
-        // Bind de parámetros
-        foreach($datos as $key => $value) {
-            $stmt->bindParam(":$key", $datos[$key]);
-        }
-        $stmt->bindParam(":valor_condicion", $valor);
-        
-        if($stmt->execute()) {
+        if($stmt->execute($valoresArray)) {
+            error_log("✅ UPDATE exitoso");
             return "ok";
         } else {
+            $errorInfo = $stmt->errorInfo();
+            error_log("❌ Error en UPDATE: " . print_r($errorInfo, true));
             return "error";
         }
         
     } catch(Exception $e) {
+        error_log("❌ Excepción en mdlActualizarDespacho: " . $e->getMessage());
         return "error: " . $e->getMessage();
     }
 }
