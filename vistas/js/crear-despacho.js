@@ -1118,92 +1118,125 @@ function actualizarInventarioLocal() {
 }
 
 /*=============================================
-ENVIAR FORMULARIO DE DESPACHO
+ENVIAR FORMULARIO DE DESPACHO - VERSIÓN CORREGIDA
 =============================================*/
 function enviarFormularioDespacho() {
     
+    console.log("🚀 Enviando formulario de despacho...");
+    
+    // Verificar si hay productos
     if(productosDespacho.length === 0) {
         swal({
-            title: "No hay productos",
-            text: "Agregue productos al despacho antes de crear",
+            title: "Sin productos",
+            text: "Debe agregar al menos un producto al despacho",
             type: "warning",
             confirmButtonText: "Entendido"
         });
         return false;
     }
     
-    // Validar campos obligatorios y auto-detectar tipo
-    var observaciones = $("#detalleAdicional").val();
-
-    // AUTO-DETECCIÓN INTELIGENTE DEL TIPO DE DESPACHO
-    var tipoDespacho = "libre"; // Por defecto
-    var tieneSolicitudes = false;
-    var tieneProductosLibres = false;
-
-    // Verificar si hay productos agregados desde solicitudes
-    productosDespacho.forEach(function(producto) {
-        if(producto.observacion && producto.observacion.includes("SOL")) {
-            tieneSolicitudes = true;
-        } else {
-            tieneProductosLibres = true;
+    // Actualizar campos ocultos antes de enviar
+    $("#productosDespachoHidden").val(JSON.stringify(productosDespacho));
+    $("#totalProductosHidden").val(productosDespacho.length);
+    
+    var totalCantidad = productosDespacho.reduce(function(sum, producto) {
+        return sum + parseInt(producto.cantidad);
+    }, 0);
+    $("#totalCantidadHidden").val(totalCantidad);
+    
+    // DETECCIÓN MEJORADA DEL MODO EDICIÓN
+    var esEdicion = false;
+    var idDespachoEditar = null;
+    
+    // Método 1: Buscar campo oculto
+    if($("#formCrearDespacho input[name='editarDespacho']").length > 0) {
+        esEdicion = true;
+        idDespachoEditar = $("#formCrearDespacho input[name='idDespachoEditar']").val();
+        console.log("✅ Modo edición detectado por campo oculto - ID:", idDespachoEditar);
+    }
+    
+    // Método 2: Variable global
+    if(typeof window.modoEdicionActivo !== 'undefined' && window.modoEdicionActivo === true) {
+        esEdicion = true;
+        idDespachoEditar = window.idDespachoEditando || null;
+        console.log("✅ Modo edición detectado por variable global - ID:", idDespachoEditar);
+    }
+    
+    // Método 3: URL con parámetro editar
+    var urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.has('editar')) {
+        esEdicion = true;
+        idDespachoEditar = urlParams.get('editar');
+        console.log("✅ Modo edición detectado por URL - ID:", idDespachoEditar);
+        
+        // Asegurar que los campos ocultos existan
+        if($("#formCrearDespacho input[name='editarDespacho']").length === 0) {
+            $("#formCrearDespacho").append('<input type="hidden" name="editarDespacho" value="1">');
         }
-    });
-
-    // Determinar tipo según el contenido
-    if(tieneSolicitudes && tieneProductosLibres) {
-        tipoDespacho = "hibrido"; // NUEVO: Despacho combinado
-    } else if(tieneSolicitudes) {
-        tipoDespacho = "solicitud"; // Solo desde solicitudes
+        if($("#formCrearDespacho input[name='idDespachoEditar']").length === 0) {
+            $("#formCrearDespacho").append('<input type="hidden" name="idDespachoEditar" value="' + idDespachoEditar + '">');
+        }
+    }
+    
+    if(esEdicion) {
+        console.log("📝 MODO EDICIÓN CONFIRMADO");
+        console.log("- ID del despacho:", idDespachoEditar);
+        console.log("- Productos a actualizar:", productosDespacho.length);
+        console.log("- Total unidades:", totalCantidad);
+        
+        // Confirmar edición
+        swal({
+            title: "¿Guardar cambios en el despacho?",
+            html: `
+                <p>Se actualizará el despacho con:</p>
+                <ul style="text-align: left; display: inline-block;">
+                    <li><strong>${productosDespacho.length}</strong> productos diferentes</li>
+                    <li><strong>${totalCantidad}</strong> unidades totales</li>
+                    <li>Despacho ID: <strong>${idDespachoEditar}</strong></li>
+                </ul>
+            `,
+            type: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#3c8dbc",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sí, guardar cambios",
+            cancelButtonText: "Cancelar"
+        }).then(function(result) {
+            if(result.value) {
+                console.log("🔄 Enviando formulario de edición...");
+                $("#formCrearDespacho")[0].submit();
+            }
+        });
+        
     } else {
-        tipoDespacho = "libre"; // Solo productos manuales
+        console.log("📝 MODO CREACIÓN");
+        
+        var tipoDespacho = solicitudSeleccionada ? "Despacho desde solicitud" : "Despacho libre";
+        
+        // Confirmar creación
+        swal({
+            title: "¿Crear despacho?",
+            html: `
+                <p>Se creará un despacho con:</p>
+                <ul style="text-align: left; display: inline-block;">
+                    <li><strong>${productosDespacho.length}</strong> productos diferentes</li>
+                    <li><strong>${totalCantidad}</strong> unidades totales</li>
+                    <li><strong>Tipo:</strong> ${tipoDespacho}</li>
+                </ul>
+            `,
+            type: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#3c8dbc",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sí, crear despacho",
+            cancelButtonText: "Cancelar"
+        }).then(function(result) {
+            if(result.value) {
+                console.log("🔄 Enviando formulario de creación...");
+                $("#formCrearDespacho")[0].submit();
+            }
+        });
     }
-
-    console.log("🎯 Tipo de despacho detectado:", tipoDespacho);
-    console.log("📋 Análisis:", {
-        tieneSolicitudes: tieneSolicitudes,
-        tieneProductosLibres: tieneProductosLibres,
-        totalProductos: productosDespacho.length
-    });
-    
-    // Mostrar confirmación
-    var tipoTexto = "";
-    switch(tipoDespacho) {
-        case "libre":
-            tipoTexto = "Despacho libre (productos seleccionados manualmente)";
-            break;
-        case "solicitud":
-            tipoTexto = "Despacho desde solicitud";
-            break;
-        case "hibrido":
-            tipoTexto = "Despacho híbrido (solicitudes + productos manuales)";
-            break;
-    }
-
-    var mensaje = `
-        Se creará un despacho con:
-        • ${productosDespacho.length} productos diferentes
-        • ${productosDespacho.reduce((total, p) => total + p.cantidad, 0)} unidades totales
-        • Tipo: ${tipoTexto}
-    `;
-
-    if(solicitudSeleccionada && (tipoDespacho === 'solicitud' || tipoDespacho === 'hibrido')) {
-        mensaje += `\n• Última solicitud procesada: ${solicitudSeleccionada.numero_solicitud}`;
-    }
-    
-    swal({
-        title: "¿Crear despacho?",
-        text: mensaje,
-        type: "question",
-        showCancelButton: true,
-        confirmButtonText: "Sí, crear despacho",
-        cancelButtonText: "Cancelar"
-    }).then(function(result) {
-        if(result.value) {
-            procesarCreacionDespacho(tipoDespacho); // CORREGIDO: Pasar tipoDespacho
-        }
-    });
-    
-    return false; // Evitar envío normal del formulario
 }
 
 /*=============================================

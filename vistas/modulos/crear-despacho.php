@@ -585,9 +585,14 @@ $(document).ready(function() {
     // Agregar campo oculto para ID del despacho
     $("#formCrearDespacho").append('<input type="hidden" name="idDespachoEditar" value="<?php echo $idDespacho; ?>">');
     
-    // Cambiar action del form
-    $("#formCrearDespacho").append('<input type="hidden" name="editarDespacho" value="1">');
+    // Cambiar action del form - VERSIÓN MEJORADA
+    $("#formCrearDespacho").append('<input type="hidden" name="editarDespacho" value="1" id="campoEditarDespacho">');
+    $("#formCrearDespacho").append('<input type="hidden" name="idDespachoEditar" value="<?php echo $idDespacho; ?>" id="campoIdDespachoEditar">');
     $("#formCrearDespacho input[name='crearDespacho']").remove();
+
+    // CONFIGURAR VARIABLES GLOBALES PARA DETECCIÓN
+    window.modoEdicionActivo = true;
+    window.idDespachoEditando = <?php echo $idDespacho; ?>;
     
     // Cargar productos después de que se cargue el inventario
     setTimeout(function() {
