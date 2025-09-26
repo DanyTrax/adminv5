@@ -1209,25 +1209,25 @@ function enviarFormularioDespacho() {
 /*=============================================
 PROCESAR CREACIÓN DE DESPACHO
 =============================================*/
-function procesarCreacionDespacho(tipoDespacho) { // CORREGIDO: Recibir tipoDespacho
+function procesarCreacionDespacho(tipoDespacho) {
     
     // Mostrar loading
     $("#btnCrearDespacho").prop("disabled", true).html('<i class="fa fa-spinner fa-spin"></i> Creando despacho...');
     
-    // Preparar datos
+    // Preparar datos (NOMBRES CORREGIDOS)
     var datosDespacho = {
         crearDespacho: true,
-        productos_despacho: JSON.stringify(productosDespacho),
-        total_productos: productosDespacho.length,
-        total_cantidad: productosDespacho.reduce((total, p) => total + p.cantidad, 0),
-        tipo_despacho: tipoDespacho, // Ahora puede ser: libre, solicitud, hibrido
-        observaciones: $("#detalleAdicional").val(),
-        id_solicitud_origen: solicitudSeleccionada ? solicitudSeleccionada.id : null
+        productosDespacho: JSON.stringify(productosDespacho),    // Sin underscore
+        totalProductos: productosDespacho.length,               // Sin underscore
+        totalCantidad: productosDespacho.reduce((total, p) => total + p.cantidad, 0), // Sin underscore
+        tipoDespacho: tipoDespacho,                             // Sin underscore
+        detalleAdicional: $("#detalleAdicional").val(),         // Nombre correcto
+        idSolicitudOrigen: solicitudSeleccionada ? solicitudSeleccionada.id : null // Sin underscore
     };
     
     console.log("📦 Datos del despacho a enviar:", datosDespacho);
     
-    // Enviar datos
+    // Enviar datos al AJAX correcto
     $.ajax({
         url: "ajax/despachos.ajax.php",
         method: "POST",
@@ -1237,11 +1237,13 @@ function procesarCreacionDespacho(tipoDespacho) { // CORREGIDO: Recibir tipoDesp
             
             $("#btnCrearDespacho").prop("disabled", false).html('<i class="fa fa-truck"></i> Crear despacho');
             
+            console.log("✅ Respuesta del servidor:", respuesta);
+            
             if(respuesta.success) {
                 
                 swal({
                     title: "¡Despacho creado!",
-                    text: `Se creó el despacho: ${respuesta.numero_despacho}`,
+                    text: `Se creó el despacho: ${respuesta.numero_despacho || 'Exitosamente'}`,
                     type: "success",
                     confirmButtonText: "Ver despachos"
                 }).then(function() {
@@ -1262,11 +1264,12 @@ function procesarCreacionDespacho(tipoDespacho) { // CORREGIDO: Recibir tipoDesp
             $("#btnCrearDespacho").prop("disabled", false).html('<i class="fa fa-truck"></i> Crear despacho');
             
             console.error("Error AJAX:", error);
-            console.error("Response:", xhr.responseText);
+            console.error("Status:", status);
+            console.error("Response Text:", xhr.responseText);
             
             swal({
                 title: "Error de conexión",
-                text: "No se pudo crear el despacho. Verifique su conexión.",
+                text: "No se pudo crear el despacho. Revise la consola para más detalles.",
                 type: "error",
                 confirmButtonText: "Cerrar"
             });

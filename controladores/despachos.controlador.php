@@ -2,89 +2,138 @@
 
 class ControladorDespachos {
 
-    /*=============================================
-    CREAR DESPACHO
-    =============================================*/
-    static public function ctrCrearDespacho() {
+/*=============================================
+CREAR DESPACHO - VERSIÓN CORREGIDA
+=============================================*/
+static public function ctrCrearDespacho($datos = null) {
 
-        if(isset($_POST["crearDespacho"])) {
-
-            // Validar campos requeridos
-            if(empty($_POST["productosDespacho"]) || 
-               empty($_POST["totalProductos"]) || 
-               empty($_POST["totalCantidad"])) {
-                
-                echo '<script>
-                    swal({
-                        type: "error",
-                        title: "Campos incompletos",
-                        text: "Debe agregar al menos un producto al despacho",
-                        showConfirmButton: true,
-                        confirmButtonText: "Cerrar"
-                    });
-                </script>';
-                return;
-            }
-
+    // Si se llama desde AJAX, usar los datos enviados
+    if($datos) {
+        
+        try {
             // Generar número de despacho único
-            $numeroDespacho = self::generarNumeroDespacho();
+            $numeroDespacho = ModeloDespachos::mdlGenerarNumeroDespacho();
 
-            try {
-                
-                $tabla = "despachos";
-                $datos = array(
-                    "numero_despacho" => $numeroDespacho,
-                    "productos_despacho" => $_POST["productosDespacho"],
-                    "total_productos" => $_POST["totalProductos"],
-                    "total_cantidad" => $_POST["totalCantidad"],
-                    "sucursal_origen" => self::obtenerSucursalLocal(),
-                    "id_solicitud_origen" => $_POST["idSolicitudOrigen"] ?? null,
-                    "estado" => "pendiente",
-                    "detalle_adicional" => $_POST["detalleAdicional"] ?? null,
-                    "usuario_creador" => $_SESSION["id"],
-                    "nombre_usuario_creador" => $_SESSION["nombre"]
-                );
+            // Preparar datos para el modelo (con nombres correctos)
+            $datosModelo = array(
+                "numero_despacho" => $numeroDespacho,
+                "id_solicitud_origen" => $datos["id_solicitud_origen"],
+                "nombre_sucursal_origen" => $datos["nombre_sucursal_origen"],
+                "id_usuario_creador" => $datos["id_usuario_creador"],
+                "nombre_usuario_creador" => $datos["nombre_usuario_creador"],
+                "productos_despacho" => $datos["productos_despacho"],
+                "total_productos" => $datos["total_productos"],
+                "total_cantidad" => $datos["total_cantidad"],
+                "detalle_adicional" => $datos["detalle_adicional"]
+            );
 
-                $respuesta = ModeloDespachos::mdlIngresarDespacho($tabla, $datos);
+            $tabla = "despachos";
+            $respuesta = ModeloDespachos::mdlCrearDespacho($tabla, $datosModelo);
 
-                if($respuesta == "ok") {
-                    
-                    // Si viene de una solicitud de stock, actualizar el estado
-                    if(!empty($_POST["idSolicitudOrigen"])) {
-                        self::actualizarEstadoSolicitudStock($_POST["idSolicitudOrigen"], "despachado");
-                    }
-
-                    echo '<script>
-                        swal({
-                            type: "success",
-                            title: "¡Despacho creado!",
-                            text: "El despacho ' . $numeroDespacho . ' se ha creado correctamente",
-                            showConfirmButton: true,
-                            confirmButtonText: "Cerrar"
-                        }).then(function(result) {
-                            if (result.value) {
-                                window.location = "despachos";
-                            }
-                        });
-                    </script>';
-
-                } else {
-                    throw new Exception("Error al crear el despacho");
-                }
-
-            } catch(Exception $e) {
-                echo '<script>
-                    swal({
-                        type: "error",
-                        title: "Error",
-                        text: "Error al crear el despacho: ' . $e->getMessage() . '",
-                        showConfirmButton: true,
-                        confirmButtonText: "Cerrar"
-                    });
-                </script>';
+            if($respuesta && $respuesta != "error") {
+                return "ok";
+            } else {
+                return "error: " . $respuesta;
             }
+
+        } catch(Exception $e) {
+            return "error: " . $e->getMessage();
         }
     }
+
+    // Si se llama desde POST (formulario tradicional)
+    if(isset($_POST["crearDespacho"])) {
+
+        // Validar campos requeridos (nombres corregidos)
+        if(empty($_POST["productosDespacho"]) || 
+           empty($_POST["totalProductos"]) || 
+           empty($_POST["totalCantidad"])) {
+            
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Campos incompletos",
+                    text: "Debe agregar al menos un producto al despacho",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+            return;
+        }
+
+        // Generar número de despacho único
+        $numeroDespacho = ModeloDespachos::mdlGenerarNumeroDespacho();
+
+        try {
+            
+            $tabla = "despachos";
+            $datos = array(
+                "numero_despacho" => $numeroDespacho,
+                "id_solicitud_origen" => $_POST["idSolicitudOrigen"] ?? null,
+                "nombre_sucursal_origen" => self::obtenerSucursalLocal(),
+                "id_usuario_creador" => $_SESSION["id"],
+                "nombre_usuario_creador" => $_SESSION["nombre"],
+                "productos_despacho" => $_POST["productosDespacho"],
+                "total_productos" => $_POST["totalProductos"],
+                "total_cantidad" => $_POST["totalCantidad"],
+                "detalle_adicional" => $_POST["detalleAdicional"] ?? null
+            );
+
+            $respuesta = ModeloDespachos::mdlCrearDespacho($tabla, $datos);
+
+            if($respuesta && $respuesta != "error") {
+                
+                // Si viene de una solicitud de stock, actualizar el estado
+                if(!empty($_POST["idSolicitudOrigen"])) {
+                    self::actualizarEstadoSolicitudStock($_POST["idSolicitudOrigen"], "despachado");
+                }
+
+                echo '<script>
+                    swal({
+                        type: "success",
+                        title: "¡Despacho creado!",
+                        text: "El despacho ' . $numeroDespacho . ' se ha creado correctamente",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    }).then(function(result) {
+                        if (result.value) {
+                            window.location = "despachos";
+                        }
+                    });
+                </script>';
+
+            } else {
+                throw new Exception("Error al crear el despacho: " . $respuesta);
+            }
+
+        } catch(Exception $e) {
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: "Error al crear el despacho: ' . $e->getMessage() . '",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+        }
+    }
+}
+
+/*=============================================
+OBTENER ÚLTIMO DESPACHO CREADO
+=============================================*/
+static public function ctrObtenerUltimoDespacho() {
+    
+    $tabla = "despachos";
+    $despachos = ModeloDespachos::mdlMostrarDespachos($tabla, null, null);
+    
+    if($despachos && count($despachos) > 0) {
+        return $despachos[0]; // El primero es el más reciente
+    }
+    
+    return null;
+}
 
     /*=============================================
     MOSTRAR DESPACHOS
