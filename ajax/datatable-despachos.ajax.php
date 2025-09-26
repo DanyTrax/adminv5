@@ -7,16 +7,14 @@ require_once "../api-transferencias/conexion-central.php";
 class AjaxTablaDespachos {
 
 /*=============================================
-MOSTRAR LA TABLA DE DESPACHOS - CON NOMBRE REAL DE SUCURSAL
+MOSTRAR LA TABLA DE DESPACHOS - SIN JOIN A BD LOCAL
 =============================================*/
 public function mostrarTablaDespachos() {
 
     try {
-        // CONSULTA CON JOIN PARA OBTENER NOMBRE REAL DE SUCURSAL
         $stmt = ConexionCentral::conectar()->prepare("
             SELECT 
                 d.*,
-                COALESCE(s.nombre_sucursal, d.sucursal_origen) as nombre_sucursal_real,
                 CASE 
                     WHEN d.estado = 'pendiente' THEN 0
                     WHEN d.estado = 'aceptado' THEN 1
@@ -25,7 +23,6 @@ public function mostrarTablaDespachos() {
                     ELSE 4
                 END as orden_estado
             FROM despachos d 
-            LEFT JOIN sucursal_local s ON s.codigo_sucursal = d.sucursal_origen
             ORDER BY orden_estado ASC, d.fecha_creacion DESC
         ");
 
@@ -63,12 +60,12 @@ public function mostrarTablaDespachos() {
             $transportador = $value["nombre_transportador"] ?: 'Sin asignar';
 
             /*=============================================
-            NOMBRE REAL DE LA SUCURSAL
+            NOMBRE DE SUCURSAL - OBTENIDO DE BD LOCAL
             =============================================*/
-            $sucursalOrigen = $value["nombre_sucursal_real"] ?: 'Sucursal no especificada';
+            $sucursalOrigen = $this->obtenerNombreSucursal($value["sucursal_origen"]);
 
             /*=============================================
-            CONSTRUIR FILA JSON - SIN SALTOS DE LÍNEA
+            CONSTRUIR FILA JSON
             =============================================*/
             $datosJson .= '[
                 "' . ($key + 1) . '",
@@ -91,6 +88,38 @@ public function mostrarTablaDespachos() {
 
     } catch(Exception $e) {
         echo '{"data": [], "error": "' . $e->getMessage() . '"}';
+    }
+}
+
+/*=============================================
+OBTENER NOMBRE DE SUCURSAL DESDE BD LOCAL
+=============================================*/
+private function obtenerNombreSucursal($codigoSucursal) {
+    
+    try {
+        require_once "../modelos/conexion.php";
+        
+        $stmt = Conexion::conectar()->prepare("
+            SELECT nombre_sucursal 
+            FROM sucursal_local 
+            WHERE codigo_sucursal = :codigo 
+            LIMIT 1
+        ");
+        
+        $stmt->bindParam(":codigo", $codigoSucursal);
+        $stmt->execute();
+        $sucursal = $stmt->fetch();
+        
+        if($sucursal) {
+            return $sucursal["nombre_sucursal"];
+        } else {
+            // Si no se encuentra, usar el código como fallback
+            return $codigoSucursal ?: 'Sucursal no especificada';
+        }
+        
+    } catch(Exception $e) {
+        // En caso de error, devolver el código original
+        return $codigoSucursal ?: 'Sucursal no especificada';
     }
 }
 
