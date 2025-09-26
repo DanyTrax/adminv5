@@ -777,4 +777,53 @@ static public function ctrObtenerUltimoDespacho() {
             }
         }
     }
+    /*=============================================
+    CANCELAR DESPACHO
+    =============================================*/
+    static public function ctrCancelarDespacho() {
+        
+        if(isset($_POST["cancelarDespacho"])) {
+            
+            $tabla = "despachos";
+            $item1 = "id";
+            $valor1 = $_POST["idDespacho"];
+            
+            $datos = array(
+                "estado" => "cancelado",
+                "fecha_cancelacion" => date("Y-m-d H:i:s"),
+                "motivo_cancelacion" => $_POST["motivoCancelacion"] ?? "Sin motivo especificado"
+            );
+            
+            $respuesta = ModeloDespachos::mdlActualizarDespacho($tabla, $datos, $item1, $valor1);
+            
+            if($respuesta == "ok") {
+                
+                echo '<script>
+                    swal({
+                        type: "success",
+                        title: "¡Despacho cancelado!",
+                        text: "El despacho ha sido cancelado correctamente",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    }).then(function(result) {
+                        if (result.value) {
+                            window.location = "despachos";
+                        }
+                    });
+                </script>';
+                
+            } else {
+                
+                echo '<script>
+                    swal({
+                        type: "error",
+                        title: "Error",
+                        text: "Error al cancelar el despacho",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                </script>';
+            }
+        }
+    }
 }
