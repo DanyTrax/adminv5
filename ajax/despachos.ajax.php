@@ -207,7 +207,7 @@ public function ajaxVerDespacho() {
 }
 
 /*=============================================
-ACEPTAR DESPACHO
+ACEPTAR DESPACHO - VERSIÓN CON MÁS DEBUG
 =============================================*/
 public function ajaxAceptarDespacho() {
     
@@ -221,22 +221,28 @@ public function ajaxAceptarDespacho() {
             
             $idDespacho = $_POST["idDespacho"];
             
+            error_log("🔍 Aceptando despacho ID: " . $idDespacho);
+            
             // 1. Obtener el despacho
             $despacho = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
             if(!$despacho) {
                 throw new Exception("Despacho no encontrado");
             }
             
+            error_log("🔍 Despacho encontrado: " . $despacho["numero_despacho"] . " - Estado: " . $despacho["estado"]);
+            
             // 2. Verificar que esté pendiente
             if($despacho["estado"] != "pendiente") {
-                throw new Exception("El despacho no está en estado pendiente");
+                throw new Exception("El despacho no está en estado pendiente. Estado actual: " . $despacho["estado"]);
             }
             
             // 3. Parsear productos
             $productos = json_decode($despacho["productos_despacho"], true);
             if(!$productos) {
-                throw new Exception("Error al leer productos del despacho");
+                throw new Exception("Error al leer productos del despacho: " . json_last_error_msg());
             }
+            
+            error_log("🔍 Productos a procesar: " . count($productos));
             
             // 4. Iniciar transacción
             $conexion = ConexionCentral::conectar();
@@ -247,6 +253,8 @@ public function ajaxAceptarDespacho() {
                 // 5. Descontar stock local y crear registros de stock en tránsito
                 foreach($productos as $producto) {
                     
+                    error_log("🔍 Procesando producto: " . $producto["codigo"] . " - Cantidad: " . $producto["cantidad"]);
+                    
                     // Descontar del stock local
                     $this->descontarStockLocal($producto["codigo"], $producto["cantidad"]);
                     
@@ -254,30 +262,52 @@ public function ajaxAceptarDespacho() {
                     $this->agregarStockTransito($despacho, $producto);
                 }
                 
-                // 6. Actualizar estado del despacho
-                $datosUpdate = array(
-                    "estado" => "aceptado",
-                    "fecha_aceptacion" => date("Y-m-d H:i:s"),
-                    "transportador_id" => $_SESSION["id"],
-                    "nombre_transportador" => $_SESSION["nombre"]
-                );
+                // 6. Actualizar estado del despacho - MÉTODO DIRECTO
+                error_log("🔍 Actualizando estado del despacho a 'aceptado'...");
                 
-                ModeloDespachos::mdlActualizarDespacho("despachos", $datosUpdate, "id", $idDespacho);
+                $stmtUpdate = $conexion->prepare("
+                    UPDATE despachos SET 
+                        estado = 'aceptado',
+                        fecha_aceptacion = NOW(),
+                        transportador_id = :transportador_id,
+                        nombre_transportador = :nombre_transportador
+                    WHERE id = :id
+                ");
+                
+                $stmtUpdate->bindParam(":transportador_id", $_SESSION["id"]);
+                $stmtUpdate->bindParam(":nombre_transportador", $_SESSION["nombre"]);
+                $stmtUpdate->bindParam(":id", $idDespacho);
+                
+                if(!$stmtUpdate->execute()) {
+                    $errorInfo = $stmtUpdate->errorInfo();
+                    throw new Exception("Error al actualizar estado del despacho: " . print_r($errorInfo, true));
+                }
+                
+                $filasAfectadas = $stmtUpdate->rowCount();
+                error_log("✅ Filas afectadas en UPDATE: " . $filasAfectadas);
+                
+                if($filasAfectadas == 0) {
+                    throw new Exception("No se actualizó ninguna fila. Verificar ID del despacho.");
+                }
                 
                 // 7. Confirmar transacción
                 $conexion->commit();
                 
+                error_log("✅ Despacho aceptado exitosamente - ID: " . $idDespacho);
+                
                 echo json_encode([
                     "success" => true,
-                    "message" => "Despacho aceptado exitosamente"
+                    "message" => "Despacho aceptado exitosamente. Los productos se han movido al stock en tránsito y el estado ha sido actualizado."
                 ]);
                 
             } catch(Exception $e) {
                 $conexion->rollBack();
+                error_log("❌ Error en transacción: " . $e->getMessage());
                 throw $e;
             }
             
         } catch(Exception $e) {
+            error_log("❌ Error aceptando despacho: " . $e->getMessage());
             echo json_encode([
                 "success" => false,
                 "error" => $e->getMessage()
