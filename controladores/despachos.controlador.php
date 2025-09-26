@@ -727,4 +727,54 @@ static public function ctrObtenerUltimoDespacho() {
             ];
         }
     }
+    /*=============================================
+    ACEPTAR DESPACHO
+    =============================================*/
+    static public function ctrAceptarDespacho() {
+        
+        if(isset($_POST["aceptarDespacho"])) {
+            
+            $tabla = "despachos";
+            $item1 = "id";
+            $valor1 = $_POST["idDespacho"];
+            
+            $datos = array(
+                "estado" => "aceptado",
+                "fecha_aceptacion" => date("Y-m-d H:i:s"),
+                "id_transportador_asignado" => $_SESSION["id"],
+                "nombre_transportador_asignado" => $_SESSION["nombre"]
+            );
+            
+            $respuesta = ModeloDespachos::mdlActualizarDespacho($tabla, $datos, $item1, $valor1);
+            
+            if($respuesta == "ok") {
+                
+                echo '<script>
+                    swal({
+                        type: "success",
+                        title: "¡Despacho aceptado!",
+                        text: "El despacho ha sido aceptado correctamente",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    }).then(function(result) {
+                        if (result.value) {
+                            window.location = "despachos";
+                        }
+                    });
+                </script>';
+                
+            } else {
+                
+                echo '<script>
+                    swal({
+                        type: "error",
+                        title: "Error",
+                        text: "Error al aceptar el despacho",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                </script>';
+            }
+        }
+    }
 }

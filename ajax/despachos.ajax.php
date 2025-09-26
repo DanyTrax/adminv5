@@ -119,7 +119,33 @@ class AjaxDespachos {
                 error_log("📦 Datos para controlador preparados correctamente");
                 
                 // Crear el despacho usando el controlador
+                // Crear el despacho usando el controlador
                 $respuesta = ControladorDespachos::ctrCrearDespacho($datos);
+
+                // AGREGAR ESTE DEBUG TEMPORAL:
+                error_log("🔍 Respuesta del controlador: " . print_r($respuesta, true));
+
+                if($respuesta == "ok") {
+                    
+                    // DEBUG: Verificar si realmente se guardó
+                    error_log("✅ Controlador devolvió OK, verificando BD...");
+                    
+                    // Intentar obtener el último despacho
+                    try {
+                        require_once "../api-transferencias/conexion-central.php";
+                        $ultimoId = ConexionCentral::conectar()->lastInsertId();
+                        error_log("🆔 Último ID insertado: " . $ultimoId);
+                        
+                        if($ultimoId > 0) {
+                            error_log("✅ Despacho guardado en BD con ID: " . $ultimoId);
+                        } else {
+                            error_log("❌ No se insertó nada en la BD");
+                        }
+                    } catch(Exception $e) {
+                        error_log("❌ Error verificando BD: " . $e->getMessage());
+                    }
+                    
+                    // logs despues borrar...
                 
                 if($respuesta == "ok") {
                     
