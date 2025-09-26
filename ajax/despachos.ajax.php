@@ -45,6 +45,9 @@ class AjaxDespachos {
         
         if(isset($_POST["idDespachoEditar"])) {
             
+            require_once "../controladores/despachos.controlador.php";
+            require_once "../modelos/despachos.modelo.php";
+            
             $item = "id";
             $valor = $_POST["idDespachoEditar"];
             
@@ -60,7 +63,7 @@ class AjaxDespachos {
     }
     
     /*=============================================
-    CREAR NUEVO DESPACHO
+    CREAR NUEVO DESPACHO - VERSIÓN CORREGIDA
     =============================================*/
     public function ajaxCrearDespacho() {
         
@@ -71,12 +74,18 @@ class AjaxDespachos {
                 require_once "../modelos/despachos.modelo.php";
                 
                 // Validar datos requeridos (NOMBRES CORREGIDOS)
-                $productosJson = $_POST["productosDespacho"] ?? '';           // Sin underscore
-                $totalProductos = $_POST["totalProductos"] ?? 0;             // Sin underscore
-                $totalCantidad = $_POST["totalCantidad"] ?? 0;               // Sin underscore
-                $tipoDespacho = $_POST["tipoDespacho"] ?? 'libre';           // Sin underscore
-                $observaciones = $_POST["detalleAdicional"] ?? '';           // Nombre correcto
-                $idSolicitudOrigen = $_POST["idSolicitudOrigen"] ?? null;    // Sin underscore
+                $productosJson = $_POST["productosDespacho"] ?? '';
+                $totalProductos = $_POST["totalProductos"] ?? 0;
+                $totalCantidad = $_POST["totalCantidad"] ?? 0;
+                $tipoDespacho = $_POST["tipoDespacho"] ?? 'libre';
+                $observaciones = $_POST["detalleAdicional"] ?? '';
+                $idSolicitudOrigen = $_POST["idSolicitudOrigen"] ?? null;
+                
+                // Debug: Mostrar qué datos se están recibiendo
+                error_log("🔍 AJAX Datos recibidos:");
+                error_log("productosDespacho: " . $productosJson);
+                error_log("totalProductos: " . $totalProductos);
+                error_log("totalCantidad: " . $totalCantidad);
                 
                 if(empty($productosJson)) {
                     throw new Exception("No se enviaron productos para el despacho");
@@ -85,28 +94,29 @@ class AjaxDespachos {
                 // Validar JSON de productos
                 $productos = json_decode($productosJson, true);
                 if(!$productos || !is_array($productos)) {
-                    throw new Exception("Error en formato de productos");
+                    throw new Exception("Error en formato de productos: " . json_last_error_msg());
+                }
+                
+                if(count($productos) === 0) {
+                    throw new Exception("La lista de productos está vacía");
                 }
                 
                 // Preparar datos para el controlador
                 $datos = array(
-                    "numero_despacho" => null, // Se genera automáticamente
-                    "id_sucursal_origen" => $_SESSION["id_sucursal"],
-                    "nombre_sucursal_origen" => $_SESSION["nombre_sucursal"],
-                    "id_usuario_creador" => $_SESSION["id"],
-                    "nombre_usuario_creador" => $_SESSION["nombre"],
+                    "id_sucursal_origen" => $_SESSION["id_sucursal"] ?? 1,
+                    "nombre_sucursal_origen" => $_SESSION["nombre_sucursal"] ?? 'Sucursal Local',
+                    "id_usuario_creador" => $_SESSION["id"] ?? 1,
+                    "nombre_usuario_creador" => $_SESSION["nombre"] ?? 'Usuario Sistema',
                     "tipo_despacho" => $tipoDespacho,
                     "productos_despacho" => $productosJson,
                     "total_productos" => $totalProductos,
                     "total_cantidad" => $totalCantidad,
-                    "estado" => "pendiente",
                     "detalle_adicional" => $observaciones,
-                    "id_solicitud_origen" => $idSolicitudOrigen,
-                    "fecha_creacion" => date("Y-m-d H:i:s"),
-                    "fecha_aceptacion" => null,
-                    "id_transportador_asignado" => null,
-                    "nombre_transportador_asignado" => null
+                    "id_solicitud_origen" => $idSolicitudOrigen
                 );
+                
+                // Debug: Mostrar datos preparados para el controlador
+                error_log("📦 Datos para controlador preparados correctamente");
                 
                 // Crear el despacho usando el controlador
                 $respuesta = ControladorDespachos::ctrCrearDespacho($datos);
@@ -121,17 +131,28 @@ class AjaxDespachos {
                         "success" => true,
                         "message" => "Despacho creado exitosamente",
                         "numero_despacho" => $numeroDespacho,
-                        "id_despacho" => $ultimoDespacho ? $ultimoDespacho["id"] : null
+                        "id_despacho" => $ultimoDespacho ? $ultimoDespacho["id"] : null,
+                        "productos_procesados" => count($productos)
                     ]);
                     
                 } else {
-                    throw new Exception("Error al crear el despacho: " . $respuesta);
+                    throw new Exception("Error del controlador: " . $respuesta);
                 }
                 
             } catch(Exception $e) {
+                // Debug: Mostrar error completo
+                error_log("❌ Error en ajaxCrearDespacho: " . $e->getMessage());
+                error_log("❌ Trace: " . $e->getTraceAsString());
+                
                 echo json_encode([
                     "success" => false,
-                    "error" => $e->getMessage()
+                    "error" => $e->getMessage(),
+                    "debug_info" => [
+                        "productos_recibidos" => !empty($productosJson),
+                        "productos_count" => isset($productos) ? count($productos) : 0,
+                        "total_productos" => $totalProductos,
+                        "total_cantidad" => $totalCantidad
+                    ]
                 ]);
             }
         }
@@ -140,39 +161,18 @@ class AjaxDespachos {
 
 // MANEJO DE PETICIONES POST
 if(isset($_POST["cargarInventario"])) {
-    $cargarInventario = new AjaxDespachos();
-    $cargarInventario->ajaxCargarInventario();
+    $ajax = new AjaxDespachos();
+    $ajax->ajaxCargarInventario();
 }
 
 if(isset($_POST["idDespachoEditar"])) {
-    $obtenerEditar = new AjaxDespachos();
-    $obtenerEditar->ajaxObtenerDespachoEditar();
+    $ajax = new AjaxDespachos();
+    $ajax->ajaxObtenerDespachoEditar();
 }
 
 if(isset($_POST["crearDespacho"])) {
-    $crearDespacho = new AjaxDespachos();
-    $crearDespacho->ajaxCrearDespacho();
+    $ajax = new AjaxDespachos();
+    $ajax->ajaxCrearDespacho();
 }
 
-// RESTO DEL CÓDIGO ORIGINAL PARA REPORTES...
-if(!class_exists('AjaxDespachos')) {
-    
-try {
-    require_once "../api-transferencias/conexion-central.php";
-    
-    // Obtener filtros
-    $fechaDesde = $_POST['fechaDesde'] ?? date('Y-m-d', strtotime('-30 days'));
-    $fechaHasta = $_POST['fechaHasta'] ?? date('Y-m-d');
-    $estado = $_POST['estado'] ?? '';
-    $transportador = $_POST['transportador'] ?? '';
-    
-    // ... resto del código de reportes
-    
-} catch(Exception $e) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Error al generar reporte: ' . $e->getMessage()
-    ]);
-}
-}
 ?>
