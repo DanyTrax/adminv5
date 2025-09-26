@@ -1229,7 +1229,7 @@ function procesarCreacionDespacho(tipoDespacho) { // CORREGIDO: Recibir tipoDesp
     
     // Enviar datos
     $.ajax({
-        url: "index.php?ruta=despachos",
+        url: "ajax/despachos.ajax.php",
         method: "POST",
         data: datosDespacho,
         dataType: "json",
