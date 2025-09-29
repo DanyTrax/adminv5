@@ -29,23 +29,24 @@ class TablaStockTransito {
 
                 $botones = '<div class="btn-group">';
                 
-                // Ver historial
                 $botones .= '<button class="btn btn-info btn-xs btnVerHistorial" 
-                                    data-codigo="'.$value["codigo_producto"].'"
-                                    data-transportador="'.$value["transportador_id"].'" 
+                                    data-codigo="'.$value["codigo_producto"].'" 
                                     title="Ver historial">
                                 <i class="fa fa-history"></i>
                             </button>';
                 
-                // Solicitar descarga
                 if($perfilUsuario != "Transportador") {
+                    $descripcionLimpia = str_replace('"', '&quot;', $value["descripcion_producto"]);
+                    $transportadorLimpio = str_replace('"', '&quot;', $value["nombre_transportador"]);
+                    $origenLimpio = str_replace('"', '&quot;', $value["sucursal_origen"]);
+                    
                     $botones .= '<button class="btn btn-success btn-xs btnSolicitarDescarga" 
                                         data-id="'.$value["id"].'"
                                         data-codigo="'.$value["codigo_producto"].'"
-                                        data-descripcion="'.htmlspecialchars($value["descripcion_producto"], ENT_QUOTES).'"
+                                        data-descripcion="'.$descripcionLimpia.'"
                                         data-cantidad="'.$value["cantidad_disponible"].'"
-                                        data-transportador="'.htmlspecialchars($value["nombre_transportador"], ENT_QUOTES).'"
-                                        data-origen="'.htmlspecialchars($value["sucursal_origen"], ENT_QUOTES).'"
+                                        data-transportador="'.$transportadorLimpio.'"
+                                        data-origen="'.$origenLimpio.'"
                                         title="Solicitar descarga">
                                     <i class="fa fa-download"></i>
                                 </button>';
@@ -67,9 +68,11 @@ class TablaStockTransito {
                 ];
             }
 
+            header('Content-Type: application/json');
             echo json_encode(["data" => $data]);
             
         } catch(Exception $e) {
+            header('Content-Type: application/json');
             echo json_encode(["data" => [], "error" => $e->getMessage()]);
         }
     }
