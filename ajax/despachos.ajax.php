@@ -370,7 +370,7 @@ public function ajaxAceptarDespacho() {
 }
 
 /*=============================================
-CANCELAR DESPACHO
+CANCELAR DESPACHO - VERSIÓN COMPLETA MEJORADA
 =============================================*/
 public function ajaxCancelarDespacho() {
     
@@ -379,35 +379,212 @@ public function ajaxCancelarDespacho() {
         try {
             require_once "../controladores/despachos.controlador.php";
             require_once "../modelos/despachos.modelo.php";
+            require_once "../modelos/productos.modelo.php";
+            require_once "../api-transferencias/conexion-central.php";
             
             $idDespacho = $_POST["idDespacho"];
-            $motivo = $_POST["motivoCancelacion"] ?? "Sin motivo especificado";
+            $motivoCancelacion = $_POST["motivoCancelacion"] ?? "Cancelación solicitada por el usuario";
             
-            // Actualizar estado del despacho
-            $datosUpdate = array(
-                "estado" => "cancelado",
-                "motivo_cancelacion" => $motivo,
-                "fecha_cancelacion" => date("Y-m-d H:i:s"),
-                "usuario_cancelacion" => $_SESSION["nombre"]
-            );
+            error_log("🔍 Cancelando despacho ID: " . $idDespacho);
+            error_log("📝 Motivo: " . $motivoCancelacion);
             
-            $respuesta = ModeloDespachos::mdlActualizarDespacho("despachos", $datosUpdate, "id", $idDespacho);
+            // 1. Obtener el despacho
+            $despacho = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
+            if(!$despacho) {
+                throw new Exception("Despacho no encontrado");
+            }
             
-            if($respuesta == "ok") {
+            error_log("🔍 Despacho encontrado: " . $despacho["numero_despacho"] . " - Estado: " . $despacho["estado"]);
+            
+            // 2. Verificar que se pueda cancelar
+            if($despacho["estado"] == "cancelado") {
+                throw new Exception("El despacho ya está cancelado");
+            }
+            
+            if($despacho["estado"] == "entregado") {
+                throw new Exception("No se puede cancelar un despacho ya entregado");
+            }
+            
+            // 3. Iniciar transacción
+            $conexion = ConexionCentral::conectar();
+            $conexion->beginTransaction();
+            
+            try {
+                
+                // 4. Si el despacho estaba en tránsito, devolver stock desde stock_transito
+                if($despacho["estado"] == "en_transito") {
+                    error_log("🔄 Despacho en tránsito - devolviendo stock desde stock_transito...");
+                    $this->devolverStockDesdeTransito($despacho);
+                }
+                
+                // 5. Si el despacho estaba pendiente, devolver stock local
+                if($despacho["estado"] == "pendiente") {
+                    error_log("🔄 Despacho pendiente - devolviendo stock local...");
+                    $this->devolverStockLocal($despacho);
+                }
+                
+                // 6. Actualizar estado del despacho con información de cancelación
+                $stmtUpdate = $conexion->prepare("
+                    UPDATE despachos SET 
+                        estado = 'cancelado',
+                        motivo_cancelacion = :motivo_cancelacion,
+                        usuario_cancelacion = :usuario_cancelacion,
+                        fecha_actualizacion = NOW()
+                    WHERE id = :id
+                ");
+                
+                $usuarioCancelacion = $_SESSION["nombre"] ?? 'Sistema';
+                
+                $stmtUpdate->bindParam(":motivo_cancelacion", $motivoCancelacion);
+                $stmtUpdate->bindParam(":usuario_cancelacion", $usuarioCancelacion);
+                $stmtUpdate->bindParam(":id", $idDespacho);
+                
+                if(!$stmtUpdate->execute()) {
+                    $errorInfo = $stmtUpdate->errorInfo();
+                    throw new Exception("Error al actualizar estado del despacho: " . print_r($errorInfo, true));
+                }
+                
+                $filasAfectadas = $stmtUpdate->rowCount();
+                error_log("✅ Filas afectadas en UPDATE: " . $filasAfectadas);
+                
+                if($filasAfectadas == 0) {
+                    throw new Exception("No se actualizó ninguna fila. Verificar ID del despacho.");
+                }
+                
+                // 7. Confirmar transacción
+                $conexion->commit();
+                
+                error_log("✅ Despacho cancelado exitosamente - ID: " . $idDespacho);
+                
                 echo json_encode([
                     "success" => true,
-                    "message" => "Despacho cancelado exitosamente"
+                    "message" => "Despacho cancelado exitosamente. El stock ha sido devuelto al inventario.",
+                    "despacho_cancelado" => $despacho["numero_despacho"],
+                    "motivo" => $motivoCancelacion,
+                    "usuario" => $usuarioCancelacion,
+                    "fecha_cancelacion" => date("Y-m-d H:i:s")
                 ]);
-            } else {
-                throw new Exception("Error al cancelar el despacho");
+                
+            } catch(Exception $e) {
+                $conexion->rollBack();
+                error_log("❌ Error en transacción de cancelación: " . $e->getMessage());
+                throw $e;
             }
             
         } catch(Exception $e) {
+            error_log("❌ Error cancelando despacho: " . $e->getMessage());
             echo json_encode([
                 "success" => false,
                 "error" => $e->getMessage()
             ]);
         }
+    }
+}
+
+/*=============================================
+DEVOLVER STOCK DESDE STOCK EN TRÁNSITO
+=============================================*/
+private function devolverStockDesdeTransito($despacho) {
+    
+    try {
+        require_once "../api-transferencias/conexion-central.php";
+        require_once "../modelos/conexion.php";
+        
+        // 1. Obtener productos del stock en tránsito relacionados con este despacho
+        $stmt = ConexionCentral::conectar()->prepare("
+            SELECT codigo_producto, cantidad_disponible 
+            FROM stock_transito 
+            WHERE id_despacho_origen = :id_despacho
+        ");
+        $stmt->bindParam(":id_despacho", $despacho["id"]);
+        $stmt->execute();
+        $productosTransito = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        error_log("🔍 Productos en tránsito a devolver: " . count($productosTransito));
+        
+        // 2. Devolver cada producto al stock local
+        foreach($productosTransito as $productoTransito) {
+            
+            $codigoProducto = $productoTransito["codigo_producto"];
+            $cantidadDevolver = $productoTransito["cantidad_disponible"];
+            
+            // Actualizar stock local
+            $stmtLocal = Conexion::conectar()->prepare("
+                UPDATE productos 
+                SET stock = stock + :cantidad 
+                WHERE codigo = :codigo
+            ");
+            $stmtLocal->bindParam(":cantidad", $cantidadDevolver);
+            $stmtLocal->bindParam(":codigo", $codigoProducto);
+            
+            if(!$stmtLocal->execute()) {
+                throw new Exception("Error devolviendo stock local para producto: " . $codigoProducto);
+            }
+            
+            error_log("✅ Stock devuelto - Producto: " . $codigoProducto . " Cantidad: " . $cantidadDevolver);
+        }
+        
+        // 3. Eliminar registros del stock en tránsito
+        $stmtDelete = ConexionCentral::conectar()->prepare("
+            DELETE FROM stock_transito 
+            WHERE id_despacho_origen = :id_despacho
+        ");
+        $stmtDelete->bindParam(":id_despacho", $despacho["id"]);
+        
+        if(!$stmtDelete->execute()) {
+            throw new Exception("Error eliminando registros de stock en tránsito");
+        }
+        
+        $registrosEliminados = $stmtDelete->rowCount();
+        error_log("✅ Registros eliminados del stock en tránsito: " . $registrosEliminados);
+        
+    } catch(Exception $e) {
+        error_log("❌ Error devolviendo stock desde tránsito: " . $e->getMessage());
+        throw $e;
+    }
+}
+
+/*=============================================
+DEVOLVER STOCK LOCAL (para despachos pendientes)
+=============================================*/
+private function devolverStockLocal($despacho) {
+    
+    try {
+        require_once "../modelos/conexion.php";
+        
+        // 1. Parsear productos del despacho
+        $productos = json_decode($despacho["productos_despacho"], true);
+        if(!$productos) {
+            throw new Exception("Error parseando productos del despacho");
+        }
+        
+        error_log("🔍 Productos del despacho a devolver: " . count($productos));
+        
+        // 2. Devolver stock de cada producto
+        foreach($productos as $producto) {
+            
+            $codigoProducto = $producto["codigo"];
+            $cantidadDevolver = $producto["cantidad"];
+            
+            // Actualizar stock local
+            $stmt = Conexion::conectar()->prepare("
+                UPDATE productos 
+                SET stock = stock + :cantidad 
+                WHERE codigo = :codigo
+            ");
+            $stmt->bindParam(":cantidad", $cantidadDevolver);
+            $stmt->bindParam(":codigo", $codigoProducto);
+            
+            if(!$stmt->execute()) {
+                throw new Exception("Error devolviendo stock para producto: " . $codigoProducto);
+            }
+            
+            error_log("✅ Stock local devuelto - Producto: " . $codigoProducto . " Cantidad: " . $cantidadDevolver);
+        }
+        
+    } catch(Exception $e) {
+        error_log("❌ Error devolviendo stock local: " . $e->getMessage());
+        throw $e;
     }
 }
 
@@ -551,13 +728,16 @@ if(isset($_POST["aceptarDespacho"])) {
     $ajax->ajaxAceptarDespacho();
 }
 
-if(isset($_POST["cancelarDespacho"])) {
-    $ajax = new AjaxDespachos();
-    $ajax->ajaxCancelarDespacho();
-}
-
 if(isset($_POST["eliminarDespacho"])) {
     $ajax = new AjaxDespachos();
     $ajax->ajaxEliminarDespacho();
+}
+
+/*=============================================
+PROCESAR PETICIONES - AGREGAR ESTA LÍNEA
+=============================================*/
+if(isset($_POST["cancelarDespacho"])) {
+    $cancelar = new AjaxDespachos();
+    $cancelar->ajaxCancelarDespacho();
 }
 ?>

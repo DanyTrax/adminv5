@@ -163,13 +163,17 @@ function cargarProductosDespacho(productosJson) {
 }
 
 /*=============================================
-CARGAR TIMELINE DEL DESPACHO
+CARGAR TIMELINE DEL DESPACHO - VERSIÓN MEJORADA
 =============================================*/
 function cargarTimelineDespacho(despacho) {
     
     var html = '';
     
-    // CREACIÓN
+    console.log("📅 Cargando timeline para despacho:", despacho.numero_despacho);
+    console.log("📅 Estado actual:", despacho.estado);
+    console.log("📅 Datos del despacho:", despacho);
+    
+    // 1. CREACIÓN
     html += `
         <div class="time-label">
             <span class="bg-blue">
@@ -186,60 +190,155 @@ function cargarTimelineDespacho(despacho) {
                     Despacho creado por <strong>${despacho.nombre_usuario_creador}</strong>
                 </h3>
                 <div class="timeline-body">
-                    Despacho <strong>${despacho.numero_despacho}</strong> creado correctamente.
+                    Despacho <strong>${despacho.numero_despacho}</strong> creado desde <strong>${despacho.sucursal_origen}</strong>.
+                    <br>
+                    <small class="text-muted">
+                        <i class="fa fa-cubes"></i> ${despacho.total_productos} productos • 
+                        <i class="fa fa-calculator"></i> ${despacho.total_cantidad} unidades
+                    </small>
                 </div>
             </div>
         </div>
     `;
     
-    // ACEPTACIÓN
-    if(despacho.fecha_aceptacion) {
+    // 2. ACEPTACIÓN / EN TRÁNSITO
+    if(despacho.estado === 'en_transito' || despacho.estado === 'entregado') {
+        
+        // Usar fecha_actualizacion si no existe fecha_aceptacion específica
+        var fechaAceptacion = despacho.fecha_aceptacion || despacho.fecha_actualizacion;
+        var usuarioAceptacion = despacho.nombre_transportador || despacho.usuario_aceptacion || 'Sistema';
+        
+        if(fechaAceptacion && fechaAceptacion !== despacho.fecha_creacion) {
+            html += `
+                <div class="time-label">
+                    <span class="bg-green">
+                        <i class="fa fa-check"></i> ${formatearFecha(fechaAceptacion)}
+                    </span>
+                </div>
+                <div>
+                    <i class="fa fa-truck bg-green"></i>
+                    <div class="timeline-item">
+                        <span class="time">
+                            <i class="fa fa-clock-o"></i> ${formatearHora(fechaAceptacion)}
+                        </span>
+                        <h3 class="timeline-header">
+                            Despacho aceptado por <strong>${usuarioAceptacion}</strong>
+                        </h3>
+                        <div class="timeline-body">
+                            Los productos han sido cargados y están en tránsito.
+                            ${despacho.nombre_transportador ? '<br><small class="text-muted"><i class="fa fa-user"></i> Transportador: ' + despacho.nombre_transportador + '</small>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // 3. ENTREGA (si aplica)
+    if(despacho.estado === 'entregado') {
+        var fechaEntrega = despacho.fecha_entrega || despacho.fecha_actualizacion;
+        
         html += `
             <div class="time-label">
-                <span class="bg-green">
-                    <i class="fa fa-check"></i> ${formatearFecha(despacho.fecha_aceptacion)}
+                <span class="bg-gray">
+                    <i class="fa fa-flag-checkered"></i> ${formatearFecha(fechaEntrega)}
                 </span>
             </div>
             <div>
-                <i class="fa fa-check bg-green"></i>
+                <i class="fa fa-flag-checkered bg-gray"></i>
                 <div class="timeline-item">
                     <span class="time">
-                        <i class="fa fa-clock-o"></i> ${formatearHora(despacho.fecha_aceptacion)}
+                        <i class="fa fa-clock-o"></i> ${formatearHora(fechaEntrega)}
                     </span>
-                    <h3 class="timeline-header">
-                        Aceptado por <strong>${despacho.nombre_transportador}</strong>
+                    <h3 class="timeline-header text-success">
+                        <strong>Despacho entregado exitosamente</strong>
                     </h3>
                     <div class="timeline-body">
-                        Los productos han sido cargados y están en tránsito.
+                        El despacho ha sido completado y entregado en su destino.
                     </div>
                 </div>
             </div>
         `;
     }
     
-    // CANCELACIÓN
+    // 4. CANCELACIÓN
     if(despacho.estado === 'cancelado') {
+        var fechaCancelacion = despacho.fecha_cancelacion || despacho.fecha_actualizacion;
+        var usuarioCancelacion = despacho.usuario_cancelacion || despacho.nombre_usuario_creador || 'Sistema';
+        
         html += `
             <div class="time-label">
                 <span class="bg-red">
-                    <i class="fa fa-ban"></i> Cancelado
+                    <i class="fa fa-ban"></i> ${formatearFecha(fechaCancelacion)}
                 </span>
             </div>
             <div>
                 <i class="fa fa-ban bg-red"></i>
                 <div class="timeline-item">
+                    <span class="time">
+                        <i class="fa fa-clock-o"></i> ${formatearHora(fechaCancelacion)}
+                    </span>
                     <h3 class="timeline-header text-red">
-                        Despacho cancelado
+                        Despacho cancelado por <strong>${usuarioCancelacion}</strong>
                     </h3>
                     <div class="timeline-body">
-                        <strong>Motivo:</strong> ${despacho.motivo_cancelacion || 'Sin motivo especificado'}
+                        <div class="alert alert-danger" style="margin: 10px 0;">
+                            <strong><i class="fa fa-exclamation-triangle"></i> Motivo:</strong>
+                            <br>
+                            ${despacho.motivo_cancelacion || 'Sin motivo especificado'}
+                        </div>
+                        <small class="text-muted">
+                            <i class="fa fa-clock-o"></i> Cancelado el ${formatearFecha(fechaCancelacion)} a las ${formatearHora(fechaCancelacion)}
+                        </small>
                     </div>
                 </div>
             </div>
         `;
     }
     
-    // FIN TIMELINE
+    // 5. ESTADO ACTUAL (si no está finalizado)
+    if(despacho.estado === 'pendiente') {
+        html += `
+            <div class="time-label">
+                <span class="bg-yellow">
+                    <i class="fa fa-hourglass-half"></i> Estado Actual
+                </span>
+            </div>
+            <div>
+                <i class="fa fa-hourglass-half bg-yellow"></i>
+                <div class="timeline-item">
+                    <h3 class="timeline-header text-yellow">
+                        <strong>Pendiente de aceptación</strong>
+                    </h3>
+                    <div class="timeline-body">
+                        El despacho está esperando ser aceptado por un transportador.
+                    </div>
+                </div>
+            </div>
+        `;
+    } else if(despacho.estado === 'en_transito') {
+        html += `
+            <div class="time-label">
+                <span class="bg-blue">
+                    <i class="fa fa-truck"></i> Estado Actual
+                </span>
+            </div>
+            <div>
+                <i class="fa fa-truck bg-blue"></i>
+                <div class="timeline-item">
+                    <h3 class="timeline-header text-blue">
+                        <strong>En tránsito</strong>
+                    </h3>
+                    <div class="timeline-body">
+                        Los productos están siendo transportados a su destino.
+                        ${despacho.nombre_transportador ? '<br><small class="text-muted"><i class="fa fa-user"></i> Transportador: ' + despacho.nombre_transportador + '</small>' : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // 6. FIN TIMELINE
     html += `
         <div>
             <i class="fa fa-clock-o bg-gray"></i>
@@ -247,6 +346,8 @@ function cargarTimelineDespacho(despacho) {
     `;
     
     $("#timelineDespacho").html(html);
+    
+    console.log("✅ Timeline cargado exitosamente");
 }
 
 /*=============================================
