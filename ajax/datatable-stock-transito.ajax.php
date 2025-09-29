@@ -23,12 +23,7 @@ class TablaStockTransito {
             $stmt->execute();
             $stockTransito = $stmt->fetchAll();
 
-            if(count($stockTransito) == 0) {
-                echo '{"data": []}';
-                return;
-            }
-
-            $datosJson = '{"data": [';
+            $data = [];
 
             foreach($stockTransito as $key => $value) {
 
@@ -47,10 +42,10 @@ class TablaStockTransito {
                     $botones .= '<button class="btn btn-success btn-xs btnSolicitarDescarga" 
                                         data-id="'.$value["id"].'"
                                         data-codigo="'.$value["codigo_producto"].'"
-                                        data-descripcion="'.htmlspecialchars($value["descripcion_producto"]).'"
+                                        data-descripcion="'.htmlspecialchars($value["descripcion_producto"], ENT_QUOTES).'"
                                         data-cantidad="'.$value["cantidad_disponible"].'"
-                                        data-transportador="'.$value["nombre_transportador"].'"
-                                        data-origen="'.$value["sucursal_origen"].'"
+                                        data-transportador="'.htmlspecialchars($value["nombre_transportador"], ENT_QUOTES).'"
+                                        data-origen="'.htmlspecialchars($value["sucursal_origen"], ENT_QUOTES).'"
                                         title="Solicitar descarga">
                                     <i class="fa fa-download"></i>
                                 </button>';
@@ -60,25 +55,22 @@ class TablaStockTransito {
 
                 $fechaCarga = date('d/m/Y H:i', strtotime($value["fecha_carga"]));
 
-                $datosJson .= '[
-                    "'.($key+1).'",
-                    "'.$value["codigo_producto"].'",
-                    "'.substr($value["descripcion_producto"], 0, 40).'...",
-                    "<span class=\"label label-primary\">'.$value["cantidad_disponible"].'</span>",
-                    "'.$value["nombre_transportador"].'",
-                    "'.$value["sucursal_origen"].'",
-                    "'.$fechaCarga.'",
-                    "'.$botones.'"
-                ],';
+                $data[] = [
+                    ($key+1),
+                    $value["codigo_producto"],
+                    substr($value["descripcion_producto"], 0, 40)."...",
+                    '<span class="label label-primary">'.$value["cantidad_disponible"].'</span>',
+                    $value["nombre_transportador"],
+                    $value["sucursal_origen"],
+                    $fechaCarga,
+                    $botones
+                ];
             }
 
-            $datosJson = substr($datosJson, 0, -1);
-            $datosJson .= ']}';
-
-            echo $datosJson;
+            echo json_encode(["data" => $data]);
             
         } catch(Exception $e) {
-            echo '{"data": [], "error": "' . $e->getMessage() . '"}';
+            echo json_encode(["data" => [], "error" => $e->getMessage()]);
         }
     }
 }
