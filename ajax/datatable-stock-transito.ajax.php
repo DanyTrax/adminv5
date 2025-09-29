@@ -14,7 +14,6 @@ class TablaStockTransito {
             $perfilUsuario = $_SESSION["perfil"] ?? "Invitado";
             $idUsuario = $_SESSION["id"] ?? 0;
             
-            // Consulta simple que funciona con tu JS actual
             $stmt = ConexionCentral::conectar()->prepare("
                 SELECT * FROM stock_transito 
                 WHERE cantidad_disponible > 0 
@@ -33,26 +32,30 @@ class TablaStockTransito {
 
             foreach($stockTransito as $key => $value) {
 
-                // Botones compatibles con tu JS
                 $botones = '<div class="btn-group">';
-                $botones .= '<button class="btn btn-info btn-xs btnVerHistorialProducto" 
-                                    codigoProducto="'.$value["codigo_producto"].'"
-                                    transportadorId="'.$value["transportador_id"].'">
+                
+                // Ver historial
+                $botones .= '<button class="btn btn-info btn-xs btnVerHistorial" 
+                                    data-codigo="'.$value["codigo_producto"].'"
+                                    data-transportador="'.$value["transportador_id"].'" 
+                                    title="Ver historial">
                                 <i class="fa fa-history"></i>
                             </button>';
                 
+                // Solicitar descarga
                 if($perfilUsuario != "Transportador") {
                     $botones .= '<button class="btn btn-success btn-xs btnSolicitarDescarga" 
-                                        idStockTransito="'.$value["id"].'"
-                                        codigoProducto="'.$value["codigo_producto"].'"
-                                        descripcionProducto="'.htmlspecialchars($value["descripcion_producto"]).'"
-                                        cantidadDisponible="'.$value["cantidad_disponible"].'"
-                                        transportadorId="'.$value["transportador_id"].'"
-                                        nombreTransportador="'.$value["nombre_transportador"].'"
-                                        sucursalOrigen="'.$value["sucursal_origen"].'">
+                                        data-id="'.$value["id"].'"
+                                        data-codigo="'.$value["codigo_producto"].'"
+                                        data-descripcion="'.htmlspecialchars($value["descripcion_producto"]).'"
+                                        data-cantidad="'.$value["cantidad_disponible"].'"
+                                        data-transportador="'.$value["nombre_transportador"].'"
+                                        data-origen="'.$value["sucursal_origen"].'"
+                                        title="Solicitar descarga">
                                     <i class="fa fa-download"></i>
                                 </button>';
                 }
+                
                 $botones .= '</div>';
 
                 $fechaCarga = date('d/m/Y H:i', strtotime($value["fecha_carga"]));
@@ -61,11 +64,10 @@ class TablaStockTransito {
                     "'.($key+1).'",
                     "'.$value["codigo_producto"].'",
                     "'.substr($value["descripcion_producto"], 0, 40).'...",
-                    "<div class=\"text-center\"><span class=\"stock-disponible\">'.$value["cantidad_disponible"].'</span></div>",
+                    "<span class=\"label label-primary\">'.$value["cantidad_disponible"].'</span>",
                     "'.$value["nombre_transportador"].'",
                     "'.$value["sucursal_origen"].'",
                     "'.$fechaCarga.'",
-                    "-",
                     "'.$botones.'"
                 ],';
             }
@@ -81,7 +83,6 @@ class TablaStockTransito {
     }
 }
 
-// Ejecutar directamente - compatible con tu JS
 $activarStock = new TablaStockTransito();
 $activarStock->mostrarTablaStockTransito();
 
