@@ -432,6 +432,15 @@ if($_SESSION["perfil"] == "Limitado"){
     </div>
 </div>
 
+<script>
+// Definir variables globales desde PHP
+window.perfilUsuario = '<?php echo $_SESSION["perfil"] ?? "Invitado"; ?>';
+window.idUsuario = <?php echo $_SESSION["id"] ?? 0; ?>;
+
+console.log("🔧 Variables definidas desde PHP:");
+console.log("- perfilUsuario:", window.perfilUsuario);
+console.log("- idUsuario:", window.idUsuario);
+</script>
 <!-- ESTILOS CSS -->
 <style>
 .stock-disponible {

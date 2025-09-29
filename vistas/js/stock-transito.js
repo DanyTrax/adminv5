@@ -39,7 +39,7 @@ CARGAR DATATABLE DE STOCK EN TRÁNSITO
 =============================================*/
 function cargarTablaStockTransito() {
     
-    tablaStockTransito = $('.tablaStockTransito').DataTable({
+    tablaStockTransito = $('#tablaStockTransito').DataTable({
         "ajax": {
             "url": "ajax/datatable-stock-transito.ajax.php",
             "type": "POST",
@@ -883,10 +883,10 @@ function formatearFechaCompleta(fecha) {
 }
 
 /*=============================================
-VARIABLES GLOBALES ADICIONALES
+VARIABLES GLOBALES - REFERENCIA A WINDOW
 =============================================*/
-var perfilUsuario = '<?php echo $_SESSION["perfil"]; ?>';
-var idUsuario = '<?php echo $_SESSION["id"]; ?>';
+var perfilUsuario = window.perfilUsuario || 'Invitado';
+var idUsuario = window.idUsuario || 0;
 
 /*=============================================
 CLEANUP AL SALIR DE LA PÁGINA
@@ -919,17 +919,6 @@ $(document).on("keydown", function(e) {
         e.preventDefault();
     }
 });
-/*=============================================
-VARIABLES GLOBALES ADICIONALES
-=============================================*/
-// Solo declarar si no existe
-if (typeof window.perfilUsuario === 'undefined') {
-    window.perfilUsuario = '<?php echo $_SESSION["perfil"]; ?>';
-}
-if (typeof window.idUsuario === 'undefined') {
-    window.idUsuario = '<?php echo $_SESSION["id"]; ?>';
-}
-
 /*=============================================
 LOG DE INICIALIZACIÓN
 =============================================*/

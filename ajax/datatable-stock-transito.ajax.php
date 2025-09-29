@@ -1,10 +1,11 @@
 <?php
 
+// Iniciar sesión solo si no está ya iniciada
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+require_once "api-transferencias/conexion-central.php";
 
 class TablaStockTransito {
 
@@ -14,10 +15,14 @@ class TablaStockTransito {
     public function mostrarTablaStockTransito() {
 
         try {
+            // VERIFICAR QUE $_SESSION ESTÉ DISPONIBLE
+            $perfilUsuario = $_SESSION["perfil"] ?? 'Invitado';
+            $idUsuario = $_SESSION["id"] ?? 0;
+
             // Si es transportador, solo mostrar su stock
             $filtroTransportador = "";
-            if($_SESSION["perfil"] == "Transportador") {
-                $filtroTransportador = "AND st.transportador_id = " . $_SESSION["id"];
+            if($perfilUsuario == "Transportador" && $idUsuario > 0) {
+                $filtroTransportador = "AND st.transportador_id = " . $idUsuario;
             }
 
             $stmt = ConexionCentral::conectar()->prepare("
@@ -50,7 +55,7 @@ class TablaStockTransito {
                 /*=============================================
                 BOTONES DE ACCIONES SEGÚN PERFIL
                 =============================================*/
-                $botones = $this->generarBotonesAccion($value);
+                $botones = $this->generarBotonesAccion($value, $perfilUsuario, $idUsuario);
 
                 /*=============================================
                 CANTIDAD CON INDICADORES
@@ -96,7 +101,7 @@ class TablaStockTransito {
     /*=============================================
     GENERAR BOTONES DE ACCIÓN SEGÚN PERFIL
     =============================================*/
-    private function generarBotonesAccion($stock) {
+    private function generarBotonesAccion($stock, $perfilUsuario = 'Invitado', $idUsuario = 0) {
 
         $botones = '<div class="btn-group">';
 
@@ -110,10 +115,10 @@ class TablaStockTransito {
                     </button>';
 
         // BOTONES SEGÚN PERFIL
-        if($_SESSION["perfil"] == "Transportador") {
+        if($perfilUsuario == "Transportador") {
             
             // SI ES EL TRANSPORTADOR DUEÑO DEL STOCK
-            if($stock["transportador_id"] == $_SESSION["id"]) {
+            if($stock["transportador_id"] == $idUsuario) {
                 
                 // Verificar si hay solicitudes pendientes
                 if($stock["solicitudes_pendientes"] > 0) {
@@ -154,7 +159,7 @@ class TablaStockTransito {
             }
 
             // ADMINISTRADOR PUEDE FORZAR DESCARGA
-            if($_SESSION["perfil"] == "Administrador" && $stock["cantidad_disponible"] > 0) {
+            if($perfilUsuario == "Administrador" && $stock["cantidad_disponible"] > 0) {
                 $botones .= '<button class="btn btn-danger btn-xs btnForzarDescarga" 
                                     data-toggle="tooltip" 
                                     title="Forzar descarga (Admin)" 
@@ -230,9 +235,13 @@ class TablaStockTransito {
     public function obtenerResumenDashboard() {
         
         try {
+            // VERIFICAR QUE $_SESSION ESTÉ DISPONIBLE
+            $perfilUsuario = $_SESSION["perfil"] ?? 'Invitado';
+            $idUsuario = $_SESSION["id"] ?? 0;
+
             $filtroTransportador = "";
-            if($_SESSION["perfil"] == "Transportador") {
-                $filtroTransportador = "AND transportador_id = " . $_SESSION["id"];
+            if($perfilUsuario == "Transportador" && $idUsuario > 0) {
+                $filtroTransportador = "AND transportador_id = " . $idUsuario;
             }
 
             // Obtener totales de stock
@@ -251,8 +260,8 @@ class TablaStockTransito {
 
             // Obtener solicitudes pendientes
             $filtroSolicitudes = "";
-            if($_SESSION["perfil"] == "Transportador") {
-                $filtroSolicitudes = "WHERE transportador_id = " . $_SESSION["id"];
+            if($perfilUsuario == "Transportador" && $idUsuario > 0) {
+                $filtroSolicitudes = "WHERE transportador_id = " . $idUsuario;
             }
 
             $stmt = ConexionCentral::conectar()->prepare("
@@ -268,7 +277,7 @@ class TablaStockTransito {
             echo json_encode([
                 "total_productos" => $resumen["total_productos"] ?? 0,
                 "total_unidades" => $resumen["total_unidades"] ?? 0,
-                "total_transportadores" => $_SESSION["perfil"] == "Transportador" ? 1 : ($resumen["total_transportadores"] ?? 0),
+                "total_transportadores" => $perfilUsuario == "Transportador" ? 1 : ($resumen["total_transportadores"] ?? 0),
                 "solicitudes_pendientes" => $solicitudes["solicitudes_pendientes"] ?? 0
             ]);
 
