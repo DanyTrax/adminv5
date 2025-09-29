@@ -936,3 +936,55 @@ LOG DE INICIALIZACIÓN
 console.log("✅ Stock en Tránsito - JavaScript cargado completamente");
 console.log("👤 Perfil de usuario:", perfilUsuario);
 console.log("🔢 ID de usuario:", idUsuario);
+
+// FUNCIÓN DE DEBUG - Agregar al inicio del archivo
+function debugDataTable() {
+    console.log("🔍 DEBUGGING DATATABLE STOCK-TRANSITO");
+    
+    // Verificar si el datatable existe
+    if($.fn.DataTable.isDataTable('#tablaStockTransito')) {
+        console.log("✅ DataTable ya inicializado");
+        var table = $('#tablaStockTransito').DataTable();
+        console.log("📊 Info del datatable:", table.page.info());
+    } else {
+        console.log("❌ DataTable NO inicializado");
+    }
+    
+    // Hacer petición AJAX manual
+    $.ajax({
+        url: "ajax/datatable-stock-transito.ajax.php",
+        method: "POST",
+        data: {
+            draw: 1,
+            start: 0,
+            length: 10
+        },
+        dataType: "json",
+        success: function(respuesta) {
+            console.log("✅ Respuesta AJAX exitosa:");
+            console.log("- draw:", respuesta.draw);
+            console.log("- recordsTotal:", respuesta.recordsTotal);
+            console.log("- recordsFiltered:", respuesta.recordsFiltered);
+            console.log("- Registros en data:", respuesta.data ? respuesta.data.length : 0);
+            
+            if(respuesta.data && respuesta.data.length > 0) {
+                console.log("📋 Primer registro:", respuesta.data[0]);
+            } else {
+                console.log("❌ No hay datos en la respuesta");
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("❌ Error AJAX:");
+            console.error("- Status:", status);
+            console.error("- Error:", error);
+            console.error("- Respuesta:", xhr.responseText);
+        }
+    });
+}
+
+// Llamar debug al cargar la página
+$(document).ready(function() {
+    setTimeout(function() {
+        debugDataTable();
+    }, 2000);
+});
