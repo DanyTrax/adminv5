@@ -6,9 +6,6 @@ require_once "api-transferencias/conexion-central.php";
 
 class TablaStockTransito {
 
-    /*=============================================
-    MOSTRAR LA TABLA DE STOCK EN TRÁNSITO
-    =============================================*/
     public function mostrarTablaStockTransito() {
 
         try {
@@ -31,28 +28,25 @@ class TablaStockTransito {
 
             foreach($stockTransito as $key => $value) {
 
-                /*=============================================
-                BOTONES DE ACCIONES SEGÚN PERFIL
-                =============================================*/
                 $botones = $this->generarBotonesAccion($value);
-
-                /*=============================================
-                FECHA FORMATEADA
-                =============================================*/
                 $fechaCarga = date('d/m/Y H:i', strtotime($value["fecha_carga"]));
 
-                /*=============================================
-                CONSTRUIR FILA JSON - IGUAL QUE DESPACHOS
-                =============================================*/
+                // ESCAPAR CORRECTAMENTE TODAS LAS COMILLAS
+                $codigo = addslashes($value["codigo_producto"]);
+                $descripcion = addslashes(substr($value["descripcion_producto"], 0, 40) . "...");
+                $transportador = addslashes($value["nombre_transportador"]);
+                $origen = addslashes($value["sucursal_origen"]);
+                $botonesEscapados = addslashes($botones);
+
                 $datosJson .= '[
                     "' . ($key + 1) . '",
-                    "' . htmlspecialchars($value["codigo_producto"]) . '",
-                    "' . htmlspecialchars(substr($value["descripcion_producto"], 0, 40) . "...") . '",
+                    "' . $codigo . '",
+                    "' . $descripcion . '",
                     "' . $value["cantidad_disponible"] . '",
-                    "' . htmlspecialchars($value["nombre_transportador"]) . '",
-                    "' . htmlspecialchars($value["sucursal_origen"]) . '",
+                    "' . $transportador . '",
+                    "' . $origen . '",
                     "' . $fechaCarga . '",
-                    "' . $botones . '"
+                    "' . $botonesEscapados . '"
                 ],';
             }
 
@@ -62,32 +56,26 @@ class TablaStockTransito {
             echo $datosJson;
 
         } catch(Exception $e) {
-            echo '{"data": [], "error": "' . $e->getMessage() . '"}';
+            echo '{"data": [], "error": "' . addslashes($e->getMessage()) . '"}';
         }
     }
 
-    /*=============================================
-    GENERAR BOTONES DE ACCIÓN - IGUAL QUE DESPACHOS
-    =============================================*/
     private function generarBotonesAccion($stock) {
         
-        $botones = '';
         $perfil = $_SESSION["perfil"];
         
-        // Botón Ver historial - TODOS
-        $botones .= '<button class="btn btn-info btn-xs btnVerHistorial" codigoProducto="' . $stock["codigo_producto"] . '" title="Ver historial"><i class="fa fa-history"></i></button>';
+        $botones = '<button class=\'btn btn-info btn-xs btnVerHistorial\' codigoProducto=\'' . $stock["codigo_producto"] . '\' title=\'Ver historial\'><i class=\'fa fa-history\'></i></button>';
         
-        // Botón Solicitar descarga - Solo NO transportadores
         if($perfil != "Transportador") {
-            $botones .= ' <button class="btn btn-success btn-xs btnSolicitarDescarga" 
-                                idStockTransito="' . $stock["id"] . '"
-                                codigoProducto="' . htmlspecialchars($stock["codigo_producto"]) . '"
-                                descripcionProducto="' . htmlspecialchars($stock["descripcion_producto"]) . '"
-                                cantidadDisponible="' . $stock["cantidad_disponible"] . '"
-                                nombreTransportador="' . htmlspecialchars($stock["nombre_transportador"]) . '"
-                                sucursalOrigen="' . htmlspecialchars($stock["sucursal_origen"]) . '"
-                                title="Solicitar descarga">
-                            <i class="fa fa-download"></i>
+            $botones .= ' <button class=\'btn btn-success btn-xs btnSolicitarDescarga\' 
+                                idStockTransito=\'' . $stock["id"] . '\'
+                                codigoProducto=\'' . $stock["codigo_producto"] . '\'
+                                descripcionProducto=\'' . str_replace("'", "&#39;", $stock["descripcion_producto"]) . '\'
+                                cantidadDisponible=\'' . $stock["cantidad_disponible"] . '\'
+                                nombreTransportador=\'' . str_replace("'", "&#39;", $stock["nombre_transportador"]) . '\'
+                                sucursalOrigen=\'' . str_replace("'", "&#39;", $stock["sucursal_origen"]) . '\'
+                                title=\'Solicitar descarga\'>
+                            <i class=\'fa fa-download\'></i>
                         </button>';
         }
         
@@ -95,9 +83,6 @@ class TablaStockTransito {
     }
 }
 
-/*=============================================
-INSTANCIAR CLASE Y MOSTRAR TABLA - IGUAL QUE DESPACHOS
-=============================================*/
 $tablaStockTransito = new TablaStockTransito();
 $tablaStockTransito->mostrarTablaStockTransito();
 
