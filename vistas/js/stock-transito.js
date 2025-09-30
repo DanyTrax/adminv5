@@ -24,12 +24,9 @@ CARGAR DATATABLE
 function cargarTablaStockTransito() {
     
     tablaStockTransito = $('#tablaStockTransito').DataTable({
-        "ajax": {
+       "ajax": {
             "url": "ajax/datatable-stock-transito.ajax.php",
-            "type": "POST",
-            "data": {
-                "tabla": "stock-transito"
-            }
+            "type": "POST"
         },
         "deferRender": true,
         "retrieve": true,

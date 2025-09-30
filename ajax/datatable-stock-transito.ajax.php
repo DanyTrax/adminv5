@@ -237,6 +237,13 @@ class TablaStockTransito {
 /*=============================================
 ACTIVAR TABLA DE STOCK EN TRÁNSITO
 =============================================*/
+
+// Si no hay parámetros específicos, mostrar la tabla por defecto
+if(empty($_POST["tabla"]) && empty($_POST["resumen"])) {
+    $activarStock = new TablaStockTransito();
+    $activarStock->mostrarTablaStockTransito();
+}
+
 if(isset($_POST["tabla"]) && $_POST["tabla"] == "stock-transito") {
     $activarStock = new TablaStockTransito();
     $activarStock->mostrarTablaStockTransito();
