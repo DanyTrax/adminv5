@@ -176,82 +176,40 @@ class TablaStockTransito {
         }
         return $texto;
     }
-
-    public function obtenerResumenDashboard() {
-        
-        try {
-            $filtroTransportador = "";
-            if($_SESSION["perfil"] == "Transportador") {
-                $filtroTransportador = "AND transportador_id = " . $_SESSION["id"];
-            }
-
-            $stmt = ConexionCentral::conectar()->prepare("
-                SELECT 
-                    COUNT(DISTINCT codigo_producto) as total_productos,
-                    SUM(cantidad_disponible) as total_unidades,
-                    COUNT(DISTINCT transportador_id) as total_transportadores
-                FROM stock_transito 
-                WHERE cantidad_disponible > 0 
-                {$filtroTransportador}
-            ");
-            
-            $stmt->execute();
-            $resumen = $stmt->fetch();
-
-            $filtroSolicitudes = "";
-            if($_SESSION["perfil"] == "Transportador") {
-                $filtroSolicitudes = "WHERE transportador_id = " . $_SESSION["id"];
-            }
-
-            $stmt = ConexionCentral::conectar()->prepare("
-                SELECT COUNT(*) as solicitudes_pendientes
-                FROM solicitudes_descarga 
-                {$filtroSolicitudes}
-                " . (!empty($filtroSolicitudes) ? "AND" : "WHERE") . " estado = 'pendiente'
-            ");
-            
-            $stmt->execute();
-            $solicitudes = $stmt->fetch();
-
-            header('Content-Type: application/json');
-            echo json_encode([
-                "total_productos" => $resumen["total_productos"] ?? 0,
-                "total_unidades" => $resumen["total_unidades"] ?? 0,
-                "total_transportadores" => $_SESSION["perfil"] == "Transportador" ? 1 : ($resumen["total_transportadores"] ?? 0),
-                "solicitudes_pendientes" => $solicitudes["solicitudes_pendientes"] ?? 0
-            ]);
-
-        } catch(Exception $e) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                "total_productos" => 0,
-                "total_unidades" => 0,
-                "total_transportadores" => 0,
-                "solicitudes_pendientes" => 0,
-                "error" => $e->getMessage()
-            ]);
-        }
-    }
 }
 
 /*=============================================
-ACTIVAR TABLA DE STOCK EN TRÁNSITO
+DETERMINAR QUÉ FUNCIÓN EJECUTAR
 =============================================*/
 
-// Si no hay parámetros específicos, mostrar la tabla por defecto
-if(empty($_POST["tabla"]) && empty($_POST["resumen"])) {
+// SI NO HAY PARÁMETROS, MOSTRAR TABLA (DEFAULT)
+if(empty($_POST)) {
     $activarStock = new TablaStockTransito();
     $activarStock->mostrarTablaStockTransito();
+    exit;
 }
 
+// SI SE SOLICITA TABLA ESPECÍFICAMENTE
 if(isset($_POST["tabla"]) && $_POST["tabla"] == "stock-transito") {
     $activarStock = new TablaStockTransito();
     $activarStock->mostrarTablaStockTransito();
+    exit;
 }
 
+// SI SE SOLICITA RESUMEN (para dashboard)
 if(isset($_POST["resumen"]) && $_POST["resumen"] == "dashboard") {
-    $resumen = new TablaStockTransito();
-    $resumen->obtenerResumenDashboard();
+    // Aquí puedes agregar la función de resumen si la necesitas
+    echo json_encode([
+        "total_productos" => 0,
+        "total_unidades" => 0,
+        "total_transportadores" => 0,
+        "solicitudes_pendientes" => 0
+    ]);
+    exit;
 }
+
+// DEFAULT: mostrar tabla
+$activarStock = new TablaStockTransito();
+$activarStock->mostrarTablaStockTransito();
 
 ?>
