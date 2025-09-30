@@ -234,15 +234,24 @@ $(document).ready(function() {
         "ajax": {
             "url": "ajax/datatable-stock-transito.ajax.php",
             "type": "POST",
-            "data": {
-                "tabla": "stock-transito"
+            "data": function(d) {
+                // Agregar parámetro específico
+                d.tabla = "stock-transito";
+                console.log("📤 Enviando datos:", d);
+                return d;
             },
             "error": function(xhr, error, code) {
                 console.error("❌ Error AJAX:", xhr.status, error);
                 console.error("Respuesta completa:", xhr.responseText);
+                
+                // Mostrar respuesta en la página para debug
+                if(xhr.responseText) {
+                    alert("Error en AJAX:\n" + xhr.responseText.substring(0, 500));
+                }
             },
             "success": function(data) {
                 console.log("✅ AJAX exitoso - datos recibidos:", data);
+                console.log("📊 Número de registros:", data.data ? data.data.length : 0);
             }
         },
         "processing": true,

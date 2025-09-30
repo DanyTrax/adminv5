@@ -182,15 +182,11 @@ class TablaStockTransito {
 DETERMINAR QUÉ FUNCIÓN EJECUTAR
 =============================================*/
 
-// SI NO HAY PARÁMETROS, MOSTRAR TABLA (DEFAULT)
-if(empty($_POST)) {
-    $activarStock = new TablaStockTransito();
-    $activarStock->mostrarTablaStockTransito();
-    exit;
-}
+// DEBUG: Ver qué parámetros llegan
+error_log("POST recibido: " . print_r($_POST, true));
 
-// SI SE SOLICITA TABLA ESPECÍFICAMENTE
-if(isset($_POST["tabla"]) && $_POST["tabla"] == "stock-transito") {
+// SI SE SOLICITA TABLA ESPECÍFICAMENTE O NO HAY PARÁMETROS
+if((isset($_POST["tabla"]) && $_POST["tabla"] == "stock-transito") || empty($_POST)) {
     $activarStock = new TablaStockTransito();
     $activarStock->mostrarTablaStockTransito();
     exit;
@@ -198,7 +194,6 @@ if(isset($_POST["tabla"]) && $_POST["tabla"] == "stock-transito") {
 
 // SI SE SOLICITA RESUMEN (para dashboard)
 if(isset($_POST["resumen"]) && $_POST["resumen"] == "dashboard") {
-    // Aquí puedes agregar la función de resumen si la necesitas
     echo json_encode([
         "total_productos" => 0,
         "total_unidades" => 0,
@@ -209,9 +204,6 @@ if(isset($_POST["resumen"]) && $_POST["resumen"] == "dashboard") {
 }
 
 // DEFAULT: mostrar tabla
-if(empty($_POST)) {
-    $activarStock = new TablaStockTransito();
-    $activarStock->mostrarTablaStockTransito();
-    exit;
-}
+$activarStock = new TablaStockTransito();
+$activarStock->mostrarTablaStockTransito();
 ?>
