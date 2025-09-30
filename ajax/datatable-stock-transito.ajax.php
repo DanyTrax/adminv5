@@ -6,9 +6,6 @@ require_once __DIR__ . "/../api-transferencias/conexion-central.php";
 
 class TablaStockTransito {
 
-    /*=============================================
-    MOSTRAR LA TABLA DE STOCK EN TRÁNSITO
-    =============================================*/
     public function mostrarTablaStockTransito() {
 
         try {
@@ -35,65 +32,39 @@ class TablaStockTransito {
             $stmt->execute();
             $stockTransito = $stmt->fetchAll();
 
-            if(count($stockTransito) == 0) {
-                echo '{"data": []}';
-                return;
-            }
-
-            $datosJson = '{
-                "data": [';
+            $data = [];
 
             foreach($stockTransito as $key => $value) {
 
-                /*=============================================
-                BOTONES DE ACCIONES SEGÚN PERFIL
-                =============================================*/
                 $botones = $this->generarBotonesAccion($value);
-
-                /*=============================================
-                CANTIDAD CON INDICADORES
-                =============================================*/
                 $cantidadDisponible = $this->formatearCantidadConIndicadores($value);
-
-                /*=============================================
-                SOLICITUDES PENDIENTES
-                =============================================*/
                 $solicitudesPendientes = $this->formatearSolicitudesPendientes($value);
-
-                /*=============================================
-                FECHA FORMATEADA
-                =============================================*/
                 $fechaCargue = date('d/m/Y H:i', strtotime($value["fecha_carga"]));
 
-                /*=============================================
-                CONSTRUIR FILA JSON
-                =============================================*/
-                $datosJson .= '[
-                    "' . ($key + 1) . '",
-                    "' . $value["codigo_producto"] . '",
-                    "' . $this->truncarTexto($value["descripcion_producto"], 40) . '",
-                    "' . $cantidadDisponible . '",
-                    "' . $value["nombre_transportador"] . '",
-                    "' . $value["sucursal_origen"] . '",
-                    "' . $fechaCargue . '",
-                    "' . $solicitudesPendientes . '",
-                    "' . $botones . '"
-                ],';
+                // USAR ARRAY EN LUGAR DE JSON MANUAL
+                $data[] = [
+                    ($key + 1),
+                    $value["codigo_producto"],
+                    $this->truncarTexto($value["descripcion_producto"], 40),
+                    $cantidadDisponible,
+                    $value["nombre_transportador"],
+                    $value["sucursal_origen"],
+                    $fechaCargue,
+                    $solicitudesPendientes,
+                    $botones
+                ];
             }
 
-            $datosJson = substr($datosJson, 0, -1);
-            $datosJson .= ']}';
-
-            echo $datosJson;
+            // USAR json_encode() PARA EVITAR PROBLEMAS DE COMILLAS
+            header('Content-Type: application/json');
+            echo json_encode(["data" => $data]);
 
         } catch(Exception $e) {
-            echo '{"data": [], "error": "' . $e->getMessage() . '"}';
+            header('Content-Type: application/json');
+            echo json_encode(["data" => [], "error" => $e->getMessage()]);
         }
     }
 
-    /*=============================================
-    GENERAR BOTONES DE ACCIÓN SEGÚN PERFIL
-    =============================================*/
     private function generarBotonesAccion($stock) {
 
         $botones = '<div class="btn-group">';
@@ -102,7 +73,7 @@ class TablaStockTransito {
         $botones .= '<button class="btn btn-info btn-xs btnVerHistorialProducto" 
                             data-toggle="tooltip" 
                             title="Ver historial del producto" 
-                            codigoProducto="' . $stock["codigo_producto"] . '"
+                            codigoProducto="' . htmlspecialchars($stock["codigo_producto"]) . '"
                             transportadorId="' . $stock["transportador_id"] . '">
                         <i class="fa fa-history"></i>
                     </button>';
@@ -110,10 +81,7 @@ class TablaStockTransito {
         // BOTONES SEGÚN PERFIL
         if($_SESSION["perfil"] == "Transportador") {
             
-            // SI ES EL TRANSPORTADOR DUEÑO DEL STOCK
             if($stock["transportador_id"] == $_SESSION["id"]) {
-                
-                // Verificar si hay solicitudes pendientes
                 if($stock["solicitudes_pendientes"] > 0) {
                     $botones .= '<button class="btn btn-warning btn-xs btnVerSolicitudesPendientes" 
                                         data-toggle="tooltip" 
@@ -126,7 +94,6 @@ class TablaStockTransito {
             }
 
         } else {
-            // USUARIOS NORMALES Y ADMINISTRADORES PUEDEN SOLICITAR DESCARGA
             
             $cantidadDisponibleReal = $stock["cantidad_disponible"] - $stock["cantidad_solicitada_pendiente"];
             
@@ -135,12 +102,12 @@ class TablaStockTransito {
                                     data-toggle="tooltip" 
                                     title="Solicitar descarga" 
                                     idStockTransito="' . $stock["id"] . '"
-                                    codigoProducto="' . $stock["codigo_producto"] . '"
+                                    codigoProducto="' . htmlspecialchars($stock["codigo_producto"]) . '"
                                     descripcionProducto="' . htmlspecialchars($stock["descripcion_producto"]) . '"
                                     cantidadDisponible="' . $cantidadDisponibleReal . '"
                                     transportadorId="' . $stock["transportador_id"] . '"
-                                    nombreTransportador="' . $stock["nombre_transportador"] . '"
-                                    sucursalOrigen="' . $stock["sucursal_origen"] . '">
+                                    nombreTransportador="' . htmlspecialchars($stock["nombre_transportador"]) . '"
+                                    sucursalOrigen="' . htmlspecialchars($stock["sucursal_origen"]) . '">
                                 <i class="fa fa-download"></i>
                             </button>';
             } else {
@@ -151,29 +118,24 @@ class TablaStockTransito {
                             </button>';
             }
 
-            // ADMINISTRADOR PUEDE FORZAR DESCARGA
             if($_SESSION["perfil"] == "Administrador" && $stock["cantidad_disponible"] > 0) {
                 $botones .= '<button class="btn btn-danger btn-xs btnForzarDescarga" 
                                     data-toggle="tooltip" 
                                     title="Forzar descarga (Admin)" 
                                     idStockTransito="' . $stock["id"] . '"
-                                    codigoProducto="' . $stock["codigo_producto"] . '"
+                                    codigoProducto="' . htmlspecialchars($stock["codigo_producto"]) . '"
                                     descripcionProducto="' . htmlspecialchars($stock["descripcion_producto"]) . '"
                                     cantidadDisponible="' . $stock["cantidad_disponible"] . '"
-                                    transportadorNombre="' . $stock["nombre_transportador"] . '">
+                                    transportadorNombre="' . htmlspecialchars($stock["nombre_transportador"]) . '">
                                 <i class="fa fa-exclamation-triangle"></i>
                             </button>';
             }
         }
 
         $botones .= '</div>';
-
         return $botones;
     }
 
-    /*=============================================
-    FORMATEAR CANTIDAD CON INDICADORES
-    =============================================*/
     private function formatearCantidadConIndicadores($stock) {
         
         $cantidadDisponible = intval($stock["cantidad_disponible"]);
@@ -189,13 +151,9 @@ class TablaStockTransito {
         }
         
         $html .= '</div>';
-
         return $html;
     }
 
-    /*=============================================
-    FORMATEAR SOLICITUDES PENDIENTES
-    =============================================*/
     private function formatearSolicitudesPendientes($stock) {
         
         $solicitudesPendientes = intval($stock["solicitudes_pendientes"]);
@@ -212,9 +170,6 @@ class TablaStockTransito {
         return '<span class="label ' . $colorClass . '">' . $solicitudesPendientes . ' pendiente' . ($solicitudesPendientes != 1 ? 's' : '') . '</span>';
     }
 
-    /*=============================================
-    TRUNCAR TEXTO
-    =============================================*/
     private function truncarTexto($texto, $limite) {
         if(strlen($texto) > $limite) {
             return substr($texto, 0, $limite) . '...';
@@ -222,9 +177,6 @@ class TablaStockTransito {
         return $texto;
     }
 
-    /*=============================================
-    OBTENER RESUMEN PARA DASHBOARD
-    =============================================*/
     public function obtenerResumenDashboard() {
         
         try {
@@ -233,7 +185,6 @@ class TablaStockTransito {
                 $filtroTransportador = "AND transportador_id = " . $_SESSION["id"];
             }
 
-            // Obtener totales de stock
             $stmt = ConexionCentral::conectar()->prepare("
                 SELECT 
                     COUNT(DISTINCT codigo_producto) as total_productos,
@@ -247,7 +198,6 @@ class TablaStockTransito {
             $stmt->execute();
             $resumen = $stmt->fetch();
 
-            // Obtener solicitudes pendientes
             $filtroSolicitudes = "";
             if($_SESSION["perfil"] == "Transportador") {
                 $filtroSolicitudes = "WHERE transportador_id = " . $_SESSION["id"];
@@ -263,6 +213,7 @@ class TablaStockTransito {
             $stmt->execute();
             $solicitudes = $stmt->fetch();
 
+            header('Content-Type: application/json');
             echo json_encode([
                 "total_productos" => $resumen["total_productos"] ?? 0,
                 "total_unidades" => $resumen["total_unidades"] ?? 0,
@@ -271,6 +222,7 @@ class TablaStockTransito {
             ]);
 
         } catch(Exception $e) {
+            header('Content-Type: application/json');
             echo json_encode([
                 "total_productos" => 0,
                 "total_unidades" => 0,
