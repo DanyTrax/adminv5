@@ -6,6 +6,10 @@ var graficosInicializados = false;
 var intervalActualizacion;
 var chartTiposMovimiento, chartTransportadores, chartLineaTiempo;
 
+// Variables de sesión
+var perfilUsuario = window.perfilUsuario || 'Invitado';
+var idUsuario = window.idUsuario || 0;
+
 /*=============================================
 INICIALIZACIÓN DEL MÓDULO
 =============================================*/
