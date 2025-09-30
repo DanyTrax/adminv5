@@ -218,13 +218,49 @@ window.idUsuario = <?php echo $_SESSION["id"] ?? 0; ?>;
 console.log("🔧 Variables PHP definidas:");
 console.log("- perfilUsuario:", window.perfilUsuario);
 console.log("- idUsuario:", window.idUsuario);
-</script>
-<!-- Forzar carga de archivos sin caché -->
-<script>
-// Verificar que no hay conflictos
-if (typeof perfilUsuario === 'undefined') {
-    console.log("✅ perfilUsuario no está definido globalmente - OK");
-} else {
-    console.log("⚠️ perfilUsuario YA existe:", perfilUsuario);
+
+// INICIALIZAR TABLA CUANDO EL DOCUMENTO ESTÉ LISTO
+$(document).ready(function() {
+    
+    console.log("🚛 Inicializando Stock en Tránsito desde PHP...");
+    
+    // Verificar que las funciones existan
+    if (typeof cargarTablaStockTransito === 'function') {
+        console.log("✅ Función cargarTablaStockTransito encontrada");
+        
+        // Inicializar tabla
+        cargarTablaStockTransito();
+        
+        // Configurar eventos si la función existe
+        if (typeof configurarEventos === 'function') {
+            configurarEventos();
+            console.log("✅ Eventos configurados");
+        }
+        
+    } else {
+        console.error("❌ Función cargarTablaStockTransito NO encontrada");
+        console.log("Funciones disponibles:", Object.getOwnPropertyNames(window).filter(name => typeof window[name] === 'function'));
+    }
+});
+
+// FUNCIÓN ACTUALIZAR TABLA (para el botón)
+function actualizarTabla() {
+    if (typeof tablaStockTransito !== 'undefined' && tablaStockTransito) {
+        tablaStockTransito.ajax.reload(null, false);
+        
+        if (typeof swal === 'function') {
+            swal({
+                title: "¡Actualizado!",
+                text: "La tabla ha sido actualizada",
+                type: "success",
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } else {
+            alert("Tabla actualizada");
+        }
+    } else {
+        console.error("❌ tablaStockTransito no está definida");
+    }
 }
 </script>

@@ -23,10 +23,16 @@ CARGAR DATATABLE
 =============================================*/
 function cargarTablaStockTransito() {
     
+    console.log("🔄 Cargando DataTable Stock Tránsito...");
+    
     tablaStockTransito = $('#tablaStockTransito').DataTable({
-       "ajax": {
+        "ajax": {
             "url": "ajax/datatable-stock-transito.ajax.php",
-            "type": "POST"
+            "type": "POST",
+            "error": function(xhr, error, code) {
+                console.error("❌ Error AJAX:", xhr.status, error);
+                console.error("Respuesta:", xhr.responseText);
+            }
         },
         "deferRender": true,
         "retrieve": true,
@@ -53,22 +59,19 @@ function cargarTablaStockTransito() {
         },
         "columnDefs": [
             {
-                "targets": [0, 3, 7, 8], // Columnas no ordenables: #, Cantidad, Solicitudes, Acciones
+                "targets": [0, 3, 7, 8], // #, Cantidad, Solicitudes, Acciones
                 "orderable": false
             },
             {
-                "targets": [3], // Columna cantidad - centrada
-                "className": "text-center"
-            },
-            {
-                "targets": [7], // Columna solicitudes - centrada
-                "className": "text-center"
-            },
-            {
-                "targets": [8], // Columna acciones - centrada
+                "targets": [3, 7, 8], // Cantidad, Solicitudes, Acciones - centradas
                 "className": "text-center"
             }
-        ]
+        ],
+        "drawCallback": function() {
+            console.log("✅ DataTable Stock Tránsito cargado exitosamente");
+            var info = this.api().page.info();
+            console.log("📊 Registros totales:", info.recordsTotal);
+        }
     });
 }
 
