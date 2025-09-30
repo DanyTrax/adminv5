@@ -219,48 +219,157 @@ console.log("🔧 Variables PHP definidas:");
 console.log("- perfilUsuario:", window.perfilUsuario);
 console.log("- idUsuario:", window.idUsuario);
 
-// INICIALIZAR TABLA CUANDO EL DOCUMENTO ESTÉ LISTO
+// CREAR TABLA DIRECTAMENTE AQUÍ - SIN DEPENDER DE ARCHIVOS EXTERNOS
 $(document).ready(function() {
     
-    console.log("🚛 Inicializando Stock en Tránsito desde PHP...");
+    console.log("🚛 Inicializando DataTable Stock Tránsito directamente...");
     
-    // Verificar que las funciones existan
-    if (typeof cargarTablaStockTransito === 'function') {
-        console.log("✅ Función cargarTablaStockTransito encontrada");
-        
-        // Inicializar tabla
-        cargarTablaStockTransito();
-        
-        // Configurar eventos si la función existe
-        if (typeof configurarEventos === 'function') {
-            configurarEventos();
-            console.log("✅ Eventos configurados");
-        }
-        
-    } else {
-        console.error("❌ Función cargarTablaStockTransito NO encontrada");
-        console.log("Funciones disponibles:", Object.getOwnPropertyNames(window).filter(name => typeof window[name] === 'function'));
+    // Destruir tabla existente si existe
+    if ($.fn.DataTable.isDataTable('#tablaStockTransito')) {
+        $('#tablaStockTransito').DataTable().destroy();
     }
+    
+    // Crear nuevo DataTable
+    var tablaStockTransito = $('#tablaStockTransito').DataTable({
+        "ajax": {
+            "url": "ajax/datatable-stock-transito.ajax.php",
+            "type": "POST",
+            "data": {
+                "tabla": "stock-transito"
+            },
+            "error": function(xhr, error, code) {
+                console.error("❌ Error AJAX:", xhr.status, error);
+                console.error("Respuesta completa:", xhr.responseText);
+            },
+            "success": function(data) {
+                console.log("✅ AJAX exitoso - datos recibidos:", data);
+            }
+        },
+        "processing": true,
+        "deferRender": true,
+        "language": {
+            "sProcessing": "Procesando...",
+            "sLengthMenu": "Mostrar _MENU_ registros",
+            "sZeroRecords": "No se encontraron productos en tránsito",
+            "sEmptyTable": "No hay productos en stock de tránsito",
+            "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+            "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
+            "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+            "sSearch": "Buscar:",
+            "sLoadingRecords": "Cargando...",
+            "oPaginate": {
+                "sFirst": "Primero",
+                "sLast": "Último",
+                "sNext": "Siguiente",
+                "sPrevious": "Anterior"
+            }
+        },
+        "columnDefs": [
+            {
+                "targets": [0, 3, 7, 8], // #, Cantidad, Solicitudes, Acciones
+                "orderable": false
+            },
+            {
+                "targets": [3, 7, 8], // Cantidad, Solicitudes, Acciones
+                "className": "text-center"
+            }
+        ],
+        "drawCallback": function() {
+            console.log("✅ DataTable Stock Tránsito dibujado exitosamente");
+            var info = this.api().page.info();
+            console.log("📊 Registros totales:", info.recordsTotal);
+            console.log("📊 Registros mostrados:", info.recordsDisplay);
+            
+            // Configurar eventos después de dibujar
+            configurarEventosStockTransito();
+        },
+        "initComplete": function() {
+            console.log("🎯 DataTable Stock Tránsito inicializado completamente");
+        }
+    });
+    
+    // Función para actualizar tabla
+    window.actualizarTablaStockTransito = function() {
+        if (tablaStockTransito) {
+            tablaStockTransito.ajax.reload(function() {
+                console.log("🔄 Tabla actualizada");
+            });
+        }
+    };
+    
 });
 
-// FUNCIÓN ACTUALIZAR TABLA (para el botón)
-function actualizarTabla() {
-    if (typeof tablaStockTransito !== 'undefined' && tablaStockTransito) {
-        tablaStockTransito.ajax.reload(null, false);
+// CONFIGURAR EVENTOS DE LOS BOTONES
+function configurarEventosStockTransito() {
+    
+    console.log("🔗 Configurando eventos de Stock Tránsito...");
+    
+    // Botón Ver Historial
+    $(document).off('click', '.btnVerHistorialProducto').on('click', '.btnVerHistorialProducto', function(e) {
+        e.preventDefault();
         
-        if (typeof swal === 'function') {
-            swal({
-                title: "¡Actualizado!",
-                text: "La tabla ha sido actualizada",
-                type: "success",
-                timer: 1500,
-                showConfirmButton: false
-            });
-        } else {
-            alert("Tabla actualizada");
+        var codigo = $(this).attr('codigoProducto');
+        var transportadorId = $(this).attr('transportadorId');
+        
+        console.log("📋 Ver historial de producto:", codigo);
+        
+        // Aquí puedes agregar la lógica para mostrar el historial
+        alert("Ver historial del producto: " + codigo);
+    });
+    
+    // Botón Solicitar Descarga
+    $(document).off('click', '.btnSolicitarDescarga').on('click', '.btnSolicitarDescarga', function(e) {
+        e.preventDefault();
+        
+        var id = $(this).attr('idStockTransito');
+        var codigo = $(this).attr('codigoProducto');
+        var descripcion = $(this).attr('descripcionProducto');
+        var cantidad = $(this).attr('cantidadDisponible');
+        var transportador = $(this).attr('nombreTransportador');
+        var origen = $(this).attr('sucursalOrigen');
+        
+        console.log("💼 Solicitar descarga de:", codigo, "Cantidad:", cantidad);
+        
+        // Aquí puedes agregar la lógica para solicitar descarga
+        alert("Solicitar descarga de: " + codigo + " (Cantidad: " + cantidad + ")");
+    });
+    
+    // Botón Ver Solicitudes Pendientes
+    $(document).off('click', '.btnVerSolicitudesPendientes').on('click', '.btnVerSolicitudesPendientes', function(e) {
+        e.preventDefault();
+        
+        var transportadorId = $(this).attr('transportadorId');
+        
+        console.log("🔔 Ver solicitudes pendientes del transportador:", transportadorId);
+        
+        alert("Ver solicitudes pendientes");
+    });
+    
+    // Botón Forzar Descarga (Admin)
+    $(document).off('click', '.btnForzarDescarga').on('click', '.btnForzarDescarga', function(e) {
+        e.preventDefault();
+        
+        var id = $(this).attr('idStockTransito');
+        var codigo = $(this).attr('codigoProducto');
+        
+        console.log("⚡ Forzar descarga (Admin):", codigo);
+        
+        if (confirm("¿Está seguro de forzar la descarga de este producto?")) {
+            alert("Descarga forzada del producto: " + codigo);
         }
+    });
+    
+    console.log("✅ Eventos de Stock Tránsito configurados");
+}
+
+// Función para actualizar tabla desde botón
+function actualizarTabla() {
+    if (typeof window.actualizarTablaStockTransito === 'function') {
+        window.actualizarTablaStockTransito();
     } else {
-        console.error("❌ tablaStockTransito no está definida");
+        location.reload();
     }
 }
+
+console.log("✅ Script Stock Tránsito cargado completamente");
 </script>
