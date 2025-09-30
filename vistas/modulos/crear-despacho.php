@@ -1,4 +1,17 @@
 <?php
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../../error_log');
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+
+// Log inicial para confirmar que la página se carga
+error_log("🔍 DEBUG crear-despacho.php iniciado - " . date('Y-m-d H:i:s'));
+error_log("👤 Usuario: " . ($_SESSION['nombre'] ?? 'No session'));
+error_log("🔗 URL: " . $_SERVER['REQUEST_URI']);
+
+// Verificar si es POST
+if ($_POST) {
+    error_log("📥 POST recibido en crear-despacho: " . print_r($_POST, true));
 
 if($_SESSION["perfil"] == "Limitado" || $_SESSION["perfil"] == "Transportador"){
     echo '<script>
