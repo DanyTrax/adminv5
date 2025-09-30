@@ -18,7 +18,7 @@ if($_SESSION["perfil"] == "Limitado" || $_SESSION["perfil"] == "Transportador"){
         window.location = "inicio";
     </script>';
     return;
-}
+}}
 
 // LÓGICA DE EDICIÓN
 $modoEdicion = false;
