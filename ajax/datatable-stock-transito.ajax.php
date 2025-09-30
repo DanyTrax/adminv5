@@ -6,67 +6,67 @@ require_once __DIR__ . "/../api-transferencias/conexion-central.php";
 
 class TablaStockTransito {
 
-public function mostrarTablaStockTransito() {
+    public function mostrarTablaStockTransito() {
 
-    try {
-        // Si es transportador, solo mostrar su stock
-        $filtroTransportador = "";
-        if($_SESSION["perfil"] == "Transportador") {
-            $filtroTransportador = "AND st.transportador_id = " . $_SESSION["id"];
+        try {
+            // Si es transportador, solo mostrar su stock
+            $filtroTransportador = "";
+            if($_SESSION["perfil"] == "Transportador") {
+                $filtroTransportador = "AND st.transportador_id = " . $_SESSION["id"];
+            }
+
+            $stmt = ConexionCentral::conectar()->prepare("
+                SELECT 
+                    st.*,
+                    COALESCE(SUM(sd.cantidad_solicitada), 0) as cantidad_solicitada_pendiente,
+                    COUNT(sd.id) as solicitudes_pendientes
+                FROM stock_transito st
+                LEFT JOIN solicitudes_descarga sd ON st.id = sd.id_stock_transito 
+                    AND sd.estado = 'pendiente'
+                WHERE st.cantidad_disponible > 0 
+                {$filtroTransportador}
+                GROUP BY st.id
+                ORDER BY st.nombre_transportador ASC, st.codigo_producto ASC
+            ");
+
+            $stmt->execute();
+            $stockTransito = $stmt->fetchAll();
+
+            $data = [];
+
+            foreach($stockTransito as $key => $value) {
+
+                $botones = $this->generarBotonesAccion($value);
+                $cantidadDisponible = $this->formatearCantidadConIndicadores($value);
+                $solicitudesPendientes = $this->formatearSolicitudesPendientes($value);
+                $fechaCargue = date('d/m/Y H:i', strtotime($value["fecha_carga"]));
+
+                // CREAR FILA DE DATOS
+                $data[] = [
+                    ($key + 1),
+                    $value["codigo_producto"],
+                    $this->truncarTexto($value["descripcion_producto"], 40),
+                    $cantidadDisponible,
+                    $value["nombre_transportador"],
+                    $value["sucursal_origen"],
+                    $fechaCargue,
+                    $solicitudesPendientes,
+                    $botones
+                ];
+            }
+
+            // RESPUESTA JSON
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(["data" => $data], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        } catch(Exception $e) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                "data" => [], 
+                "error" => $e->getMessage()
+            ], JSON_UNESCAPED_SLASHES);
         }
-
-        $stmt = ConexionCentral::conectar()->prepare("
-            SELECT 
-                st.*,
-                COALESCE(SUM(sd.cantidad_solicitada), 0) as cantidad_solicitada_pendiente,
-                COUNT(sd.id) as solicitudes_pendientes
-            FROM stock_transito st
-            LEFT JOIN solicitudes_descarga sd ON st.id = sd.id_stock_transito 
-                AND sd.estado = 'pendiente'
-            WHERE st.cantidad_disponible > 0 
-            {$filtroTransportador}
-            GROUP BY st.id
-            ORDER BY st.nombre_transportador ASC, st.codigo_producto ASC
-        ");
-
-        $stmt->execute();
-        $stockTransito = $stmt->fetchAll();
-
-        $data = [];
-
-        foreach($stockTransito as $key => $value) {
-
-            $botones = $this->generarBotonesAccion($value);
-            $cantidadDisponible = $this->formatearCantidadConIndicadores($value);
-            $solicitudesPendientes = $this->formatearSolicitudesPendientes($value);
-            $fechaCargue = date('d/m/Y H:i', strtotime($value["fecha_carga"]));
-
-            // CREAR FILA DE DATOS SIN ESCAPES PROBLEMÁTICOS
-            $data[] = [
-                ($key + 1),
-                $value["codigo_producto"],
-                $this->truncarTexto($value["descripcion_producto"], 40),
-                $cantidadDisponible,
-                $value["nombre_transportador"],
-                $value["sucursal_origen"],
-                $fechaCargue,
-                $solicitudesPendientes,
-                $botones
-            ];
-        }
-
-        // RESPUESTA JSON SIN FLAGS PROBLEMÁTICOS
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode(["data" => $data], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-
-    } catch(Exception $e) {
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode([
-            "data" => [], 
-            "error" => $e->getMessage()
-        ], JSON_UNESCAPED_SLASHES);
     }
-}
 
     private function generarBotonesAccion($stock) {
 
@@ -139,39 +139,23 @@ public function mostrarTablaStockTransito() {
         return $botones;
     }
 
-private function formatearCantidadConIndicadores($stock) {
-    
-    $cantidadDisponible = intval($stock["cantidad_disponible"]);
-    $cantidadSolicitada = intval($stock["cantidad_solicitada_pendiente"]);
-    $cantidadReal = $cantidadDisponible - $cantidadSolicitada;
+    private function formatearCantidadConIndicadores($stock) {
+        
+        $cantidadDisponible = intval($stock["cantidad_disponible"]);
+        $cantidadSolicitada = intval($stock["cantidad_solicitada_pendiente"]);
+        $cantidadReal = $cantidadDisponible - $cantidadSolicitada;
 
-    $html = '<div class="text-center">';
-    $html .= '<span class="stock-disponible">' . $cantidadDisponible . '</span>';
-    
-    if($cantidadSolicitada > 0) {
-        $html .= '<br><small class="stock-solicitado">(' . $cantidadSolicitada . ' solicitado)</small>';
-        $html .= '<br><small class="text-success"><strong>' . $cantidadReal . ' disponible</strong></small>';
+        $html = '<div class="text-center">';
+        $html .= '<span class="stock-disponible">' . $cantidadDisponible . '</span>';
+        
+        if($cantidadSolicitada > 0) {
+            $html .= '<br><small class="stock-solicitado">(' . $cantidadSolicitada . ' solicitado)</small>';
+            $html .= '<br><small class="text-success"><strong>' . $cantidadReal . ' disponible</strong></small>';
+        }
+        
+        $html .= '</div>';
+        return $html;
     }
-    
-    $html .= '</div>';
-    return $html;
-}
-
-private function formatearSolicitudesPendientes($stock) {
-    
-    $solicitudesPendientes = intval($stock["solicitudes_pendientes"]);
-    
-    if($solicitudesPendientes == 0) {
-        return '<span class="text-muted">-</span>';
-    }
-
-    $colorClass = 'label-warning';
-    if($solicitudesPendientes >= 3) {
-        $colorClass = 'label-danger';
-    }
-
-    return '<span class="label ' . $colorClass . '">' . $solicitudesPendientes . ' pendiente' . ($solicitudesPendientes != 1 ? 's' : '') . '</span>';
-}
 
     private function formatearSolicitudesPendientes($stock) {
         
