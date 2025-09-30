@@ -56,15 +56,19 @@ function cargarTablaStockTransito() {
         },
         "columnDefs": [
             {
-                "targets": [0, 3, 7, 8], // AÑADIR columna 8 para botones
+                "targets": [0, 3, 7, 8], // Columnas no ordenables: #, Cantidad, Solicitudes, Acciones
                 "orderable": false
             },
             {
-                "targets": [3],
+                "targets": [3], // Columna cantidad - centrada
                 "className": "text-center"
             },
             {
-                "targets": [8], // Columna de botones
+                "targets": [7], // Columna solicitudes - centrada
+                "className": "text-center"
+            },
+            {
+                "targets": [8], // Columna acciones - centrada
                 "className": "text-center"
             }
         ]

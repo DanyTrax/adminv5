@@ -35,22 +35,23 @@
 
             <div class="box-body">
                 
-                <table id="tablaStockTransito" class="table table-bordered table-striped dt-responsive" width="100%">
-                    
-                    <thead>
-                        <tr>
-                            <th style="width:10px">#</th>
-                            <th>Código</th>
-                            <th>Descripción</th>
-                            <th>Cantidad</th>
-                            <th>Transportador</th>
-                            <th>Origen</th>
-                            <th>Fecha Carga</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
+            <table id="tablaStockTransito" class="table table-bordered table-striped dt-responsive" width="100%">
+                
+                <thead>
+                    <tr>
+                        <th style="width:10px">#</th>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th>Cantidad</th>
+                        <th>Transportador</th>
+                        <th>Origen</th>
+                        <th>Fecha Carga</th>
+                        <th>Solicitudes</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
 
-                </table>
+            </table>
 
             </div>
 
