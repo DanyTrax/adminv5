@@ -826,110 +826,115 @@ public function ctrEditarDespacho($datos = null) {
             return false;
         }
     }
-    /*=============================================
-    PROCESAR DESPACHO EN TRÁNSITO - AGREGAR A STOCK TRANSITO
-    =============================================*/
-    static public function procesarDespachoEnTransito($idDespacho) {
+/*=============================================
+PROCESAR DESPACHO EN TRÁNSITO - AGREGAR A STOCK TRANSITO
+=============================================*/
+static public function procesarDespachoEnTransito($idDespacho) {
+    
+    try {
+        require_once "api-transferencias/conexion-central.php";
         
-        try {
-            require_once "api-transferencias/conexion-central.php";
-            
-            $conexion = ConexionCentral::conectar();
-            $conexion->beginTransaction();
-            
-            // 1. Obtener datos del despacho
-            $stmt = $conexion->prepare("SELECT * FROM despachos WHERE id = ?");
-            $stmt->execute([$idDespacho]);
-            $despacho = $stmt->fetch();
-            
-            if (!$despacho) {
-                throw new Exception("Despacho no encontrado");
-            }
-            
-            // 2. Decodificar productos del despacho
-            $productosDespacho = json_decode($despacho['productos_despacho'], true);
-            
-            if (!$productosDespacho || !is_array($productosDespacho)) {
-                throw new Exception("No se pudieron decodificar los productos del despacho");
-            }
-            
-            // 3. Procesar cada producto y agregarlo al stock en tránsito
-            foreach ($productosDespacho as $producto) {
-                
-                $codigoProducto = $producto['codigo'];
-                $cantidadDespacho = intval($producto['cantidad']);
-                
-                // Verificar si ya existe en stock_transito del mismo transportador y despacho
-                $stmt = $conexion->prepare("
-                    SELECT id, cantidad_disponible 
-                    FROM stock_transito 
-                    WHERE codigo_producto = ? 
-                    AND transportador_id = ? 
-                    AND numero_despacho_origen = ?
-                ");
-                $stmt->execute([
-                    $codigoProducto, 
-                    $_SESSION['id'], 
-                    $despacho['numero_despacho']
-                ]);
-                $stockExistente = $stmt->fetch();
-                
-                if ($stockExistente) {
-                    // Si ya existe, sumar a la cantidad existente
-                    $nuevaCantidad = $stockExistente['cantidad_disponible'] + $cantidadDespacho;
-                    $stmt = $conexion->prepare("
-                        UPDATE stock_transito 
-                        SET cantidad_disponible = ?,
-                            fecha_actualizacion = NOW()
-                        WHERE id = ?
-                    ");
-                    $stmt->execute([$nuevaCantidad, $stockExistente['id']]);
-                    
-                    error_log("✅ Stock en tránsito actualizado - Código: {$codigoProducto}, Nueva cantidad: {$nuevaCantidad}");
-                    
-                } else {
-                    // Crear nuevo registro en stock_transito
-                    $stmt = $conexion->prepare("
-                        INSERT INTO stock_transito (
-                            codigo_producto, descripcion_producto, cantidad_disponible,
-                            transportador_id, nombre_transportador, sucursal_origen,
-                            numero_despacho_origen, fecha_carga
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
-                    ");
-                    
-                    $nombreTransportador = $_SESSION['nombre'] ?? 'Administrador';
-                    $sucursalOrigen = $_SESSION['sucursal'] ?? 'Sucursal Principal';
-                    
-                    $stmt->execute([
-                        $codigoProducto,
-                        $producto['descripcion'],
-                        $cantidadDespacho,
-                        $_SESSION['id'],
-                        $nombreTransportador,
-                        $sucursalOrigen,
-                        $despacho['numero_despacho']
-                    ]);
-                    
-                    error_log("✅ Nuevo stock en tránsito creado - Código: {$codigoProducto}, Cantidad: {$cantidadDespacho}");
-                }
-            }
-            
-            $conexion->commit();
-            
-            return [
-                "exito" => true, 
-                "mensaje" => "Despacho procesado y productos agregados al stock en tránsito exitosamente"
-            ];
-            
-        } catch (Exception $e) {
-            if (isset($conexion)) {
-                $conexion->rollBack();
-            }
-            error_log("❌ Error procesando despacho en tránsito: " . $e->getMessage());
-            return [
-                "exito" => false, 
-                "mensaje" => "Error: " . $e->getMessage()
-            ];
+        $conexion = ConexionCentral::conectar();
+        $conexion->beginTransaction();
+        
+        // 1. Obtener datos del despacho
+        $stmt = $conexion->prepare("SELECT * FROM despachos WHERE id = ?");
+        $stmt->execute([$idDespacho]);
+        $despacho = $stmt->fetch();
+        
+        if (!$despacho) {
+            throw new Exception("Despacho no encontrado");
         }
+        
+        // 2. Decodificar productos del despacho
+        $productosDespacho = json_decode($despacho['productos_despacho'], true);
+        
+        if (!$productosDespacho || !is_array($productosDespacho)) {
+            throw new Exception("No se pudieron decodificar los productos del despacho");
+        }
+        
+        error_log("🚛 Procesando despacho #{$despacho['numero_despacho']} con " . count($productosDespacho) . " productos");
+        
+        // 3. Procesar cada producto y agregarlo al stock en tránsito
+        foreach ($productosDespacho as $producto) {
+            
+            $codigoProducto = $producto['codigo'];
+            $cantidadDespacho = intval($producto['cantidad']);
+            $descripcionProducto = $producto['descripcion'] ?? $producto['nombre'] ?? 'Producto sin descripción';
+            
+            // Verificar si ya existe en stock_transito del mismo despacho
+            $stmt = $conexion->prepare("
+                SELECT id, cantidad_disponible 
+                FROM stock_transito 
+                WHERE codigo_producto = ? 
+                AND numero_despacho_origen = ?
+                AND transportador_id = ?
+            ");
+            $stmt->execute([
+                $codigoProducto, 
+                $despacho['numero_despacho'],
+                $_SESSION['id']
+            ]);
+            $stockExistente = $stmt->fetch();
+            
+            if ($stockExistente) {
+                // Si ya existe, sumar a la cantidad existente
+                $nuevaCantidad = $stockExistente['cantidad_disponible'] + $cantidadDespacho;
+                $stmt = $conexion->prepare("
+                    UPDATE stock_transito 
+                    SET cantidad_disponible = ?
+                    WHERE id = ?
+                ");
+                $stmt->execute([$nuevaCantidad, $stockExistente['id']]);
+                
+                error_log("✅ Stock actualizado - Código: {$codigoProducto}, Nueva cantidad: {$nuevaCantidad}");
+                
+            } else {
+                // Crear nuevo registro en stock_transito
+                $stmt = $conexion->prepare("
+                    INSERT INTO stock_transito (
+                        codigo_producto, descripcion_producto, cantidad_disponible,
+                        transportador_id, nombre_transportador, sucursal_origen,
+                        numero_despacho_origen, fecha_carga, id_despacho_origen
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)
+                ");
+                
+                $nombreTransportador = $_SESSION['nombre'] ?? 'Transportador';
+                $sucursalOrigen = $_SESSION['sucursal'] ?? $despacho['nombre_sucursal_origen'] ?? 'Sucursal Principal';
+                
+                $stmt->execute([
+                    $codigoProducto,
+                    $descripcionProducto,
+                    $cantidadDespacho,
+                    $_SESSION['id'],
+                    $nombreTransportador,
+                    $sucursalOrigen,
+                    $despacho['numero_despacho'],
+                    $idDespacho
+                ]);
+                
+                error_log("✅ Nuevo stock creado - Código: {$codigoProducto}, Cantidad: {$cantidadDespacho}");
+            }
+        }
+        
+        $conexion->commit();
+        
+        error_log("🎉 Despacho #{$despacho['numero_despacho']} procesado exitosamente en stock tránsito");
+        
+        return [
+            "exito" => true, 
+            "mensaje" => "Despacho procesado y productos agregados al stock en tránsito exitosamente"
+        ];
+        
+    } catch (Exception $e) {
+        if (isset($conexion)) {
+            $conexion->rollBack();
+        }
+        error_log("❌ Error procesando despacho en tránsito: " . $e->getMessage());
+        return [
+            "exito" => false, 
+            "mensaje" => "Error: " . $e->getMessage()
+        ];
     }
+}
 }
