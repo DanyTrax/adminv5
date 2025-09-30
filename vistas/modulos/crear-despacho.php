@@ -30,7 +30,7 @@ if(isset($_POST["crearDespacho"])){
         // Preparar datos para el controlador
         $datosDespacho = array(
             "id_solicitud_origen" => $_POST["idSolicitudOrigen"] ?? null,
-            "nombre_sucursal_origen" => $_SESSION["sucursal"] ?? "Sucursal Local",
+            "nombre_sucursal_origen" => obtenerNombreSucursalLocal(),
             "id_usuario_creador" => $_SESSION["id"],
             "nombre_usuario_creador" => $_SESSION["nombre"],
             "productos_despacho" => $_POST["productosDespacho"],
