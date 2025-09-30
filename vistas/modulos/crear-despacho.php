@@ -20,6 +20,70 @@ if($_SESSION["perfil"] == "Limitado" || $_SESSION["perfil"] == "Transportador"){
     return;
 }}
 
+// PROCESAMIENTO DEL FORMULARIO
+if(isset($_POST["crearDespacho"])){
+    error_log("✅ Entrando al procesamiento del formulario crearDespacho");
+    
+    try {
+        require_once "controladores/despachos.controlador.php";
+        
+        // Preparar datos para el controlador
+        $datosDespacho = array(
+            "id_solicitud_origen" => $_POST["idSolicitudOrigen"] ?? null,
+            "nombre_sucursal_origen" => $_SESSION["sucursal"] ?? "Sucursal Local",
+            "id_usuario_creador" => $_SESSION["id"],
+            "nombre_usuario_creador" => $_SESSION["nombre"],
+            "productos_despacho" => $_POST["productosDespacho"],
+            "total_productos" => intval($_POST["totalProductos"]),
+            "total_cantidad" => intval($_POST["totalCantidad"]),
+            "detalle_adicional" => $_POST["detalleAdicional"] ?? ""
+        );
+        
+        error_log("📦 Datos preparados: " . print_r($datosDespacho, true));
+        
+        $resultado = ControladorDespachos::ctrCrearDespacho($datosDespacho);
+        
+        error_log("📋 Resultado del controlador: " . $resultado);
+        
+        if($resultado == "ok") {
+            error_log("✅ Despacho creado exitosamente");
+            echo '<script>
+                swal({
+                    title: "¡Despacho creado!",
+                    text: "El despacho ha sido creado exitosamente",
+                    type: "success",
+                    confirmButtonText: "Ver despachos"
+                }).then(function() {
+                    window.location = "despachos";
+                });
+            </script>';
+        } else {
+            error_log("❌ Error creando despacho: " . $resultado);
+            echo '<script>
+                swal({
+                    title: "Error",
+                    text: "Error al crear el despacho: ' . htmlspecialchars($resultado) . '",
+                    type: "error",
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+        }
+        
+    } catch(Exception $e) {
+        error_log("❌ Excepción creando despacho: " . $e->getMessage());
+        echo '<script>
+            swal({
+                title: "Error",
+                text: "Error interno: ' . htmlspecialchars($e->getMessage()) . '",
+                type: "error",
+                confirmButtonText: "Cerrar"
+            });
+        </script>';
+    }
+} else {
+    error_log("⚠️ No se encontró procesamiento para crearDespacho");
+}
+
 // LÓGICA DE EDICIÓN
 $modoEdicion = false;
 $despachoEditar = null;
