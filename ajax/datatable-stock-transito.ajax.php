@@ -1,6 +1,9 @@
 <?php
 
-session_start();
+// Iniciar sesión solo si no está activa
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 require_once __DIR__ . "/../api-transferencias/conexion-central.php";
 
@@ -9,10 +12,14 @@ class TablaStockTransito {
     public function mostrarTablaStockTransito() {
 
         try {
+            // Valor por defecto si no hay sesión
+            $perfilUsuario = isset($_SESSION["perfil"]) ? $_SESSION["perfil"] : "Administrador";
+            $idUsuario = isset($_SESSION["id"]) ? $_SESSION["id"] : 1;
+            
             // Si es transportador, solo mostrar su stock
             $filtroTransportador = "";
-            if($_SESSION["perfil"] == "Transportador") {
-                $filtroTransportador = "AND st.transportador_id = " . $_SESSION["id"];
+            if($perfilUsuario == "Transportador") {
+                $filtroTransportador = "AND st.transportador_id = " . $idUsuario;
             }
 
             $stmt = ConexionCentral::conectar()->prepare("
@@ -36,7 +43,7 @@ class TablaStockTransito {
 
             foreach($stockTransito as $key => $value) {
 
-                $botones = $this->generarBotonesAccion($value);
+                $botones = $this->generarBotonesAccion($value, $perfilUsuario, $idUsuario);
                 $cantidadDisponible = $this->formatearCantidadConIndicadores($value);
                 $solicitudesPendientes = $this->formatearSolicitudesPendientes($value);
                 $fechaCargue = date('d/m/Y H:i', strtotime($value["fecha_carga"]));
@@ -55,7 +62,7 @@ class TablaStockTransito {
                 ];
             }
 
-            // RESPUESTA JSON
+            // RESPUESTA JSON LIMPIA
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode(["data" => $data], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
@@ -64,11 +71,11 @@ class TablaStockTransito {
             echo json_encode([
                 "data" => [], 
                 "error" => $e->getMessage()
-            ], JSON_UNESCAPED_SLASHES);
+            ]);
         }
     }
 
-    private function generarBotonesAccion($stock) {
+    private function generarBotonesAccion($stock, $perfilUsuario, $idUsuario) {
 
         $botones = '<div class="btn-group">';
 
@@ -82,9 +89,9 @@ class TablaStockTransito {
                     </button>';
 
         // BOTONES SEGÚN PERFIL
-        if($_SESSION["perfil"] == "Transportador") {
+        if($perfilUsuario == "Transportador") {
             
-            if($stock["transportador_id"] == $_SESSION["id"]) {
+            if($stock["transportador_id"] == $idUsuario) {
                 if($stock["solicitudes_pendientes"] > 0) {
                     $botones .= '<button class="btn btn-warning btn-xs btnVerSolicitudesPendientes" 
                                         data-toggle="tooltip" 
@@ -121,7 +128,7 @@ class TablaStockTransito {
                             </button>';
             }
 
-            if($_SESSION["perfil"] == "Administrador" && $stock["cantidad_disponible"] > 0) {
+            if($perfilUsuario == "Administrador" && $stock["cantidad_disponible"] > 0) {
                 $botones .= '<button class="btn btn-danger btn-xs btnForzarDescarga" 
                                     data-toggle="tooltip" 
                                     title="Forzar descarga (Admin)" 
@@ -181,32 +188,7 @@ class TablaStockTransito {
     }
 }
 
-/*=============================================
-DETERMINAR QUÉ FUNCIÓN EJECUTAR
-=============================================*/
-
-// DEBUG: Ver qué parámetros llegan
-error_log("POST recibido: " . print_r($_POST, true));
-
-// SI SE SOLICITA TABLA ESPECÍFICAMENTE O NO HAY PARÁMETROS
-if((isset($_POST["tabla"]) && $_POST["tabla"] == "stock-transito") || empty($_POST)) {
-    $activarStock = new TablaStockTransito();
-    $activarStock->mostrarTablaStockTransito();
-    exit;
-}
-
-// SI SE SOLICITA RESUMEN (para dashboard)
-if(isset($_POST["resumen"]) && $_POST["resumen"] == "dashboard") {
-    echo json_encode([
-        "total_productos" => 0,
-        "total_unidades" => 0,
-        "total_transportadores" => 0,
-        "solicitudes_pendientes" => 0
-    ]);
-    exit;
-}
-
-// DEFAULT: mostrar tabla
+// EJECUTAR DIRECTAMENTE SIN VERIFICAR PARÁMETROS
 $activarStock = new TablaStockTransito();
 $activarStock->mostrarTablaStockTransito();
 ?>

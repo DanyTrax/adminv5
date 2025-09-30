@@ -211,118 +211,121 @@ MODAL VER HISTORIAL
 </div>
 
 <script>
-// Variables globales simples
-var perfilUsuario = '<?php echo $_SESSION["perfil"] ?? "Administrador"; ?>';
-var idUsuario = <?php echo $_SESSION["id"] ?? 1; ?>;
-var tablaStock = null;
-
-console.log("🔧 Stock Tránsito - Variables:", perfilUsuario, idUsuario);
-
-// Inicializar cuando todo esté listo
-$(document).ready(function() {
+// EVITAR CONFLICTOS - NO DECLARAR VARIABLES GLOBALES
+(function() {
     
-    setTimeout(function() {
-        console.log("🚛 Iniciando tabla stock tránsito...");
+    console.log("🚛 Inicializando Stock Tránsito...");
+    
+    var tablaStock = null;
+    
+    // Esperar a que todo se cargue
+    $(document).ready(function() {
         
-        // Limpiar cualquier tabla anterior
-        if ($.fn.DataTable.isDataTable('#tablaStockTransito')) {
-            $('#tablaStockTransito').DataTable().destroy();
-        }
-        
-        // Crear tabla nueva
-        tablaStock = $('#tablaStockTransito').DataTable({
-            "ajax": {
-                "url": "ajax/datatable-stock-transito.ajax.php",
-                "type": "POST"
-            },
-            "processing": true,
-            "language": {
-                "sProcessing": "Procesando...",
-                "sLengthMenu": "Mostrar _MENU_ registros",
-                "sZeroRecords": "No se encontraron productos en tránsito",
-                "sEmptyTable": "No hay productos en stock de tránsito",
-                "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-                "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
-                "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-                "sSearch": "Buscar:",
-                "sLoadingRecords": "Cargando...",
-                "oPaginate": {
-                    "sFirst": "Primero",
-                    "sLast": "Último", 
-                    "sNext": "Siguiente",
-                    "sPrevious": "Anterior"
-                }
-            },
-            "columnDefs": [
-                { "targets": [0, 3, 7, 8], "orderable": false },
-                { "targets": [3, 7, 8], "className": "text-center" }
-            ],
-            "drawCallback": function() {
-                var info = this.api().page.info();
-                console.log("✅ Tabla cargada:", info.recordsTotal, "registros");
-                
-                // Configurar eventos de botones
-                configurarBotones();
+        setTimeout(function() {
+            
+            console.log("⚡ Creando DataTable...");
+            
+            // Limpiar tabla anterior
+            if ($.fn.DataTable.isDataTable('#tablaStockTransito')) {
+                $('#tablaStockTransito').DataTable().destroy();
             }
+            
+            // Crear nueva tabla
+            tablaStock = $('#tablaStockTransito').DataTable({
+                "ajax": {
+                    "url": "ajax/datatable-stock-transito.ajax.php",
+                    "type": "POST",
+                    "error": function(xhr, error, thrown) {
+                        console.error("❌ Error AJAX:", error);
+                        console.error("Respuesta:", xhr.responseText);
+                    }
+                },
+                "processing": true,
+                "language": {
+                    "sProcessing": "Procesando...",
+                    "sLengthMenu": "Mostrar _MENU_ registros",
+                    "sZeroRecords": "No se encontraron productos en tránsito",
+                    "sEmptyTable": "No hay productos en stock de tránsito",
+                    "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+                    "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
+                    "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+                    "sSearch": "Buscar:",
+                    "sLoadingRecords": "Cargando...",
+                    "oPaginate": {
+                        "sFirst": "Primero",
+                        "sLast": "Último", 
+                        "sNext": "Siguiente",
+                        "sPrevious": "Anterior"
+                    }
+                },
+                "columnDefs": [
+                    { "targets": [0, 3, 7, 8], "orderable": false },
+                    { "targets": [3, 7, 8], "className": "text-center" }
+                ],
+                "drawCallback": function() {
+                    var info = this.api().page.info();
+                    console.log("✅ Tabla cargada:", info.recordsTotal, "registros");
+                    
+                    // Configurar eventos
+                    configurarEventos();
+                }
+            });
+            
+            // Función global para actualizar
+            window.actualizarTablaStock = function() {
+                if (tablaStock) {
+                    tablaStock.ajax.reload();
+                    console.log("🔄 Tabla actualizada");
+                }
+            };
+            
+        }, 2000); // Esperar 2 segundos
+        
+    });
+    
+    // Configurar eventos
+    function configurarEventos() {
+        
+        // Ver historial
+        $(document).off('click', '.btnVerHistorialProducto').on('click', '.btnVerHistorialProducto', function() {
+            var codigo = $(this).attr('codigoProducto');
+            console.log("📋 Ver historial:", codigo);
+            
+            $("#historialCodigo").text(codigo);
+            $("#modalHistorial").modal("show");
+            $("#contenidoHistorial").html('<p class="text-center">Historial del producto ' + codigo + '</p>');
         });
         
-    }, 1500); // Esperar 1.5 segundos
-});
-
-// Configurar eventos de botones
-function configurarBotones() {
-    
-    // Ver historial
-    $(document).off('click', '.btnVerHistorialProducto').on('click', '.btnVerHistorialProducto', function() {
-        var codigo = $(this).attr('codigoProducto');
-        console.log("📋 Ver historial:", codigo);
+        // Solicitar descarga
+        $(document).off('click', '.btnSolicitarDescarga').on('click', '.btnSolicitarDescarga', function() {
+            var datos = {
+                id: $(this).attr('idStockTransito'),
+                codigo: $(this).attr('codigoProducto'),
+                descripcion: $(this).attr('descripcionProducto'),
+                cantidad: $(this).attr('cantidadDisponible'),
+                transportador: $(this).attr('nombreTransportador'),
+                origen: $(this).attr('sucursalOrigen')
+            };
+            
+            console.log("💼 Solicitar descarga:", datos.codigo);
+            
+            // Llenar modal
+            $("#infoCodigo").text(datos.codigo);
+            $("#infoDescripcion").text(datos.descripcion);
+            $("#infoTransportador").text(datos.transportador);
+            $("#infoOrigen").text(datos.origen);
+            $("#cantidadDisponible").val(datos.cantidad);
+            $("#cantidadSolicitada").attr("max", datos.cantidad).val(1);
+            $("#idStockTransito").val(datos.id);
+            $("#codigoProducto").val(datos.codigo);
+            
+            $("#modalSolicitarDescarga").modal("show");
+        });
         
-        $("#historialCodigo").text(codigo);
-        $("#modalHistorial").modal("show");
-        $("#contenidoHistorial").html('<p class="text-center">Historial del producto ' + codigo + '</p>');
-    });
-    
-    // Solicitar descarga
-    $(document).off('click', '.btnSolicitarDescarga').on('click', '.btnSolicitarDescarga', function() {
-        var datos = {
-            id: $(this).attr('idStockTransito'),
-            codigo: $(this).attr('codigoProducto'),
-            descripcion: $(this).attr('descripcionProducto'),
-            cantidad: $(this).attr('cantidadDisponible'),
-            transportador: $(this).attr('nombreTransportador'),
-            origen: $(this).attr('sucursalOrigen')
-        };
-        
-        console.log("💼 Solicitar descarga:", datos.codigo);
-        
-        // Llenar modal
-        $("#infoCodigo").text(datos.codigo);
-        $("#infoDescripcion").text(datos.descripcion);
-        $("#infoTransportador").text(datos.transportador);
-        $("#infoOrigen").text(datos.origen);
-        $("#cantidadDisponible").val(datos.cantidad);
-        $("#cantidadSolicitada").attr("max", datos.cantidad).val(1);
-        $("#idStockTransito").val(datos.id);
-        $("#codigoProducto").val(datos.codigo);
-        
-        $("#modalSolicitarDescarga").modal("show");
-    });
-    
-    console.log("🔗 Botones configurados");
-}
-
-// Función para actualizar tabla
-function actualizarTablaStock() {
-    if (tablaStock) {
-        console.log("🔄 Actualizando...");
-        tablaStock.ajax.reload();
-        
-        // Mostrar mensaje
-        if (typeof swal === 'function') {
-            swal("¡Actualizado!", "La tabla ha sido actualizada", "success");
-        }
+        console.log("🔗 Eventos configurados");
     }
-}
+    
+})();
 
-console.log("✅ Script cargado");
+console.log("✅ Módulo cargado");
 </script>
