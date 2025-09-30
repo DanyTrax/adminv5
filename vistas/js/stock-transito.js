@@ -24,7 +24,13 @@ CARGAR DATATABLE
 function cargarTablaStockTransito() {
     
     tablaStockTransito = $('#tablaStockTransito').DataTable({
-        "ajax": "ajax/datatable-stock-transito.ajax.php",
+        "ajax": {
+            "url": "ajax/datatable-stock-transito.ajax.php",
+            "type": "POST",
+            "data": {
+                "tabla": "stock-transito"
+            }
+        },
         "deferRender": true,
         "retrieve": true,
         "processing": true,
@@ -50,7 +56,7 @@ function cargarTablaStockTransito() {
         },
         "columnDefs": [
             {
-                "targets": [0, 3, 7],
+                "targets": [0, 3, 7, 8], // AÑADIR columna 8 para botones
                 "orderable": false
             },
             {
@@ -58,7 +64,7 @@ function cargarTablaStockTransito() {
                 "className": "text-center"
             },
             {
-                "targets": [7],
+                "targets": [8], // Columna de botones
                 "className": "text-center"
             }
         ]
