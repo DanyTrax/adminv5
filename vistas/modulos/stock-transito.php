@@ -26,7 +26,7 @@
                 </h3>
                 
                 <div class="box-tools pull-right">
-                    <button type="button" class="btn btn-primary btn-sm" onclick="actualizarTabla()">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="actualizarTablaStock()">
                         <i class="fa fa-refresh"></i> Actualizar
                     </button>
                 </div>
@@ -211,174 +211,118 @@ MODAL VER HISTORIAL
 </div>
 
 <script>
-// Definir variables globales desde PHP
-window.perfilUsuario = '<?php echo $_SESSION["perfil"] ?? "Invitado"; ?>';
-window.idUsuario = <?php echo $_SESSION["id"] ?? 0; ?>;
+// Variables globales simples
+var perfilUsuario = '<?php echo $_SESSION["perfil"] ?? "Administrador"; ?>';
+var idUsuario = <?php echo $_SESSION["id"] ?? 1; ?>;
+var tablaStock = null;
 
-console.log("🔧 Variables PHP definidas:");
-console.log("- perfilUsuario:", window.perfilUsuario);
-console.log("- idUsuario:", window.idUsuario);
+console.log("🔧 Stock Tránsito - Variables:", perfilUsuario, idUsuario);
 
-// CREAR TABLA DIRECTAMENTE AQUÍ - SIN DEPENDER DE ARCHIVOS EXTERNOS
+// Inicializar cuando todo esté listo
 $(document).ready(function() {
     
-    console.log("🚛 Inicializando DataTable Stock Tránsito directamente...");
-    
-    // Destruir tabla existente si existe
-    if ($.fn.DataTable.isDataTable('#tablaStockTransito')) {
-        $('#tablaStockTransito').DataTable().destroy();
-    }
-    
-    // Crear nuevo DataTable
-    var tablaStockTransito = $('#tablaStockTransito').DataTable({
-        "ajax": {
-            "url": "ajax/datatable-stock-transito.ajax.php",
-            "type": "POST",
-            "data": function(d) {
-                // Agregar parámetro específico
-                d.tabla = "stock-transito";
-                console.log("📤 Enviando datos:", d);
-                return d;
+    setTimeout(function() {
+        console.log("🚛 Iniciando tabla stock tránsito...");
+        
+        // Limpiar cualquier tabla anterior
+        if ($.fn.DataTable.isDataTable('#tablaStockTransito')) {
+            $('#tablaStockTransito').DataTable().destroy();
+        }
+        
+        // Crear tabla nueva
+        tablaStock = $('#tablaStockTransito').DataTable({
+            "ajax": {
+                "url": "ajax/datatable-stock-transito.ajax.php",
+                "type": "POST"
             },
-            "error": function(xhr, error, code) {
-                console.error("❌ Error AJAX:", xhr.status, error);
-                console.error("Respuesta completa:", xhr.responseText);
-                
-                // Mostrar respuesta en la página para debug
-                if(xhr.responseText) {
-                    alert("Error en AJAX:\n" + xhr.responseText.substring(0, 500));
+            "processing": true,
+            "language": {
+                "sProcessing": "Procesando...",
+                "sLengthMenu": "Mostrar _MENU_ registros",
+                "sZeroRecords": "No se encontraron productos en tránsito",
+                "sEmptyTable": "No hay productos en stock de tránsito",
+                "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
+                "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
+                "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+                "sSearch": "Buscar:",
+                "sLoadingRecords": "Cargando...",
+                "oPaginate": {
+                    "sFirst": "Primero",
+                    "sLast": "Último", 
+                    "sNext": "Siguiente",
+                    "sPrevious": "Anterior"
                 }
             },
-            "success": function(data) {
-                console.log("✅ AJAX exitoso - datos recibidos:", data);
-                console.log("📊 Número de registros:", data.data ? data.data.length : 0);
+            "columnDefs": [
+                { "targets": [0, 3, 7, 8], "orderable": false },
+                { "targets": [3, 7, 8], "className": "text-center" }
+            ],
+            "drawCallback": function() {
+                var info = this.api().page.info();
+                console.log("✅ Tabla cargada:", info.recordsTotal, "registros");
+                
+                // Configurar eventos de botones
+                configurarBotones();
             }
-        },
-        "processing": true,
-        "deferRender": true,
-        "language": {
-            "sProcessing": "Procesando...",
-            "sLengthMenu": "Mostrar _MENU_ registros",
-            "sZeroRecords": "No se encontraron productos en tránsito",
-            "sEmptyTable": "No hay productos en stock de tránsito",
-            "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-            "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
-            "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-            "sSearch": "Buscar:",
-            "sLoadingRecords": "Cargando...",
-            "oPaginate": {
-                "sFirst": "Primero",
-                "sLast": "Último",
-                "sNext": "Siguiente",
-                "sPrevious": "Anterior"
-            }
-        },
-        "columnDefs": [
-            {
-                "targets": [0, 3, 7, 8], // #, Cantidad, Solicitudes, Acciones
-                "orderable": false
-            },
-            {
-                "targets": [3, 7, 8], // Cantidad, Solicitudes, Acciones
-                "className": "text-center"
-            }
-        ],
-        "drawCallback": function() {
-            console.log("✅ DataTable Stock Tránsito dibujado exitosamente");
-            var info = this.api().page.info();
-            console.log("📊 Registros totales:", info.recordsTotal);
-            console.log("📊 Registros mostrados:", info.recordsDisplay);
-            
-            // Configurar eventos después de dibujar
-            configurarEventosStockTransito();
-        },
-        "initComplete": function() {
-            console.log("🎯 DataTable Stock Tránsito inicializado completamente");
-        }
-    });
-    
-    // Función para actualizar tabla
-    window.actualizarTablaStockTransito = function() {
-        if (tablaStockTransito) {
-            tablaStockTransito.ajax.reload(function() {
-                console.log("🔄 Tabla actualizada");
-            });
-        }
-    };
-    
+        });
+        
+    }, 1500); // Esperar 1.5 segundos
 });
 
-// CONFIGURAR EVENTOS DE LOS BOTONES
-function configurarEventosStockTransito() {
+// Configurar eventos de botones
+function configurarBotones() {
     
-    console.log("🔗 Configurando eventos de Stock Tránsito...");
-    
-    // Botón Ver Historial
-    $(document).off('click', '.btnVerHistorialProducto').on('click', '.btnVerHistorialProducto', function(e) {
-        e.preventDefault();
-        
+    // Ver historial
+    $(document).off('click', '.btnVerHistorialProducto').on('click', '.btnVerHistorialProducto', function() {
         var codigo = $(this).attr('codigoProducto');
-        var transportadorId = $(this).attr('transportadorId');
+        console.log("📋 Ver historial:", codigo);
         
-        console.log("📋 Ver historial de producto:", codigo);
-        
-        // Aquí puedes agregar la lógica para mostrar el historial
-        alert("Ver historial del producto: " + codigo);
+        $("#historialCodigo").text(codigo);
+        $("#modalHistorial").modal("show");
+        $("#contenidoHistorial").html('<p class="text-center">Historial del producto ' + codigo + '</p>');
     });
     
-    // Botón Solicitar Descarga
-    $(document).off('click', '.btnSolicitarDescarga').on('click', '.btnSolicitarDescarga', function(e) {
-        e.preventDefault();
+    // Solicitar descarga
+    $(document).off('click', '.btnSolicitarDescarga').on('click', '.btnSolicitarDescarga', function() {
+        var datos = {
+            id: $(this).attr('idStockTransito'),
+            codigo: $(this).attr('codigoProducto'),
+            descripcion: $(this).attr('descripcionProducto'),
+            cantidad: $(this).attr('cantidadDisponible'),
+            transportador: $(this).attr('nombreTransportador'),
+            origen: $(this).attr('sucursalOrigen')
+        };
         
-        var id = $(this).attr('idStockTransito');
-        var codigo = $(this).attr('codigoProducto');
-        var descripcion = $(this).attr('descripcionProducto');
-        var cantidad = $(this).attr('cantidadDisponible');
-        var transportador = $(this).attr('nombreTransportador');
-        var origen = $(this).attr('sucursalOrigen');
+        console.log("💼 Solicitar descarga:", datos.codigo);
         
-        console.log("💼 Solicitar descarga de:", codigo, "Cantidad:", cantidad);
+        // Llenar modal
+        $("#infoCodigo").text(datos.codigo);
+        $("#infoDescripcion").text(datos.descripcion);
+        $("#infoTransportador").text(datos.transportador);
+        $("#infoOrigen").text(datos.origen);
+        $("#cantidadDisponible").val(datos.cantidad);
+        $("#cantidadSolicitada").attr("max", datos.cantidad).val(1);
+        $("#idStockTransito").val(datos.id);
+        $("#codigoProducto").val(datos.codigo);
         
-        // Aquí puedes agregar la lógica para solicitar descarga
-        alert("Solicitar descarga de: " + codigo + " (Cantidad: " + cantidad + ")");
+        $("#modalSolicitarDescarga").modal("show");
     });
     
-    // Botón Ver Solicitudes Pendientes
-    $(document).off('click', '.btnVerSolicitudesPendientes').on('click', '.btnVerSolicitudesPendientes', function(e) {
-        e.preventDefault();
-        
-        var transportadorId = $(this).attr('transportadorId');
-        
-        console.log("🔔 Ver solicitudes pendientes del transportador:", transportadorId);
-        
-        alert("Ver solicitudes pendientes");
-    });
-    
-    // Botón Forzar Descarga (Admin)
-    $(document).off('click', '.btnForzarDescarga').on('click', '.btnForzarDescarga', function(e) {
-        e.preventDefault();
-        
-        var id = $(this).attr('idStockTransito');
-        var codigo = $(this).attr('codigoProducto');
-        
-        console.log("⚡ Forzar descarga (Admin):", codigo);
-        
-        if (confirm("¿Está seguro de forzar la descarga de este producto?")) {
-            alert("Descarga forzada del producto: " + codigo);
-        }
-    });
-    
-    console.log("✅ Eventos de Stock Tránsito configurados");
+    console.log("🔗 Botones configurados");
 }
 
-// Función para actualizar tabla desde botón
-function actualizarTabla() {
-    if (typeof window.actualizarTablaStockTransito === 'function') {
-        window.actualizarTablaStockTransito();
-    } else {
-        location.reload();
+// Función para actualizar tabla
+function actualizarTablaStock() {
+    if (tablaStock) {
+        console.log("🔄 Actualizando...");
+        tablaStock.ajax.reload();
+        
+        // Mostrar mensaje
+        if (typeof swal === 'function') {
+            swal("¡Actualizado!", "La tabla ha sido actualizada", "success");
+        }
     }
 }
 
-console.log("✅ Script Stock Tránsito cargado completamente");
+console.log("✅ Script cargado");
 </script>
