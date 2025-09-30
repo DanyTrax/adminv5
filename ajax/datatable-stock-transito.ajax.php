@@ -209,7 +209,9 @@ if(isset($_POST["resumen"]) && $_POST["resumen"] == "dashboard") {
 }
 
 // DEFAULT: mostrar tabla
-$activarStock = new TablaStockTransito();
-$activarStock->mostrarTablaStockTransito();
-
+if(empty($_POST)) {
+    $activarStock = new TablaStockTransito();
+    $activarStock->mostrarTablaStockTransito();
+    exit;
+}
 ?>
