@@ -27,7 +27,7 @@ function obtenerNombreSucursalLocal() {
         
         $stmt = Conexion::conectar()->prepare("
             SELECT nombre 
-            FROM sucursales 
+            FROM sucursal_local 
             WHERE es_local = 1 
             LIMIT 1
         ");
