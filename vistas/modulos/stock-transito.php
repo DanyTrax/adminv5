@@ -219,7 +219,6 @@ console.log("- perfilUsuario:", window.perfilUsuario);
 console.log("- idUsuario:", window.idUsuario);
 </script>
 <!-- Forzar carga de archivos sin caché -->
-<script src="vistas/js/stock-transito.js?v=<?php echo time(); ?>"></script>
 <script>
 // Verificar que no hay conflictos
 if (typeof perfilUsuario === 'undefined') {
