@@ -283,48 +283,114 @@ MODAL VER HISTORIAL
         
     });
     
-    // Configurar eventos
-    function configurarEventos() {
-        
-        // Ver historial
-        $(document).off('click', '.btnVerHistorialProducto').on('click', '.btnVerHistorialProducto', function() {
-            var codigo = $(this).attr('codigoProducto');
-            console.log("📋 Ver historial:", codigo);
-            
-            $("#historialCodigo").text(codigo);
-            $("#modalHistorial").modal("show");
-            $("#contenidoHistorial").html('<p class="text-center">Historial del producto ' + codigo + '</p>');
-        });
-        
-        // Solicitar descarga
-        $(document).off('click', '.btnSolicitarDescarga').on('click', '.btnSolicitarDescarga', function() {
-            var datos = {
-                id: $(this).attr('idStockTransito'),
-                codigo: $(this).attr('codigoProducto'),
-                descripcion: $(this).attr('descripcionProducto'),
-                cantidad: $(this).attr('cantidadDisponible'),
-                transportador: $(this).attr('nombreTransportador'),
-                origen: $(this).attr('sucursalOrigen')
-            };
-            
-            console.log("💼 Solicitar descarga:", datos.codigo);
-            
-            // Llenar modal
-            $("#infoCodigo").text(datos.codigo);
-            $("#infoDescripcion").text(datos.descripcion);
-            $("#infoTransportador").text(datos.transportador);
-            $("#infoOrigen").text(datos.origen);
-            $("#cantidadDisponible").val(datos.cantidad);
-            $("#cantidadSolicitada").attr("max", datos.cantidad).val(1);
-            $("#idStockTransito").val(datos.id);
-            $("#codigoProducto").val(datos.codigo);
-            
-            $("#modalSolicitarDescarga").modal("show");
-        });
-        
-        console.log("🔗 Eventos configurados");
-    }
+// Configurar eventos
+function configurarEventos() {
     
+    // Ver historial
+    $(document).off('click', '.btnVerHistorialProducto').on('click', '.btnVerHistorialProducto', function() {
+        var codigo = $(this).attr('codigoProducto');
+        console.log("📋 Ver historial:", codigo);
+        
+        $("#historialCodigo").text(codigo);
+        $("#modalHistorial").modal("show");
+        $("#contenidoHistorial").html('<p class="text-center">Historial del producto ' + codigo + '</p>');
+    });
+    
+    // Recibir stock (usuarios)
+    $(document).off('click', '.btnRecibirStock').on('click', '.btnRecibirStock', function() {
+        var datos = {
+            id: $(this).attr('idStockTransito'),
+            codigo: $(this).attr('codigoProducto'),
+            descripcion: $(this).attr('descripcionProducto'),
+            cantidad: $(this).attr('cantidadDisponible'),
+            transportador: $(this).attr('nombreTransportador'),
+            origen: $(this).attr('sucursalOrigen')
+        };
+        
+        console.log("📦 Recibir stock:", datos.codigo);
+        
+        // Llenar modal
+        $("#recibirCodigo").text(datos.codigo);
+        $("#recibirDescripcion").text(datos.descripcion);
+        $("#recibirTransportador").text(datos.transportador);
+        $("#recibirOrigen").text(datos.origen);
+        $("#recibirDisponible").text(datos.cantidad);
+        $("#cantidadRecibir").attr("max", datos.cantidad).val(1);
+        $("#recibirIdStock").val(datos.id);
+        
+        $("#modalRecibirStock").modal("show");
+    });
+    
+    // Eliminar stock (admin)
+    $(document).off('click', '.btnEliminarStock').on('click', '.btnEliminarStock', function() {
+        var datos = {
+            id: $(this).attr('idStockTransito'),
+            codigo: $(this).attr('codigoProducto'),
+            cantidad: $(this).attr('cantidadDisponible')
+        };
+        
+        console.log("🗑️ Eliminar stock:", datos.codigo);
+        
+        // Llenar modal
+        $("#eliminarCodigo").text(datos.codigo);
+        $("#eliminarCantidad").text(datos.cantidad);
+        $("#eliminarIdStock").val(datos.id);
+        
+        $("#modalEliminarStock").modal("show");
+    });
+    
+    console.log("🔗 Eventos configurados");
+}
+
+// Procesar formulario de recepción
+$(document).on('submit', '#formRecibirStock', function(e) {
+    e.preventDefault();
+    
+    console.log("📤 Procesando recepción...");
+    
+    $.ajax({
+        url: 'ajax/procesar-recepcion-stock.ajax.php',
+        type: 'POST',
+        data: $(this).serialize(),
+        dataType: 'json',
+        beforeSend: function() {
+            $("#formRecibirStock button[type=submit]").prop("disabled", true);
+        },
+        success: function(response) {
+            if (response.success) {
+                $("#modalRecibirStock").modal("hide");
+                
+                if (typeof swal === 'function') {
+                    swal("¡Recibido!", response.message, "success");
+                } else {
+                    alert("Recepción procesada exitosamente");
+                }
+                
+                // Actualizar tabla
+                if (tablaStock) {
+                    tablaStock.ajax.reload();
+                }
+            } else {
+                if (typeof swal === 'function') {
+                    swal("Error", response.error, "error");
+                } else {
+                    alert("Error: " + response.error);
+                }
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error AJAX:", error);
+            if (typeof swal === 'function') {
+                swal("Error", "Error al procesar la recepción", "error");
+            } else {
+                alert("Error al procesar la recepción");
+            }
+        },
+        complete: function() {
+            $("#formRecibirStock button[type=submit]").prop("disabled", false);
+        }
+    });
+});
 })();
 
 console.log("✅ Módulo cargado");

@@ -75,76 +75,56 @@ class TablaStockTransito {
         }
     }
 
-    private function generarBotonesAccion($stock, $perfilUsuario, $idUsuario) {
+private function generarBotonesAccion($stock, $perfilUsuario, $idUsuario) {
 
-        $botones = '<div class="btn-group">';
+    $botones = '<div class="btn-group">';
 
-        // BOTÓN VER HISTORIAL - TODOS LOS PERFILES
-        $botones .= '<button class="btn btn-info btn-xs btnVerHistorialProducto" 
-                            data-toggle="tooltip" 
-                            title="Ver historial del producto" 
-                            codigoProducto="' . htmlspecialchars($stock["codigo_producto"]) . '"
-                            transportadorId="' . $stock["transportador_id"] . '">
-                        <i class="fa fa-history"></i>
-                    </button>';
+    // BOTÓN VER HISTORIAL - TODOS LOS PERFILES
+    $botones .= '<button class="btn btn-info btn-xs btnVerHistorialProducto" 
+                        data-toggle="tooltip" 
+                        title="Ver historial del producto" 
+                        codigoProducto="' . htmlspecialchars($stock["codigo_producto"]) . '"
+                        transportadorId="' . $stock["transportador_id"] . '">
+                    <i class="fa fa-history"></i>
+                </button>';
 
-        // BOTONES SEGÚN PERFIL
-        if($perfilUsuario == "Transportador") {
-            
-            if($stock["transportador_id"] == $idUsuario) {
-                if($stock["solicitudes_pendientes"] > 0) {
-                    $botones .= '<button class="btn btn-warning btn-xs btnVerSolicitudesPendientes" 
-                                        data-toggle="tooltip" 
-                                        title="Ver solicitudes pendientes" 
-                                        transportadorId="' . $stock["transportador_id"] . '">
-                                    <i class="fa fa-bell"></i>
-                                    <span class="badge">' . $stock["solicitudes_pendientes"] . '</span>
-                                </button>';
-                }
-            }
-
-        } else {
-            
-            $cantidadDisponibleReal = $stock["cantidad_disponible"] - $stock["cantidad_solicitada_pendiente"];
-            
-            if($cantidadDisponibleReal > 0) {
-                $botones .= '<button class="btn btn-success btn-xs btnSolicitarDescarga" 
-                                    data-toggle="tooltip" 
-                                    title="Solicitar descarga" 
-                                    idStockTransito="' . $stock["id"] . '"
-                                    codigoProducto="' . htmlspecialchars($stock["codigo_producto"]) . '"
-                                    descripcionProducto="' . htmlspecialchars($stock["descripcion_producto"]) . '"
-                                    cantidadDisponible="' . $cantidadDisponibleReal . '"
-                                    transportadorId="' . $stock["transportador_id"] . '"
-                                    nombreTransportador="' . htmlspecialchars($stock["nombre_transportador"]) . '"
-                                    sucursalOrigen="' . htmlspecialchars($stock["sucursal_origen"]) . '">
-                                <i class="fa fa-download"></i>
-                            </button>';
-            } else {
-                $botones .= '<button class="btn btn-default btn-xs" 
-                                    data-toggle="tooltip" 
-                                    title="Sin stock disponible" disabled>
-                                <i class="fa fa-ban"></i>
-                            </button>';
-            }
-
-            if($perfilUsuario == "Administrador" && $stock["cantidad_disponible"] > 0) {
-                $botones .= '<button class="btn btn-danger btn-xs btnForzarDescarga" 
-                                    data-toggle="tooltip" 
-                                    title="Forzar descarga (Admin)" 
-                                    idStockTransito="' . $stock["id"] . '"
-                                    codigoProducto="' . htmlspecialchars($stock["codigo_producto"]) . '"
-                                    descripcionProducto="' . htmlspecialchars($stock["descripcion_producto"]) . '"
-                                    cantidadDisponible="' . $stock["cantidad_disponible"] . '"
-                                    transportadorNombre="' . htmlspecialchars($stock["nombre_transportador"]) . '">
-                                <i class="fa fa-exclamation-triangle"></i>
-                            </button>';
-            }
+    // BOTÓN RECIBIR - SOLO USUARIOS (NO ADMIN, NO TRANSPORTADOR)
+    if($perfilUsuario != "Administrador" && $perfilUsuario != "Transportador") {
+        
+        $cantidadDisponible = intval($stock["cantidad_disponible"]);
+        
+        if($cantidadDisponible > 0) {
+            $botones .= '<button class="btn btn-success btn-xs btnRecibirStock" 
+                                data-toggle="tooltip" 
+                                title="Recibir en mi sucursal" 
+                                idStockTransito="' . $stock["id"] . '"
+                                codigoProducto="' . htmlspecialchars($stock["codigo_producto"]) . '"
+                                descripcionProducto="' . htmlspecialchars($stock["descripcion_producto"]) . '"
+                                cantidadDisponible="' . $cantidadDisponible . '"
+                                transportadorId="' . $stock["transportador_id"] . '"
+                                nombreTransportador="' . htmlspecialchars($stock["nombre_transportador"]) . '"
+                                sucursalOrigen="' . htmlspecialchars($stock["sucursal_origen"]) . '">
+                            <i class="fa fa-check-circle"></i>
+                        </button>';
         }
-
-        $botones .= '</div>';
-        return $botones;
     }
+
+    // BOTÓN ELIMINAR - SOLO ADMINISTRADOR
+    if($perfilUsuario == "Administrador") {
+        $botones .= '<button class="btn btn-danger btn-xs btnEliminarStock" 
+                            data-toggle="tooltip" 
+                            title="Eliminar del stock en tránsito" 
+                            idStockTransito="' . $stock["id"] . '"
+                            codigoProducto="' . htmlspecialchars($stock["codigo_producto"]) . '"
+                            descripcionProducto="' . htmlspecialchars($stock["descripcion_producto"]) . '"
+                            cantidadDisponible="' . $stock["cantidad_disponible"] . '">
+                        <i class="fa fa-trash"></i>
+                    </button>';
+    }
+
+    $botones .= '</div>';
+    return $botones;
+}
 
     private function formatearCantidadConIndicadores($stock) {
         
@@ -181,9 +161,6 @@ class TablaStockTransito {
     }
 
     private function truncarTexto($texto, $limite) {
-        if(strlen($texto) > $limite) {
-            return substr($texto, 0, $limite) . '...';
-        }
         return $texto;
     }
 }

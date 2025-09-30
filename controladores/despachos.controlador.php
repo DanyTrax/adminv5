@@ -301,7 +301,8 @@ public function ctrEditarDespacho($datos = null) {
                     $resultado = self::procesarDespachoEnTransito($idDespacho);
                     
                     if(!$resultado["exito"]) {
-                        throw new Exception($resultado["mensaje"]);
+                        // Solo mostrar warning pero no fallar el cambio de estado
+                        error_log("⚠️ Warning procesando stock en tránsito: " . $resultado["mensaje"]);
                     }
                 }
 
@@ -349,111 +350,6 @@ public function ctrEditarDespacho($datos = null) {
                     });
                 </script>';
             }
-        }
-    }
-
-    /*=============================================
-    PROCESAR DESPACHO EN TRÁNSITO
-    =============================================*/
-    static private function procesarDespachoEnTransito($idDespacho) {
-        
-        try {
-            require_once "modelos/conexion.php";
-            require_once "api-transferencias/conexion-central.php";
-            
-            // Obtener despacho
-            $despacho = self::ctrMostrarDespachos("id", $idDespacho);
-            
-            if(!$despacho) {
-                return ["exito" => false, "mensaje" => "Despacho no encontrado"];
-            }
-            
-            // Decodificar productos
-            $productos = json_decode($despacho["productos_despacho"], true);
-            
-            if(!$productos) {
-                return ["exito" => false, "mensaje" => "Error al procesar productos del despacho"];
-            }
-            
-            // Iniciar transacciones
-            $conexionLocal = Conexion::conectar();
-            $conexionCentral = ConexionCentral::conectar();
-            
-            $conexionLocal->beginTransaction();
-            $conexionCentral->beginTransaction();
-            
-            // 1. Descontar del stock local
-            foreach($productos as $producto) {
-                $stmt = $conexionLocal->prepare("
-                    UPDATE productos 
-                    SET stock = stock - :cantidad 
-                    WHERE codigo = :codigo 
-                    AND stock >= :cantidad
-                ");
-                
-                $stmt->bindParam(":cantidad", $producto["cantidad"], PDO::PARAM_INT);
-                $stmt->bindParam(":codigo", $producto["codigo"], PDO::PARAM_STR);
-                
-                if(!$stmt->execute() || $stmt->rowCount() === 0) {
-                    $conexionLocal->rollBack();
-                    $conexionCentral->rollBack();
-                    return ["exito" => false, "mensaje" => "Stock insuficiente para el producto: " . $producto["codigo"]];
-                }
-            }
-            
-            // 2. Agregar a stock en tránsito
-            require_once "modelos/stock-transito.modelo.php";
-            $sessionTransportador = [
-                "id" => $_SESSION["id"],
-                "nombre" => $_SESSION["nombre"]
-            ];
-            
-            $resultadoStockTransito = ModeloStockTransito::mdlAgregarStockTransito(
-                $productos, 
-                $despacho, 
-                $sessionTransportador
-            );
-            
-            if(!$resultadoStockTransito) {
-                $conexionLocal->rollBack();
-                $conexionCentral->rollBack();
-                return ["exito" => false, "mensaje" => "Error al agregar productos a stock en tránsito"];
-            }
-            
-            // 3. Registrar en histórico
-            foreach($productos as $producto) {
-                require_once "controladores/stock-transito.controlador.php";
-                ControladorStockTransito::registrarHistoricoTransito(
-                    $producto["codigo"],
-                    $producto["descripcion"],
-                    $producto["cantidad"],
-                    'cargue',
-                    $_SESSION["id"],
-                    $_SESSION["nombre"],
-                    $despacho["sucursal_origen"],
-                    null, // No hay destino específico aún
-                    $_SESSION["id"],
-                    $_SESSION["nombre"],
-                    null,
-                    null,
-                    $despacho["id"],
-                    $despacho["numero_despacho"],
-                    null,
-                    "Productos cargados desde despacho: " . $despacho["numero_despacho"]
-                );
-            }
-            
-            // Confirmar transacciones
-            $conexionLocal->commit();
-            $conexionCentral->commit();
-            
-            return ["exito" => true, "mensaje" => "Productos movidos a stock en tránsito correctamente"];
-            
-        } catch(Exception $e) {
-            if(isset($conexionLocal)) $conexionLocal->rollBack();
-            if(isset($conexionCentral)) $conexionCentral->rollBack();
-            
-            return ["exito" => false, "mensaje" => "Error en la transacción: " . $e->getMessage()];
         }
     }
 
@@ -824,6 +720,216 @@ public function ctrEditarDespacho($datos = null) {
                     });
                 </script>';
             }
+        }
+    }
+
+    /*=============================================
+    FUNCIÓN PARA LIMPIAR STOCK EN TRÁNSITO CUANDO CANTIDAD = 0
+    =============================================*/
+    static public function limpiarStockTransitoCero() {
+        
+        try {
+            require_once "api-transferencias/conexion-central.php";
+            
+            $conexion = ConexionCentral::conectar();
+            
+            // Eliminar registros con cantidad 0 o menor
+            $stmt = $conexion->prepare("DELETE FROM stock_transito WHERE cantidad_disponible <= 0");
+            $stmt->execute();
+            
+            $registrosEliminados = $stmt->rowCount();
+            
+            if ($registrosEliminados > 0) {
+                error_log("🧹 Limpieza automática: {$registrosEliminados} registros eliminados del stock en tránsito");
+            }
+            
+            return $registrosEliminados;
+            
+        } catch (Exception $e) {
+            error_log("❌ Error limpiando stock en tránsito: " . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /*=============================================
+    ACTUALIZAR STOCK EN TRÁNSITO AL APROBAR DESPACHO
+    =============================================*/
+    static public function actualizarStockTransitoDespacho($numeroDespacho, $productos) {
+        
+        try {
+            require_once "api-transferencias/conexion-central.php";
+            
+            $conexion = ConexionCentral::conectar();
+            $conexion->beginTransaction();
+            
+            foreach ($productos as $producto) {
+                
+                $codigoProducto = $producto['codigo'];
+                $cantidadDespacho = intval($producto['cantidad']);
+                $descripcionProducto = $producto['descripcion'];
+                
+                // Buscar si ya existe el producto en stock_transito
+                $stmt = $conexion->prepare("
+                    SELECT id, cantidad_disponible 
+                    FROM stock_transito 
+                    WHERE codigo_producto = ? 
+                    AND numero_despacho_origen = ?
+                ");
+                $stmt->execute([$codigoProducto, $numeroDespacho]);
+                $stockExistente = $stmt->fetch();
+                
+                if ($stockExistente) {
+                    // Sumar a la cantidad existente
+                    $nuevaCantidad = $stockExistente['cantidad_disponible'] + $cantidadDespacho;
+                    $stmt = $conexion->prepare("
+                        UPDATE stock_transito 
+                        SET cantidad_disponible = ?,
+                            fecha_actualizacion = NOW()
+                        WHERE id = ?
+                    ");
+                    $stmt->execute([$nuevaCantidad, $stockExistente['id']]);
+                    
+                } else {
+                    // Crear nuevo registro
+                    $stmt = $conexion->prepare("
+                        INSERT INTO stock_transito (
+                            codigo_producto, descripcion_producto, cantidad_disponible,
+                            transportador_id, nombre_transportador, sucursal_origen,
+                            numero_despacho_origen, fecha_carga
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+                    ");
+                    
+                    $stmt->execute([
+                        $codigoProducto,
+                        $descripcionProducto,
+                        $cantidadDespacho,
+                        $_SESSION['id'],
+                        $_SESSION['nombre'] ?? 'Administrador',
+                        $_SESSION['sucursal'] ?? 'Sucursal Principal',
+                        $numeroDespacho
+                    ]);
+                }
+            }
+            
+            $conexion->commit();
+            
+            // Limpiar registros con cantidad 0
+            self::limpiarStockTransitoCero();
+            
+            return true;
+            
+        } catch (Exception $e) {
+            if (isset($conexion)) {
+                $conexion->rollBack();
+            }
+            error_log("❌ Error actualizando stock en tránsito: " . $e->getMessage());
+            return false;
+        }
+    }
+    /*=============================================
+    PROCESAR DESPACHO EN TRÁNSITO - AGREGAR A STOCK TRANSITO
+    =============================================*/
+    static public function procesarDespachoEnTransito($idDespacho) {
+        
+        try {
+            require_once "api-transferencias/conexion-central.php";
+            
+            $conexion = ConexionCentral::conectar();
+            $conexion->beginTransaction();
+            
+            // 1. Obtener datos del despacho
+            $stmt = $conexion->prepare("SELECT * FROM despachos WHERE id = ?");
+            $stmt->execute([$idDespacho]);
+            $despacho = $stmt->fetch();
+            
+            if (!$despacho) {
+                throw new Exception("Despacho no encontrado");
+            }
+            
+            // 2. Decodificar productos del despacho
+            $productosDespacho = json_decode($despacho['productos_despacho'], true);
+            
+            if (!$productosDespacho || !is_array($productosDespacho)) {
+                throw new Exception("No se pudieron decodificar los productos del despacho");
+            }
+            
+            // 3. Procesar cada producto y agregarlo al stock en tránsito
+            foreach ($productosDespacho as $producto) {
+                
+                $codigoProducto = $producto['codigo'];
+                $cantidadDespacho = intval($producto['cantidad']);
+                
+                // Verificar si ya existe en stock_transito del mismo transportador y despacho
+                $stmt = $conexion->prepare("
+                    SELECT id, cantidad_disponible 
+                    FROM stock_transito 
+                    WHERE codigo_producto = ? 
+                    AND transportador_id = ? 
+                    AND numero_despacho_origen = ?
+                ");
+                $stmt->execute([
+                    $codigoProducto, 
+                    $_SESSION['id'], 
+                    $despacho['numero_despacho']
+                ]);
+                $stockExistente = $stmt->fetch();
+                
+                if ($stockExistente) {
+                    // Si ya existe, sumar a la cantidad existente
+                    $nuevaCantidad = $stockExistente['cantidad_disponible'] + $cantidadDespacho;
+                    $stmt = $conexion->prepare("
+                        UPDATE stock_transito 
+                        SET cantidad_disponible = ?,
+                            fecha_actualizacion = NOW()
+                        WHERE id = ?
+                    ");
+                    $stmt->execute([$nuevaCantidad, $stockExistente['id']]);
+                    
+                    error_log("✅ Stock en tránsito actualizado - Código: {$codigoProducto}, Nueva cantidad: {$nuevaCantidad}");
+                    
+                } else {
+                    // Crear nuevo registro en stock_transito
+                    $stmt = $conexion->prepare("
+                        INSERT INTO stock_transito (
+                            codigo_producto, descripcion_producto, cantidad_disponible,
+                            transportador_id, nombre_transportador, sucursal_origen,
+                            numero_despacho_origen, fecha_carga
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+                    ");
+                    
+                    $nombreTransportador = $_SESSION['nombre'] ?? 'Administrador';
+                    $sucursalOrigen = $_SESSION['sucursal'] ?? 'Sucursal Principal';
+                    
+                    $stmt->execute([
+                        $codigoProducto,
+                        $producto['descripcion'],
+                        $cantidadDespacho,
+                        $_SESSION['id'],
+                        $nombreTransportador,
+                        $sucursalOrigen,
+                        $despacho['numero_despacho']
+                    ]);
+                    
+                    error_log("✅ Nuevo stock en tránsito creado - Código: {$codigoProducto}, Cantidad: {$cantidadDespacho}");
+                }
+            }
+            
+            $conexion->commit();
+            
+            return [
+                "exito" => true, 
+                "mensaje" => "Despacho procesado y productos agregados al stock en tránsito exitosamente"
+            ];
+            
+        } catch (Exception $e) {
+            if (isset($conexion)) {
+                $conexion->rollBack();
+            }
+            error_log("❌ Error procesando despacho en tránsito: " . $e->getMessage());
+            return [
+                "exito" => false, 
+                "mensaje" => "Error: " . $e->getMessage()
+            ];
         }
     }
 }
