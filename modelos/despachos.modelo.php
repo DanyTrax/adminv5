@@ -369,12 +369,15 @@ static public function mdlObtenerSucursalLocal() {
         $sucursal = $stmt->fetch();
         
         if($sucursal && !empty($sucursal["nombre"])) {
+            error_log("✅ Sucursal local obtenida desde BD: " . $sucursal["nombre"]);
             return $sucursal["nombre"];
         } else {
+            error_log("❌ No se encontró sucursal en tabla sucursal_local");
             return "Sucursal Local";
         }
         
     } catch(Exception $e) {
+        error_log("❌ Error obteniendo sucursal local: " . $e->getMessage());
         return "Sucursal Local";
     }
 }
