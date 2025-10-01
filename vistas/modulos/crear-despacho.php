@@ -950,18 +950,80 @@ $("#formCrearDespacho").on("submit", function(e) {
 });
 </script>
 <?php
-// EJECUTAR CONTROLADOR
-$crearDespacho = new ControladorDespachos();
+// PROCESAMIENTO DEL FORMULARIO
+if(isset($_POST["crearDespacho"])){
+    error_log("✅ Entrando al procesamiento del formulario crearDespacho");
+    
+    try {
+        error_log("🔄 Cargando controlador de despachos...");
+        require_once "controladores/despachos.controlador.php";
+        error_log("✅ Controlador cargado exitosamente");
+        
+        // Preparar datos para el controlador
+        $datosDespacho = array(
+            "id_solicitud_origen" => $_POST["idSolicitudOrigen"] ?? null,
+            "id_usuario_creador" => $_SESSION["id"],
+            "nombre_usuario_creador" => $_SESSION["nombre"],
+            "productos_despacho" => $_POST["productosDespacho"],
+            "total_productos" => intval($_POST["totalProductos"]),
+            "total_cantidad" => intval($_POST["totalCantidad"]),
+            "detalle_adicional" => $_POST["detalleAdicional"] ?? ""
+        );
+        
+        error_log("📦 Datos preparados para controlador: " . print_r($datosDespacho, true));
+        
+        error_log("🚀 Llamando al controlador...");
+        $resultado = ControladorDespachos::ctrCrearDespacho($datosDespacho);
+        error_log("📋 Resultado del controlador: " . $resultado);
+        
+        if($resultado == "ok") {
+            error_log("✅ Despacho creado exitosamente");
+            echo '<script>
+                swal({
+                    title: "¡Despacho creado!",
+                    text: "El despacho ha sido creado exitosamente",
+                    type: "success",
+                    confirmButtonText: "Ver despachos"
+                }).then(function() {
+                    window.location = "despachos";
+                });
+            </script>';
+        } else {
+            error_log("❌ Error creando despacho: " . $resultado);
+            echo '<script>
+                swal({
+                    title: "Error",
+                    text: "Error al crear el despacho: ' . htmlspecialchars($resultado) . '",
+                    type: "error",
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+        }
+        
+    } catch(Exception $e) {
+        error_log("❌ Excepción procesando despacho: " . $e->getMessage());
+        error_log("📍 Línea del error: " . $e->getLine());
+        error_log("📄 Archivo del error: " . $e->getFile());
+        echo '<script>
+            swal({
+                title: "Error del sistema",
+                text: "Error interno: ' . htmlspecialchars($e->getMessage()) . '",
+                type: "error",
+                confirmButtonText: "Cerrar"
+            });
+        </script>';
+    }
+}
 
-// Verificar si es modo edición por GET o POST
+// PROCESAMIENTO PARA EDICIÓN
 if($modoEdicion && isset($_POST["editarDespacho"])) {
-    echo "<!-- DEBUG: Ejecutando ctrEditarDespacho -->";
-    $crearDespacho->ctrEditarDespacho($_POST);
-} else if(!$modoEdicion && isset($_POST["crearDespacho"])) {
-    echo "<!-- DEBUG: Ejecutando ctrCrearDespacho -->";
-    $crearDespacho->ctrCrearDespacho();
-} else if(isset($_POST)) {
-    // Debug para ver qué datos están llegando
-    echo "<!-- DEBUG POST DATA: " . print_r($_POST, true) . " -->";
+    error_log("📝 Procesando edición de despacho");
+    try {
+        require_once "controladores/despachos.controlador.php";
+        $crearDespacho = new ControladorDespachos();
+        $crearDespacho->ctrEditarDespacho($_POST);
+    } catch(Exception $e) {
+        error_log("❌ Error en edición: " . $e->getMessage());
+    }
 }
 ?>
