@@ -20,35 +20,6 @@ if($_SESSION["perfil"] == "Limitado" || $_SESSION["perfil"] == "Transportador"){
     return;
 }}
 
-// FUNCIÓN: Obtener nombre de la sucursal local desde la BD
-function obtenerNombreSucursalLocal() {
-    try {
-        require_once "modelos/conexion.php";
-        
-        $stmt = Conexion::conectar()->prepare("
-            SELECT nombre 
-            FROM sucursal_local 
-            WHERE es_local = 1 
-            LIMIT 1
-        ");
-        
-        $stmt->execute();
-        $sucursal = $stmt->fetch();
-        
-        if($sucursal) {
-            error_log("✅ Sucursal local encontrada en BD: " . $sucursal["nombre"]);
-            return $sucursal["nombre"];
-        } else {
-            error_log("⚠️ No se encontró sucursal local en BD, usando valor por defecto");
-            return "Sucursal Local";
-        }
-        
-    } catch(Exception $e) {
-        error_log("❌ Error obteniendo sucursal local: " . $e->getMessage());
-        return "Sucursal Local";
-    }
-}
-
 // PROCESAMIENTO DEL FORMULARIO
 if(isset($_POST["crearDespacho"])){
     error_log("✅ Entrando al procesamiento del formulario crearDespacho");
@@ -59,7 +30,7 @@ if(isset($_POST["crearDespacho"])){
         // Preparar datos para el controlador
         $datosDespacho = array(
             "id_solicitud_origen" => $_POST["idSolicitudOrigen"] ?? null,
-            "nombre_sucursal_origen" => obtenerNombreSucursalLocal(),
+            "nombre_sucursal_origen" => $_SESSION["nombre_sucursal"] ?? "Sucursal Local",
             "id_usuario_creador" => $_SESSION["id"],
             "nombre_usuario_creador" => $_SESSION["nombre"],
             "productos_despacho" => $_POST["productosDespacho"],
