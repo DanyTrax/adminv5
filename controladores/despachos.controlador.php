@@ -17,7 +17,7 @@ static public function ctrCrearDespacho($datos = null) {
             $datosModelo = array(
                 "numero_despacho" => $numeroDespacho,
                 "id_solicitud_origen" => $datos["id_solicitud_origen"],
-                "nombre_sucursal_origen" => ModeloDespachos::mdlObtenerSucursalLocal(),
+                "nombre_sucursal_origen" => self::obtenerSucursalConDebug(),
                 "id_usuario_creador" => $datos["id_usuario_creador"],
                 "nombre_usuario_creador" => $datos["nombre_usuario_creador"],
                 "productos_despacho" => $datos["productos_despacho"],
@@ -934,6 +934,36 @@ static public function procesarDespachoEnTransito($idDespacho) {
             "exito" => false, 
             "mensaje" => "Error: " . $e->getMessage()
         ];
+    }
+}
+/*=============================================
+FUNCIÓN DEBUG TEMPORAL PARA SUCURSAL
+=============================================*/
+static public function obtenerSucursalConDebug(){
+    
+    error_log("🔍 DEBUG: Iniciando obtención de sucursal local...");
+    
+    try {
+        // Verificar si la función existe en el modelo
+        if(!method_exists('ModeloDespachos', 'mdlObtenerSucursalLocal')) {
+            error_log("❌ La función mdlObtenerSucursalLocal NO existe en ModeloDespachos");
+            return "Sucursal Local";
+        }
+        
+        error_log("✅ La función mdlObtenerSucursalLocal SÍ existe");
+        
+        // Intentar llamar la función
+        $resultado = ModeloDespachos::mdlObtenerSucursalLocal();
+        
+        error_log("✅ Función ejecutada, resultado: " . $resultado);
+        
+        return $resultado;
+        
+    } catch(Exception $e) {
+        error_log("❌ Error en obtenerSucursalConDebug: " . $e->getMessage());
+        error_log("📍 Línea: " . $e->getLine());
+        error_log("📄 Archivo: " . $e->getFile());
+        return "Sucursal Local";
     }
 }
 }
