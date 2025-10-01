@@ -353,4 +353,29 @@ static public function mdlObtenerTransportadores() {
         return [];
     }
 }
+/*=============================================
+OBTENER NOMBRE DE SUCURSAL LOCAL
+=============================================*/
+static public function mdlObtenerSucursalLocal() {
+    
+    try {
+        $stmt = Conexion::conectar()->prepare("
+            SELECT nombre 
+            FROM sucursal_local 
+            LIMIT 1
+        ");
+        
+        $stmt->execute();
+        $sucursal = $stmt->fetch();
+        
+        if($sucursal && !empty($sucursal["nombre"])) {
+            return $sucursal["nombre"];
+        } else {
+            return "Sucursal Local";
+        }
+        
+    } catch(Exception $e) {
+        return "Sucursal Local";
+    }
+}
 }
