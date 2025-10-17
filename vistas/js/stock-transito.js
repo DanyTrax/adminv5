@@ -2,8 +2,14 @@
 VARIABLES GLOBALES
 =============================================*/
 var tablaStockTransito;
-var perfilUsuario = window.perfilUsuario || 'Invitado';
-var idUsuario = window.idUsuario || 0;
+if (typeof window.perfilUsuario === 'undefined') {
+    window.perfilUsuario = window.perfilUsuario || 'Invitado';
+}
+if (typeof window.idUsuario === 'undefined') {
+    window.idUsuario = window.idUsuario || 0;
+}
+var perfilUsuario = window.perfilUsuario;
+var idUsuario = window.idUsuario;
 
 /*=============================================
 INICIALIZACIÓN

@@ -7,8 +7,14 @@ var intervalActualizacion;
 var chartTiposMovimiento, chartTransportadores, chartLineaTiempo;
 
 // Variables de sesión
-var perfilUsuario = window.perfilUsuario || 'Invitado';
-var idUsuario = window.idUsuario || 0;
+if (typeof window.perfilUsuario === 'undefined') {
+    window.perfilUsuario = window.perfilUsuario || 'Invitado';
+}
+if (typeof window.idUsuario === 'undefined') {
+    window.idUsuario = window.idUsuario || 0;
+}
+var perfilUsuario = window.perfilUsuario;
+var idUsuario = window.idUsuario;
 
 /*=============================================
 INICIALIZACIÓN DEL MÓDULO
@@ -1068,8 +1074,7 @@ function formatearFechaCompleta(fecha) {
 /*=============================================
 VARIABLES GLOBALES ADICIONALES
 =============================================*/
-var perfilUsuario = '<?php echo $_SESSION["perfil"]; ?>';
-var idUsuario = '<?php echo $_SESSION["id"]; ?>';
+// Las variables perfilUsuario e idUsuario ya están declaradas arriba
 
 /*=============================================
 CLEANUP AL SALIR DE LA PÁGINA
