@@ -3,11 +3,11 @@
 class ConexionCentral {
     static public function conectar(){
 
-        // REEMPLAZA CON LOS DATOS DE TU BASE DE DATOS CENTRAL
+        // Usar la misma base de datos que la conexión principal
         $servidor = "localhost";
-        $nombreBD = "epicosie_central"; // O el nombre que le hayas puesto
-        $usuario = "epicosie_central";
-        $password = "=Nf?M#6A'QU&.6c";
+        $nombreBD = "epicosie_pruebas";
+        $usuario = "epicosie_ricaurte";
+        $password = "m5Wwg)~M{i~*kFr{";
 
         try {
             // CORRECCIÓN: Añadimos charset=utf8mb4 directamente a la línea de conexión.
