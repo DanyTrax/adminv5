@@ -1,0 +1,2 @@
+touch error_log
+chmod 644 error_log
