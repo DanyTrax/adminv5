@@ -11,7 +11,12 @@ if (session_status() === PHP_SESSION_NONE) {
 // Función helper para enviar JSON limpio
 function sendJsonResponse($data) {
     ob_clean(); // Limpiar buffer de warnings
-    header('Content-Type: application/json');
+    
+    // Solo enviar header si no se han enviado headers aún
+    if (!headers_sent()) {
+        header('Content-Type: application/json');
+    }
+    
     echo json_encode($data);
     exit;
 }
