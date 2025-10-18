@@ -255,17 +255,23 @@ if(isset($_POST["cancelarDespacho"])){
         
         $datos = array(
             "id" => $idDespacho,
-            "estado" => "cancelado",
-            "motivo_cancelacion" => $motivoCancelacion,
-            "usuario_cancelacion" => $_SESSION["nombre"] ?? "Usuario"
+            "estado" => "cancelado"
         );
+        
+        error_log("🔍 CANCELAR DESPACHO - Datos a actualizar: " . print_r($datos, true));
         
         $respuesta = ModeloDespachos::mdlActualizarDespacho("despachos", $datos, "id", $idDespacho);
         
+        error_log("🔍 CANCELAR DESPACHO - Respuesta: " . $respuesta);
+        
         if($respuesta == "ok") {
+            // Verificar que realmente se actualizó
+            $despachoVerificar = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
+            error_log("🔍 CANCELAR DESPACHO - Estado después de actualizar: " . $despachoVerificar["estado"]);
+            
             sendJsonResponse(["success" => true, "message" => "Despacho cancelado correctamente"]);
         } else {
-            sendJsonResponse(["success" => false, "error" => "Error al cancelar el despacho"]);
+            sendJsonResponse(["success" => false, "error" => "Error al cancelar el despacho: " . $respuesta]);
         }
         
     } catch(Exception $e) {
