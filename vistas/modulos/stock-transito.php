@@ -680,8 +680,5 @@ $(document).ready(function() {
     });
 }
 
-// Llamar a configurarEventos cuando el documento esté listo
-$(document).ready(function() {
-    configurarEventos();
-});
+// Los eventos se configuran desde el JavaScript externo
 </script>
