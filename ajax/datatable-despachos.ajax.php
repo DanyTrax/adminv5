@@ -2,7 +2,7 @@
 
 session_start();
 
-require_once "../api-transferencias/conexion-central.php";
+require_once "api-transferencias/conexion-central.php";
 
 class AjaxTablaDespachos {
 
