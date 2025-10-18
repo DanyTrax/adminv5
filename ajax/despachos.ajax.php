@@ -23,7 +23,8 @@ function sendJsonResponse($data) {
         header('Content-Type: application/json');
     }
     
-    sendJsonResponse($data);
+    echo json_encode($data);
+    exit;
 }
 
 /*=============================================
