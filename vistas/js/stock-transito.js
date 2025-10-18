@@ -8,8 +8,7 @@ if (typeof window.perfilUsuario === 'undefined') {
 if (typeof window.idUsuario === 'undefined') {
     window.idUsuario = window.idUsuario || 0;
 }
-let perfilUsuario = window.perfilUsuario;
-let idUsuario = window.idUsuario;
+// Usar window.perfilUsuario directamente para evitar conflictos con const
 
 /*=============================================
 INICIALIZACIÓN
@@ -17,8 +16,8 @@ INICIALIZACIÓN
 $(document).ready(function() {
     
     console.log("🚛 Stock en Tránsito inicializado");
-    console.log("👤 Perfil:", perfilUsuario);
-    console.log("🔢 ID Usuario:", idUsuario);
+    console.log("👤 Perfil:", window.perfilUsuario);
+    console.log("🔢 ID Usuario:", window.idUsuario);
     
     cargarTablaStockTransito();
     configurarEventos();

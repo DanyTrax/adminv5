@@ -7,14 +7,13 @@ var intervalActualizacion;
 var chartTiposMovimiento, chartTransportadores, chartLineaTiempo;
 
 // Variables de sesión
-if (typeof window.perfilUsuario === 'undefined') {
-    window.perfilUsuario = window.perfilUsuario || 'Invitado';
+if (typeof window.window.perfilUsuario === 'undefined') {
+    window.window.perfilUsuario = window.window.perfilUsuario || 'Invitado';
 }
-if (typeof window.idUsuario === 'undefined') {
-    window.idUsuario = window.idUsuario || 0;
+if (typeof window.window.idUsuario === 'undefined') {
+    window.window.idUsuario = window.window.idUsuario || 0;
 }
-let perfilUsuario = window.perfilUsuario;
-let idUsuario = window.idUsuario;
+// Usar window.window.perfilUsuario directamente para evitar conflictos con const
 
 /*=============================================
 INICIALIZACIÓN DEL MÓDULO
@@ -33,7 +32,7 @@ $(document).ready(function() {
     configurarEventos();
     
     // Inicializar gráficos si es administrador
-    if(perfilUsuario === "Administrador") {
+    if(window.perfilUsuario === "Administrador") {
         setTimeout(function() {
             inicializarGraficos();
         }, 1000);
@@ -137,7 +136,7 @@ function cargarEstadisticasHistorico() {
                 actualizarContadoresEstadisticas(respuesta.estadisticas_generales);
             }
             
-            if(perfilUsuario === "Administrador") {
+            if(window.perfilUsuario === "Administrador") {
                 actualizarDatosGraficos(respuesta);
             }
             
@@ -534,7 +533,7 @@ INICIALIZAR GRÁFICOS (SOLO ADMINISTRADORES)
 =============================================*/
 function inicializarGraficos() {
     
-    if(perfilUsuario !== "Administrador") return;
+    if(window.perfilUsuario !== "Administrador") return;
     
     // Chart.js debe estar cargado
     if(typeof Chart === 'undefined') {
@@ -1074,7 +1073,7 @@ function formatearFechaCompleta(fecha) {
 /*=============================================
 VARIABLES GLOBALES ADICIONALES
 =============================================*/
-// Las variables perfilUsuario e idUsuario ya están declaradas arriba
+// Las variables window.perfilUsuario e window.idUsuario ya están declaradas arriba
 
 /*=============================================
 CLEANUP AL SALIR DE LA PÁGINA
@@ -1150,6 +1149,6 @@ $('<style>')
 LOG DE INICIALIZACIÓN
 =============================================*/
 console.log("✅ Histórico de Movimientos - JavaScript cargado completamente");
-console.log("👤 Perfil de usuario:", perfilUsuario);
-console.log("🔢 ID de usuario:", idUsuario);
-console.log("📊 Gráficos habilitados:", perfilUsuario === "Administrador");
+console.log("👤 Perfil de usuario:", window.perfilUsuario);
+console.log("🔢 ID de usuario:", window.idUsuario);
+console.log("📊 Gráficos habilitados:", window.perfilUsuario === "Administrador");
