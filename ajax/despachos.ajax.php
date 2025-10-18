@@ -48,10 +48,10 @@ class AjaxDespachos {
                 $stmt->execute();
                 $productos = $stmt->fetchAll();
                 
-                echo json_encode($productos);
+                sendJsonResponse($productos);
                 
             } catch(Exception $e) {
-                echo json_encode([]);
+                sendJsonResponse([]);
             }
         }
     }
@@ -73,9 +73,9 @@ class AjaxDespachos {
             
             // Solo permitir edición de despachos pendientes
             if($respuesta && $respuesta["estado"] == "pendiente") {
-                echo json_encode($respuesta);
+                sendJsonResponse($respuesta);
             } else {
-                echo json_encode(["error" => "No se puede editar este despacho"]);
+                sendJsonResponse(["error" => "No se puede editar este despacho"]);
             }
         }
     }
@@ -147,7 +147,7 @@ public function ajaxCrearDespacho() {
                 $ultimoDespacho = ControladorDespachos::ctrObtenerUltimoDespacho();
                 $numeroDespacho = $ultimoDespacho ? $ultimoDespacho["numero_despacho"] : "DEP" . date("YmdHis");
                 
-                echo json_encode([
+                sendJsonResponse([
                     "success" => true,
                     "message" => "Despacho creado exitosamente desde " . $nombreSucursalReal,
                     "numero_despacho" => $numeroDespacho,
@@ -163,7 +163,7 @@ public function ajaxCrearDespacho() {
         } catch(Exception $e) {
             error_log("❌ Error en ajaxCrearDespacho: " . $e->getMessage());
             
-            echo json_encode([
+            sendJsonResponse([
                 "success" => false,
                 "error" => $e->getMessage(),
                 "debug_info" => [
@@ -366,7 +366,7 @@ public function ajaxAceptarDespacho() {
                 
                 error_log("✅ Despacho aceptado exitosamente - Nuevo estado: en_transito");
                 
-                echo json_encode([
+                sendJsonResponse([
                     "success" => true,
                     "message" => "Despacho aceptado exitosamente. Estado cambiado a 'En Tránsito' y productos movidos al stock en tránsito."
                 ]);
@@ -379,7 +379,7 @@ public function ajaxAceptarDespacho() {
             
         } catch(Exception $e) {
             error_log("❌ Error aceptando despacho: " . $e->getMessage());
-            echo json_encode([
+            sendJsonResponse([
                 "success" => false,
                 "error" => $e->getMessage()
             ]);
@@ -474,7 +474,7 @@ public function ajaxCancelarDespacho() {
                 
                 error_log("✅ Despacho cancelado exitosamente - ID: " . $idDespacho);
                 
-                echo json_encode([
+                sendJsonResponse([
                     "success" => true,
                     "message" => "Despacho cancelado exitosamente. El stock ha sido devuelto al inventario.",
                     "despacho_cancelado" => $despacho["numero_despacho"],
@@ -491,7 +491,7 @@ public function ajaxCancelarDespacho() {
             
         } catch(Exception $e) {
             error_log("❌ Error cancelando despacho: " . $e->getMessage());
-            echo json_encode([
+            sendJsonResponse([
                 "success" => false,
                 "error" => $e->getMessage()
             ]);
@@ -627,7 +627,7 @@ public function ajaxEliminarDespacho() {
             $respuesta = ModeloDespachos::mdlBorrarDespacho("despachos", "id", $idDespacho);
             
             if($respuesta == "ok") {
-                echo json_encode([
+                sendJsonResponse([
                     "success" => true,
                     "message" => "Despacho eliminado exitosamente"
                 ]);
@@ -636,7 +636,7 @@ public function ajaxEliminarDespacho() {
             }
             
         } catch(Exception $e) {
-            echo json_encode([
+            sendJsonResponse([
                 "success" => false,
                 "error" => $e->getMessage()
             ]);
