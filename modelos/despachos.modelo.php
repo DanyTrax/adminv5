@@ -167,7 +167,7 @@ static public function mdlGenerarNumeroDespacho() {
                 SET estado = :estado,
                     transportador_id = :id_transportador,
                     nombre_transportador = :nombre_transportador,
-                    fecha_aceptacion = :fecha_aceptacion
+                    fecha_actualizacion = :fecha_aceptacion
                 WHERE id = :id
             ");
 
