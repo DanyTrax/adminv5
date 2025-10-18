@@ -124,28 +124,59 @@ if(isset($_POST["aceptarDespacho"])){
             
             // 8. Agregar productos al stock en tránsito
             foreach($productosDespacho as $producto) {
-                $stmt = $conexionCentral->prepare("
-                    INSERT INTO stock_transito (
-                        codigo_producto, 
-                        descripcion_producto, 
-                        cantidad_disponible, 
-                        numero_despacho_origen, 
-                        transportador_id, 
-                        nombre_transportador,
-                        sucursal_origen,
-                        fecha_creacion
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+                // Verificar si el producto ya existe en stock_transito
+                $stmtCheck = $conexionCentral->prepare("
+                    SELECT id, cantidad_disponible 
+                    FROM stock_transito 
+                    WHERE codigo_producto = ? AND transportador_id = ? AND sucursal_origen = ?
                 ");
                 
-                $stmt->execute([
+                $stmtCheck->execute([
                     $producto["codigo"],
-                    $producto["descripcion"],
-                    $producto["cantidad"],
-                    $despacho["numero_despacho"],
                     $_SESSION["id"],
-                    $_SESSION["nombre"],
                     $despacho["sucursal_origen"]
                 ]);
+                
+                $productoExistente = $stmtCheck->fetch();
+                
+                if($productoExistente) {
+                    // Si existe, sumar a la cantidad existente
+                    $stmtUpdate = $conexionCentral->prepare("
+                        UPDATE stock_transito 
+                        SET cantidad_disponible = cantidad_disponible + ?,
+                            fecha_actualizacion = NOW()
+                        WHERE id = ?
+                    ");
+                    
+                    $stmtUpdate->execute([
+                        $producto["cantidad"],
+                        $productoExistente["id"]
+                    ]);
+                } else {
+                    // Si no existe, crear nuevo registro
+                    $stmtInsert = $conexionCentral->prepare("
+                        INSERT INTO stock_transito (
+                            codigo_producto, 
+                            descripcion_producto, 
+                            cantidad_disponible, 
+                            numero_despacho_origen, 
+                            transportador_id, 
+                            nombre_transportador,
+                            sucursal_origen,
+                            fecha_creacion
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+                    ");
+                    
+                    $stmtInsert->execute([
+                        $producto["codigo"],
+                        $producto["descripcion"],
+                        $producto["cantidad"],
+                        $despacho["numero_despacho"],
+                        $_SESSION["id"],
+                        $_SESSION["nombre"],
+                        $despacho["sucursal_origen"]
+                    ]);
+                }
             }
             
             // 9. Confirmar transacciones
