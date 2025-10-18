@@ -22,17 +22,15 @@ class TablaStockTransito {
                 $filtroTransportador = "AND st.transportador_id = " . $idUsuario;
             }
 
+            // Consulta optimizada sin LEFT JOIN costoso
             $stmt = ConexionCentral::conectar()->prepare("
                 SELECT 
                     st.*,
-                    COALESCE(SUM(sd.cantidad_solicitada), 0) as cantidad_solicitada_pendiente,
-                    COUNT(sd.id) as solicitudes_pendientes
+                    0 as cantidad_solicitada_pendiente,
+                    0 as solicitudes_pendientes
                 FROM stock_transito st
-                LEFT JOIN solicitudes_descarga sd ON st.id = sd.id_stock_transito 
-                    AND sd.estado = 'pendiente'
                 WHERE st.cantidad_disponible > 0 
                 {$filtroTransportador}
-                GROUP BY st.id
                 ORDER BY st.nombre_transportador ASC, st.codigo_producto ASC
             ");
 
