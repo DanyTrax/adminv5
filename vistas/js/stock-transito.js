@@ -364,17 +364,46 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
 /*=============================================
 EVENTO DE PRUEBA PARA BOTÓN DESCARGA
 =============================================*/
-$(document).on("click", "button", function(e) {
-    console.log("🔍 Cualquier botón clickeado:", $(this).attr("class"));
+$(document).on("click", ".btnDescargaDirecta", function(e) {
+    e.preventDefault();
+    console.log("🎯 Botón de descarga directa clickeado!");
     
-    if($(this).hasClass("btnDescargaDirecta")) {
-        console.log("🎯 Botón de descarga directa clickeado!");
-        console.log("🎯 Clases del botón:", $(this).attr("class"));
-        console.log("🎯 Atributos:", $(this)[0].attributes);
-        
-        // Llamar directamente a la función
-        abrirModalDescarga($(this));
-    }
+    // Obtener datos de los data attributes
+    var idStockTransito = $(this).data("id-stock");
+    var codigoProducto = $(this).data("codigo");
+    var descripcionProducto = $(this).data("descripcion");
+    var cantidadDisponible = $(this).data("cantidad");
+    var nombreTransportador = $(this).data("transportador");
+    var sucursalOrigen = $(this).data("origen");
+    var numeroDespacho = $(this).data("despacho");
+    
+    console.log("📥 Datos obtenidos:", {
+        idStockTransito,
+        codigoProducto,
+        descripcionProducto,
+        cantidadDisponible,
+        nombreTransportador,
+        sucursalOrigen,
+        numeroDespacho
+    });
+    
+    // Llenar información del producto
+    $("#descargaCodigo").text(codigoProducto);
+    $("#descargaDescripcion").text(descripcionProducto);
+    $("#descargaTransportador").text(nombreTransportador);
+    $("#descargaOrigen").text(sucursalOrigen);
+    $("#descargaDespacho").text(numeroDespacho);
+    $("#descargaCantidadDisponible").val(cantidadDisponible);
+    
+    // Configurar máximo en el input
+    $("#cantidadDescargar").attr("max", cantidadDisponible);
+    $("#cantidadDescargar").val("");
+    $("#observacionesDescarga").val("");
+    
+    // Mostrar modal
+    console.log("🔍 Intentando mostrar modal...");
+    $("#modalDescargaDirecta").modal("show");
+    console.log("🔍 Modal mostrado");
 });
 
 /*=============================================
@@ -422,7 +451,7 @@ function abrirModalDescarga(boton) {
 /*=============================================
 FUNCIÓN GLOBAL PARA ABRIR MODAL (ONCLICK)
 =============================================*/
-function abrirModalDescargaDirecta(idStockTransito, codigoProducto, descripcionProducto, cantidadDisponible, nombreTransportador, sucursalOrigen, numeroDespacho) {
+window.abrirModalDescargaDirecta = function(idStockTransito, codigoProducto, descripcionProducto, cantidadDisponible, nombreTransportador, sucursalOrigen, numeroDespacho) {
     console.log("🚀 Función global abrirModalDescargaDirecta llamada");
     console.log("📥 Parámetros:", {
         idStockTransito,
@@ -452,5 +481,8 @@ function abrirModalDescargaDirecta(idStockTransito, codigoProducto, descripcionP
     $("#modalDescargaDirecta").modal("show");
     console.log("🔍 Modal mostrado");
 }
+
+// Verificar que la función esté disponible globalmente
+console.log("🔍 Función abrirModalDescargaDirecta disponible:", typeof window.abrirModalDescargaDirecta);
 
 console.log("✅ Stock en Tránsito - JavaScript cargado correctamente");
