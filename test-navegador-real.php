@@ -1,75 +1,77 @@
 <?php
-// Test que simula exactamente la petición del navegador con sesión
+// Test que simula exactamente la petición del navegador
 
-// Habilitar reporte de errores
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+echo "🔍 Test Navegador Real - Simulación exacta del navegador\n";
+echo "=====================================================\n\n";
 
-echo "🔍 Test Navegador Real - Con sesión simulada\n";
-echo "============================================\n\n";
-
-// Simular headers HTTP del navegador
-$_SERVER['REQUEST_METHOD'] = 'POST';
-$_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
-$_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 (Test Browser)';
-$_SERVER['HTTP_ACCEPT'] = 'application/json, text/javascript, */*; q=0.01';
+// Simular headers exactos del navegador
+$_SERVER['REQUEST_METHOD'] = 'GET';
 $_SERVER['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest';
+$_SERVER['HTTP_ACCEPT'] = 'application/json, text/javascript, */*; q=0.01';
+$_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'es-ES,es;q=0.9,en;q=0.8';
+$_SERVER['HTTP_ACCEPT_ENCODING'] = 'gzip, deflate, br';
+$_SERVER['HTTP_CONNECTION'] = 'keep-alive';
+$_SERVER['HTTP_REFERER'] = 'https://pruebas.acrilicosinfinito.com/despachos';
+$_SERVER['HTTP_USER_AGENT'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
 
-// Simular datos POST exactamente como los envía el navegador
-$_POST = ["idDespacho" => "20"];
+// Simular parámetros de DataTables
+$_GET['_'] = time() * 1000; // Timestamp para evitar caché
 
 echo "📝 Headers simulados:\n";
 echo "   - REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD'] . "\n";
-echo "   - CONTENT_TYPE: " . $_SERVER['CONTENT_TYPE'] . "\n";
 echo "   - X_REQUESTED_WITH: " . $_SERVER['HTTP_X_REQUESTED_WITH'] . "\n";
-echo "   - POST data: " . print_r($_POST, true) . "\n\n";
+echo "   - ACCEPT: " . $_SERVER['HTTP_ACCEPT'] . "\n";
+echo "   - REFERER: " . $_SERVER['HTTP_REFERER'] . "\n";
+echo "   - Timestamp: " . $_GET['_'] . "\n\n";
 
-// Iniciar sesión y simular datos de usuario
+// Simular sesión exacta del navegador
 session_start();
+$_SESSION['iniciarSesion'] = 'ok';
 $_SESSION['perfil'] = 'Administrador';
 $_SESSION['id'] = 1;
 $_SESSION['nombre'] = 'Administrador';
 
-echo "📋 Datos de sesión simulados:\n";
+echo "📋 Sesión simulada:\n";
 echo "   - perfil: " . $_SESSION['perfil'] . "\n";
 echo "   - id: " . $_SESSION['id'] . "\n";
 echo "   - nombre: " . $_SESSION['nombre'] . "\n\n";
 
-// Probar incluir el archivo
-echo "🚀 Ejecutando ajax/despachos.ajax.php...\n";
+// Probar el archivo datatable
+echo "🚀 Ejecutando ajax/datatable-despachos.ajax.php...\n";
 
 try {
+    // Capturar output y errores
     ob_start();
-    include "ajax/despachos.ajax.php";
+    
+    // Incluir el archivo
+    include 'ajax/datatable-despachos.ajax.php';
+    
     $output = ob_get_clean();
     
     echo "✅ Archivo ejecutado exitosamente\n";
-    echo "📤 Output recibido:\n";
+    echo "📤 Output completo:\n";
     echo $output . "\n\n";
     
     // Verificar si es JSON válido
     $json = json_decode($output, true);
     if($json !== null) {
-        echo "✅ JSON válido\n";
-        echo "📋 Datos principales:\n";
-        echo "   - ID: " . ($json['id'] ?? 'N/A') . "\n";
-        echo "   - Número: " . ($json['numero_despacho'] ?? 'N/A') . "\n";
-        echo "   - Estado: " . ($json['estado'] ?? 'N/A') . "\n";
+        echo "✅ JSON válido - DataTables debería funcionar\n";
+        echo "📋 Datos encontrados:\n";
+        echo "   - Total registros: " . count($json['data']) . "\n";
+        if(count($json['data']) > 0) {
+            echo "   - Primer registro: " . $json['data'][0][1] . " (" . $json['data'][0][2] . ")\n";
+        }
     } else {
-        echo "❌ JSON inválido\n";
+        echo "❌ JSON inválido - DataTables no funcionará\n";
         echo "Error JSON: " . json_last_error_msg() . "\n";
     }
     
-} catch(ParseError $e) {
-    echo "❌ Error de sintaxis PHP: " . $e->getMessage() . "\n";
+} catch(Exception $e) {
+    echo "❌ Error: " . $e->getMessage() . "\n";
     echo "Archivo: " . $e->getFile() . "\n";
     echo "Línea: " . $e->getLine() . "\n";
 } catch(Error $e) {
-    echo "❌ Error fatal PHP: " . $e->getMessage() . "\n";
-    echo "Archivo: " . $e->getFile() . "\n";
-    echo "Línea: " . $e->getLine() . "\n";
-} catch(Exception $e) {
-    echo "❌ Excepción: " . $e->getMessage() . "\n";
+    echo "❌ Error fatal: " . $e->getMessage() . "\n";
     echo "Archivo: " . $e->getFile() . "\n";
     echo "Línea: " . $e->getLine() . "\n";
 }
