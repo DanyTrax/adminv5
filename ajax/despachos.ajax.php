@@ -8,6 +8,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Verificar que la sesión esté iniciada correctamente
+if (!isset($_SESSION['perfil'])) {
+    sendJsonResponse(["success" => false, "error" => "Sesión no iniciada. Por favor, inicie sesión nuevamente."]);
+}
+
 require_once "modelos/conexion.php";
 require_once "api-transferencias/conexion-central.php";
 require_once "controladores/despachos.controlador.php";
