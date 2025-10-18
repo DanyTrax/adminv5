@@ -10,7 +10,7 @@ class ModeloStockTransito {
     static public function mdlMostrarStockTransito($tabla, $item, $valor, $transportador = null) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             if($item != null) {
                 $stmt = ConexionCentral::conectar()->prepare("
@@ -55,7 +55,7 @@ class ModeloStockTransito {
     static public function mdlAgregarStockTransito($productos, $despacho, $sessionTransportador) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $conexion = ConexionCentral::conectar();
             $conexion->beginTransaction();
@@ -134,7 +134,7 @@ class ModeloStockTransito {
     static public function mdlCrearSolicitudDescarga($tabla, $datos) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $stmt = ConexionCentral::conectar()->prepare("
                 INSERT INTO $tabla 
@@ -174,7 +174,7 @@ class ModeloStockTransito {
     static public function mdlDescontarStockTransito($idStockTransito, $cantidad) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $stmt = ConexionCentral::conectar()->prepare("
                 UPDATE stock_transito 
@@ -223,7 +223,7 @@ class ModeloStockTransito {
     static public function mdlObtenerSolicitudDescarga($idSolicitud) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $stmt = ConexionCentral::conectar()->prepare("
                 SELECT * FROM solicitudes_descarga 
@@ -246,7 +246,7 @@ class ModeloStockTransito {
     static public function mdlActualizarEstadoSolicitud($idSolicitud, $estado, $observacionesConfirmacion = null, $motivoRechazo = null) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $sql = "UPDATE solicitudes_descarga 
                     SET estado = :estado, 
@@ -292,7 +292,7 @@ class ModeloStockTransito {
     static public function mdlContarSolicitudesPendientes($codigoProducto, $transportadorId) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $stmt = ConexionCentral::conectar()->prepare("
                 SELECT COUNT(*) as total 
@@ -320,7 +320,7 @@ class ModeloStockTransito {
     static public function mdlObtenerCantidadSolicitadaPendiente($codigoProducto, $transportadorId) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $stmt = ConexionCentral::conectar()->prepare("
                 SELECT SUM(cantidad_solicitada) as total_solicitado
@@ -348,7 +348,7 @@ class ModeloStockTransito {
     static public function mdlObtenerSolicitudesPendientesTransportador($transportadorId) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $stmt = ConexionCentral::conectar()->prepare("
                 SELECT sd.*, st.descripcion_producto, st.sucursal_origen

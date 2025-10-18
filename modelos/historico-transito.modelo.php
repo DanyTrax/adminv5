@@ -10,7 +10,7 @@ class ModeloHistoricoTransito {
     static public function mdlMostrarHistoricoTransito($tabla, $item, $valor, $filtros = []) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             if($item != null && $valor != null) {
                 // Consulta específica por item y valor
@@ -99,7 +99,7 @@ class ModeloHistoricoTransito {
     static public function mdlRegistrarMovimiento($datos) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $stmt = ConexionCentral::conectar()->prepare("
                 INSERT INTO historico_transito 
@@ -149,7 +149,7 @@ class ModeloHistoricoTransito {
     static public function mdlObtenerEstadisticasPorFechas($fechaDesde, $fechaHasta, $transportadorId = null) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $sql = "SELECT 
                         DATE(fecha_movimiento) as fecha,
@@ -194,7 +194,7 @@ class ModeloHistoricoTransito {
     static public function mdlObtenerTopProductos($limite = 10, $filtros = []) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $sql = "SELECT 
                         codigo_producto,
@@ -250,7 +250,7 @@ class ModeloHistoricoTransito {
     static public function mdlObtenerEficienciaPorTransportador($filtros = []) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $sql = "SELECT 
                         transportador_id,
@@ -310,7 +310,7 @@ class ModeloHistoricoTransito {
     static public function mdlObtenerMovimientosRecientes($limite = 20) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $sql = "SELECT * FROM historico_transito WHERE 1=1";
             $parametros = [];
@@ -346,7 +346,7 @@ class ModeloHistoricoTransito {
     static public function mdlLimpiarHistoricoAntiguo($diasAntiguedad = 365) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             // Solo administradores pueden ejecutar esta función
             if($_SESSION["perfil"] != "Administrador") {
@@ -396,7 +396,7 @@ class ModeloHistoricoTransito {
     static public function mdlObtenerResumenEjecutivo($filtros = []) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $parametros = [];
             $filtroFechas = "";

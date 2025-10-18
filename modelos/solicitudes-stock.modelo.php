@@ -4,7 +4,7 @@ require_once "conexion.php";
 
 // ✅ INCLUIR CONEXIÓN CENTRAL CON RUTA CORRECTA
 if (file_exists("api-transferencias/conexion-central.php")) {
-    require_once "api-transferencias/conexion-central.php";
+    require_once __DIR__ . "/../api-transferencias/conexion-central.php";
 } elseif (file_exists("../api-transferencias/conexion-central.php")) {
     require_once "../api-transferencias/conexion-central.php";
 } elseif (file_exists(__DIR__ . "/../api-transferencias/conexion-central.php")) {

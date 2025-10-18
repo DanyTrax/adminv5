@@ -399,7 +399,7 @@ public function ctrImportarDesdeExcel() {
                         if(!empty($id_existente) && is_numeric($id_existente) && $id_existente > 0) {
                             
                             // Verificar que el ID existe en la base de datos
-                            require_once "api-transferencias/conexion-central.php";
+                            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
                             $db = ConexionCentral::conectar();
                             $stmtVerificar = $db->prepare("SELECT id FROM catalogo_maestro WHERE id = ? AND activo = 1");
                             $stmtVerificar->execute([$id_existente]);

@@ -18,7 +18,7 @@ class ControladorHistoricoTransito {
     static public function ctrObtenerEstadisticasHistorico($filtros = []) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             // Aplicar filtro de perfil
             $filtroTransportador = "";
@@ -147,7 +147,7 @@ class ControladorHistoricoTransito {
     static public function ctrObtenerDatosLineaTiempo($filtros = []) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $filtroTransportador = "";
             $parametros = [];
@@ -236,7 +236,7 @@ class ControladorHistoricoTransito {
     static public function ctrObtenerTrazabilidadProducto($codigoProducto, $transportadorId = null) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $sql = "SELECT * FROM historico_transito 
                     WHERE codigo_producto = :codigo_producto";
@@ -461,7 +461,7 @@ class ControladorHistoricoTransito {
     static private function obtenerHistoricoParaExportar($filtros) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $sql = "SELECT * FROM historico_transito WHERE 1=1";
             $parametros = [];

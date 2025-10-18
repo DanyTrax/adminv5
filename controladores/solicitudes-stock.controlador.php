@@ -496,7 +496,7 @@ CONTAR SOLICITUDES PENDIENTES - PARA NOTIFICACIONES
 static public function ctrContarSolicitudesPendientes() {
     
     try {
-        require_once "api-transferencias/conexion-central.php";
+        require_once __DIR__ . "/../api-transferencias/conexion-central.php";
         
         $stmt = ConexionCentral::conectar()->prepare("
             SELECT COUNT(*) as total 
@@ -521,7 +521,7 @@ OBTENER SOLICITUDES PENDIENTES RECIENTES - PARA NOTIFICACIONES
 static public function ctrObtenerSolicitudesPendientes($limite = 8) {
     
     try {
-        require_once "api-transferencias/conexion-central.php";
+        require_once __DIR__ . "/../api-transferencias/conexion-central.php";
         
         $stmt = ConexionCentral::conectar()->prepare("
             SELECT 
@@ -594,7 +594,7 @@ OBTENER ESTADÍSTICAS BÁSICAS - PARA DASHBOARD
 static public function ctrObtenerEstadisticas() {
     
     try {
-        require_once "api-transferencias/conexion-central.php";
+        require_once __DIR__ . "/../api-transferencias/conexion-central.php";
         
         $stmt = ConexionCentral::conectar()->prepare("
             SELECT 

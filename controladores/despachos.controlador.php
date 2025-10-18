@@ -89,7 +89,7 @@ public function ctrEditarDespacho($datos = null) {
         
         try {
             require_once __DIR__ . "/../modelos/despachos.modelo.php";
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $idDespacho = $datos["idDespachoEditar"];
             
@@ -436,7 +436,7 @@ public function ctrEditarDespacho($datos = null) {
     static private function actualizarEstadoSolicitudStock($idSolicitud, $nuevoEstado) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $stmt = ConexionCentral::conectar()->prepare("
                 UPDATE solicitudes_stock 
@@ -763,7 +763,7 @@ public function ctrEditarDespacho($datos = null) {
     static public function limpiarStockTransitoCero() {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $conexion = ConexionCentral::conectar();
             
@@ -791,7 +791,7 @@ public function ctrEditarDespacho($datos = null) {
     static public function actualizarStockTransitoDespacho($numeroDespacho, $productos) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $conexion = ConexionCentral::conectar();
             $conexion->beginTransaction();
@@ -866,7 +866,7 @@ PROCESAR DESPACHO EN TRÁNSITO - AGREGAR A STOCK TRANSITO
 static public function procesarDespachoEnTransito($idDespacho) {
     
     try {
-        require_once "api-transferencias/conexion-central.php";
+        require_once __DIR__ . "/../api-transferencias/conexion-central.php";
         
         $conexion = ConexionCentral::conectar();
         $conexion->beginTransaction();

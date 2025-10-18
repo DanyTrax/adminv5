@@ -197,7 +197,7 @@ class ControladorStockTransito {
             $observacionesConfirmacion = $_POST["observacionesConfirmacion"] ?? null;
 
             try {
-                require_once "api-transferencias/conexion-central.php";
+                require_once __DIR__ . "/../api-transferencias/conexion-central.php";
                 require_once "modelos/conexion.php";
 
                 // Obtener detalles de la solicitud
@@ -470,7 +470,7 @@ class ControladorStockTransito {
     static public function ctrObtenerResumenStockTransito() {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $stmt = ConexionCentral::conectar()->prepare("
                 SELECT 
@@ -517,7 +517,7 @@ class ControladorStockTransito {
     static public function registrarHistoricoTransito($codigo, $descripcion, $cantidad, $tipoMovimiento, $transportadorId, $nombreTransportador, $sucursalOrigen, $sucursalDestino, $usuarioOrigen, $nombreUsuarioOrigen, $usuarioDestino, $nombreUsuarioDestino, $idDespacho, $numeroDespacho, $idSolicitudDescarga, $observaciones) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $stmt = ConexionCentral::conectar()->prepare("
                 INSERT INTO historico_transito 
@@ -568,7 +568,7 @@ class ControladorStockTransito {
             $motivoForzado = $_POST["motivoForzado"];
 
             try {
-                require_once "api-transferencias/conexion-central.php";
+                require_once __DIR__ . "/../api-transferencias/conexion-central.php";
                 require_once "modelos/conexion.php";
 
                 // Obtener stock actual
@@ -772,7 +772,7 @@ class ControladorStockTransito {
     static private function obtenerStockTransitoParaExportar($filtros) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $sql = "SELECT * FROM stock_transito WHERE cantidad_disponible > 0";
             $parametros = [];
