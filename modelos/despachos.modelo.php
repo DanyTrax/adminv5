@@ -11,7 +11,7 @@ static public function mdlCrearDespacho($tabla, $datos) {
     
     try {
         // Usar conexión central
-        require_once "api-transferencias/conexion-central.php";
+        require_once "../api-transferencias/conexion-central.php";
         $conexion = ConexionCentral::conectar();
         
         $stmt = $conexion->prepare("
@@ -81,7 +81,7 @@ static public function mdlCrearDespacho($tabla, $datos) {
     static public function mdlMostrarDespachos($tabla, $item, $valor) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once "../api-transferencias/conexion-central.php";
             
             if($item != null) {
                 $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item ORDER BY fecha_creacion DESC");
@@ -106,7 +106,7 @@ GENERAR NÚMERO DE DESPACHO CON SELECT FOR UPDATE - VERSIÓN SIMPLE
 static public function mdlGenerarNumeroDespacho() {
     
     try {
-        require_once "api-transferencias/conexion-central.php";
+        require_once "../api-transferencias/conexion-central.php";
         $conexion = ConexionCentral::conectar();
         
         // ✅ INICIAR TRANSACCIÓN
@@ -158,7 +158,7 @@ static public function mdlGenerarNumeroDespacho() {
     static public function mdlActualizarEstadoDespacho($tabla, $datos) {
         
         try {
-            require_once "api-transferencias/conexion-central.php";
+            require_once "../api-transferencias/conexion-central.php";
             
             $stmt = ConexionCentral::conectar()->prepare("
                 UPDATE $tabla 
@@ -247,7 +247,7 @@ BORRAR DESPACHO
 static public function mdlBorrarDespacho($tabla, $item, $valor) {
     
     try {
-        require_once "api-transferencias/conexion-central.php";
+        require_once "../api-transferencias/conexion-central.php";
         
         $stmt = ConexionCentral::conectar()->prepare("DELETE FROM $tabla WHERE $item = :valor");
         $stmt->bindParam(":valor", $valor, PDO::PARAM_STR);
@@ -269,7 +269,7 @@ ACTUALIZAR DESPACHO - VERSIÓN CORREGIDA
 static public function mdlActualizarDespacho($tabla, $datos, $item, $valor) {
     
     try {
-        require_once "api-transferencias/conexion-central.php";
+        require_once "../api-transferencias/conexion-central.php";
         
         // Construir SQL dinámicamente
         $campos = [];
@@ -311,7 +311,7 @@ CANCELAR DESPACHO
 static public function mdlCancelarDespacho($tabla, $datos) {
     
     try {
-        require_once "api-transferencias/conexion-central.php";
+        require_once "../api-transferencias/conexion-central.php";
         
         $stmt = ConexionCentral::conectar()->prepare("
             UPDATE $tabla 
