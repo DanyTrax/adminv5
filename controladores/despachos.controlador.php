@@ -1,5 +1,7 @@
 <?php
 
+require_once "modelos/despachos.modelo.php";
+
 class ControladorDespachos {
 
 /*=============================================
