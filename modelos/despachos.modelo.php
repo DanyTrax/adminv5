@@ -95,7 +95,8 @@ static public function mdlCrearDespacho($tabla, $datos) {
             }
 
         } catch(Exception $e) {
-            return [];
+            error_log("Error en mdlMostrarDespachos: " . $e->getMessage());
+            return false;
         }
     }
 
