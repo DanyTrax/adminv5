@@ -262,9 +262,12 @@ if(isset($_POST["cancelarDespacho"])){
         
         error_log("🔍 CANCELAR DESPACHO - Datos a actualizar: " . print_r($datos, true));
         
+        // Log del estado antes de actualizar
+        error_log("🔍 CANCELAR DESPACHO - Estado ANTES de actualizar: " . $despacho["estado"]);
+        
         $respuesta = ModeloDespachos::mdlActualizarDespacho("despachos", $datos, "id", $idDespacho);
         
-        error_log("🔍 CANCELAR DESPACHO - Respuesta: " . $respuesta);
+        error_log("🔍 CANCELAR DESPACHO - Respuesta de mdlActualizarDespacho: " . $respuesta);
         
         if($respuesta == "ok") {
             // Verificar que realmente se actualizó
