@@ -256,7 +256,11 @@ function actualizarTabla() {
 /*=============================================
 DESCARGA DIRECTA
 =============================================*/
-$(document).on("click", ".btnDescargaDirecta", function() {
+$(document).on("click", ".btnDescargaDirecta", function(e) {
+    e.preventDefault();
+    
+    console.log("🔍 Evento click detectado en .btnDescargaDirecta");
+    console.log("🔍 Elemento clickeado:", $(this));
     
     var idStockTransito = $(this).attr("idStockTransito");
     var codigoProducto = $(this).attr("codigoProducto");
@@ -272,6 +276,7 @@ $(document).on("click", ".btnDescargaDirecta", function() {
     console.log("ID Stock:", idStockTransito);
     console.log("Producto:", codigoProducto, "-", descripcionProducto);
     console.log("Cantidad disponible:", cantidadDisponible);
+    console.log("Modal existe:", $("#modalDescargaDirecta").length > 0);
     
     // Llenar información del producto
     $("#descargaCodigo").text(codigoProducto);
@@ -287,7 +292,9 @@ $(document).on("click", ".btnDescargaDirecta", function() {
     $("#observacionesDescarga").val("");
     
     // Mostrar modal
+    console.log("🔍 Intentando mostrar modal...");
     $("#modalDescargaDirecta").modal("show");
+    console.log("🔍 Modal mostrado");
 });
 
 /*=============================================
@@ -352,6 +359,17 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
             swal("Error", "Error al procesar la descarga", "error");
         }
     });
+});
+
+/*=============================================
+EVENTO DE PRUEBA PARA BOTÓN DESCARGA
+=============================================*/
+$(document).on("click", "button", function() {
+    if($(this).hasClass("btnDescargaDirecta")) {
+        console.log("🎯 Botón de descarga directa clickeado!");
+        console.log("🎯 Clases del botón:", $(this).attr("class"));
+        console.log("🎯 Atributos:", $(this)[0].attributes);
+    }
 });
 
 console.log("✅ Stock en Tránsito - JavaScript cargado correctamente");
