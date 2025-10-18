@@ -119,7 +119,7 @@ OBTENER NOMBRE DE SUCURSAL DESDE BD LOCAL
 private function obtenerNombreSucursal($codigoSucursal) {
     
     try {
-        require_once "modelos/conexion.php";
+        require_once "../modelos/conexion.php";
         
         $stmt = Conexion::conectar()->prepare("
             SELECT nombre_sucursal 
