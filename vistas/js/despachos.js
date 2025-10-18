@@ -386,8 +386,8 @@ function configurarBotonesModalDespacho(despacho) {
         `;
     }
     
-    // BOTÓN CANCELAR (para pendientes y aceptados)
-    if(despacho.estado === 'pendiente' || despacho.estado === 'aceptado') {
+    // BOTÓN CANCELAR (para pendientes y en_transito)
+    if(despacho.estado === 'pendiente' || despacho.estado === 'en_transito') {
         html += `
             <button type="button" class="btn btn-warning" onclick="cancelarDespachoModal(${despacho.id}, '${despacho.estado}')">
                 <i class="fa fa-ban"></i> Cancelar

@@ -169,8 +169,8 @@ private function generarBotonesAccion($despacho) {
             $botones .= ' <button class=\"btn btn-warning btn-xs btnEditarDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Editar despacho\" onclick=\"editarDespacho(' . $despacho["id"] . ')\"><i class=\"fa fa-pencil\"></i></button>';
         }
         
-        // Botón Cancelar (solo si está pendiente)
-        if($estado == "pendiente") {
+        // Botón Cancelar (si está pendiente o en_transito)
+        if($estado == "pendiente" || $estado == "en_transito") {
             $botones .= ' <button class=\"btn btn-warning btn-xs btnCancelarDespacho\" idDespacho=\"' . $despacho["id"] . '\" estadoDespacho=\"' . $estado . '\" title=\"Cancelar despacho\"><i class=\"fa fa-ban\"></i></button>';
         }
         
