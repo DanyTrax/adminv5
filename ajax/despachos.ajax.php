@@ -42,7 +42,18 @@ if(isset($_POST["idDespacho"])){
     
     $respuesta = ControladorDespachos::ctrMostrarDespachos($item, $valor);
     
-    sendJsonResponse($respuesta);
+    if($respuesta) {
+        sendJsonResponse([
+            "success" => true,
+            "data" => $respuesta,
+            "message" => "Despacho obtenido correctamente"
+        ]);
+    } else {
+        sendJsonResponse([
+            "success" => false,
+            "error" => "No se pudo obtener el despacho"
+        ]);
+    }
 }
 
 /*=============================================

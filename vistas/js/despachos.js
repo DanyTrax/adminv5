@@ -55,8 +55,8 @@ $(document).on("click", ".btnVerDespacho", function(){
             
             console.log("📦 Respuesta del servidor:", respuesta);
             
-            if(respuesta && !respuesta.error) {
-                mostrarDetallesDespacho(respuesta);
+            if(respuesta.success && respuesta.data) {
+                mostrarDetallesDespacho(respuesta.data);
             } else {
                 swal({
                     title: "Error",
