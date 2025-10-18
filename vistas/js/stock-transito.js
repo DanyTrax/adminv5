@@ -77,6 +77,9 @@ function cargarTablaStockTransito() {
             console.log("✅ DataTable Stock Tránsito cargado exitosamente");
             var info = this.api().page.info();
             console.log("📊 Registros totales:", info.recordsTotal);
+            
+            // Configurar eventos después de cargar la tabla
+            configurarEventosStock();
         }
     });
 }
@@ -84,7 +87,7 @@ function cargarTablaStockTransito() {
 /*=============================================
 CONFIGURAR EVENTOS
 =============================================*/
-function configurarEventos() {
+function configurarEventosStock() {
     
     // Ver historial
     $(document).on("click", ".btnVerHistorial", function() {

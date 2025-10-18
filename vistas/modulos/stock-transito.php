@@ -211,7 +211,136 @@ MODAL VER HISTORIAL
 </div>
 
 <script>
-// Configurar eventos
+// Variable global para almacenar el ID del stock seleccionado
+var stockSeleccionado = null;
+
+console.log("🔍 Script de descarga directa cargado");
+
+// Evento para botón de descarga directa
+$(document).ready(function() {
+    console.log("🔍 Document ready ejecutado");
+    
+    // Evento de prueba para cualquier botón
+    $(document).on("click", "button", function() {
+        console.log("🔍 Botón clickeado:", $(this).attr("class"));
+        
+        if($(this).hasClass("btnDescargaDirecta")) {
+            console.log("🎯 Botón de descarga detectado!");
+            
+            // Obtener datos del botón
+            var idStockTransito = $(this).data("id-stock");
+            var codigoProducto = $(this).data("codigo");
+            var descripcionProducto = $(this).data("descripcion");
+            var cantidadDisponible = $(this).data("cantidad");
+            var nombreTransportador = $(this).data("transportador");
+            var sucursalOrigen = $(this).data("origen");
+            var numeroDespacho = $(this).data("despacho");
+            
+            console.log("📥 Datos obtenidos:", {
+                idStockTransito,
+                codigoProducto,
+                descripcionProducto,
+                cantidadDisponible,
+                nombreTransportador,
+                sucursalOrigen,
+                numeroDespacho
+            });
+            
+            // Guardar ID del stock seleccionado
+            stockSeleccionado = idStockTransito;
+            
+            // Llenar información del producto
+            $("#descargaCodigo").text(codigoProducto || "N/A");
+            $("#descargaDescripcion").text(descripcionProducto || "N/A");
+            $("#descargaTransportador").text(nombreTransportador || "N/A");
+            $("#descargaOrigen").text(sucursalOrigen || "N/A");
+            $("#descargaDespacho").text(numeroDespacho || "N/A");
+            $("#descargaCantidadDisponible").val(cantidadDisponible || 0);
+            
+            // Configurar máximo en el input
+            $("#cantidadDescargar").attr("max", cantidadDisponible || 0);
+            $("#cantidadDescargar").val("");
+            $("#observacionesDescarga").val("");
+            
+            // Mostrar modal
+            $("#modalDescargaDirecta").modal("show");
+        }
+    });
+    
+    // Manejar envío del formulario de descarga
+    $(document).on("submit", "#formDescargaDirecta", function(e) {
+        e.preventDefault();
+        
+        console.log("📤 Formulario de descarga enviado");
+        
+        var cantidadDescargar = $("#cantidadDescargar").val();
+        var observaciones = $("#observacionesDescarga").val();
+        
+        console.log("📥 Datos del formulario:", {
+            cantidadDescargar,
+            observaciones
+        });
+        
+        if(!cantidadDescargar || cantidadDescargar <= 0) {
+            alert("Debe ingresar una cantidad válida");
+            return;
+        }
+        
+        // Usar el ID del stock guardado globalmente
+        var idStockTransito = stockSeleccionado;
+        
+        console.log("📤 Enviando descarga AJAX:", {
+            idStockTransito,
+            cantidadDescargar,
+            observaciones
+        });
+        
+        // Enviar datos por AJAX
+        var datos = new FormData();
+        datos.append("descargarStockDirecto", true);
+        datos.append("idStockTransito", idStockTransito);
+        datos.append("cantidadDescargar", cantidadDescargar);
+        datos.append("observaciones", observaciones);
+        
+        $.ajax({
+            url: "ajax/stock-transito.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function(respuesta) {
+                console.log("📨 Respuesta descarga:", respuesta);
+                
+                if(respuesta.success) {
+                    swal({
+                        title: "¡Descarga exitosa!",
+                        text: respuesta.message,
+                        type: "success",
+                        confirmButtonText: "Cerrar"
+                    }).then(function() {
+                        $("#modalDescargaDirecta").modal("hide");
+                        // Recargar la tabla
+                        if(typeof tablaStockTransito !== 'undefined') {
+                            tablaStockTransito.ajax.reload();
+                        } else {
+                            location.reload();
+                        }
+                    });
+                } else {
+                    swal("Error", respuesta.error || "No se pudo procesar la descarga", "error");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("❌ Error AJAX descarga:", error);
+                swal("Error", "Error al procesar la descarga", "error");
+            }
+        });
+    });
+});
+
+// Función para configurar eventos (llamada desde JavaScript externo)
 function configurarEventos() {
     
     // Ver historial
