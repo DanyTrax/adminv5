@@ -296,6 +296,37 @@ public function ctrEditarDespacho($datos = null) {
                 return;
             }
 
+            // Validar que el despacho esté en estado "aceptado" antes de ponerlo "en_transito"
+            if($nuevoEstado == "en_transito") {
+                $despachoActual = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
+                
+                if(!$despachoActual) {
+                    echo '<script>
+                        swal({
+                            type: "error",
+                            title: "Error",
+                            text: "Despacho no encontrado",
+                            showConfirmButton: true,
+                            confirmButtonText: "Cerrar"
+                        });
+                    </script>';
+                    return;
+                }
+                
+                if($despachoActual["estado"] != "aceptado") {
+                    echo '<script>
+                        swal({
+                            type: "error",
+                            title: "Estado no válido",
+                            text: "El despacho debe estar en estado \'aceptado\' antes de poder ponerlo en tránsito. Estado actual: " + "' . $despachoActual["estado"] . '",
+                            showConfirmButton: true,
+                            confirmButtonText: "Cerrar"
+                        });
+                    </script>';
+                    return;
+                }
+            }
+
             try {
                 
                 // Si el estado cambia a "en_transito", mover productos a stock en tránsito
@@ -316,7 +347,7 @@ public function ctrEditarDespacho($datos = null) {
                     "nombre_transportador" => $_SESSION["perfil"] == "Transportador" ? $_SESSION["nombre"] : null
                 );
 
-                $respuesta = ModeloDespachos::mdlCambiarEstadoDespacho($tabla, $datos);
+                $respuesta = ModeloDespachos::mdlActualizarDespacho($tabla, $datos, "id", $idDespacho);
 
                 if($respuesta == "ok") {
 
