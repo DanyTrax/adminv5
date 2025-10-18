@@ -404,11 +404,17 @@ function configurarBotonesModalDespacho(despacho) {
         `;
     }
     
-    // BOTÓN ELIMINAR (solo pendientes)
-    if(despacho.estado === 'pendiente') {
+    // BOTÓN ELIMINAR (pendientes para todos, cualquier estado para administradores)
+    var perfilUsuario = window.perfilUsuario || "Usuario";
+    var puedeEliminar = despacho.estado === 'pendiente' || perfilUsuario === 'Administrador';
+    
+    if(puedeEliminar) {
+        var textoEliminar = despacho.estado === 'pendiente' ? 'Eliminar' : 'Eliminar (Admin)';
+        var claseBoton = despacho.estado === 'pendiente' ? 'btn-danger' : 'btn-warning';
+        
         html += `
-            <button type="button" class="btn btn-danger" onclick="eliminarDespachoModal(${despacho.id}, '${despacho.numero_despacho}')">
-                <i class="fa fa-trash"></i> Eliminar
+            <button type="button" class="btn ${claseBoton}" onclick="eliminarDespachoModal(${despacho.id}, '${despacho.numero_despacho}', '${despacho.estado}')">
+                <i class="fa fa-trash"></i> ${textoEliminar}
             </button>
         `;
     }
@@ -697,18 +703,28 @@ function eliminarDespachoDirecto(idDespacho, numeroDespacho) {
 /*=============================================
 ELIMINAR DESPACHO DESDE MODAL
 =============================================*/
-function eliminarDespachoModal(idDespacho, numeroDespacho) {
+function eliminarDespachoModal(idDespacho, numeroDespacho, estadoDespacho) {
     
-    console.log("🗑️ Eliminando despacho desde modal ID:", idDespacho);
+    console.log("🗑️ Eliminando despacho desde modal ID:", idDespacho, "Estado:", estadoDespacho);
     
     $("#modalVerDespacho").modal("hide");
     
+    var titulo = "¿Eliminar despacho " + numeroDespacho + "?";
+    var texto = "¡Esta acción no se puede deshacer!";
+    var tipo = "warning";
+    
+    // Si es un despacho que no está pendiente, mostrar advertencia especial
+    if(estadoDespacho && estadoDespacho !== 'pendiente') {
+        texto = "⚠️ ADVERTENCIA: Este despacho está en estado '" + estadoDespacho + "'. ¡Esta acción no se puede deshacer!";
+        tipo = "error";
+    }
+    
     swal({
-        title: "¿Eliminar despacho " + numeroDespacho + "?",
-        text: "¡Esta acción no se puede deshacer!",
-        type: "warning",
+        title: titulo,
+        text: texto,
+        type: tipo,
         showCancelButton: true,
-        confirmButtonColor: "#d33",
+        confirmButtonColor: estadoDespacho !== 'pendiente' ? "#f39c12" : "#d33",
         cancelButtonColor: "#3c8dbc",
         confirmButtonText: "Sí, eliminar",
         cancelButtonText: "Cancelar"

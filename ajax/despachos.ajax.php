@@ -324,10 +324,18 @@ if(isset($_POST["eliminarDespacho"])){
             sendJsonResponse(["success" => false, "error" => "Despacho no encontrado"]);
         }
         
-        // Solo se pueden eliminar despachos pendientes
-        if($despacho["estado"] != "pendiente") {
-            sendJsonResponse(["success" => false, "error" => "Solo se pueden eliminar despachos pendientes"]);
+        // Verificar permisos de administrador para eliminar en cualquier estado
+        $perfilUsuario = $_SESSION["perfil"] ?? "";
+        
+        if($perfilUsuario != "Administrador") {
+            // Solo administradores pueden eliminar despachos en cualquier estado
+            if($despacho["estado"] != "pendiente") {
+                sendJsonResponse(["success" => false, "error" => "Solo los administradores pueden eliminar despachos que no estén pendientes"]);
+            }
         }
+        
+        // Log de eliminación para auditoría
+        error_log("🗑️ ELIMINAR DESPACHO - Usuario: " . ($_SESSION["nombre"] ?? "Desconocido") . " | Perfil: " . $perfilUsuario . " | Despacho: " . $despacho["numero_despacho"] . " | Estado: " . $despacho["estado"]);
         
         $respuesta = ModeloDespachos::mdlBorrarDespacho("despachos", "id", $idDespacho);
         
