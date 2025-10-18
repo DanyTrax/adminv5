@@ -1,6 +1,9 @@
 <?php
 
-session_start();
+// Iniciar sesión solo si no está activa
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 require_once "api-transferencias/conexion-central.php";
 
@@ -97,7 +100,7 @@ OBTENER NOMBRE DE SUCURSAL DESDE BD LOCAL
 private function obtenerNombreSucursal($codigoSucursal) {
     
     try {
-        require_once "../modelos/conexion.php";
+        require_once "modelos/conexion.php";
         
         $stmt = Conexion::conectar()->prepare("
             SELECT nombre_sucursal 
