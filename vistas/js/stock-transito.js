@@ -20,7 +20,7 @@ $(document).ready(function() {
     console.log("🔢 ID Usuario:", window.idUsuario);
     
     cargarTablaStockTransito();
-    configurarEventos();
+    configurarEventosStock();
 });
 
 /*=============================================
