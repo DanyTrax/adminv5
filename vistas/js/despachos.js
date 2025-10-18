@@ -627,14 +627,20 @@ function ejecutarCancelarDespacho(idDespacho, motivo) {
                     type: "success",
                     confirmButtonText: "Cerrar"
                 }).then(function() {
-                    // Recargar la tabla para mostrar el cambio
+                    console.log("✅ Despacho cancelado exitosamente");
+                    console.log("🔄 Iniciando recarga de datos...");
+                    
+                    // Método 1: Recarga simple de DataTable
                     if($.fn.DataTable.isDataTable('.tablaDespachos')) {
+                        console.log("🔄 Recargando DataTable...");
                         $('.tablaDespachos').DataTable().ajax.reload(null, false);
                     }
-                    // También recargar la página si es necesario
+                    
+                    // Método 2: Recarga de página después de un breve delay
                     setTimeout(function() {
-                        location.reload();
-                    }, 1000);
+                        console.log("🔄 Recargando página completa...");
+                        window.location.reload();
+                    }, 1500);
                 });
             } else {
                 console.error("❌ Error al cancelar despacho:", respuesta.error);
