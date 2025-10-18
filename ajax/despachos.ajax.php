@@ -248,34 +248,9 @@ if(isset($_POST["cancelarDespacho"])){
             sendJsonResponse(["success" => false, "error" => "Despacho no encontrado"]);
         }
         
-        // Solo se pueden cancelar despachos pendientes o en_transito
-        if(!in_array($despacho["estado"], ["pendiente", "en_transito"])) {
-            sendJsonResponse(["success" => false, "error" => "No se puede cancelar un despacho en estado: " . $despacho["estado"]]);
-        }
-        
-        // Si el despacho está en_transito, necesitamos devolver el stock
-        if($despacho["estado"] == "en_transito") {
-            // Decodificar productos del despacho
-            $productosDespacho = json_decode($despacho["productos_despacho"], true);
-            
-            if($productosDespacho && is_array($productosDespacho)) {
-                // Devolver stock local
-                foreach($productosDespacho as $producto) {
-                    $stmt = Conexion::conectar()->prepare("
-                        UPDATE productos 
-                        SET stock = stock + ? 
-                        WHERE codigo = ?
-                    ");
-                    $stmt->execute([$producto["cantidad"], $producto["codigo"]]);
-                }
-                
-                // Eliminar del stock en tránsito
-                $stmt = ConexionCentral::conectar()->prepare("
-                    DELETE FROM stock_transito 
-                    WHERE numero_despacho_origen = ?
-                ");
-                $stmt->execute([$despacho["numero_despacho"]]);
-            }
+        // Solo se pueden cancelar despachos pendientes
+        if($despacho["estado"] != "pendiente") {
+            sendJsonResponse(["success" => false, "error" => "Solo se pueden cancelar despachos pendientes. Estado actual: " . $despacho["estado"]]);
         }
         
         $datos = array(
@@ -288,11 +263,7 @@ if(isset($_POST["cancelarDespacho"])){
         $respuesta = ModeloDespachos::mdlActualizarDespacho("despachos", $datos, "id", $idDespacho);
         
         if($respuesta == "ok") {
-            $mensaje = "Despacho cancelado correctamente";
-            if($despacho["estado"] == "en_transito") {
-                $mensaje .= ". Stock devuelto al inventario local.";
-            }
-            sendJsonResponse(["success" => true, "message" => $mensaje]);
+            sendJsonResponse(["success" => true, "message" => "Despacho cancelado correctamente"]);
         } else {
             sendJsonResponse(["success" => false, "error" => "Error al cancelar el despacho"]);
         }
