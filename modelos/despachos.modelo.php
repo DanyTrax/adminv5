@@ -162,8 +162,8 @@ static public function mdlGenerarNumeroDespacho() {
             $stmt = ConexionCentral::conectar()->prepare("
                 UPDATE $tabla 
                 SET estado = :estado,
-                    id_transportador_asignado = :id_transportador,
-                    nombre_transportador_asignado = :nombre_transportador,
+                    transportador_id = :id_transportador,
+                    nombre_transportador = :nombre_transportador,
                     fecha_aceptacion = :fecha_aceptacion
                 WHERE id = :id
             ");
