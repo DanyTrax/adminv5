@@ -6,9 +6,10 @@ Thumbs.db
 config-local.php
 .env
 
-# Logs
-*.log
+# Logs (excepto logs del sistema)
 error_log
+logs/error.log
+logs/access.log
 
 # Archivos temporales
 *.tmp
