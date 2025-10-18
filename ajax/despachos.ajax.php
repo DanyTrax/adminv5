@@ -1,12 +1,30 @@
 <?php
 
-session_start();
+// Iniciar buffer de salida para capturar warnings
+ob_start();
+
+// Iniciar sesión solo si no está activa
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 require_once "modelos/conexion.php";
 require_once "api-transferencias/conexion-central.php";
 require_once "controladores/despachos.controlador.php";
 require_once "modelos/despachos.modelo.php";
 require_once "modelos/productos.modelo.php";
+
+// Función helper para enviar JSON limpio
+function sendJsonResponse($data) {
+    ob_clean(); // Limpiar buffer de warnings
+    
+    // Solo enviar header si no se han enviado headers aún
+    if (!headers_sent()) {
+        header('Content-Type: application/json');
+    }
+    
+    sendJsonResponse($data);
+}
 
 /*=============================================
 VER DESPACHO
@@ -18,7 +36,7 @@ if(isset($_POST["idDespacho"])){
     
     $respuesta = ControladorDespachos::ctrMostrarDespachos($item, $valor);
     
-    echo json_encode($respuesta);
+    sendJsonResponse($respuesta);
 }
 
 /*=============================================
@@ -33,33 +51,29 @@ if(isset($_POST["aceptarDespacho"])){
         $despacho = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
         
         if(!$despacho) {
-            echo json_encode(["success" => false, "error" => "Despacho no encontrado"]);
-            exit;
+            sendJsonResponse(["success" => false, "error" => "Despacho no encontrado"]);
         }
         
         // 2. Verificar que esté en estado pendiente
         if($despacho["estado"] != "pendiente") {
-            echo json_encode(["success" => false, "error" => "Solo se pueden aceptar despachos pendientes"]);
-            exit;
+            sendJsonResponse(["success" => false, "error" => "Solo se pueden aceptar despachos pendientes"]);
         }
         
         // 3. Decodificar productos del despacho
         $productosDespacho = json_decode($despacho["productos_despacho"], true);
         
         if(!$productosDespacho || !is_array($productosDespacho)) {
-            echo json_encode(["success" => false, "error" => "Error al procesar productos del despacho"]);
-            exit;
+            sendJsonResponse(["success" => false, "error" => "Error al procesar productos del despacho"]);
         }
         
         // 4. Verificar stock local disponible
         foreach($productosDespacho as $producto) {
             $stockDisponible = ModeloDespachos::mdlVerificarStockLocal($producto["codigo"], $producto["cantidad"]);
             if(!$stockDisponible) {
-                echo json_encode([
+                sendJsonResponse([
                     "success" => false, 
                     "error" => "Stock insuficiente para el producto: " . $producto["codigo"]
                 ]);
-                exit;
             }
         }
         
@@ -121,7 +135,7 @@ if(isset($_POST["aceptarDespacho"])){
             $conexionLocal->commit();
             $conexionCentral->commit();
             
-            echo json_encode([
+            sendJsonResponse([
                 "success" => true, 
                 "message" => "Despacho aceptado correctamente. Stock local descontado y productos agregados al stock en tránsito."
             ]);
@@ -134,7 +148,7 @@ if(isset($_POST["aceptarDespacho"])){
         }
         
     } catch(Exception $e) {
-        echo json_encode(["success" => false, "error" => $e->getMessage()]);
+        sendJsonResponse(["success" => false, "error" => $e->getMessage()]);
     }
 }
 
@@ -150,14 +164,12 @@ if(isset($_POST["cancelarDespacho"])){
         $despacho = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
         
         if(!$despacho) {
-            echo json_encode(["success" => false, "error" => "Despacho no encontrado"]);
-            exit;
+            sendJsonResponse(["success" => false, "error" => "Despacho no encontrado"]);
         }
         
         // Solo se pueden cancelar despachos pendientes o aceptados
         if(!in_array($despacho["estado"], ["pendiente", "aceptado"])) {
-            echo json_encode(["success" => false, "error" => "No se puede cancelar un despacho en estado: " . $despacho["estado"]]);
-            exit;
+            sendJsonResponse(["success" => false, "error" => "No se puede cancelar un despacho en estado: " . $despacho["estado"]]);
         }
         
         $datos = array(
@@ -170,13 +182,13 @@ if(isset($_POST["cancelarDespacho"])){
         $respuesta = ModeloDespachos::mdlActualizarDespacho("despachos", $datos, "id", $idDespacho);
         
         if($respuesta == "ok") {
-            echo json_encode(["success" => true, "message" => "Despacho cancelado correctamente"]);
+            sendJsonResponse(["success" => true, "message" => "Despacho cancelado correctamente"]);
         } else {
-            echo json_encode(["success" => false, "error" => "Error al cancelar el despacho"]);
+            sendJsonResponse(["success" => false, "error" => "Error al cancelar el despacho"]);
         }
         
     } catch(Exception $e) {
-        echo json_encode(["success" => false, "error" => $e->getMessage()]);
+        sendJsonResponse(["success" => false, "error" => $e->getMessage()]);
     }
 }
 
@@ -191,26 +203,24 @@ if(isset($_POST["eliminarDespacho"])){
         $despacho = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
         
         if(!$despacho) {
-            echo json_encode(["success" => false, "error" => "Despacho no encontrado"]);
-            exit;
+            sendJsonResponse(["success" => false, "error" => "Despacho no encontrado"]);
         }
         
         // Solo se pueden eliminar despachos pendientes
         if($despacho["estado"] != "pendiente") {
-            echo json_encode(["success" => false, "error" => "Solo se pueden eliminar despachos pendientes"]);
-            exit;
+            sendJsonResponse(["success" => false, "error" => "Solo se pueden eliminar despachos pendientes"]);
         }
         
         $respuesta = ModeloDespachos::mdlBorrarDespacho("despachos", "id", $idDespacho);
         
         if($respuesta == "ok") {
-            echo json_encode(["success" => true, "message" => "Despacho eliminado correctamente"]);
+            sendJsonResponse(["success" => true, "message" => "Despacho eliminado correctamente"]);
         } else {
-            echo json_encode(["success" => false, "error" => "Error al eliminar el despacho"]);
+            sendJsonResponse(["success" => false, "error" => "Error al eliminar el despacho"]);
         }
         
     } catch(Exception $e) {
-        echo json_encode(["success" => false, "error" => $e->getMessage()]);
+        sendJsonResponse(["success" => false, "error" => $e->getMessage()]);
     }
 }
 
@@ -221,5 +231,5 @@ if(isset($_POST["mostrarDespachos"])){
 
     $respuesta = ControladorDespachos::ctrMostrarDespachos(null, null);
     
-    echo json_encode($respuesta);
+    sendJsonResponse($respuesta);
 }
