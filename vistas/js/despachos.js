@@ -478,8 +478,7 @@ EJECUTAR ACEPTACIÓN DE DESPACHO
 function ejecutarAceptarDespacho(idDespacho) {
     
     var datos = new FormData();
-    datos.append("aceptarDespacho", true);
-    datos.append("idDespacho", idDespacho);
+    datos.append("aceptarDespacho", idDespacho);
     
     console.log("🔄 Enviando petición de aceptación...");
     
