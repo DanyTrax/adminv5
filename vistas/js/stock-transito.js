@@ -253,4 +253,105 @@ function actualizarTabla() {
     }
 }
 
+/*=============================================
+DESCARGA DIRECTA
+=============================================*/
+$(document).on("click", ".btnDescargaDirecta", function() {
+    
+    var idStockTransito = $(this).attr("idStockTransito");
+    var codigoProducto = $(this).attr("codigoProducto");
+    var descripcionProducto = $(this).attr("descripcionProducto");
+    var cantidadDisponible = $(this).attr("cantidadDisponible");
+    var transportadorId = $(this).attr("transportadorId");
+    var nombreTransportador = $(this).attr("nombreTransportador");
+    var sucursalOrigen = $(this).attr("sucursalOrigen");
+    var idDespacho = $(this).attr("idDespacho");
+    var numeroDespacho = $(this).attr("numeroDespacho");
+    
+    console.log("📥 Abriendo modal de descarga directa");
+    console.log("ID Stock:", idStockTransito);
+    console.log("Producto:", codigoProducto, "-", descripcionProducto);
+    console.log("Cantidad disponible:", cantidadDisponible);
+    
+    // Llenar información del producto
+    $("#descargaCodigo").text(codigoProducto);
+    $("#descargaDescripcion").text(descripcionProducto);
+    $("#descargaTransportador").text(nombreTransportador);
+    $("#descargaOrigen").text(sucursalOrigen);
+    $("#descargaDespacho").text(numeroDespacho);
+    $("#descargaCantidadDisponible").val(cantidadDisponible);
+    
+    // Configurar máximo en el input
+    $("#cantidadDescargar").attr("max", cantidadDisponible);
+    $("#cantidadDescargar").val("");
+    $("#observacionesDescarga").val("");
+    
+    // Mostrar modal
+    $("#modalDescargaDirecta").modal("show");
+});
+
+/*=============================================
+ENVIAR DESCARGA DIRECTA
+=============================================*/
+$(document).on("submit", "#formDescargaDirecta", function(e) {
+    e.preventDefault();
+    
+    var idStockTransito = $(".btnDescargaDirecta").attr("idStockTransito");
+    var cantidadDescargar = $("#cantidadDescargar").val();
+    var observaciones = $("#observacionesDescarga").val();
+    
+    if(!cantidadDescargar || cantidadDescargar <= 0) {
+        swal("Error", "Debe ingresar una cantidad válida", "error");
+        return;
+    }
+    
+    var cantidadDisponible = parseInt($("#descargaCantidadDisponible").val());
+    if(parseInt(cantidadDescargar) > cantidadDisponible) {
+        swal("Error", "La cantidad a descargar no puede ser mayor a la disponible", "error");
+        return;
+    }
+    
+    console.log("📤 Enviando descarga directa");
+    console.log("ID Stock:", idStockTransito);
+    console.log("Cantidad:", cantidadDescargar);
+    
+    var datos = new FormData();
+    datos.append("descargarStockDirecto", true);
+    datos.append("idStockTransito", idStockTransito);
+    datos.append("cantidadDescargar", cantidadDescargar);
+    datos.append("observaciones", observaciones);
+    
+    $.ajax({
+        url: "ajax/stock-transito.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function(respuesta) {
+            
+            console.log("📨 Respuesta descarga:", respuesta);
+            
+            if(respuesta.success) {
+                swal({
+                    title: "¡Descarga exitosa!",
+                    text: respuesta.message,
+                    type: "success",
+                    confirmButtonText: "Cerrar"
+                }).then(function() {
+                    $("#modalDescargaDirecta").modal("hide");
+                    tablaStockTransito.ajax.reload();
+                });
+            } else {
+                swal("Error", respuesta.error || "No se pudo procesar la descarga", "error");
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("❌ Error AJAX descarga:", error);
+            swal("Error", "Error al procesar la descarga", "error");
+        }
+    });
+});
+
 console.log("✅ Stock en Tránsito - JavaScript cargado correctamente");

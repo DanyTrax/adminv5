@@ -395,3 +395,91 @@ $(document).on('submit', '#formRecibirStock', function(e) {
 
 console.log("✅ Módulo cargado");
 </script>
+
+<!--=====================================
+MODAL DESCARGA DIRECTA
+======================================-->
+<div id="modalDescargaDirecta" class="modal fade" role="dialog">
+    
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <form role="form" method="post" id="formDescargaDirecta">
+
+                <div class="modal-header" style="background:#28a745; color:white">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">
+                        <i class="fa fa-download"></i> Descargar Producto
+                    </h4>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="box-body">
+
+                        <!-- INFO PRODUCTO -->
+                        <div class="alert alert-info">
+                            <h4><i class="fa fa-info-circle"></i> Información del Producto</h4>
+                            <p><strong>Código:</strong> <span id="descargaCodigo"></span></p>
+                            <p><strong>Descripción:</strong> <span id="descargaDescripcion"></span></p>
+                            <p><strong>Transportador:</strong> <span id="descargaTransportador"></span></p>
+                            <p><strong>Origen:</strong> <span id="descargaOrigen"></span></p>
+                            <p><strong>Despacho:</strong> <span id="descargaDespacho"></span></p>
+                        </div>
+
+                        <!-- FORM -->
+                        <div class="row">
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Cantidad disponible:</label>
+                                    <input type="text" id="descargaCantidadDisponible" class="form-control" readonly>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Cantidad a descargar: *</label>
+                                    <input type="number" 
+                                           name="cantidadDescargar" 
+                                           id="cantidadDescargar"
+                                           class="form-control" 
+                                           min="1" 
+                                           required>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+                            
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Observaciones:</label>
+                                    <textarea name="observacionesDescarga" 
+                                              id="observacionesDescarga"
+                                              class="form-control" 
+                                              rows="3" 
+                                              placeholder="Observaciones sobre la descarga..."></textarea>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Descargar</button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>

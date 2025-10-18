@@ -109,6 +109,29 @@ private function generarBotonesAccion($stock, $perfilUsuario, $idUsuario) {
         }
     }
 
+    // BOTÓN DESCARGA DIRECTA - USUARIOS NO TRANSPORTADOR
+    if($perfilUsuario != "Transportador") {
+        
+        $cantidadDisponible = intval($stock["cantidad_disponible"]);
+        
+        if($cantidadDisponible > 0) {
+            $botones .= '<button class="btn btn-warning btn-xs btnDescargaDirecta" 
+                                data-toggle="tooltip" 
+                                title="Descargar cantidad específica" 
+                                idStockTransito="' . $stock["id"] . '"
+                                codigoProducto="' . htmlspecialchars($stock["codigo_producto"]) . '"
+                                descripcionProducto="' . htmlspecialchars($stock["descripcion_producto"]) . '"
+                                cantidadDisponible="' . $cantidadDisponible . '"
+                                transportadorId="' . $stock["transportador_id"] . '"
+                                nombreTransportador="' . htmlspecialchars($stock["nombre_transportador"]) . '"
+                                sucursalOrigen="' . htmlspecialchars($stock["sucursal_origen"]) . '"
+                                idDespacho="' . $stock["id_despacho"] . '"
+                                numeroDespacho="' . htmlspecialchars($stock["numero_despacho"]) . '">
+                            <i class="fa fa-download"></i>
+                        </button>';
+        }
+    }
+
     // BOTÓN ELIMINAR - SOLO ADMINISTRADOR
     if($perfilUsuario == "Administrador") {
         $botones .= '<button class="btn btn-danger btn-xs btnEliminarStock" 

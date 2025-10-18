@@ -268,4 +268,66 @@ if(isset($_POST["transportadorId"]) && isset($_POST["filtrarStock"])) {
     $filtrarStock->ajaxFiltrarPorTransportador();
 }
 
+/*=============================================
+DESCARGAR STOCK DIRECTO
+=============================================*/
+if(isset($_POST["descargarStockDirecto"])) {
+    
+    try {
+        $idStockTransito = $_POST["idStockTransito"];
+        $cantidadDescargar = intval($_POST["cantidadDescargar"]);
+        $observaciones = $_POST["observaciones"] ?? "";
+        
+        error_log("📥 DESCARGA DIRECTA - ID Stock: $idStockTransito, Cantidad: $cantidadDescargar");
+        
+        // Obtener información del stock en tránsito
+        $stock = ControladorStockTransito::ctrObtenerStockDisponible($idStockTransito);
+        
+        if(!$stock) {
+            echo json_encode(["success" => false, "error" => "Producto no encontrado en stock en tránsito"]);
+            return;
+        }
+        
+        // Verificar que la cantidad sea válida
+        if($cantidadDescargar <= 0 || $cantidadDescargar > $stock["cantidad_disponible"]) {
+            echo json_encode(["success" => false, "error" => "Cantidad inválida"]);
+            return;
+        }
+        
+        // Obtener información de la sesión
+        $usuarioId = $_SESSION["id"] ?? 1;
+        $nombreUsuario = $_SESSION["nombre"] ?? "Usuario";
+        $sucursalDestino = $_SESSION["sucursal"] ?? "Sucursal";
+        
+        // Ejecutar descarga directa
+        $resultado = ControladorStockTransito::ctrDescargarStockDirecto(
+            $idStockTransito,
+            $cantidadDescargar,
+            $usuarioId,
+            $nombreUsuario,
+            $sucursalDestino,
+            $observaciones
+        );
+        
+        if($resultado["success"]) {
+            echo json_encode([
+                "success" => true,
+                "message" => "Descarga realizada correctamente. " . $resultado["message"]
+            ]);
+        } else {
+            echo json_encode([
+                "success" => false,
+                "error" => $resultado["error"]
+            ]);
+        }
+        
+    } catch(Exception $e) {
+        error_log("❌ Error en descarga directa: " . $e->getMessage());
+        echo json_encode([
+            "success" => false,
+            "error" => "Error al procesar la descarga: " . $e->getMessage()
+        ]);
+    }
+}
+
 ?>

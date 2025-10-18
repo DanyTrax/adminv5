@@ -808,4 +808,120 @@ class ControladorStockTransito {
             return [];
         }
     }
+
+    /*=============================================
+    DESCARGAR STOCK DIRECTO
+    =============================================*/
+    static public function ctrDescargarStockDirecto($idStockTransito, $cantidadDescargar, $usuarioId, $nombreUsuario, $sucursalDestino, $observaciones) {
+        
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../modelos/conexion.php";
+            
+            $conexionCentral = ConexionCentral::conectar();
+            $conexionLocal = Conexion::conectar();
+            
+            // Iniciar transacciones
+            $conexionCentral->beginTransaction();
+            $conexionLocal->beginTransaction();
+            
+            // 1. Obtener información del stock en tránsito
+            $stmt = $conexionCentral->prepare("SELECT * FROM stock_transito WHERE id = ?");
+            $stmt->execute([$idStockTransito]);
+            $stock = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if(!$stock) {
+                throw new Exception("Producto no encontrado en stock en tránsito");
+            }
+            
+            // 2. Verificar cantidad disponible
+            if($cantidadDescargar > $stock["cantidad_disponible"]) {
+                throw new Exception("Cantidad a descargar excede la disponible");
+            }
+            
+            // 3. Actualizar stock en tránsito (descontar cantidad)
+            $nuevaCantidad = $stock["cantidad_disponible"] - $cantidadDescargar;
+            $stmt = $conexionCentral->prepare("UPDATE stock_transito SET cantidad_disponible = ? WHERE id = ?");
+            $stmt->execute([$nuevaCantidad, $idStockTransito]);
+            
+            // 4. Agregar al stock local
+            $stmt = $conexionLocal->prepare("
+                INSERT INTO productos (codigo, descripcion, stock, precio_compra, precio_venta, fecha_creacion) 
+                VALUES (?, ?, ?, 0, 0, NOW())
+                ON DUPLICATE KEY UPDATE 
+                stock = stock + ?
+            ");
+            $stmt->execute([
+                $stock["codigo_producto"],
+                $stock["descripcion_producto"],
+                $cantidadDescargar,
+                $cantidadDescargar
+            ]);
+            
+            // 5. Registrar en historial de tránsito
+            self::registrarHistoricoTransito(
+                $stock["codigo_producto"],
+                $stock["descripcion_producto"],
+                $cantidadDescargar,
+                "descarga_directa",
+                $stock["transportador_id"],
+                $stock["nombre_transportador"],
+                $stock["sucursal_origen"],
+                $sucursalDestino,
+                $stock["usuario_origen"],
+                $stock["nombre_usuario_origen"],
+                $usuarioId,
+                $nombreUsuario,
+                $stock["id_despacho"],
+                $stock["numero_despacho"],
+                null, // No hay solicitud de descarga
+                $observaciones
+            );
+            
+            // 6. Verificar si el despacho se completó
+            $stmt = $conexionCentral->prepare("
+                SELECT SUM(cantidad_disponible) as total_pendiente 
+                FROM stock_transito 
+                WHERE id_despacho = ?
+            ");
+            $stmt->execute([$stock["id_despacho"]]);
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $totalPendiente = $resultado["total_pendiente"] ?? 0;
+            
+            if($totalPendiente == 0) {
+                // 7. Marcar despacho como entregado
+                $stmt = $conexionCentral->prepare("UPDATE despachos SET estado = 'entregado' WHERE id = ?");
+                $stmt->execute([$stock["id_despacho"]]);
+                
+                error_log("✅ DESPACHO COMPLETADO - ID: " . $stock["id_despacho"] . " - Estado: entregado");
+            }
+            
+            // Confirmar transacciones
+            $conexionCentral->commit();
+            $conexionLocal->commit();
+            
+            $mensaje = "Se descargaron $cantidadDescargar unidades de " . $stock["descripcion_producto"];
+            if($totalPendiente == 0) {
+                $mensaje .= ". Despacho completado y marcado como entregado.";
+            }
+            
+            return [
+                "success" => true,
+                "message" => $mensaje,
+                "despacho_completado" => $totalPendiente == 0
+            ];
+            
+        } catch(Exception $e) {
+            // Rollback en caso de error
+            if(isset($conexionCentral)) $conexionCentral->rollBack();
+            if(isset($conexionLocal)) $conexionLocal->rollBack();
+            
+            error_log("❌ Error en descarga directa: " . $e->getMessage());
+            return [
+                "success" => false,
+                "error" => $e->getMessage()
+            ];
+        }
+    }
 }
