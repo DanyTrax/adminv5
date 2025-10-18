@@ -1,5 +1,8 @@
 <?php
 
+// Iniciar buffer de salida para capturar warnings
+ob_start();
+
 // Iniciar sesión solo si no está activa
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -33,6 +36,7 @@ public function mostrarTablaDespachos() {
         $despachos = $stmt->fetchAll();
 
         if(count($despachos) == 0) {
+            ob_clean(); // Limpiar buffer de warnings
             echo '{"data": []}';
             return;
         }
@@ -86,10 +90,12 @@ public function mostrarTablaDespachos() {
 
         $datosJson = substr($datosJson, 0, -1);
         $datosJson .= ']}';
-
+        
+        ob_clean(); // Limpiar buffer de warnings
         echo $datosJson;
 
     } catch(Exception $e) {
+        ob_clean(); // Limpiar buffer de warnings
         echo '{"data": [], "error": "' . $e->getMessage() . '"}';
     }
 }
