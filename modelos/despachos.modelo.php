@@ -160,6 +160,8 @@ static public function mdlGenerarNumeroDespacho() {
         try {
             require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
+            error_log("🔍 mdlActualizarEstadoDespacho - Datos recibidos: " . print_r($datos, true));
+            
             $stmt = ConexionCentral::conectar()->prepare("
                 UPDATE $tabla 
                 SET estado = :estado,
@@ -175,9 +177,19 @@ static public function mdlGenerarNumeroDespacho() {
             $stmt->bindParam(":fecha_aceptacion", $datos["fecha_aceptacion"], PDO::PARAM_STR);
             $stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
 
-            return $stmt->execute();
+            $resultado = $stmt->execute();
+            
+            if($resultado) {
+                error_log("✅ mdlActualizarEstadoDespacho - UPDATE exitoso");
+                return true;
+            } else {
+                $errorInfo = $stmt->errorInfo();
+                error_log("❌ mdlActualizarEstadoDespacho - Error SQL: " . print_r($errorInfo, true));
+                return false;
+            }
 
         } catch(Exception $e) {
+            error_log("❌ mdlActualizarEstadoDespacho - Excepción: " . $e->getMessage());
             return false;
         }
     }
