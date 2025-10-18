@@ -493,6 +493,9 @@ INCLUIR JAVASCRIPT
 SCRIPT DE PRUEBA
 ======================================-->
 <script>
+// Variable global para almacenar el ID del stock seleccionado
+var stockSeleccionado = null;
+
 console.log("🔍 Script de prueba cargado");
 console.log("🔍 jQuery disponible:", typeof $ !== 'undefined');
 console.log("🔍 Modal existe:", $("#modalDescargaDirecta").length > 0);
@@ -526,6 +529,9 @@ $(document).ready(function() {
                 sucursalOrigen,
                 numeroDespacho
             });
+            
+            // Guardar ID del stock seleccionado
+            stockSeleccionado = idStockTransito;
             
             // Llenar información del producto
             $("#descargaCodigo").text(codigoProducto || "N/A");
@@ -564,9 +570,57 @@ $(document).ready(function() {
             return;
         }
         
-        // Aquí iría la lógica de envío AJAX
-        alert("Descarga procesada: " + cantidadDescargar + " unidades");
-        $("#modalDescargaDirecta").modal("hide");
+        // Usar el ID del stock guardado globalmente
+        var idStockTransito = stockSeleccionado;
+        
+        console.log("📤 Enviando descarga AJAX:", {
+            idStockTransito,
+            cantidadDescargar,
+            observaciones
+        });
+        
+        // Enviar datos por AJAX
+        var datos = new FormData();
+        datos.append("descargarStockDirecto", true);
+        datos.append("idStockTransito", idStockTransito);
+        datos.append("cantidadDescargar", cantidadDescargar);
+        datos.append("observaciones", observaciones);
+        
+        $.ajax({
+            url: "ajax/stock-transito.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function(respuesta) {
+                console.log("📨 Respuesta descarga:", respuesta);
+                
+                if(respuesta.success) {
+                    swal({
+                        title: "¡Descarga exitosa!",
+                        text: respuesta.message,
+                        type: "success",
+                        confirmButtonText: "Cerrar"
+                    }).then(function() {
+                        $("#modalDescargaDirecta").modal("hide");
+                        // Recargar la tabla
+                        if(typeof tablaStockTransito !== 'undefined') {
+                            tablaStockTransito.ajax.reload();
+                        } else {
+                            location.reload();
+                        }
+                    });
+                } else {
+                    swal("Error", respuesta.error || "No se pudo procesar la descarga", "error");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("❌ Error AJAX descarga:", error);
+                swal("Error", "Error al procesar la descarga", "error");
+            }
+        });
     });
 });
 </script>
