@@ -601,8 +601,7 @@ EJECUTAR CANCELACIÓN DE DESPACHO
 function ejecutarCancelarDespacho(idDespacho, motivo) {
     
     var datos = new FormData();
-    datos.append("cancelarDespacho", true);
-    datos.append("idDespacho", idDespacho);
+    datos.append("cancelarDespacho", idDespacho);
     datos.append("motivoCancelacion", motivo);
     
     console.log("🔄 Enviando petición de cancelación...");
