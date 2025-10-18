@@ -118,6 +118,7 @@ private function generarBotonesAccion($stock, $perfilUsuario, $idUsuario) {
             $botones .= '<button class="btn btn-warning btn-xs btnDescargaDirecta" 
                                 data-toggle="tooltip" 
                                 title="Descargar cantidad específica" 
+                                onclick="abrirModalDescargaDirecta(' . $stock["id"] . ', \'' . htmlspecialchars($stock["codigo_producto"]) . '\', \'' . htmlspecialchars($stock["descripcion_producto"]) . '\', ' . $cantidadDisponible . ', \'' . htmlspecialchars($stock["nombre_transportador"]) . '\', \'' . htmlspecialchars($stock["sucursal_origen"]) . '\', \'' . htmlspecialchars($stock["numero_despacho"]) . '\')"
                                 idStockTransito="' . $stock["id"] . '"
                                 codigoProducto="' . htmlspecialchars($stock["codigo_producto"]) . '"
                                 descripcionProducto="' . htmlspecialchars($stock["descripcion_producto"]) . '"
