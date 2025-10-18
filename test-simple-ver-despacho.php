@@ -75,7 +75,7 @@ echo "<h3>🔍 Test 3: Probar modelo de despachos</h3>";
 try {
     require_once "modelos/despachos.modelo.php";
     
-    $despacho = ModeloDespachos::mdlMostrarDespachos("id", 1);
+    $despacho = ModeloDespachos::mdlMostrarDespachos("despachos", "id", 1);
     
     if ($despacho) {
         echo "<p>✅ Modelo funcionando correctamente</p>";
