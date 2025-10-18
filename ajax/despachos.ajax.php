@@ -130,10 +130,10 @@ if(isset($_POST["aceptarDespacho"])){
                 throw new Exception("Error descontando stock local");
             }
             
-            // 7. Actualizar estado del despacho a "aceptado"
+            // 7. Actualizar estado del despacho a "en_transito"
             $datosDespacho = array(
                 "id" => $idDespacho,
-                "estado" => "aceptado",
+                "estado" => "en_transito",
                 "id_transportador" => $_SESSION["id"],
                 "nombre_transportador" => $_SESSION["nombre"],
                 "fecha_aceptacion" => date("Y-m-d H:i:s")
