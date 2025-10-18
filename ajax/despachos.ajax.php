@@ -1,11 +1,24 @@
 <?php
 
-session_start();
+// Iniciar buffer de salida para capturar warnings
+ob_start();
+
+// Iniciar sesión solo si no está activa
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Función helper para enviar JSON limpio
+function sendJsonResponse($data) {
+    ob_clean(); // Limpiar buffer de warnings
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
 
 // Verificar permisos
 if($_SESSION["perfil"] != "Administrador" && $_SESSION["perfil"] != "Transportador") {
-    echo json_encode(['success' => false, 'message' => 'Sin permisos']);
-    exit;
+    sendJsonResponse(['success' => false, 'message' => 'Sin permisos']);
 }
 
 class AjaxDespachos {
@@ -252,13 +265,13 @@ public function ajaxVerDespacho() {
             $despacho = ControladorDespachos::ctrMostrarDespachos($item, $valor);
             
             if($despacho) {
-                echo json_encode($despacho);
+                sendJsonResponse($despacho);
             } else {
-                echo json_encode(["error" => "Despacho no encontrado"]);
+                sendJsonResponse(["error" => "Despacho no encontrado"]);
             }
             
         } catch(Exception $e) {
-            echo json_encode(["error" => $e->getMessage()]);
+            sendJsonResponse(["error" => $e->getMessage()]);
         }
     }
 }
