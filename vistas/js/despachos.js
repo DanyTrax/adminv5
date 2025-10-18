@@ -753,8 +753,7 @@ EJECUTAR ELIMINACIÓN DE DESPACHO
 function ejecutarEliminarDespacho(idDespacho) {
     
     var datos = new FormData();
-    datos.append("eliminarDespacho", true);
-    datos.append("idDespacho", idDespacho);
+    datos.append("eliminarDespacho", idDespacho);
     
     console.log("🔄 Enviando petición de eliminación...");
     

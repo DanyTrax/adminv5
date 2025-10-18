@@ -318,6 +318,9 @@ if(isset($_POST["eliminarDespacho"])){
     try {
         $idDespacho = $_POST["eliminarDespacho"];
         
+        error_log("🗑️ ELIMINAR DESPACHO - ID recibido: " . $idDespacho);
+        error_log("🗑️ ELIMINAR DESPACHO - POST data: " . print_r($_POST, true));
+        
         $despacho = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
         
         if(!$despacho) {
@@ -337,12 +340,18 @@ if(isset($_POST["eliminarDespacho"])){
         // Log de eliminación para auditoría
         error_log("🗑️ ELIMINAR DESPACHO - Usuario: " . ($_SESSION["nombre"] ?? "Desconocido") . " | Perfil: " . $perfilUsuario . " | Despacho: " . $despacho["numero_despacho"] . " | Estado: " . $despacho["estado"]);
         
+        error_log("🗑️ ELIMINAR DESPACHO - Llamando a mdlBorrarDespacho...");
+        
         $respuesta = ModeloDespachos::mdlBorrarDespacho("despachos", "id", $idDespacho);
         
+        error_log("🗑️ ELIMINAR DESPACHO - Respuesta de mdlBorrarDespacho: " . $respuesta);
+        
         if($respuesta == "ok") {
+            error_log("✅ ELIMINAR DESPACHO - Eliminación exitosa");
             sendJsonResponse(["success" => true, "message" => "Despacho eliminado correctamente"]);
         } else {
-            sendJsonResponse(["success" => false, "error" => "Error al eliminar el despacho"]);
+            error_log("❌ ELIMINAR DESPACHO - Error en eliminación: " . $respuesta);
+            sendJsonResponse(["success" => false, "error" => "Error al eliminar el despacho: " . $respuesta]);
         }
         
     } catch(Exception $e) {
