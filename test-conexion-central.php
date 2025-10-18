@@ -1,57 +1,63 @@
 <?php
-// Test de conexión a BD central
-session_start();
+/**
+ * TEST DE CONEXIÓN A BASE DE DATOS CENTRAL
+ */
 
-if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] != "Administrador") {
-    die("Sin permisos");
-}
-
-echo "<h1>🌐 Test Conexión BD Central</h1>";
+echo "<h2>🔍 Test de Conexión a Base de Datos Central</h2>";
 
 try {
-    
+    // Incluir el archivo de conexión
     require_once "api-transferencias/conexion-central.php";
-    $db = ConexionCentral::conectar();
     
-    echo "✅ <strong>Conexión exitosa</strong><br>";
+    echo "<p>✅ Archivo conexion-central.php cargado correctamente</p>";
     
-    // Probar consulta simple
-    $stmt = $db->prepare("SELECT COUNT(*) as total FROM catalogo_maestro WHERE activo = 1");
-    $stmt->execute();
-    $resultado = $stmt->fetch();
+    // Intentar conectar
+    $pdo = ConexionCentral::conectar();
     
-    echo "📊 <strong>Total productos activos:</strong> " . $resultado['total'] . "<br>";
-    
-    // Probar UPDATE simple
-    $stmt = $db->prepare("SELECT id, descripcion FROM catalogo_maestro WHERE activo = 1 LIMIT 1");
-    $stmt->execute();
-    $producto = $stmt->fetch();
-    
-    if ($producto) {
-        echo "<br><strong>🧪 Probando UPDATE simple...</strong><br>";
-        echo "ID del producto: " . $producto['id'] . "<br>";
-        echo "Descripción actual: " . $producto['descripcion'] . "<br>";
+    if ($pdo) {
+        echo "<p>✅ Conexión a base de datos central exitosa</p>";
         
-        // Intentar UPDATE
-        $nuevaDescripcion = $producto['descripcion'] . " [TEST " . date('H:i:s') . "]";
-        $stmtUpdate = $db->prepare("UPDATE catalogo_maestro SET descripcion = ? WHERE id = ?");
-        $resultadoUpdate = $stmtUpdate->execute([$nuevaDescripcion, $producto['id']]);
+        // Verificar que la tabla despachos existe
+        $stmt = $pdo->query("SHOW TABLES LIKE 'despachos'");
+        $tabla = $stmt->fetch();
         
-        if ($resultadoUpdate) {
-            echo "✅ <strong>UPDATE exitoso</strong><br>";
-            echo "Nueva descripción: " . $nuevaDescripcion . "<br>";
+        if ($tabla) {
+            echo "<p>✅ Tabla 'despachos' encontrada en la base de datos central</p>";
+            
+            // Contar registros
+            $stmt = $pdo->query("SELECT COUNT(*) as total FROM despachos");
+            $total = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+            echo "<p>📊 Registros en tabla despachos: $total</p>";
+            
+            // Probar consulta específica
+            $stmt = $pdo->prepare("SELECT * FROM despachos LIMIT 1");
+            $stmt->execute();
+            $despacho = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($despacho) {
+                echo "<p>✅ Consulta de prueba exitosa</p>";
+                echo "<pre>Primer despacho: " . print_r($despacho, true) . "</pre>";
+            } else {
+                echo "<p>⚠️ No hay registros en la tabla despachos</p>";
+            }
+            
         } else {
-            $errorInfo = $stmtUpdate->errorInfo();
-            echo "❌ <strong>Error en UPDATE:</strong> " . implode(" - ", $errorInfo) . "<br>";
+            echo "<p>❌ Tabla 'despachos' NO encontrada en la base de datos central</p>";
         }
+        
+    } else {
+        echo "<p>❌ No se pudo conectar a la base de datos central</p>";
     }
     
 } catch (Exception $e) {
-    echo "❌ <strong>Error de conexión:</strong> " . $e->getMessage() . "<br>";
-    echo "<strong>Archivo:</strong> " . $e->getFile() . "<br>";
-    echo "<strong>Línea:</strong> " . $e->getLine() . "<br>";
+    echo "<p>❌ Error: " . $e->getMessage() . "</p>";
+    echo "<p>📍 Archivo: " . $e->getFile() . "</p>";
+    echo "<p>📍 Línea: " . $e->getLine() . "</p>";
 }
 
 echo "<hr>";
-echo "<p><a href='catalogo-maestro'>← Volver</a></p>";
+echo "<h3>🔍 Información de Debug</h3>";
+echo "<p><strong>Directorio actual:</strong> " . __DIR__ . "</p>";
+echo "<p><strong>Archivo conexion-central.php existe:</strong> " . (file_exists("api-transferencias/conexion-central.php") ? "SÍ" : "NO") . "</p>";
+echo "<p><strong>Ruta completa:</strong> " . realpath("api-transferencias/conexion-central.php") . "</p>";
 ?>
