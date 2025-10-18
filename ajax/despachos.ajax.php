@@ -18,6 +18,7 @@ require_once __DIR__ . "/../api-transferencias/conexion-central.php";
 require_once __DIR__ . "/../controladores/despachos.controlador.php";
 require_once __DIR__ . "/../modelos/despachos.modelo.php";
 require_once __DIR__ . "/../modelos/productos.modelo.php";
+require_once __DIR__ . "/../src/Logger.php";
 
 // Función helper para enviar JSON limpio
 function sendJsonResponse($data) {
@@ -67,15 +68,21 @@ if(isset($_POST["aceptarDespacho"])){
     try {
         $idDespacho = $_POST["aceptarDespacho"];
         
+        Logger::ajax("ACEPTAR_DESPACHO", ["idDespacho" => $idDespacho], "despachos.ajax.php", "aceptarDespacho");
+        
         // 1. Obtener datos del despacho
         $despacho = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
         
         if(!$despacho) {
+            Logger::error("Despacho no encontrado: ID $idDespacho", "despachos.ajax.php", "aceptarDespacho");
             sendJsonResponse(["success" => false, "error" => "Despacho no encontrado"]);
         }
         
+        Logger::info("Despacho encontrado: " . json_encode($despacho), "despachos.ajax.php", "aceptarDespacho");
+        
         // 2. Verificar que esté en estado pendiente
         if($despacho["estado"] != "pendiente") {
+            Logger::warning("Intento de aceptar despacho no pendiente: " . $despacho["estado"], "despachos.ajax.php", "aceptarDespacho");
             sendJsonResponse(["success" => false, "error" => "Solo se pueden aceptar despachos pendientes"]);
         }
         
@@ -83,13 +90,19 @@ if(isset($_POST["aceptarDespacho"])){
         $productosDespacho = json_decode($despacho["productos_despacho"], true);
         
         if(!$productosDespacho || !is_array($productosDespacho)) {
+            Logger::error("Error al decodificar productos del despacho", "despachos.ajax.php", "aceptarDespacho");
             sendJsonResponse(["success" => false, "error" => "Error al procesar productos del despacho"]);
         }
+        
+        Logger::info("Productos del despacho: " . json_encode($productosDespacho), "despachos.ajax.php", "aceptarDespacho");
         
         // 4. Verificar stock local disponible
         foreach($productosDespacho as $producto) {
             $stockDisponible = ModeloDespachos::mdlVerificarStockLocal($producto["codigo"], $producto["cantidad"]);
+            Logger::stock("VERIFICAR", $producto["codigo"], $producto["cantidad"], "despachos.ajax.php", "aceptarDespacho");
+            
             if(!$stockDisponible) {
+                Logger::error("Stock insuficiente para producto: " . $producto["codigo"], "despachos.ajax.php", "aceptarDespacho");
                 sendJsonResponse([
                     "success" => false, 
                     "error" => "Stock insuficiente para el producto: " . $producto["codigo"]
@@ -101,15 +114,19 @@ if(isset($_POST["aceptarDespacho"])){
         $conexionLocal = Conexion::conectar();
         $conexionCentral = ConexionCentral::conectar();
         
+        Logger::transaction("BEGIN", "despachos", [], "despachos.ajax.php", "aceptarDespacho");
+        
         $conexionLocal->beginTransaction();
         $conexionCentral->beginTransaction();
         
         try {
             // 6. Descontar stock local
-            error_log("DEBUG: Iniciando descuento de stock local para " . count($productosDespacho) . " productos");
+            Logger::info("Iniciando descuento de stock local para " . count($productosDespacho) . " productos", "despachos.ajax.php", "aceptarDespacho");
             $descuentoStock = ModeloDespachos::mdlDescontarStockLocal($productosDespacho);
-            error_log("DEBUG: Resultado descuento stock local: " . ($descuentoStock ? 'true' : 'false'));
+            Logger::info("Resultado descuento stock local: " . ($descuentoStock ? 'true' : 'false'), "despachos.ajax.php", "aceptarDespacho");
+            
             if(!$descuentoStock) {
+                Logger::error("Error descontando stock local", "despachos.ajax.php", "aceptarDespacho");
                 throw new Exception("Error descontando stock local");
             }
             
@@ -122,17 +139,19 @@ if(isset($_POST["aceptarDespacho"])){
                 "fecha_aceptacion" => date("Y-m-d H:i:s")
             );
             
-            error_log("DEBUG: Actualizando estado del despacho a aceptado");
+            Logger::transaction("UPDATE", "despachos", $datosDespacho, "despachos.ajax.php", "aceptarDespacho");
             $actualizacionDespacho = ModeloDespachos::mdlActualizarEstadoDespacho("despachos", $datosDespacho);
-            error_log("DEBUG: Resultado actualización despacho: " . ($actualizacionDespacho ? 'true' : 'false'));
+            Logger::info("Resultado actualización despacho: " . ($actualizacionDespacho ? 'true' : 'false'), "despachos.ajax.php", "aceptarDespacho");
+            
             if(!$actualizacionDespacho) {
+                Logger::error("Error actualizando estado del despacho", "despachos.ajax.php", "aceptarDespacho");
                 throw new Exception("Error actualizando estado del despacho");
             }
             
             // 8. Agregar productos al stock en tránsito
-            error_log("DEBUG: Iniciando agregado a stock en tránsito para " . count($productosDespacho) . " productos");
+            Logger::info("Iniciando agregado a stock en tránsito para " . count($productosDespacho) . " productos", "despachos.ajax.php", "aceptarDespacho");
             foreach($productosDespacho as $producto) {
-                error_log("DEBUG: Procesando producto: " . $producto["codigo"] . " cantidad: " . $producto["cantidad"]);
+                Logger::stock("AGREGAR_TRANSITO", $producto["codigo"], $producto["cantidad"], "despachos.ajax.php", "aceptarDespacho");
                 // Verificar si el producto ya existe en stock_transito
                 $stmtCheck = $conexionCentral->prepare("
                     SELECT id, cantidad_disponible 
@@ -189,9 +208,11 @@ if(isset($_POST["aceptarDespacho"])){
             }
             
             // 9. Confirmar transacciones
+            Logger::transaction("COMMIT", "despachos", [], "despachos.ajax.php", "aceptarDespacho");
             $conexionLocal->commit();
             $conexionCentral->commit();
             
+            Logger::info("Despacho aceptado exitosamente: ID $idDespacho", "despachos.ajax.php", "aceptarDespacho");
             sendJsonResponse([
                 "success" => true, 
                 "message" => "Despacho aceptado correctamente. Stock local descontado y productos agregados al stock en tránsito."
@@ -199,12 +220,15 @@ if(isset($_POST["aceptarDespacho"])){
             
         } catch(Exception $e) {
             // Rollback en caso de error
+            Logger::error("Error en transacción, haciendo rollback: " . $e->getMessage(), "despachos.ajax.php", "aceptarDespacho");
+            Logger::transaction("ROLLBACK", "despachos", [], "despachos.ajax.php", "aceptarDespacho");
             $conexionLocal->rollBack();
             $conexionCentral->rollBack();
             throw $e;
         }
         
     } catch(Exception $e) {
+        Logger::error("Error general en aceptar despacho: " . $e->getMessage(), "despachos.ajax.php", "aceptarDespacho");
         sendJsonResponse(["success" => false, "error" => $e->getMessage()]);
     }
 }
