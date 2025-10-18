@@ -1,6 +1,6 @@
 <?php
 
-require_once "../modelos/despachos.modelo.php";
+require_once __DIR__ . "/../modelos/despachos.modelo.php";
 
 class ControladorDespachos {
 
@@ -88,7 +88,7 @@ public function ctrEditarDespacho($datos = null) {
     if($datos && (isset($datos["editarDespacho"]) || isset($datos["idDespachoEditar"]))) {
         
         try {
-            require_once "../modelos/despachos.modelo.php";
+            require_once __DIR__ . "/../modelos/despachos.modelo.php";
             require_once "api-transferencias/conexion-central.php";
             
             $idDespacho = $datos["idDespachoEditar"];
