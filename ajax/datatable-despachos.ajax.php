@@ -8,6 +8,19 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Establecer headers JSON solo si no se han enviado headers aún
+if (!headers_sent()) {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-cache, must-revalidate');
+    header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+} else {
+    // Si los headers ya se enviaron, limpiar el buffer y empezar de nuevo
+    ob_clean();
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-cache, must-revalidate');
+    header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+}
+
 require_once "api-transferencias/conexion-central.php";
 
 class AjaxTablaDespachos {
