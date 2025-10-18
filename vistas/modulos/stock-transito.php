@@ -508,9 +508,65 @@ $(document).ready(function() {
         if($(this).hasClass("btnDescargaDirecta")) {
             console.log("🎯 Botón de descarga detectado!");
             
-            // Mostrar modal directamente
+            // Obtener datos del botón
+            var idStockTransito = $(this).data("id-stock");
+            var codigoProducto = $(this).data("codigo");
+            var descripcionProducto = $(this).data("descripcion");
+            var cantidadDisponible = $(this).data("cantidad");
+            var nombreTransportador = $(this).data("transportador");
+            var sucursalOrigen = $(this).data("origen");
+            var numeroDespacho = $(this).data("despacho");
+            
+            console.log("📥 Datos obtenidos:", {
+                idStockTransito,
+                codigoProducto,
+                descripcionProducto,
+                cantidadDisponible,
+                nombreTransportador,
+                sucursalOrigen,
+                numeroDespacho
+            });
+            
+            // Llenar información del producto
+            $("#descargaCodigo").text(codigoProducto || "N/A");
+            $("#descargaDescripcion").text(descripcionProducto || "N/A");
+            $("#descargaTransportador").text(nombreTransportador || "N/A");
+            $("#descargaOrigen").text(sucursalOrigen || "N/A");
+            $("#descargaDespacho").text(numeroDespacho || "N/A");
+            $("#descargaCantidadDisponible").val(cantidadDisponible || 0);
+            
+            // Configurar máximo en el input
+            $("#cantidadDescargar").attr("max", cantidadDisponible || 0);
+            $("#cantidadDescargar").val("");
+            $("#observacionesDescarga").val("");
+            
+            // Mostrar modal
             $("#modalDescargaDirecta").modal("show");
         }
+    });
+    
+    // Manejar envío del formulario de descarga
+    $(document).on("submit", "#formDescargaDirecta", function(e) {
+        e.preventDefault();
+        
+        console.log("📤 Formulario de descarga enviado");
+        
+        var cantidadDescargar = $("#cantidadDescargar").val();
+        var observaciones = $("#observacionesDescarga").val();
+        
+        console.log("📥 Datos del formulario:", {
+            cantidadDescargar,
+            observaciones
+        });
+        
+        if(!cantidadDescargar || cantidadDescargar <= 0) {
+            alert("Debe ingresar una cantidad válida");
+            return;
+        }
+        
+        // Aquí iría la lógica de envío AJAX
+        alert("Descarga procesada: " + cantidadDescargar + " unidades");
+        $("#modalDescargaDirecta").modal("hide");
     });
 });
 </script>
