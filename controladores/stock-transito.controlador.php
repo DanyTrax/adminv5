@@ -844,19 +844,21 @@ class ControladorStockTransito {
             $stmt = $conexionCentral->prepare("UPDATE stock_transito SET cantidad_disponible = ? WHERE id = ?");
             $stmt->execute([$nuevaCantidad, $idStockTransito]);
             
-            // 4. Agregar al stock local
+            // 4. Incrementar stock local del producto existente
             $stmt = $conexionLocal->prepare("
-                INSERT INTO productos (codigo, descripcion, stock, precio_compra, precio_venta, fecha_creacion) 
-                VALUES (?, ?, ?, 0, 0, NOW())
-                ON DUPLICATE KEY UPDATE 
-                stock = stock + ?
+                UPDATE productos 
+                SET stock = stock + ? 
+                WHERE codigo = ?
             ");
             $stmt->execute([
-                $stock["codigo_producto"],
-                $stock["descripcion_producto"],
                 $cantidadDescargar,
-                $cantidadDescargar
+                $stock["codigo_producto"]
             ]);
+            
+            // Verificar que el producto existe
+            if($stmt->rowCount() == 0) {
+                throw new Exception("Producto con código " . $stock["codigo_producto"] . " no existe en la base local");
+            }
             
             // 5. Registrar en historial de tránsito
             self::registrarHistoricoTransito(
