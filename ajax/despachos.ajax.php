@@ -2,11 +2,11 @@
 
 session_start();
 
-require_once "../modelos/conexion.php";
-require_once "../api-transferencias/conexion-central.php";
-require_once "../controladores/despachos.controlador.php";
-require_once "../modelos/despachos.modelo.php";
-require_once "../modelos/productos.modelo.php";
+require_once "modelos/conexion.php";
+require_once "api-transferencias/conexion-central.php";
+require_once "controladores/despachos.controlador.php";
+require_once "modelos/despachos.modelo.php";
+require_once "modelos/productos.modelo.php";
 
 /*=============================================
 VER DESPACHO
