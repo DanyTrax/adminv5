@@ -13,8 +13,8 @@ if (typeof window.perfilUsuario === 'undefined') {
 if (typeof window.idUsuario === 'undefined') {
     window.idUsuario = window.idUsuario || 0;
 }
-var perfilUsuario = window.perfilUsuario;
-var idUsuario = window.idUsuario;
+let perfilUsuario = window.perfilUsuario;
+let idUsuario = window.idUsuario;
 
 /*=============================================
 INICIALIZACIÓN DEL MÓDULO

@@ -448,7 +448,6 @@ $(document).on('submit', '#formRecibirStock', function(e) {
         }
     });
 });
-})();
 
 console.log("✅ Módulo cargado");
 </script>
