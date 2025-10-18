@@ -870,12 +870,12 @@ class ControladorStockTransito {
                 $stock["nombre_transportador"],
                 $stock["sucursal_origen"],
                 $sucursalDestino,
-                $stock["usuario_origen"],
-                $stock["nombre_usuario_origen"],
+                $stock["usuario_origen"] ?? null,
+                $stock["nombre_usuario_origen"] ?? null,
                 $usuarioId,
                 $nombreUsuario,
-                $stock["id_despacho"],
-                $stock["numero_despacho"],
+                $stock["id_despacho_origen"],
+                $stock["numero_despacho_origen"],
                 null, // No hay solicitud de descarga
                 $observaciones
             );
@@ -884,9 +884,9 @@ class ControladorStockTransito {
             $stmt = $conexionCentral->prepare("
                 SELECT SUM(cantidad_disponible) as total_pendiente 
                 FROM stock_transito 
-                WHERE id_despacho = ?
+                WHERE id_despacho_origen = ?
             ");
-            $stmt->execute([$stock["id_despacho"]]);
+            $stmt->execute([$stock["id_despacho_origen"]]);
             $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
             
             $totalPendiente = $resultado["total_pendiente"] ?? 0;
@@ -894,9 +894,9 @@ class ControladorStockTransito {
             if($totalPendiente == 0) {
                 // 7. Marcar despacho como entregado
                 $stmt = $conexionCentral->prepare("UPDATE despachos SET estado = 'entregado' WHERE id = ?");
-                $stmt->execute([$stock["id_despacho"]]);
+                $stmt->execute([$stock["id_despacho_origen"]]);
                 
-                error_log("✅ DESPACHO COMPLETADO - ID: " . $stock["id_despacho"] . " - Estado: entregado");
+                error_log("✅ DESPACHO COMPLETADO - ID: " . $stock["id_despacho_origen"] . " - Estado: entregado");
             }
             
             // Confirmar transacciones
