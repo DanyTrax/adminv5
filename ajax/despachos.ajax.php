@@ -270,6 +270,9 @@ if(isset($_POST["cancelarDespacho"])){
         error_log("🔍 CANCELAR DESPACHO - Respuesta de mdlActualizarDespacho: " . $respuesta);
         
         if($respuesta == "ok") {
+            // Pequeño delay para asegurar que la actualización se complete
+            usleep(100000); // 0.1 segundos
+            
             // Verificar que realmente se actualizó
             $despachoVerificar = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
             error_log("🔍 CANCELAR DESPACHO - Estado después de actualizar: " . $despachoVerificar["estado"]);
@@ -282,10 +285,35 @@ if(isset($_POST["cancelarDespacho"])){
                 ]);
             } else {
                 error_log("❌ CANCELAR DESPACHO - Estado no se actualizó correctamente. Estado actual: " . $despachoVerificar["estado"]);
-                sendJsonResponse([
-                    "success" => false, 
-                    "error" => "El despacho no se canceló correctamente. Estado actual: " . $despachoVerificar["estado"]
-                ]);
+                
+                // Intentar verificación directa en la base de datos
+                try {
+                    require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+                    $conexion = ConexionCentral::conectar();
+                    $stmt = $conexion->query("SELECT estado FROM despachos WHERE id = $idDespacho");
+                    $estadoBD = $stmt->fetchColumn();
+                    
+                    error_log("🔍 CANCELAR DESPACHO - Verificación directa BD: " . $estadoBD);
+                    
+                    if($estadoBD == "cancelado") {
+                        sendJsonResponse([
+                            "success" => true, 
+                            "message" => "Despacho cancelado correctamente (verificado en BD)",
+                            "estado_actualizado" => $estadoBD
+                        ]);
+                    } else {
+                        sendJsonResponse([
+                            "success" => false, 
+                            "error" => "El despacho no se canceló correctamente. Estado en BD: " . $estadoBD
+                        ]);
+                    }
+                } catch(Exception $e) {
+                    error_log("❌ CANCELAR DESPACHO - Error en verificación directa: " . $e->getMessage());
+                    sendJsonResponse([
+                        "success" => false, 
+                        "error" => "El despacho no se canceló correctamente. Estado actual: " . $despachoVerificar["estado"]
+                    ]);
+                }
             }
         } else {
             sendJsonResponse(["success" => false, "error" => "Error al cancelar el despacho: " . $respuesta]);
