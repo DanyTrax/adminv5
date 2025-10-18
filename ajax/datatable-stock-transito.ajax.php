@@ -124,7 +124,7 @@ private function generarBotonesAccion($stock, $perfilUsuario, $idUsuario) {
                                 data-cantidad="' . $cantidadDisponible . '"
                                 data-transportador="' . htmlspecialchars($stock["nombre_transportador"]) . '"
                                 data-origen="' . htmlspecialchars($stock["sucursal_origen"]) . '"
-                                data-despacho="' . htmlspecialchars($stock["numero_despacho"]) . '"
+                                data-despacho="' . htmlspecialchars($stock["numero_despacho_origen"] ?? "N/A") . '"
                                 idStockTransito="' . $stock["id"] . '"
                                 codigoProducto="' . htmlspecialchars($stock["codigo_producto"]) . '"
                                 descripcionProducto="' . htmlspecialchars($stock["descripcion_producto"]) . '"
@@ -132,8 +132,8 @@ private function generarBotonesAccion($stock, $perfilUsuario, $idUsuario) {
                                 transportadorId="' . $stock["transportador_id"] . '"
                                 nombreTransportador="' . htmlspecialchars($stock["nombre_transportador"]) . '"
                                 sucursalOrigen="' . htmlspecialchars($stock["sucursal_origen"]) . '"
-                                idDespacho="' . $stock["id_despacho"] . '"
-                                numeroDespacho="' . htmlspecialchars($stock["numero_despacho"]) . '">
+                                idDespacho="' . ($stock["id_despacho_origen"] ?? "N/A") . '"
+                                numeroDespacho="' . htmlspecialchars($stock["numero_despacho_origen"] ?? "N/A") . '">
                             <i class="fa fa-download"></i>
                         </button>';
         }
