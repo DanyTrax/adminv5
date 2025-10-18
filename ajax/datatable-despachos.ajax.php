@@ -21,7 +21,7 @@ if (!headers_sent()) {
     header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 }
 
-require_once "api-transferencias/conexion-central.php";
+require_once "../api-transferencias/conexion-central.php";
 
 class AjaxTablaDespachos {
 
