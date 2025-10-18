@@ -18,7 +18,7 @@ class AjaxDespachos {
         if(isset($_POST["cargarInventario"])) {
             
             try {
-                require_once "../modelos/conexion.php";
+                require_once "modelos/conexion.php";
                 
                 $stmt = Conexion::conectar()->prepare("
                     SELECT codigo, descripcion, stock, precio_venta 
@@ -45,8 +45,8 @@ class AjaxDespachos {
         
         if(isset($_POST["idDespachoEditar"])) {
             
-            require_once "../controladores/despachos.controlador.php";
-            require_once "../modelos/despachos.modelo.php";
+            require_once "controladores/despachos.controlador.php";
+            require_once "modelos/despachos.modelo.php";
             
             $item = "id";
             $valor = $_POST["idDespachoEditar"];
@@ -70,8 +70,8 @@ public function ajaxCrearDespacho() {
     if(isset($_POST["crearDespacho"])) {
         
         try {
-            require_once "../controladores/despachos.controlador.php";
-            require_once "../modelos/despachos.modelo.php";
+            require_once "controladores/despachos.controlador.php";
+            require_once "modelos/despachos.modelo.php";
             
             // Validar datos requeridos
             $productosJson = $_POST["productosDespacho"] ?? '';
@@ -165,7 +165,7 @@ OBTENER NOMBRE REAL DE LA SUCURSAL - VERSIÓN MEJORADA
 private function obtenerNombreSucursalLocal() {
     
     try {
-        require_once "../modelos/conexion.php";
+        require_once "modelos/conexion.php";
         
         // Obtener el código de sucursal de la sesión
         $codigoSucursal = $_SESSION["codigo_sucursal"] ?? null;
@@ -243,8 +243,8 @@ public function ajaxVerDespacho() {
     if(isset($_POST["idDespacho"])) {
         
         try {
-            require_once "../controladores/despachos.controlador.php";
-            require_once "../modelos/despachos.modelo.php";
+            require_once "controladores/despachos.controlador.php";
+            require_once "modelos/despachos.modelo.php";
             
             $item = "id";
             $valor = $_POST["idDespacho"];
@@ -271,10 +271,10 @@ public function ajaxAceptarDespacho() {
     if(isset($_POST["aceptarDespacho"])) {
         
         try {
-            require_once "../controladores/despachos.controlador.php";
-            require_once "../modelos/despachos.modelo.php";
-            require_once "../modelos/productos.modelo.php";
-            require_once "../api-transferencias/conexion-central.php";
+            require_once "controladores/despachos.controlador.php";
+            require_once "modelos/despachos.modelo.php";
+            require_once "modelos/productos.modelo.php";
+            require_once "api-transferencias/conexion-central.php";
             
             $idDespacho = $_POST["idDespacho"];
             
@@ -377,10 +377,10 @@ public function ajaxCancelarDespacho() {
     if(isset($_POST["cancelarDespacho"])) {
         
         try {
-            require_once "../controladores/despachos.controlador.php";
-            require_once "../modelos/despachos.modelo.php";
-            require_once "../modelos/productos.modelo.php";
-            require_once "../api-transferencias/conexion-central.php";
+            require_once "controladores/despachos.controlador.php";
+            require_once "modelos/despachos.modelo.php";
+            require_once "modelos/productos.modelo.php";
+            require_once "api-transferencias/conexion-central.php";
             
             $idDespacho = $_POST["idDespacho"];
             $motivoCancelacion = $_POST["motivoCancelacion"] ?? "Cancelación solicitada por el usuario";
@@ -487,8 +487,8 @@ DEVOLVER STOCK DESDE STOCK EN TRÁNSITO
 private function devolverStockDesdeTransito($despacho) {
     
     try {
-        require_once "../api-transferencias/conexion-central.php";
-        require_once "../modelos/conexion.php";
+        require_once "api-transferencias/conexion-central.php";
+        require_once "modelos/conexion.php";
         
         // 1. Obtener productos del stock en tránsito relacionados con este despacho
         $stmt = ConexionCentral::conectar()->prepare("
@@ -550,7 +550,7 @@ DEVOLVER STOCK LOCAL (para despachos pendientes)
 private function devolverStockLocal($despacho) {
     
     try {
-        require_once "../modelos/conexion.php";
+        require_once "modelos/conexion.php";
         
         // 1. Parsear productos del despacho
         $productos = json_decode($despacho["productos_despacho"], true);
@@ -596,8 +596,8 @@ public function ajaxEliminarDespacho() {
     if(isset($_POST["eliminarDespacho"])) {
         
         try {
-            require_once "../controladores/despachos.controlador.php";
-            require_once "../modelos/despachos.modelo.php";
+            require_once "controladores/despachos.controlador.php";
+            require_once "modelos/despachos.modelo.php";
             
             $idDespacho = $_POST["idDespacho"];
             
@@ -631,7 +631,7 @@ FUNCIONES AUXILIARES
 =============================================*/
 private function descontarStockLocal($codigoProducto, $cantidad) {
     
-    require_once "../modelos/conexion.php";
+    require_once "modelos/conexion.php";
     
     $stmt = Conexion::conectar()->prepare("
         UPDATE productos 
@@ -653,7 +653,7 @@ private function descontarStockLocal($codigoProducto, $cantidad) {
 
 private function agregarStockTransito($despacho, $producto) {
     
-    require_once "../api-transferencias/conexion-central.php";
+    require_once "api-transferencias/conexion-central.php";
     
     $stmt = ConexionCentral::conectar()->prepare("
         INSERT INTO stock_transito (
