@@ -483,3 +483,34 @@ MODAL DESCARGA DIRECTA
     </div>
 
 </div>
+
+<!--=====================================
+INCLUIR JAVASCRIPT
+======================================-->
+<script src="vistas/js/stock-transito.js"></script>
+
+<!--=====================================
+SCRIPT DE PRUEBA
+======================================-->
+<script>
+console.log("🔍 Script de prueba cargado");
+console.log("🔍 jQuery disponible:", typeof $ !== 'undefined');
+console.log("🔍 Modal existe:", $("#modalDescargaDirecta").length > 0);
+
+// Evento de prueba simple
+$(document).ready(function() {
+    console.log("🔍 Document ready ejecutado");
+    
+    // Evento de prueba para cualquier botón
+    $(document).on("click", "button", function() {
+        console.log("🔍 Botón clickeado:", $(this).attr("class"));
+        
+        if($(this).hasClass("btnDescargaDirecta")) {
+            console.log("🎯 Botón de descarga detectado!");
+            
+            // Mostrar modal directamente
+            $("#modalDescargaDirecta").modal("show");
+        }
+    });
+});
+</script>
