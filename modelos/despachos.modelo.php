@@ -208,6 +208,8 @@ static public function mdlGenerarNumeroDespacho() {
     =============================================*/
     static public function mdlDescontarStockLocal($productos) {
         
+        $conexion = null;
+        
         try {
             $conexion = Conexion::conectar();
             $conexion->beginTransaction();

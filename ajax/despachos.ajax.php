@@ -103,7 +103,9 @@ if(isset($_POST["aceptarDespacho"])){
         
         try {
             // 6. Descontar stock local
+            error_log("DEBUG: Iniciando descuento de stock local para " . count($productosDespacho) . " productos");
             $descuentoStock = ModeloDespachos::mdlDescontarStockLocal($productosDespacho);
+            error_log("DEBUG: Resultado descuento stock local: " . ($descuentoStock ? 'true' : 'false'));
             if(!$descuentoStock) {
                 throw new Exception("Error descontando stock local");
             }
@@ -117,13 +119,17 @@ if(isset($_POST["aceptarDespacho"])){
                 "fecha_aceptacion" => date("Y-m-d H:i:s")
             );
             
+            error_log("DEBUG: Actualizando estado del despacho a aceptado");
             $actualizacionDespacho = ModeloDespachos::mdlActualizarEstadoDespacho("despachos", $datosDespacho);
+            error_log("DEBUG: Resultado actualización despacho: " . ($actualizacionDespacho ? 'true' : 'false'));
             if(!$actualizacionDespacho) {
                 throw new Exception("Error actualizando estado del despacho");
             }
             
             // 8. Agregar productos al stock en tránsito
+            error_log("DEBUG: Iniciando agregado a stock en tránsito para " . count($productosDespacho) . " productos");
             foreach($productosDespacho as $producto) {
+                error_log("DEBUG: Procesando producto: " . $producto["codigo"] . " cantidad: " . $producto["cantidad"]);
                 // Verificar si el producto ya existe en stock_transito
                 $stmtCheck = $conexionCentral->prepare("
                     SELECT id, cantidad_disponible 
