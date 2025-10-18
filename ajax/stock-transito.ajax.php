@@ -279,9 +279,11 @@ if(isset($_POST["descargarStockDirecto"])) {
         $observaciones = $_POST["observaciones"] ?? "";
         
         error_log("📥 DESCARGA DIRECTA - ID Stock: $idStockTransito, Cantidad: $cantidadDescargar");
+        error_log("📥 DATOS POST: " . json_encode($_POST));
         
         // Obtener información del stock en tránsito
         $stock = ControladorStockTransito::ctrObtenerStockDisponible($idStockTransito);
+        error_log("📦 STOCK OBTENIDO: " . json_encode($stock));
         
         if(!$stock) {
             echo json_encode(["success" => false, "error" => "Producto no encontrado en stock en tránsito"]);
@@ -289,10 +291,21 @@ if(isset($_POST["descargarStockDirecto"])) {
         }
         
         // Verificar que la cantidad sea válida
-        if($cantidadDescargar <= 0 || $cantidadDescargar > $stock["cantidad_disponible"]) {
-            echo json_encode(["success" => false, "error" => "Cantidad inválida"]);
+        error_log("🔍 VALIDACIÓN CANTIDAD - Solicitada: $cantidadDescargar, Disponible: " . ($stock["cantidad_disponible"] ?? 'NULL'));
+        
+        if($cantidadDescargar <= 0) {
+            error_log("❌ CANTIDAD INVÁLIDA - Menor o igual a 0: $cantidadDescargar");
+            echo json_encode(["success" => false, "error" => "La cantidad debe ser mayor a 0"]);
             return;
         }
+        
+        if($cantidadDescargar > ($stock["cantidad_disponible"] ?? 0)) {
+            error_log("❌ CANTIDAD INVÁLIDA - Excede disponible: $cantidadDescargar > " . ($stock["cantidad_disponible"] ?? 0));
+            echo json_encode(["success" => false, "error" => "Cantidad excede la disponible (" . ($stock["cantidad_disponible"] ?? 0) . ")"]);
+            return;
+        }
+        
+        error_log("✅ CANTIDAD VÁLIDA - $cantidadDescargar unidades");
         
         // Obtener información de la sesión
         $usuarioId = $_SESSION["id"] ?? 1;
