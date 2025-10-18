@@ -35,8 +35,9 @@ try {
     echo "<p>✅ Conexión central exitosa</p>";
     
     // Probar la consulta exacta que usa el modelo
+    $id = 1;
     $stmt = $pdo->prepare("SELECT * FROM despachos WHERE id = :id ORDER BY fecha_creacion DESC");
-    $stmt->bindParam(":id", 1, PDO::PARAM_STR);
+    $stmt->bindParam(":id", $id, PDO::PARAM_STR);
     $stmt->execute();
     $despacho = $stmt->fetch();
     
