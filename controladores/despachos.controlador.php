@@ -368,7 +368,9 @@ public function ctrEditarDespacho($datos = null) {
                     </script>';
 
                 } else {
-                    throw new Exception("Error al cambiar el estado del despacho");
+                    // Log del error específico para debugging
+                    error_log("❌ Error actualizando despacho ID $idDespacho: " . $respuesta);
+                    throw new Exception("Error al cambiar el estado del despacho: " . $respuesta);
                 }
 
             } catch(Exception $e) {

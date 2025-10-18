@@ -295,8 +295,11 @@ static public function mdlActualizarDespacho($tabla, $datos, $item, $valor) {
             return "ok";
         } else {
             $errorInfo = $stmt->errorInfo();
-            error_log("❌ Error en UPDATE: " . print_r($errorInfo, true));
-            return "error";
+            $errorMessage = "Error SQL: " . $errorInfo[2] . " (Código: " . $errorInfo[1] . ")";
+            error_log("❌ Error en UPDATE: " . $errorMessage);
+            error_log("❌ SQL: " . $sql);
+            error_log("❌ Valores: " . print_r($valoresArray, true));
+            return "error: " . $errorMessage;
         }
         
     } catch(Exception $e) {
