@@ -191,7 +191,7 @@ if(isset($_POST["aceptarDespacho"])){
                             transportador_id, 
                             nombre_transportador,
                             sucursal_origen,
-                            fecha_creacion
+                            fecha_carga
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
                     ");
                     
