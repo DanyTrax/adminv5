@@ -255,7 +255,9 @@ if(isset($_POST["cancelarDespacho"])){
         
         $datos = array(
             "id" => $idDespacho,
-            "estado" => "cancelado"
+            "estado" => "cancelado",
+            "motivo_cancelacion" => $motivoCancelacion,
+            "usuario_cancelacion" => $_SESSION["nombre"] ?? "Usuario"
         );
         
         error_log("🔍 CANCELAR DESPACHO - Datos a actualizar: " . print_r($datos, true));
@@ -269,7 +271,19 @@ if(isset($_POST["cancelarDespacho"])){
             $despachoVerificar = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
             error_log("🔍 CANCELAR DESPACHO - Estado después de actualizar: " . $despachoVerificar["estado"]);
             
-            sendJsonResponse(["success" => true, "message" => "Despacho cancelado correctamente"]);
+            if($despachoVerificar["estado"] == "cancelado") {
+                sendJsonResponse([
+                    "success" => true, 
+                    "message" => "Despacho cancelado correctamente",
+                    "estado_actualizado" => $despachoVerificar["estado"]
+                ]);
+            } else {
+                error_log("❌ CANCELAR DESPACHO - Estado no se actualizó correctamente. Estado actual: " . $despachoVerificar["estado"]);
+                sendJsonResponse([
+                    "success" => false, 
+                    "error" => "El despacho no se canceló correctamente. Estado actual: " . $despachoVerificar["estado"]
+                ]);
+            }
         } else {
             sendJsonResponse(["success" => false, "error" => "Error al cancelar el despacho: " . $respuesta]);
         }

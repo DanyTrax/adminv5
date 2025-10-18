@@ -620,15 +620,24 @@ function ejecutarCancelarDespacho(idDespacho, motivo) {
             console.log("📨 Respuesta de cancelación:", respuesta);
             
             if(respuesta.success) {
+                console.log("✅ Despacho cancelado exitosamente. Estado actualizado:", respuesta.estado_actualizado);
                 swal({
                     title: "¡Despacho cancelado!",
                     text: respuesta.message,
                     type: "success",
                     confirmButtonText: "Cerrar"
                 }).then(function() {
-                    $('.tablaDespachos').DataTable().ajax.reload();
+                    // Recargar la tabla para mostrar el cambio
+                    if($.fn.DataTable.isDataTable('.tablaDespachos')) {
+                        $('.tablaDespachos').DataTable().ajax.reload(null, false);
+                    }
+                    // También recargar la página si es necesario
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
                 });
             } else {
+                console.error("❌ Error al cancelar despacho:", respuesta.error);
                 swal({
                     title: "Error",
                     text: respuesta.error || "No se pudo cancelar el despacho",
