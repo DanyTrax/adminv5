@@ -676,19 +676,30 @@ $(document).on("click", ".btnEliminarDespacho", function(e){
     e.preventDefault();
     var idDespacho = $(this).attr("idDespacho");
     var numeroDespacho = $(this).attr("numeroDespacho");
-    eliminarDespachoDirecto(idDespacho, numeroDespacho);
+    var estadoDespacho = $(this).attr("estadoDespacho");
+    eliminarDespachoDirecto(idDespacho, numeroDespacho, estadoDespacho);
 });
 
-function eliminarDespachoDirecto(idDespacho, numeroDespacho) {
+function eliminarDespachoDirecto(idDespacho, numeroDespacho, estadoDespacho) {
     
-    console.log("🗑️ Eliminando despacho desde tabla ID:", idDespacho);
+    console.log("🗑️ Eliminando despacho desde tabla ID:", idDespacho, "Estado:", estadoDespacho);
+    
+    var titulo = "¿Eliminar despacho " + numeroDespacho + "?";
+    var texto = "¡Esta acción no se puede deshacer!";
+    var tipo = "warning";
+    
+    // Si es un despacho que no está pendiente, mostrar advertencia especial
+    if(estadoDespacho && estadoDespacho !== 'pendiente') {
+        texto = "⚠️ ADVERTENCIA: Este despacho está en estado '" + estadoDespacho + "'. ¡Esta acción no se puede deshacer!";
+        tipo = "error";
+    }
     
     swal({
-        title: "¿Eliminar despacho " + numeroDespacho + "?",
-        text: "¡Esta acción no se puede deshacer!",
-        type: "warning",
+        title: titulo,
+        text: texto,
+        type: tipo,
         showCancelButton: true,
-        confirmButtonColor: "#d33",
+        confirmButtonColor: estadoDespacho !== 'pendiente' ? "#f39c12" : "#d33",
         cancelButtonColor: "#3c8dbc",
         confirmButtonText: "Sí, eliminar",
         cancelButtonText: "Cancelar"

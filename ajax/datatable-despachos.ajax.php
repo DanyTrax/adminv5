@@ -174,9 +174,15 @@ private function generarBotonesAccion($despacho) {
             $botones .= ' <button class=\"btn btn-warning btn-xs btnCancelarDespacho\" idDespacho=\"' . $despacho["id"] . '\" estadoDespacho=\"' . $estado . '\" title=\"Cancelar despacho\"><i class=\"fa fa-ban\"></i></button>';
         }
         
-        // Botón Eliminar (solo administrador y pendientes)
-        if($perfil == "Administrador" && $estado == "pendiente") {
-            $botones .= ' <button class=\"btn btn-danger btn-xs btnEliminarDespacho\" idDespacho=\"' . $despacho["id"] . '\" numeroDespacho=\"' . $despacho["numero_despacho"] . '\" title=\"Eliminar despacho\"><i class=\"fa fa-trash\"></i></button>';
+        // Botón Eliminar (pendientes para todos, cualquier estado para administradores)
+        $puedeEliminar = ($estado == "pendiente") || ($perfil == "Administrador");
+        
+        if($puedeEliminar) {
+            $textoEliminar = $estado == "pendiente" ? "Eliminar" : "Eliminar (Admin)";
+            $claseBoton = $estado == "pendiente" ? "btn-danger" : "btn-warning";
+            $titulo = $estado == "pendiente" ? "Eliminar despacho" : "Eliminar despacho (Admin)";
+            
+            $botones .= ' <button class=\"btn ' . $claseBoton . ' btn-xs btnEliminarDespacho\" idDespacho=\"' . $despacho["id"] . '\" numeroDespacho=\"' . $despacho["numero_despacho"] . '\" estadoDespacho=\"' . $estado . '\" title=\"' . $titulo . '\"><i class=\"fa fa-trash\"></i></button>';
         }
     }
     
