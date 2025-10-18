@@ -21,7 +21,10 @@ require_once "../modelos/productos.modelo.php";
 
 // Función helper para enviar JSON limpio
 function sendJsonResponse($data) {
-    ob_clean(); // Limpiar buffer de warnings
+    // Limpiar buffer de warnings solo si hay contenido
+    if (ob_get_level() > 0) {
+        ob_clean();
+    }
     
     // Solo enviar header si no se han enviado headers aún
     if (!headers_sent()) {
