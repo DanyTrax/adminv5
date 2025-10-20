@@ -181,7 +181,9 @@ class ControladorSucursales {
     =============================================*/
     static public function ctrActualizarSucursal() {
         
+        // Debug temporal
         if (isset($_POST["editarId"])) {
+            error_log("DEBUG ctrActualizarSucursal - POST recibido: " . print_r($_POST, true));
             
             if (preg_match('/^[a-zA-Z0-9ÁÉÍÓÚáéíóúñÑ ]+$/', $_POST["editarNombre"])) {
                 

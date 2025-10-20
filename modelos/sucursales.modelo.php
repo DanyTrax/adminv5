@@ -253,6 +253,7 @@ class ModeloSucursales {
     =============================================*/
     static public function mdlActualizarSucursalCentral($datos) {
         try {
+            error_log("DEBUG mdlActualizarSucursalCentral - Datos recibidos: " . print_r($datos, true));
             require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             $pdo = ConexionCentral::conectar();
             
