@@ -151,7 +151,7 @@ if(isset($_GET["editar"]) && is_numeric($_GET["editar"])) {
                                            id="numeroSolicitudBuscar"
                                            placeholder="Número de solicitud (opcional)">
                                     <span class="input-group-btn">
-                                        <button type="button" class="btn btn-info" onclick="buscarSolicitud()">
+                                        <button type="button" class="btn btn-info" onclick="buscarSolicitudesStock($('#numeroSolicitudBuscar').val())">
                                             <i class="fa fa-search"></i>
                                         </button>
                                     </span>

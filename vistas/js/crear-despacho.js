@@ -182,6 +182,9 @@ function configurarEventos() {
     });
     
     // Búsqueda de solicitudes
+    console.log("🔍 Configurando event listener para numeroSolicitudBuscar...");
+    console.log("🔍 Elemento existe:", $("#numeroSolicitudBuscar").length > 0);
+    
     $("#numeroSolicitudBuscar").on("keyup", function() {
         var termino = $(this).val();
         console.log("⌨️ Tecla presionada en numeroSolicitudBuscar. Término:", termino, "Longitud:", termino.length);
@@ -194,6 +197,8 @@ function configurarEventos() {
             ocultarResultadosSolicitudes();
         }
     });
+    
+    console.log("✅ Event listener configurado para numeroSolicitudBuscar");
     
     // Confirmar agregar producto
     $("#confirmarAgregarProductoDespacho").on("click", function() {
