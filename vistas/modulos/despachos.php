@@ -121,15 +121,21 @@
                     
                     <div class="col-md-6 text-right">
                         <!-- FILTROS RÁPIDOS -->
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-default btnFiltroEstado" data-estado="todos">
-                                Todos
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-default btnFiltroEstado" data-estado="">
+                                <i class="fa fa-list"></i> Todos
                             </button>
                             <button type="button" class="btn btn-warning btnFiltroEstado" data-estado="pendiente">
-                                Pendientes
+                                <i class="fa fa-clock-o"></i> Pendientes
                             </button>
-                            <button type="button" class="btn btn-success btnFiltroEstado" data-estado="aceptado">
-                                Aceptados
+                            <button type="button" class="btn btn-info btnFiltroEstado" data-estado="en_transito">
+                                <i class="fa fa-truck"></i> En Tránsito
+                            </button>
+                            <button type="button" class="btn btn-success btnFiltroEstado" data-estado="entregado">
+                                <i class="fa fa-check"></i> Entregados
+                            </button>
+                            <button type="button" class="btn btn-danger btnFiltroEstado" data-estado="cancelado">
+                                <i class="fa fa-times"></i> Cancelados
                             </button>
                         </div>
                     </div>
@@ -691,6 +697,50 @@
     background-color: #337ab7;
     color: white;
     border-color: #2e6da4;
+}
+
+/*=============================================
+ESTILOS PARA FILTROS RÁPIDOS
+=============================================*/
+.btn-group-sm .btn {
+    padding: 4px 8px;
+    font-size: 11px;
+    line-height: 1.4;
+    border-radius: 3px;
+    margin-right: 2px;
+}
+
+.btn-group-sm .btn:last-child {
+    margin-right: 0;
+}
+
+.btn-group-sm .btn i {
+    margin-right: 3px;
+}
+
+.btn-group-sm .btn.active {
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    transform: translateY(1px);
+}
+
+/* Responsive para filtros */
+@media (max-width: 768px) {
+    .btn-group-sm {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px;
+    }
+    
+    .btn-group-sm .btn {
+        flex: 1;
+        min-width: 0;
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+    
+    .btn-group-sm .btn i {
+        margin-right: 2px;
+    }
 }
 </style>
 

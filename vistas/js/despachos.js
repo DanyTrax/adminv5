@@ -358,9 +358,8 @@ function configurarIconoEstado(estado) {
     var $icono = $("#estadoIconDespacho");
     var configuraciones = {
         'pendiente': { icon: 'fa-clock-o', color: 'bg-yellow' },
-        'aceptado': { icon: 'fa-check', color: 'bg-green' },
         'en_transito': { icon: 'fa-truck', color: 'bg-blue' },
-        'finalizado': { icon: 'fa-flag-checkered', color: 'bg-gray' },
+        'entregado': { icon: 'fa-check', color: 'bg-green' },
         'cancelado': { icon: 'fa-ban', color: 'bg-red' }
     };
     
@@ -819,7 +818,7 @@ $(document).on("click", ".btnFiltroEstado", function(){
     $(this).addClass("active");
     
     // Aplicar filtro a DataTable
-    if(estado === "todos") {
+    if(estado === "" || estado === "todos") {
         $('.tablaDespachos').DataTable().columns(4).search("").draw();
     } else {
         $('.tablaDespachos').DataTable().columns(4).search(estado.toUpperCase()).draw();
