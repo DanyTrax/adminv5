@@ -821,7 +821,7 @@ $(document).on("click", ".btnFiltroEstado", function(){
     if(estado === "" || estado === "todos") {
         $('.tablaDespachos').DataTable().columns(4).search("").draw();
     } else {
-        $('.tablaDespachos').DataTable().columns(4).search(estado.toUpperCase()).draw();
+        $('.tablaDespachos').DataTable().columns(4).search(estado).draw();
     }
 });
 
