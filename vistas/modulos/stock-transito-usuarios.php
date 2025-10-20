@@ -209,7 +209,7 @@ foreach($transportadores as $productos) {
                                                    </strong>
                                                </td>
                                                <td>
-                                                   <div style="max-width: 300px; line-height: 1.3;">
+                                                   <div style="line-height: 1.3;">
                                                        <strong style="word-wrap: break-word; white-space: normal;"><?php echo $producto['descripcion_producto']; ?></strong>
                                                    </div>
                                                </td>
