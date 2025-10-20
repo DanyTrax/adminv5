@@ -462,6 +462,16 @@ $(document).on("click", ".btnEditarSucursal", function() {
                 
                 var datos = respuesta.data;
                 
+                // Debug temporal
+                console.log("DEBUG - Datos recibidos del AJAX:", datos);
+                console.log("DEBUG - Campos de conexión:", {
+                    usuario_bd: datos.usuario_bd,
+                    password_bd: datos.password_bd,
+                    nombre_bd: datos.nombre_bd,
+                    host_bd: datos.host_bd,
+                    puerto_bd: datos.puerto_bd
+                });
+                
                 // Llenar formulario de edición
                 $("#editarId").val(datos.id);
                 $("#editarCodigo").val(datos.codigo_sucursal);
