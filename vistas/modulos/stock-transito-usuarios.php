@@ -131,51 +131,98 @@ foreach($transportadores as $productos) {
                         <?php 
                         $primerProducto = $productos[0];
                         $totalCantidad = array_sum(array_column($productos, 'cantidad_disponible'));
+                        $totalProductos = count($productos);
                         ?>
                         <div class="box box-info transportador-section">
                             <div class="box-header with-border">
-                                <h3 class="box-title">
-                                    <i class="fa fa-truck"></i> 
-                                    <?php echo $primerProducto['nombre_transportador']; ?>
-                                </h3>
-                                <div class="box-tools pull-right">
-                                    <span class="label label-info"><?php echo count($productos); ?> productos</span>
-                                    <span class="label label-success"><?php echo $totalCantidad; ?> unidades</span>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h3 class="box-title">
+                                            <i class="fa fa-truck"></i> 
+                                            <strong><?php echo $primerProducto['nombre_transportador']; ?></strong>
+                                        </h3>
+                                        <p class="text-muted" style="margin: 5px 0 0 0;">
+                                            <i class="fa fa-map-marker"></i> Transportador responsable
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4 text-right">
+                                        <div class="info-box-content" style="display: inline-block; text-align: right;">
+                                            <span class="info-box-text">Productos</span>
+                                            <span class="info-box-number" style="font-size: 24px; color: #17a2b8;"><?php echo $totalProductos; ?></span>
+                                        </div>
+                                        <div class="info-box-content" style="display: inline-block; text-align: right; margin-left: 20px;">
+                                            <span class="info-box-text">Unidades</span>
+                                            <span class="info-box-number" style="font-size: 24px; color: #28a745;"><?php echo $totalCantidad; ?></span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="box-body">
-                                <!-- Grid de Productos -->
-                                <div class="row productos-grid">
-                                    <?php foreach($productos as $producto): ?>
-                                        <div class="col-md-6 col-lg-4 producto-card" data-codigo="<?php echo strtolower($producto['codigo_producto']); ?>" data-descripcion="<?php echo strtolower($producto['descripcion_producto']); ?>">
-                                            <div class="box box-solid box-primary">
-                                                <div class="box-header with-border">
-                                                    <h3 class="box-title">
-                                                        <i class="fa fa-cube"></i> 
-                                                        <?php echo $producto['codigo_producto']; ?>
-                                                    </h3>
-                                                </div>
-                                                <div class="box-body">
-                                                    <p><strong>Descripción:</strong><br>
-                                                    <?php echo $producto['descripcion_producto']; ?></p>
-                                                    
-                                                    <p><strong>Despacho:</strong> <?php echo $producto['numero_despacho']; ?></p>
-                                                    <p><strong>Origen:</strong> <?php echo $producto['sucursal_origen']; ?></p>
-                                                    
-                                                    <div class="row">
-                                                        <div class="col-md-6">
-                                                            <strong>Cantidad:</strong><br>
-                                                            <span class="badge bg-blue" style="font-size: 16px;">
-                                                                <?php echo $producto['cantidad_disponible']; ?>
-                                                            </span>
+                            <div class="box-body" style="padding: 0;">
+                                <!-- Tabla de Productos -->
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover productos-table">
+                                        <thead style="background-color: #f8f9fa;">
+                                            <tr>
+                                                <th style="width: 100px;">
+                                                    <i class="fa fa-barcode"></i> Código
+                                                </th>
+                                                <th>
+                                                    <i class="fa fa-cube"></i> Descripción del Producto
+                                                </th>
+                                                <th style="width: 120px;">
+                                                    <i class="fa fa-shipping-fast"></i> Despacho
+                                                </th>
+                                                <th style="width: 120px;">
+                                                    <i class="fa fa-map-marker"></i> Origen
+                                                </th>
+                                                <th style="width: 100px; text-align: center;">
+                                                    <i class="fa fa-cubes"></i> Cantidad
+                                                </th>
+                                                <th style="width: 100px; text-align: center;">
+                                                    <i class="fa fa-flag"></i> Estado
+                                                </th>
+                                                <th style="width: 120px; text-align: center;">
+                                                    <i class="fa fa-cogs"></i> Acciones
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach($productos as $index => $producto): ?>
+                                                <tr class="producto-row" 
+                                                    data-codigo="<?php echo strtolower($producto['codigo_producto']); ?>" 
+                                                    data-descripcion="<?php echo strtolower($producto['descripcion_producto']); ?>">
+                                                    <td>
+                                                        <strong class="text-primary" style="font-size: 16px;">
+                                                            <?php echo $producto['codigo_producto']; ?>
+                                                        </strong>
+                                                    </td>
+                                                    <td>
+                                                        <div style="max-width: 300px;">
+                                                            <strong><?php echo $producto['descripcion_producto']; ?></strong>
                                                         </div>
-                                                        <div class="col-md-6">
-                                                            <strong>Estado:</strong><br>
-                                                            <span class="label label-success">Disponible</span>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div class="text-center" style="margin-top: 15px;">
+                                                    </td>
+                                                    <td>
+                                                        <span class="label label-default" style="font-size: 12px;">
+                                                            <?php echo $producto['numero_despacho']; ?>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="text-muted">
+                                                            <i class="fa fa-building"></i> 
+                                                            <?php echo $producto['sucursal_origen']; ?>
+                                                        </span>
+                                                    </td>
+                                                    <td style="text-align: center;">
+                                                        <span class="badge bg-blue" style="font-size: 16px; padding: 8px 12px;">
+                                                            <?php echo $producto['cantidad_disponible']; ?>
+                                                        </span>
+                                                    </td>
+                                                    <td style="text-align: center;">
+                                                        <span class="label label-success" style="font-size: 12px;">
+                                                            <i class="fa fa-check"></i> Disponible
+                                                        </span>
+                                                    </td>
+                                                    <td style="text-align: center;">
                                                         <button class="btn btn-success btn-sm btnDescargaDirecta" 
                                                                 data-id="<?php echo $producto['id']; ?>"
                                                                 data-codigo="<?php echo $producto['codigo_producto']; ?>"
@@ -186,11 +233,11 @@ foreach($transportadores as $productos) {
                                                                 data-transportador="<?php echo $producto['nombre_transportador']; ?>">
                                                             <i class="fa fa-download"></i> Descargar
                                                         </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -280,33 +327,53 @@ foreach($transportadores as $productos) {
 
 <style>
 .transportador-section {
-    margin-bottom: 25px;
+    margin-bottom: 30px;
     border-left: 4px solid #17a2b8;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .transportador-section .box-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 2px solid #17a2b8;
+    padding: 20px;
+}
+
+.transportador-section .box-title {
+    font-size: 20px;
+    color: #495057;
+    margin: 0;
+}
+
+.productos-table {
+    margin: 0;
+    font-size: 14px;
+}
+
+.productos-table thead th {
+    background-color: #f8f9fa !important;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: bold;
+    color: #495057;
+    padding: 15px 10px;
+    vertical-align: middle;
+}
+
+.productos-table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.productos-table tbody tr:hover {
     background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
 }
 
-.productos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 15px;
+.productos-table tbody td {
+    padding: 15px 10px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f3f4;
 }
 
-.producto-card {
-    margin-bottom: 15px;
-}
-
-.producto-card .box {
-    height: 100%;
-    transition: transform 0.2s;
-}
-
-.producto-card .box:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+.producto-row:hover {
+    background-color: #f8f9fa !important;
 }
 
 .info-box {
@@ -318,6 +385,48 @@ foreach($transportadores as $productos) {
     border: 1px solid #e9ecef;
     border-radius: 4px;
     padding: 15px;
+}
+
+/* Mejorar espaciado y organización */
+.transportador-section + .transportador-section {
+    margin-top: 20px;
+}
+
+/* Estilos para badges y labels */
+.badge {
+    font-size: 12px;
+    padding: 6px 10px;
+}
+
+.label {
+    font-size: 11px;
+    padding: 4px 8px;
+}
+
+/* Botones de acción */
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .productos-table {
+        font-size: 12px;
+    }
+    
+    .productos-table thead th,
+    .productos-table tbody td {
+        padding: 10px 5px;
+    }
+    
+    .transportador-section .box-header .row {
+        text-align: center;
+    }
+    
+    .transportador-section .box-header .col-md-4 {
+        margin-top: 10px;
+    }
 }
 </style>
 
@@ -352,13 +461,13 @@ function aplicarFiltros() {
     
     // Filtrar por búsqueda de producto
     if(buscarProducto) {
-        var productos = document.querySelectorAll('.producto-card');
+        var productos = document.querySelectorAll('.producto-row');
         productos.forEach(function(producto) {
             var codigo = producto.getAttribute('data-codigo');
             var descripcion = producto.getAttribute('data-descripcion');
             
             if(codigo.includes(buscarProducto) || descripcion.includes(buscarProducto)) {
-                producto.style.display = 'block';
+                producto.style.display = 'table-row';
             } else {
                 producto.style.display = 'none';
             }
@@ -371,9 +480,9 @@ function limpiarFiltros() {
     document.getElementById('filtroTransportador').value = '';
     document.getElementById('buscarProducto').value = '';
     
-    var productos = document.querySelectorAll('.producto-card');
+    var productos = document.querySelectorAll('.producto-row');
     productos.forEach(function(producto) {
-        producto.style.display = 'block';
+        producto.style.display = 'table-row';
     });
     
     // Recargar página sin filtros
