@@ -310,13 +310,13 @@ MODAL EDITAR SUCURSAL
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>Usuario BD:</label>
-                    <input type="text" class="form-control" name="editarUsuarioBd" id="editarUsuarioBd" placeholder="usuario_bd">
+                    <input type="text" class="form-control" name="editarUsuarioBd" id="editarUsuarioBd" placeholder="usuario_bd" value="">
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>Contraseña BD:</label>
-                    <input type="password" class="form-control" name="editarPasswordBd" id="editarPasswordBd" placeholder="password_bd">
+                    <input type="password" class="form-control" name="editarPasswordBd" id="editarPasswordBd" placeholder="password_bd" value="">
                   </div>
                 </div>
               </div>
@@ -325,13 +325,13 @@ MODAL EDITAR SUCURSAL
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>Nombre BD:</label>
-                    <input type="text" class="form-control" name="editarNombreBd" id="editarNombreBd" placeholder="nombre_bd">
+                    <input type="text" class="form-control" name="editarNombreBd" id="editarNombreBd" placeholder="nombre_bd" value="">
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>Host BD:</label>
-                    <input type="text" class="form-control" name="editarHostBd" id="editarHostBd" placeholder="localhost" value="localhost">
+                    <input type="text" class="form-control" name="editarHostBd" id="editarHostBd" placeholder="localhost" value="">
                   </div>
                 </div>
               </div>
@@ -340,7 +340,7 @@ MODAL EDITAR SUCURSAL
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>Puerto BD:</label>
-                    <input type="number" class="form-control" name="editarPuertoBd" id="editarPuertoBd" placeholder="3306" value="3306">
+                    <input type="number" class="form-control" name="editarPuertoBd" id="editarPuertoBd" placeholder="3306" value="">
                   </div>
                 </div>
                 <div class="col-md-6">
