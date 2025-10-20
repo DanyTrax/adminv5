@@ -821,11 +821,19 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
     }
     
     // Enviar datos por AJAX
+    console.log("🔍 DEBUG: Datos a enviar:", {
+        stockSeleccionado: stockSeleccionado,
+        cantidadDescargar: cantidadDescargar,
+        observaciones: observaciones
+    });
+    
     var datos = new FormData();
     datos.append("descargarStockDirecto", true);
     datos.append("codigoProducto", stockSeleccionado);
     datos.append("cantidadDescargar", cantidadDescargar);
     datos.append("observaciones", observaciones);
+    
+    console.log("🔍 DEBUG: FormData creado, enviando AJAX...");
     
     $.ajax({
         url: "ajax/stock-transito.ajax.php",

@@ -280,11 +280,13 @@ if(isset($_POST["descargarStockDirecto"])) {
         
         error_log("📥 DESCARGA CONSOLIDADA - Código: $codigoProducto, Cantidad: $cantidadDescargar");
         error_log("📥 DATOS POST: " . json_encode($_POST));
+        error_log("📥 SESSION: " . json_encode($_SESSION));
         
         // Validar datos básicos
         if(empty($codigoProducto) || $cantidadDescargar <= 0) {
-            error_log("❌ DATOS INVÁLIDOS - Código: $codigoProducto, Cantidad: $cantidadDescargar");
-            echo json_encode(["success" => false, "error" => "Datos inválidos"]);
+            error_log("❌ DATOS INVÁLIDOS - Código: '$codigoProducto', Cantidad: '$cantidadDescargar'");
+            error_log("❌ TIPOS - Código tipo: " . gettype($codigoProducto) . ", Cantidad tipo: " . gettype($cantidadDescargar));
+            echo json_encode(["success" => false, "error" => "Datos inválidos - Código: '$codigoProducto', Cantidad: '$cantidadDescargar'"]);
             return;
         }
         
