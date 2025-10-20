@@ -138,13 +138,13 @@ foreach($transportadores as $productos) {
                 <?php else: ?>
                     <!-- Contenedor para resultados AJAX -->
                     <div id="contenedorProductos">
-                        <!-- Lista de Transportadores -->
-                        <?php foreach($transportadores as $transportadorId => $productos): ?>
-                        <?php 
-                        $primerProducto = $productos[0];
-                        $totalCantidad = array_sum(array_column($productos, 'cantidad_disponible'));
-                        $totalProductos = count($productos);
-                        ?>
+               <!-- Lista de Transportadores -->
+               <?php foreach($transportadores as $transportadorId => $productos): ?>
+                   <?php 
+                   $primerProducto = reset($productos); // Obtener el primer producto del array
+                   $totalCantidad = array_sum(array_column($productos, 'cantidad_total'));
+                   $totalProductos = count($productos);
+                   ?>
                         <div class="box box-info transportador-section">
                             <div class="box-header with-border">
                                 <div class="row">
@@ -198,56 +198,65 @@ foreach($transportadores as $productos) {
                                                 </th>
                                             </tr>
                                         </thead>
-                                        <tbody>
-                                            <?php foreach($productos as $index => $producto): ?>
-                                                <tr class="producto-row" 
-                                                    data-codigo="<?php echo strtolower($producto['codigo_producto']); ?>" 
-                                                    data-descripcion="<?php echo strtolower($producto['descripcion_producto']); ?>">
-                                                    <td>
-                                                        <strong class="text-primary" style="font-size: 16px;">
-                                                            <?php echo $producto['codigo_producto']; ?>
-                                                        </strong>
-                                                    </td>
-                                                    <td>
-                                                        <div style="max-width: 300px;">
-                                                            <strong><?php echo $producto['descripcion_producto']; ?></strong>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <span class="label label-default" style="font-size: 12px;">
-                                                            <?php echo $producto['numero_despacho']; ?>
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <span class="text-muted">
-                                                            <i class="fa fa-building"></i> 
-                                                            <?php echo $producto['sucursal_origen']; ?>
-                                                        </span>
-                                                    </td>
-                                                    <td style="text-align: center;">
-                                                        <span class="badge bg-blue" style="font-size: 16px; padding: 8px 12px;">
-                                                            <?php echo $producto['cantidad_disponible']; ?>
-                                                        </span>
-                                                    </td>
-                                                    <td style="text-align: center;">
-                                                        <span class="label label-success" style="font-size: 12px;">
-                                                            <i class="fa fa-check"></i> Disponible
-                                                        </span>
-                                                    </td>
-                                                    <td style="text-align: center;">
-                                                        <button class="btn btn-success btn-sm btnDescargaDirecta" 
-                                                                data-id="<?php echo $producto['id']; ?>"
-                                                                data-codigo="<?php echo $producto['codigo_producto']; ?>"
-                                                                data-descripcion="<?php echo $producto['descripcion_producto']; ?>"
-                                                                data-cantidad="<?php echo $producto['cantidad_disponible']; ?>"
-                                                                data-despacho="<?php echo $producto['numero_despacho']; ?>"
-                                                                data-origen="<?php echo $producto['sucursal_origen']; ?>"
-                                                                data-transportador="<?php echo $producto['nombre_transportador']; ?>">
-                                                            <i class="fa fa-download"></i> Descargar
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
+                                   <tbody>
+                                       <?php foreach($productos as $codigoProducto => $producto): ?>
+                                           <tr class="producto-row" 
+                                               data-codigo="<?php echo strtolower($producto['codigo_producto']); ?>" 
+                                               data-descripcion="<?php echo strtolower($producto['descripcion_producto']); ?>">
+                                               <td>
+                                                   <strong class="text-primary" style="font-size: 16px;">
+                                                       <?php echo $producto['codigo_producto']; ?>
+                                                   </strong>
+                                               </td>
+                                               <td>
+                                                   <div style="max-width: 300px;">
+                                                       <strong><?php echo $producto['descripcion_producto']; ?></strong>
+                                                   </div>
+                                               </td>
+                                               <td>
+                                                   <span class="label label-info" style="font-size: 12px;">
+                                                       <i class="fa fa-list"></i> <?php echo count($producto['detalles']); ?> despachos
+                                                   </span>
+                                               </td>
+                                               <td>
+                                                   <span class="text-muted">
+                                                       <i class="fa fa-building"></i> 
+                                                       Múltiples sucursales
+                                                   </span>
+                                               </td>
+                                               <td style="text-align: center;">
+                                                   <span class="badge bg-blue" style="font-size: 16px; padding: 8px 12px;">
+                                                       <?php echo $producto['cantidad_total']; ?>
+                                                   </span>
+                                               </td>
+                                               <td style="text-align: center;">
+                                                   <span class="label label-success" style="font-size: 12px;">
+                                                       <i class="fa fa-check"></i> Disponible
+                                                   </span>
+                                               </td>
+                                               <td style="text-align: center;">
+                                                   <div class="btn-group">
+                                                       <button class="btn btn-info btn-sm btnVerDetalle" 
+                                                               data-codigo="<?php echo $producto['codigo_producto']; ?>"
+                                                               data-descripcion="<?php echo $producto['descripcion_producto']; ?>"
+                                                               data-detalles='<?php echo json_encode($producto['detalles']); ?>'
+                                                               data-cronologia='<?php echo json_encode($producto['cronologia_completa']); ?>'
+                                                               data-cantidad-total="<?php echo $producto['cantidad_total']; ?>"
+                                                               data-transportador="<?php echo $producto['nombre_transportador']; ?>">
+                                                           <i class="fa fa-info-circle"></i> Detalle
+                                                       </button>
+                                                       <button class="btn btn-success btn-sm btnDescargaDirecta" 
+                                                               data-codigo="<?php echo $producto['codigo_producto']; ?>"
+                                                               data-descripcion="<?php echo $producto['descripcion_producto']; ?>"
+                                                               data-cantidad="<?php echo $producto['cantidad_total']; ?>"
+                                                               data-transportador="<?php echo $producto['nombre_transportador']; ?>"
+                                                               data-detalles='<?php echo json_encode($producto['detalles']); ?>'>
+                                                           <i class="fa fa-download"></i> Descargar
+                                                       </button>
+                                                   </div>
+                                               </td>
+                                           </tr>
+                                       <?php endforeach; ?>
                                         </tbody>
                                     </table>
                                 </div>
@@ -259,6 +268,71 @@ foreach($transportadores as $productos) {
             </div>
         </div>
     </section>
+</div>
+
+<!-- Modal de Detalle del Producto -->
+<div class="modal fade" id="modalDetalleProducto" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">
+                    <i class="fa fa-info-circle text-info"></i> Detalle del Producto
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="alert alert-info">
+                            <h4 id="detalleCodigoProducto">-</h4>
+                            <p id="detalleDescripcionProducto">-</p>
+                            <p><strong>Transportador:</strong> <span id="detalleTransportador">-</span></p>
+                            <p><strong>Cantidad Total:</strong> <span class="badge bg-blue" id="detalleCantidadTotal">-</span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <h5><i class="fa fa-list"></i> Detalle por Despacho (Orden LIFO)</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th><i class="fa fa-sort-numeric-desc"></i> Orden</th>
+                                        <th><i class="fa fa-shipping-fast"></i> Despacho</th>
+                                        <th><i class="fa fa-building"></i> Sucursal</th>
+                                        <th><i class="fa fa-cubes"></i> Cantidad</th>
+                                        <th><i class="fa fa-clock-o"></i> Fecha Carga</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detalleTablaDespachos">
+                                    <!-- Se llena dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <h5><i class="fa fa-history"></i> Cronología Completa de Cargas</h5>
+                        <div class="timeline" id="detalleCronologia">
+                            <!-- Se llena dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cerrar
+                </button>
+                <button type="button" class="btn btn-success" id="btnDescargarDesdeDetalle">
+                    <i class="fa fa-download"></i> Descargar Producto
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal de Descarga -->
@@ -578,37 +652,107 @@ $(document).ready(function() {
     });
 });
 
-// Event listener para botones de descarga
-$(document).on("click", ".btnDescargaDirecta", function(e) {
-    e.preventDefault();
-    
-    var id = $(this).data('id');
-    var codigo = $(this).data('codigo');
-    var descripcion = $(this).data('descripcion');
-    var cantidad = $(this).data('cantidad');
-    var despacho = $(this).data('despacho');
-    var origen = $(this).data('origen');
-    var transportador = $(this).data('transportador');
-    
-    // Guardar ID globalmente
-    stockSeleccionado = id;
-    
-    // Llenar modal
-    $("#descargaCodigo").text(codigo);
-    $("#descargaDescripcion").text(descripcion);
-    $("#descargaTransportador").text(transportador);
-    $("#descargaOrigen").text(origen);
-    $("#descargaDespacho").text(despacho);
-    $("#descargaCantidadDisponible").val(cantidad);
-    
-    // Configurar máximo en el input
-    $("#cantidadDescargar").attr("max", cantidad);
-    $("#cantidadDescargar").val("");
-    $("#observacionesDescarga").val("");
-    
-    // Mostrar modal
-    $("#modalDescargaDirecta").modal("show");
-});
+       // Event listener para botón de detalle
+       $(document).on("click", ".btnVerDetalle", function(e) {
+           e.preventDefault();
+           
+           var codigo = $(this).data("codigo");
+           var descripcion = $(this).data("descripcion");
+           var detalles = $(this).data("detalles");
+           var cronologia = $(this).data("cronologia");
+           var cantidadTotal = $(this).data("cantidad-total");
+           var transportador = $(this).data("transportador");
+           
+           console.log("🔍 DEBUG: Mostrando detalle del producto:", {
+               codigo, descripcion, cantidadTotal, transportador, detalles, cronologia
+           });
+           
+           // Llenar información básica
+           $("#detalleCodigoProducto").text(codigo);
+           $("#detalleDescripcionProducto").text(descripcion);
+           $("#detalleTransportador").text(transportador);
+           $("#detalleCantidadTotal").text(cantidadTotal);
+           
+           // Llenar tabla de despachos
+           var tablaHtml = "";
+           detalles.forEach(function(detalle, index) {
+               tablaHtml += `
+                   <tr>
+                       <td><span class="badge bg-blue">${detalle.orden_carga || (index + 1)}</span></td>
+                       <td><span class="label label-default">${detalle.numero_despacho}</span></td>
+                       <td><i class="fa fa-building"></i> ${detalle.sucursal_origen}</td>
+                       <td><span class="badge bg-green">${detalle.cantidad}</span></td>
+                       <td>${new Date(detalle.fecha_carga).toLocaleString()}</td>
+                   </tr>
+               `;
+           });
+           $("#detalleTablaDespachos").html(tablaHtml);
+           
+           // Llenar cronología
+           var cronologiaHtml = "";
+           cronologia.forEach(function(entrada, index) {
+               cronologiaHtml += `
+                   <div class="timeline-item">
+                       <div class="timeline-marker bg-blue"></div>
+                       <div class="timeline-content">
+                           <h6 class="timeline-title">Carga #${entrada.orden_carga || (index + 1)}</h6>
+                           <p><strong>Despacho:</strong> ${entrada.despacho}</p>
+                           <p><strong>Sucursal:</strong> ${entrada.sucursal_origen}</p>
+                           <p><strong>Cantidad:</strong> ${entrada.cantidad_agregada || entrada.total_cantidad}</p>
+                           <p><strong>Fecha:</strong> ${new Date(entrada.fecha).toLocaleString()}</p>
+                       </div>
+                   </div>
+               `;
+           });
+           $("#detalleCronologia").html(cronologiaHtml);
+           
+           // Mostrar modal
+           $("#modalDetalleProducto").modal("show");
+       });
+       
+       // Event listener para botón de descarga desde detalle
+       $(document).on("click", "#btnDescargarDesdeDetalle", function(e) {
+           e.preventDefault();
+           $("#modalDetalleProducto").modal("hide");
+           
+           // Buscar el botón de descarga correspondiente y hacer clic
+           var codigo = $("#detalleCodigoProducto").text();
+           $(".btnDescargaDirecta[data-codigo='" + codigo + "']").click();
+       });
+       
+       // Event listener para botones de descarga
+       $(document).on("click", ".btnDescargaDirecta", function(e) {
+           e.preventDefault();
+           
+           var codigo = $(this).data('codigo');
+           var descripcion = $(this).data('descripcion');
+           var cantidad = $(this).data('cantidad');
+           var transportador = $(this).data('transportador');
+           var detalles = $(this).data('detalles');
+           
+           console.log("🔍 DEBUG: Iniciando descarga consolidada:", {
+               codigo, descripcion, cantidad, transportador, detalles
+           });
+           
+           // Guardar código globalmente
+           stockSeleccionado = codigo;
+           
+           // Llenar modal
+           $("#descargaCodigo").text(codigo);
+           $("#descargaDescripcion").text(descripcion);
+           $("#descargaTransportador").text(transportador);
+           $("#descargaOrigen").text("Múltiples sucursales");
+           $("#descargaDespacho").text(detalles ? detalles.length + " despachos" : "N/A");
+           $("#descargaCantidadDisponible").val(cantidad);
+           
+           // Configurar máximo en el input
+           $("#cantidadDescargar").attr("max", cantidad);
+           $("#cantidadDescargar").val("");
+           $("#observacionesDescarga").val("");
+           
+           // Mostrar modal
+           $("#modalDescargaDirecta").modal("show");
+       });
 
 // Event listener para el formulario de descarga
 $(document).on("submit", "#formDescargaDirecta", function(e) {
@@ -630,7 +774,7 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
     // Enviar datos por AJAX
     var datos = new FormData();
     datos.append("descargarStockDirecto", true);
-    datos.append("idStockTransito", stockSeleccionado);
+    datos.append("codigoProducto", stockSeleccionado);
     datos.append("cantidadDescargar", cantidadDescargar);
     datos.append("observaciones", observaciones);
     

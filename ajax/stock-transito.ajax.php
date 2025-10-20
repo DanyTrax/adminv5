@@ -274,47 +274,30 @@ DESCARGAR STOCK DIRECTO
 if(isset($_POST["descargarStockDirecto"])) {
     
     try {
-        $idStockTransito = $_POST["idStockTransito"];
+        $codigoProducto = $_POST["codigoProducto"];
         $cantidadDescargar = intval($_POST["cantidadDescargar"]);
         $observaciones = $_POST["observaciones"] ?? "";
         
-        error_log("📥 DESCARGA DIRECTA - ID Stock: $idStockTransito, Cantidad: $cantidadDescargar");
+        error_log("📥 DESCARGA CONSOLIDADA - Código: $codigoProducto, Cantidad: $cantidadDescargar");
         error_log("📥 DATOS POST: " . json_encode($_POST));
         
-        // Obtener información del stock en tránsito
-        $stock = ControladorStockTransito::ctrObtenerStockDisponible($idStockTransito);
-        error_log("📦 STOCK OBTENIDO: " . json_encode($stock));
-        
-        if(!$stock) {
-            echo json_encode(["success" => false, "error" => "Producto no encontrado en stock en tránsito"]);
+        // Validar datos básicos
+        if(empty($codigoProducto) || $cantidadDescargar <= 0) {
+            error_log("❌ DATOS INVÁLIDOS - Código: $codigoProducto, Cantidad: $cantidadDescargar");
+            echo json_encode(["success" => false, "error" => "Datos inválidos"]);
             return;
         }
         
-        // Verificar que la cantidad sea válida
-        error_log("🔍 VALIDACIÓN CANTIDAD - Solicitada: $cantidadDescargar, Disponible: " . ($stock["cantidad_disponible"] ?? 'NULL'));
-        
-        if($cantidadDescargar <= 0) {
-            error_log("❌ CANTIDAD INVÁLIDA - Menor o igual a 0: $cantidadDescargar");
-            echo json_encode(["success" => false, "error" => "La cantidad debe ser mayor a 0"]);
-            return;
-        }
-        
-        if($cantidadDescargar > ($stock["cantidad_disponible"] ?? 0)) {
-            error_log("❌ CANTIDAD INVÁLIDA - Excede disponible: $cantidadDescargar > " . ($stock["cantidad_disponible"] ?? 0));
-            echo json_encode(["success" => false, "error" => "Cantidad excede la disponible (" . ($stock["cantidad_disponible"] ?? 0) . ")"]);
-            return;
-        }
-        
-        error_log("✅ CANTIDAD VÁLIDA - $cantidadDescargar unidades");
+        error_log("✅ DATOS VÁLIDOS - Código: $codigoProducto, Cantidad: $cantidadDescargar");
         
         // Obtener información de la sesión
         $usuarioId = $_SESSION["id"] ?? 1;
         $nombreUsuario = $_SESSION["nombre"] ?? "Usuario";
         $sucursalDestino = $_SESSION["sucursal"] ?? "Sucursal";
         
-        // Ejecutar descarga directa
-        $resultado = ControladorStockTransito::ctrDescargarStockDirecto(
-            $idStockTransito,
+        // Ejecutar descarga consolidada
+        $resultado = ControladorStockTransito::ctrDescargarStockConsolidado(
+            $codigoProducto,
             $cantidadDescargar,
             $usuarioId,
             $nombreUsuario,

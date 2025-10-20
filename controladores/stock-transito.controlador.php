@@ -516,10 +516,62 @@ class ControladorStockTransito {
             $stmt->execute($params);
             $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Agrupar por transportador
+            // Consolidar productos por transportador y código
             $transportadores = [];
             foreach($productos as $producto) {
-                $transportadores[$producto['transportador_id']][] = $producto;
+                $transportadorId = $producto['transportador_id'];
+                $codigoProducto = $producto['codigo_producto'];
+                
+                if(!isset($transportadores[$transportadorId])) {
+                    $transportadores[$transportadorId] = [];
+                }
+                
+                if(!isset($transportadores[$transportadorId][$codigoProducto])) {
+                    // Crear producto consolidado
+                    $transportadores[$transportadorId][$codigoProducto] = [
+                        'codigo_producto' => $producto['codigo_producto'],
+                        'descripcion_producto' => $producto['descripcion_producto'],
+                        'cantidad_total' => 0,
+                        'transportador_id' => $producto['transportador_id'],
+                        'nombre_transportador' => $producto['nombre_transportador'],
+                        'detalles' => [], // Array con detalles por despacho/sucursal
+                        'cronologia_completa' => []
+                    ];
+                }
+                
+                // Sumar cantidad
+                $transportadores[$transportadorId][$codigoProducto]['cantidad_total'] += $producto['cantidad_disponible'];
+                
+                // Agregar detalle
+                $transportadores[$transportadorId][$codigoProducto]['detalles'][] = [
+                    'id' => $producto['id'],
+                    'numero_despacho' => $producto['numero_despacho'],
+                    'sucursal_origen' => $producto['sucursal_origen'],
+                    'cantidad' => $producto['cantidad_disponible'],
+                    'orden_carga' => $producto['orden_carga'],
+                    'fecha_carga' => $producto['fecha_carga'],
+                    'cronologia_carga' => json_decode($producto['cronologia_carga'], true) ?: []
+                ];
+                
+                // Agregar a cronología completa (ordenada por orden_carga DESC para LIFO)
+                $cronologia = json_decode($producto['cronologia_carga'], true) ?: [];
+                foreach($cronologia as $entrada) {
+                    $transportadores[$transportadorId][$codigoProducto]['cronologia_completa'][] = $entrada;
+                }
+            }
+            
+            // Ordenar cronología por orden_carga DESC (LIFO)
+            foreach($transportadores as $transportadorId => $productos) {
+                foreach($productos as $codigo => $producto) {
+                    usort($transportadores[$transportadorId][$codigo]['cronologia_completa'], function($a, $b) {
+                        return ($b['orden_carga'] ?? 0) - ($a['orden_carga'] ?? 0);
+                    });
+                    
+                    // Ordenar detalles por orden_carga DESC también
+                    usort($transportadores[$transportadorId][$codigo]['detalles'], function($a, $b) {
+                        return ($b['orden_carga'] ?? 0) - ($a['orden_carga'] ?? 0);
+                    });
+                }
             }
             
             return $transportadores;
@@ -930,7 +982,170 @@ class ControladorStockTransito {
     }
 
     /*=============================================
-    DESCARGAR STOCK DIRECTO
+    DESCARGAR STOCK CONSOLIDADO (LIFO)
+    =============================================*/
+    static public function ctrDescargarStockConsolidado($codigoProducto, $cantidadDescargar, $usuarioId, $nombreUsuario, $sucursalDestino, $observaciones) {
+        
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../modelos/conexion.php";
+            
+            $conexionCentral = ConexionCentral::conectar();
+            $conexionLocal = Conexion::conectar();
+            
+            // Obtener todos los registros de stock en tránsito para este producto (orden LIFO)
+            $stmt = $conexionCentral->prepare("
+                SELECT st.*, d.numero_despacho, d.sucursal_origen
+                FROM stock_transito st
+                INNER JOIN despachos d ON st.id_despacho_origen = d.id
+                WHERE st.codigo_producto = ? 
+                AND st.cantidad_disponible > 0
+                ORDER BY st.orden_carga DESC
+            ");
+            $stmt->execute([$codigoProducto]);
+            $stocks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if(empty($stocks)) {
+                throw new Exception("No hay stock disponible para el producto $codigoProducto");
+            }
+            
+            // Calcular cantidad total disponible
+            $cantidadTotalDisponible = array_sum(array_column($stocks, 'cantidad_disponible'));
+            
+            if($cantidadDescargar > $cantidadTotalDisponible) {
+                throw new Exception("Cantidad solicitada ($cantidadDescargar) excede la disponible ($cantidadTotalDisponible)");
+            }
+            
+            // Iniciar transacciones
+            $conexionCentral->beginTransaction();
+            $conexionLocal->beginTransaction();
+            
+            try {
+                $cantidadRestante = $cantidadDescargar;
+                $despachosAfectados = [];
+                $productoInfo = $stocks[0]; // Información del producto
+                
+                // Procesar descarga en orden LIFO (Last In, First Out)
+                foreach($stocks as $stock) {
+                    if($cantidadRestante <= 0) break;
+                    
+                    $cantidadADescontar = min($cantidadRestante, $stock["cantidad_disponible"]);
+                    
+                    if($cantidadADescontar > 0) {
+                        // Actualizar stock en tránsito
+                        $nuevaCantidad = $stock["cantidad_disponible"] - $cantidadADescontar;
+                        $stmt = $conexionCentral->prepare("
+                            UPDATE stock_transito 
+                            SET cantidad_disponible = ?, fecha_actualizacion = NOW()
+                            WHERE id = ?
+                        ");
+                        $stmt->execute([$nuevaCantidad, $stock["id"]]);
+                        
+                        // Registrar despacho afectado
+                        $despachosAfectados[] = [
+                            'despacho' => $stock["numero_despacho"],
+                            'sucursal' => $stock["sucursal_origen"],
+                            'cantidad' => $cantidadADescontar,
+                            'id_despacho' => $stock["id_despacho_origen"]
+                        ];
+                        
+                        $cantidadRestante -= $cantidadADescontar;
+                    }
+                }
+                
+                // Incrementar stock local del producto existente
+                $stmt = $conexionLocal->prepare("
+                    UPDATE productos 
+                    SET stock = stock + ? 
+                    WHERE codigo = ?
+                ");
+                $stmt->execute([$cantidadDescargar, $codigoProducto]);
+                
+                // Verificar que el producto existe
+                if($stmt->rowCount() == 0) {
+                    throw new Exception("Producto con código $codigoProducto no existe en la base local");
+                }
+                
+                // Registrar en historial de tránsito
+                $despachosStr = implode(", ", array_map(function($d) {
+                    return "{$d['despacho']} ({$d['sucursal']}: {$d['cantidad']})";
+                }, $despachosAfectados));
+                
+                self::registrarHistoricoTransito(
+                    $codigoProducto,
+                    $productoInfo["descripcion_producto"],
+                    $cantidadDescargar,
+                    "descarga_consolidada",
+                    $productoInfo["transportador_id"],
+                    $productoInfo["nombre_transportador"],
+                    "Múltiples sucursales",
+                    $sucursalDestino,
+                    $productoInfo["usuario_origen"] ?? null,
+                    $productoInfo["nombre_usuario_origen"] ?? null,
+                    $usuarioId,
+                    $nombreUsuario,
+                    $despachosAfectados[0]["id_despacho"] ?? null,
+                    $despachosStr,
+                    null, // No hay solicitud de descarga
+                    $observaciones . " | Despachos: " . $despachosStr
+                );
+                
+                // Verificar si se completaron despachos
+                $despachosCompletados = [];
+                foreach($despachosAfectados as $despacho) {
+                    $stmt = $conexionCentral->prepare("
+                        SELECT SUM(cantidad_disponible) as total_restante
+                        FROM stock_transito 
+                        WHERE id_despacho_origen = ?
+                    ");
+                    $stmt->execute([$despacho['id_despacho']]);
+                    $totalRestante = $stmt->fetch()["total_restante"];
+                    
+                    if($totalRestante == 0) {
+                        // Marcar despacho como entregado
+                        $stmt = $conexionCentral->prepare("
+                            UPDATE despachos 
+                            SET estado = 'entregado', fecha_actualizacion = NOW()
+                            WHERE id = ?
+                        ");
+                        $stmt->execute([$despacho['id_despacho']]);
+                        $despachosCompletados[] = $despacho['despacho'];
+                    }
+                }
+                
+                // Confirmar transacciones
+                $conexionCentral->commit();
+                $conexionLocal->commit();
+                
+                $mensaje = "Se descargaron $cantidadDescargar unidades de $codigoProducto desde: $despachosStr";
+                if(!empty($despachosCompletados)) {
+                    $mensaje .= " | Despachos completados: " . implode(", ", $despachosCompletados);
+                }
+                
+                return [
+                    "success" => true,
+                    "message" => $mensaje,
+                    "despachos_afectados" => $despachosAfectados,
+                    "despachos_completados" => $despachosCompletados
+                ];
+                
+            } catch(Exception $e) {
+                $conexionCentral->rollBack();
+                $conexionLocal->rollBack();
+                throw $e;
+            }
+            
+        } catch(Exception $e) {
+            error_log("Error en ctrDescargarStockConsolidado: " . $e->getMessage());
+            return [
+                "success" => false,
+                "error" => $e->getMessage()
+            ];
+        }
+    }
+
+    /*=============================================
+    DESCARGAR STOCK DIRECTO (LEGACY)
     =============================================*/
     static public function ctrDescargarStockDirecto($idStockTransito, $cantidadDescargar, $usuarioId, $nombreUsuario, $sucursalDestino, $observaciones) {
         
