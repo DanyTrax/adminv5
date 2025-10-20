@@ -55,6 +55,11 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                                 </button>
                             </div>
                             <div class="col-md-6 text-right">
+                                <a href="consultar-usuarios-sucursales" class="btn btn-info btn-lg">
+                                    <i class="fa fa-search"></i> Consultar Usuarios de Sucursales
+                                </a>
+                            </div>
+                            <div class="col-md-6 text-right">
                                 <button class="btn btn-info" id="btnActualizarEstadisticas">
                                     <i class="fa fa-refresh"></i> Actualizar Estadísticas
                                 </button>

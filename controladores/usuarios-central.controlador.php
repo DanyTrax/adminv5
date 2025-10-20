@@ -238,5 +238,19 @@ class ControladorUsuariosCentral {
             ];
         }
     }
+
+    /*=============================================
+    CONSULTAR USUARIOS DE SUCURSALES
+    =============================================*/
+    static public function ctrConsultarUsuariosSucursales($sucursalId = null) {
+        return ModeloUsuariosCentral::mdlConsultarUsuariosSucursales($sucursalId);
+    }
+
+    /*=============================================
+    OBTENER USUARIOS DE LA SUCURSAL LOCAL
+    =============================================*/
+    static public function ctrObtenerUsuariosLocal() {
+        return ModeloUsuariosCentral::mdlObtenerUsuariosLocal();
+    }
 }
 ?>

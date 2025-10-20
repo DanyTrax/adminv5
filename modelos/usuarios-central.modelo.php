@@ -306,5 +306,119 @@ class ModeloUsuariosCentral {
             return "error";
         }
     }
+
+    /*=============================================
+    CONSULTAR USUARIOS DE SUCURSALES ESPECÍFICAS
+    =============================================*/
+    static public function mdlConsultarUsuariosSucursales($sucursalId = null) {
+        
+        try {
+            $conexionCentral = ConexionCentral::conectar();
+            $conexionLocal = Conexion::conectar();
+            
+            // Obtener información de la sucursal
+            $stmt = $conexionCentral->prepare("
+                SELECT id, nombre, codigo_sucursal, url_api, activo
+                FROM sucursales 
+                WHERE activo = 1
+                " . ($sucursalId ? "AND id = ?" : "") . "
+                ORDER BY nombre
+            ");
+            
+            if($sucursalId) {
+                $stmt->execute([$sucursalId]);
+            } else {
+                $stmt->execute();
+            }
+            
+            $sucursales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $resultado = [];
+            
+            foreach($sucursales as $sucursal) {
+                // Intentar conectar a la sucursal
+                try {
+                    $urlApi = rtrim($sucursal['url_api'], '/') . '/usuarios.ajax.php';
+                    
+                    // Hacer petición HTTP para obtener usuarios
+                    $context = stream_context_create([
+                        'http' => [
+                            'method' => 'POST',
+                            'header' => 'Content-Type: application/x-www-form-urlencoded',
+                            'content' => 'consultarUsuariosSucursal=true',
+                            'timeout' => 10
+                        ]
+                    ]);
+                    
+                    $response = @file_get_contents($urlApi, false, $context);
+                    
+                    if($response !== false) {
+                        $usuarios = json_decode($response, true);
+                        
+                        $resultado[] = [
+                            'sucursal' => $sucursal,
+                            'usuarios' => $usuarios ?: [],
+                            'estado_conexion' => 'conectado',
+                            'total_usuarios' => count($usuarios ?: [])
+                        ];
+                    } else {
+                        $resultado[] = [
+                            'sucursal' => $sucursal,
+                            'usuarios' => [],
+                            'estado_conexion' => 'error_conexion',
+                            'total_usuarios' => 0,
+                            'error' => 'No se pudo conectar a la sucursal'
+                        ];
+                    }
+                    
+                } catch(Exception $e) {
+                    $resultado[] = [
+                        'sucursal' => $sucursal,
+                        'usuarios' => [],
+                        'estado_conexion' => 'error',
+                        'total_usuarios' => 0,
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+            
+            return $resultado;
+            
+        } catch(Exception $e) {
+            error_log("Error en mdlConsultarUsuariosSucursales: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /*=============================================
+    OBTENER USUARIOS DE LA SUCURSAL LOCAL
+    =============================================*/
+    static public function mdlObtenerUsuariosLocal() {
+        
+        try {
+            $conexionLocal = Conexion::conectar();
+            
+            $stmt = $conexionLocal->prepare("
+                SELECT id, nombre, usuario, perfil, foto, estado, ultimo_login, fecha_creacion
+                FROM usuarios 
+                ORDER BY nombre
+            ");
+            
+            $stmt->execute();
+            $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Formatear datos
+            foreach($usuarios as &$usuario) {
+                $usuario['fecha_creacion_formateada'] = date('d/m/Y H:i', strtotime($usuario['fecha_creacion']));
+                $usuario['ultimo_login_formateado'] = $usuario['ultimo_login'] ? date('d/m/Y H:i', strtotime($usuario['ultimo_login'])) : 'Nunca';
+                $usuario['estado_texto'] = $usuario['estado'] ? 'Activo' : 'Inactivo';
+            }
+            
+            return $usuarios;
+            
+        } catch(Exception $e) {
+            error_log("Error en mdlObtenerUsuariosLocal: " . $e->getMessage());
+            return [];
+        }
+    }
 }
 ?>
