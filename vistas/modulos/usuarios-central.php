@@ -1,5 +1,5 @@
 <?php
-require_once "../controladores/usuarios-central.controlador.php";
+require_once __DIR__ . "/../../controladores/usuarios-central.controlador.php";
 
 // Obtener sucursales disponibles
 $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
