@@ -441,6 +441,126 @@ class ControladorStockTransito {
     }
 
     /*=============================================
+    MOSTRAR STOCK POR TRANSPORTADOR
+    =============================================*/
+    static public function ctrMostrarStockPorTransportador($transportadorId) {
+        
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            
+            $conexion = ConexionCentral::conectar();
+            
+            $sql = "
+                SELECT 
+                    st.*,
+                    d.numero_despacho,
+                    d.sucursal_origen,
+                    d.fecha_creacion,
+                    d.estado as estado_despacho
+                FROM stock_transito st
+                INNER JOIN despachos d ON st.id_despacho_origen = d.id
+                WHERE st.transportador_id = ?
+                AND st.cantidad_disponible > 0
+                ORDER BY d.fecha_creacion DESC, st.codigo_producto ASC
+            ";
+            
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute([$transportadorId]);
+            $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Agrupar por despacho
+            $despachos = [];
+            foreach($productos as $producto) {
+                $despachos[$producto['numero_despacho']][] = $producto;
+            }
+            
+            return $despachos;
+            
+        } catch(Exception $e) {
+            error_log("Error en ctrMostrarStockPorTransportador: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /*=============================================
+    MOSTRAR STOCK DISPONIBLE PARA USUARIOS
+    =============================================*/
+    static public function ctrMostrarStockDisponibleUsuarios($filtroTransportador = null) {
+        
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            
+            $conexion = ConexionCentral::conectar();
+            
+            $sql = "
+                SELECT 
+                    st.*,
+                    d.numero_despacho,
+                    d.sucursal_origen,
+                    st.transportador_id,
+                    st.nombre_transportador
+                FROM stock_transito st
+                INNER JOIN despachos d ON st.id_despacho_origen = d.id
+                WHERE st.cantidad_disponible > 0
+            ";
+            
+            $params = [];
+            if($filtroTransportador) {
+                $sql .= " AND st.transportador_id = ?";
+                $params[] = $filtroTransportador;
+            }
+            
+            $sql .= " ORDER BY st.transportador_id, st.codigo_producto ASC";
+            
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute($params);
+            $productos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Agrupar por transportador
+            $transportadores = [];
+            foreach($productos as $producto) {
+                $transportadores[$producto['transportador_id']][] = $producto;
+            }
+            
+            return $transportadores;
+            
+        } catch(Exception $e) {
+            error_log("Error en ctrMostrarStockDisponibleUsuarios: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /*=============================================
+    OBTENER LISTA DE TRANSPORTADORES
+    =============================================*/
+    static public function ctrObtenerTransportadores() {
+        
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            
+            $conexion = ConexionCentral::conectar();
+            
+            $sql = "
+                SELECT DISTINCT 
+                    transportador_id,
+                    nombre_transportador
+                FROM stock_transito 
+                WHERE cantidad_disponible > 0
+                AND transportador_id IS NOT NULL
+                ORDER BY nombre_transportador ASC
+            ";
+            
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch(Exception $e) {
+            error_log("Error en ctrObtenerTransportadores: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /*=============================================
     VERIFICAR SOLICITUDES PENDIENTES
     =============================================*/
     static public function ctrVerificarSolicitudesPendientes($codigoProducto, $transportadorId) {
