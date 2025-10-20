@@ -148,40 +148,74 @@ if(isset($_POST["aceptarDespacho"])){
                 throw new Exception("Error actualizando estado del despacho");
             }
             
-            // 8. Agregar productos al stock en tránsito
+            // 8. Agregar productos al stock en tránsito con cronología
             Logger::info("Iniciando agregado a stock en tránsito para " . count($productosDespacho) . " productos", "despachos.ajax.php", "aceptarDespacho");
+            
+            // Obtener el siguiente orden de carga para este transportador
+            $stmtOrden = $conexionCentral->prepare("
+                SELECT COALESCE(MAX(orden_carga), 0) + 1 as siguiente_orden
+                FROM stock_transito 
+                WHERE transportador_id = ?
+            ");
+            $stmtOrden->execute([$_SESSION["id"]]);
+            $siguienteOrden = $stmtOrden->fetch()['siguiente_orden'];
+            
+            // Crear cronología de esta carga
+            $cronologiaCarga = json_encode([
+                'fecha' => date('Y-m-d H:i:s'),
+                'despacho' => $despacho["numero_despacho"],
+                'sucursal_origen' => $despacho["sucursal_origen"],
+                'productos' => count($productosDespacho),
+                'total_cantidad' => array_sum(array_column($productosDespacho, 'cantidad'))
+            ]);
+            
             foreach($productosDespacho as $producto) {
                 Logger::stock("AGREGAR_TRANSITO", $producto["codigo"], $producto["cantidad"], "despachos.ajax.php", "aceptarDespacho");
+                
                 // Verificar si el producto ya existe en stock_transito
                 $stmtCheck = $conexionCentral->prepare("
-                    SELECT id, cantidad_disponible 
+                    SELECT id, cantidad_disponible, orden_carga, cronologia_carga
                     FROM stock_transito 
-                    WHERE codigo_producto = ? AND transportador_id = ? AND sucursal_origen = ?
+                    WHERE codigo_producto = ? AND transportador_id = ?
+                    ORDER BY orden_carga DESC
+                    LIMIT 1
                 ");
                 
                 $stmtCheck->execute([
                     $producto["codigo"],
-                    $_SESSION["id"],
-                    $despacho["sucursal_origen"]
+                    $_SESSION["id"]
                 ]);
                 
                 $productoExistente = $stmtCheck->fetch();
                 
                 if($productoExistente) {
-                    // Si existe, sumar a la cantidad existente
+                    // Si existe, actualizar cronología y cantidad
+                    $cronologiaActual = json_decode($productoExistente['cronologia_carga'], true) ?: [];
+                    $cronologiaActual[] = [
+                        'fecha' => date('Y-m-d H:i:s'),
+                        'despacho' => $despacho["numero_despacho"],
+                        'sucursal_origen' => $despacho["sucursal_origen"],
+                        'cantidad_agregada' => $producto["cantidad"],
+                        'orden_carga' => $siguienteOrden
+                    ];
+                    
                     $stmtUpdate = $conexionCentral->prepare("
                         UPDATE stock_transito 
                         SET cantidad_disponible = cantidad_disponible + ?,
+                            cronologia_carga = ?,
                             fecha_actualizacion = NOW()
                         WHERE id = ?
                     ");
                     
                     $stmtUpdate->execute([
                         $producto["cantidad"],
+                        json_encode($cronologiaActual),
                         $productoExistente["id"]
                     ]);
+                    
+                    Logger::info("✅ Stock actualizado - Código: {$producto['codigo']}, Cantidad agregada: {$producto['cantidad']}, Orden: $siguienteOrden", "despachos.ajax.php", "aceptarDespacho");
                 } else {
-                    // Si no existe, crear nuevo registro
+                    // Si no existe, crear nuevo registro con cronología
                     $stmtInsert = $conexionCentral->prepare("
                         INSERT INTO stock_transito (
                             codigo_producto, 
@@ -192,8 +226,12 @@ if(isset($_POST["aceptarDespacho"])){
                             transportador_id, 
                             nombre_transportador,
                             sucursal_origen,
+                            orden_carga,
+                            cronologia_carga,
+                            sucursal_carga,
+                            fecha_carga_original,
                             fecha_carga
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                     ");
                     
                     $stmtInsert->execute([
@@ -204,10 +242,13 @@ if(isset($_POST["aceptarDespacho"])){
                         $idDespacho,
                         $_SESSION["id"],
                         $_SESSION["nombre"],
+                        $despacho["sucursal_origen"],
+                        $siguienteOrden,
+                        $cronologiaCarga,
                         $despacho["sucursal_origen"]
                     ]);
                     
-                    Logger::info("✅ Nuevo stock creado - Código: {$producto['codigo']}, Cantidad: {$producto['cantidad']}, Despacho: {$despacho['numero_despacho']}", "despachos.ajax.php", "aceptarDespacho");
+                    Logger::info("✅ Nuevo stock creado - Código: {$producto['codigo']}, Cantidad: {$producto['cantidad']}, Despacho: {$despacho['numero_despacho']}, Orden: $siguienteOrden", "despachos.ajax.php", "aceptarDespacho");
                 }
             }
             
