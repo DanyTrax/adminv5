@@ -26,28 +26,32 @@ class AjaxTablaUsuariosCentral {
             
             $datosJson = '{"data": [';
             
-            foreach ($usuarios as $key => $value) {
+            if(!empty($usuarios)) {
+                foreach ($usuarios as $key => $value) {
+                    
+                    $fechaCreacion = date('d/m/Y H:i', strtotime($value["fecha_creacion"]));
+                    
+                    $estadoSincronizacion = $this->formatearEstadoSincronizacion($value["sincronizado"]);
+                    
+                    $botones = $this->generarBotonesAccion($value);
+                    
+                    $datosJson .= '[
+                        "' . ($key + 1) . '",
+                        "' . htmlspecialchars($value["usuario"]) . '",
+                        "' . htmlspecialchars($value["nombre"]) . '",
+                        "' . $this->formatearPerfil($value["perfil"]) . '",
+                        "' . htmlspecialchars($value["nombre_sucursal"] ?? 'N/A') . '",
+                        "' . htmlspecialchars($value["telefono"] ?? 'N/A') . '",
+                        "' . $estadoSincronizacion . '",
+                        "' . $fechaCreacion . '",
+                        "' . $botones . '"
+                    ],';
+                }
                 
-                $fechaCreacion = date('d/m/Y H:i', strtotime($value["fecha_creacion"]));
-                
-                $estadoSincronizacion = $this->formatearEstadoSincronizacion($value["sincronizado"]);
-                
-                $botones = $this->generarBotonesAccion($value);
-                
-                $datosJson .= '[
-                    "' . ($key + 1) . '",
-                    "' . htmlspecialchars($value["usuario"]) . '",
-                    "' . htmlspecialchars($value["nombre"]) . '",
-                    "' . $this->formatearPerfil($value["perfil"]) . '",
-                    "' . htmlspecialchars($value["nombre_sucursal"] ?? 'N/A') . '",
-                    "' . htmlspecialchars($value["telefono"] ?? 'N/A') . '",
-                    "' . $estadoSincronizacion . '",
-                    "' . $fechaCreacion . '",
-                    "' . $botones . '"
-                ],';
+                // Eliminar la última coma
+                $datosJson = rtrim($datosJson, ',');
             }
             
-            $datosJson = substr($datosJson, 0, -1);
             $datosJson .= ']}';
             
             echo $datosJson;
