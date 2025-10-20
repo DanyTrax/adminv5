@@ -118,6 +118,28 @@ $(document).ready(function() {
         limpiarModalCantidad();
     });
 
+    // Event listener para cambiar cantidades en la lista
+    $(document).on('change', '.cantidad-producto', function() {
+        var index = $(this).data('index');
+        var nuevaCantidad = parseInt($(this).val());
+        
+        if(isNaN(nuevaCantidad) || nuevaCantidad < 1) {
+            $(this).val(productosSeleccionados[index].cantidad);
+            return;
+        }
+        
+        if(nuevaCantidad > 9999) {
+            $(this).val(9999);
+            nuevaCantidad = 9999;
+        }
+        
+        productosSeleccionados[index].cantidad = nuevaCantidad;
+        actualizarContadorProductos();
+    });
+
+    // Inicializar estado de botones
+    actualizarEstadoBotonesAgregar();
+
 });
 
 /*=============================================
@@ -309,30 +331,29 @@ function agregarProductoALista() {
     // Verificar si ya está en la lista
     var yaSeleccionado = productosSeleccionados.find(p => p.codigo === producto.codigo);
     if(yaSeleccionado) {
-        mostrarAlerta('warning', 'Este producto ya está en la lista. Si desea cambiar la cantidad, elimínelo primero.');
-        return;
+        // Si ya está, actualizar la cantidad
+        yaSeleccionado.cantidad = cantidad;
+        yaSeleccionado.observacion = observacion;
+    } else {
+        // Si no está, agregar nuevo producto
+        var nuevoProducto = {
+            id: producto.id,
+            codigo: producto.codigo,
+            descripcion: producto.descripcion,
+            cantidad: cantidad,
+            observacion: observacion
+        };
+        productosSeleccionados.push(nuevoProducto);
     }
-
-    // Agregar producto
-    var nuevoProducto = {
-        id: producto.id,
-        codigo: producto.codigo,
-        descripcion: producto.descripcion,
-        cantidad: cantidad,
-        observacion: observacion
-    };
-
-    productosSeleccionados.push(nuevoProducto);
 
     // Actualizar interfaz
     actualizarListaProductosSeleccionados();
     actualizarContadorProductos();
     habilitarBotonCrear();
+    actualizarEstadoBotonesAgregar();
 
     // Cerrar modal
     $('#modalCantidadProducto').modal('hide');
-
-    mostrarAlerta('success', 'Producto agregado: ' + producto.codigo + ' (Cantidad: ' + cantidad + ')');
 }
 
 /*=============================================
@@ -433,7 +454,9 @@ function actualizarListaProductosSeleccionados() {
                    (producto.observacion ? '<br><em class="text-info">' + producto.observacion + '</em>' : '') +
                    '</td>' +
                    '<td class="text-center">' +
-                   '<span class="badge bg-blue">' + producto.cantidad + '</span>' +
+                   '<input type="number" class="form-control input-sm cantidad-producto" ' +
+                   'value="' + producto.cantidad + '" min="1" max="9999" ' +
+                   'data-index="' + index + '" style="width: 80px; display: inline-block;">' +
                    '</td>' +
                    '<td class="text-center">' +
                    '<button class="btn btn-danger btn-xs" onclick="eliminarProducto(' + index + ')" title="Eliminar">' +
@@ -457,8 +480,7 @@ function eliminarProducto(index) {
     actualizarListaProductosSeleccionados();
     actualizarContadorProductos();
     habilitarBotonCrear();
-    
-    mostrarAlerta('info', 'Producto eliminado de la solicitud');
+    actualizarEstadoBotonesAgregar();
 }
 
 /*=============================================
@@ -550,6 +572,30 @@ $(document).on('input', '#cantidadProductoModal', function() {
         $(this).val(9999);
     }
 });
+
+/*=============================================
+ACTUALIZAR ESTADO DE BOTONES AGREGAR
+=============================================*/
+function actualizarEstadoBotonesAgregar() {
+    $('.btnAgregarProducto').each(function() {
+        var codigoProducto = $(this).attr('codigoProducto');
+        var yaSeleccionado = productosSeleccionados.find(p => p.codigo === codigoProducto);
+        
+        if(yaSeleccionado) {
+            $(this).prop('disabled', true)
+                   .removeClass('btn-success')
+                   .addClass('btn-default')
+                   .html('<i class="fa fa-check"></i> Agregado')
+                   .attr('title', 'Producto ya agregado - Use la lista para cambiar cantidad');
+        } else {
+            $(this).prop('disabled', false)
+                   .removeClass('btn-default')
+                   .addClass('btn-success')
+                   .html('<i class="fa fa-plus"></i> Agregar')
+                   .attr('title', 'Agregar producto a la solicitud');
+        }
+    });
+}
 
 $(document).on('keydown', '#cantidadProductoModal', function(e) {
     if ($.inArray(e.keyCode, [46, 8, 9, 27, 13]) !== -1 ||
