@@ -52,18 +52,28 @@ foreach($transportadores as $productos) {
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Buscar Producto:</label>
-                                    <input type="text" class="form-control" id="buscarProducto" placeholder="Código o descripción...">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="buscarProducto" placeholder="Código o descripción...">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" type="button" onclick="limpiarBusqueda()">
+                                                <i class="fa fa-times"></i>
+                                            </button>
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="fa fa-info-circle"></i> Búsqueda en tiempo real
+                                    </small>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label>&nbsp;</label><br>
-                                    <button class="btn btn-primary" onclick="aplicarFiltros()">
-                                        <i class="fa fa-search"></i> Buscar
-                                    </button>
                                     <button class="btn btn-default" onclick="limpiarFiltros()">
-                                        <i class="fa fa-refresh"></i> Limpiar
+                                        <i class="fa fa-refresh"></i> Limpiar Filtros
                                     </button>
+                                    <span id="resultadosInfo" class="label label-info" style="margin-left: 10px; display: none;">
+                                        <i class="fa fa-info-circle"></i> <span id="resultadosTexto">0 productos</span>
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -126,8 +136,10 @@ foreach($transportadores as $productos) {
                         </div>
                     </div>
                 <?php else: ?>
-                    <!-- Lista de Transportadores -->
-                    <?php foreach($transportadores as $transportadorId => $productos): ?>
+                    <!-- Contenedor para resultados AJAX -->
+                    <div id="contenedorProductos">
+                        <!-- Lista de Transportadores -->
+                        <?php foreach($transportadores as $transportadorId => $productos): ?>
                         <?php 
                         $primerProducto = $productos[0];
                         $totalCantidad = array_sum(array_column($productos, 'cantidad_disponible'));
@@ -241,7 +253,8 @@ foreach($transportadores as $productos) {
                                 </div>
                             </div>
                         </div>
-                    <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -433,63 +446,137 @@ foreach($transportadores as $productos) {
 <script>
 // Variable global para almacenar el ID del stock seleccionado
 var stockSeleccionado = null;
+var timeoutBusqueda = null;
 
 // Función para filtrar por transportador
 function filtrarPorTransportador() {
     var transportadorId = document.getElementById('filtroTransportador').value;
-    var url = new URL(window.location);
+    var terminoBusqueda = document.getElementById('buscarProducto').value;
     
-    if(transportadorId) {
-        url.searchParams.set('transportador', transportadorId);
-    } else {
-        url.searchParams.delete('transportador');
-    }
-    
-    window.location.href = url.toString();
+    // Realizar búsqueda AJAX
+    buscarProductos(terminoBusqueda, transportadorId);
 }
 
-// Función para aplicar filtros
-function aplicarFiltros() {
+// Función para limpiar búsqueda
+function limpiarBusqueda() {
+    document.getElementById('buscarProducto').value = '';
     var transportadorId = document.getElementById('filtroTransportador').value;
-    var buscarProducto = document.getElementById('buscarProducto').value.toLowerCase();
-    
-    // Filtrar por transportador
-    if(transportadorId) {
-        filtrarPorTransportador();
-        return;
-    }
-    
-    // Filtrar por búsqueda de producto
-    if(buscarProducto) {
-        var productos = document.querySelectorAll('.producto-row');
-        productos.forEach(function(producto) {
-            var codigo = producto.getAttribute('data-codigo');
-            var descripcion = producto.getAttribute('data-descripcion');
-            
-            if(codigo.includes(buscarProducto) || descripcion.includes(buscarProducto)) {
-                producto.style.display = 'table-row';
-            } else {
-                producto.style.display = 'none';
-            }
-        });
-    }
+    buscarProductos('', transportadorId);
 }
 
 // Función para limpiar filtros
 function limpiarFiltros() {
     document.getElementById('filtroTransportador').value = '';
     document.getElementById('buscarProducto').value = '';
+    buscarProductos('', '');
+}
+
+// Función principal de búsqueda AJAX
+function buscarProductos(termino, transportadorId) {
+    // Mostrar indicador de carga
+    mostrarCargando();
     
-    var productos = document.querySelectorAll('.producto-row');
-    productos.forEach(function(producto) {
-        producto.style.display = 'table-row';
+    // Realizar petición AJAX
+    $.ajax({
+        url: "ajax/buscar-stock-transito.ajax.php",
+        method: "POST",
+        data: {
+            buscarProductos: true,
+            terminoBusqueda: termino,
+            filtroTransportador: transportadorId
+        },
+        success: function(respuesta) {
+            try {
+                var datos = JSON.parse(respuesta);
+                
+                if(datos.success) {
+                    // Actualizar contenedor de productos
+                    $("#contenedorProductos").html(datos.html);
+                    
+                    // Actualizar información de resultados
+                    actualizarInfoResultados(datos.totalProductos, datos.totalTransportadores);
+                    
+                    // Reconfigurar eventos de descarga
+                    configurarEventosDescarga();
+                } else {
+                    mostrarError("Error en la búsqueda: " + datos.error);
+                }
+            } catch(e) {
+                mostrarError("Error procesando respuesta del servidor");
+            }
+        },
+        error: function() {
+            mostrarError("Error de conexión con el servidor");
+        }
+    });
+}
+
+// Función para mostrar indicador de carga
+function mostrarCargando() {
+    $("#contenedorProductos").html(`
+        <div class="box box-info">
+            <div class="box-body text-center">
+                <i class="fa fa-spinner fa-spin fa-2x text-info"></i>
+                <h4 class="text-info">Buscando productos...</h4>
+            </div>
+        </div>
+    `);
+}
+
+// Función para mostrar error
+function mostrarError(mensaje) {
+    $("#contenedorProductos").html(`
+        <div class="box box-danger">
+            <div class="box-body text-center">
+                <i class="fa fa-exclamation-triangle fa-2x text-danger"></i>
+                <h4 class="text-danger">Error</h4>
+                <p>${mensaje}</p>
+            </div>
+        </div>
+    `);
+}
+
+// Función para actualizar información de resultados
+function actualizarInfoResultados(totalProductos, totalTransportadores) {
+    if(totalProductos > 0) {
+        $("#resultadosTexto").text(`${totalProductos} productos en ${totalTransportadores} transportador${totalTransportadores > 1 ? 'es' : ''}`);
+        $("#resultadosInfo").show();
+    } else {
+        $("#resultadosInfo").hide();
+    }
+}
+
+// Función para configurar eventos de descarga
+function configurarEventosDescarga() {
+    // Los eventos ya están configurados con $(document).on()
+    // Esta función se puede usar para reconfigurar si es necesario
+}
+
+// Event listener para búsqueda en tiempo real
+$(document).ready(function() {
+    // Búsqueda en tiempo real con debounce
+    $("#buscarProducto").on("input", function() {
+        var termino = $(this).val();
+        var transportadorId = $("#filtroTransportador").val();
+        
+        // Limpiar timeout anterior
+        if(timeoutBusqueda) {
+            clearTimeout(timeoutBusqueda);
+        }
+        
+        // Establecer nuevo timeout (500ms de delay)
+        timeoutBusqueda = setTimeout(function() {
+            buscarProductos(termino, transportadorId);
+        }, 500);
     });
     
-    // Recargar página sin filtros
-    var url = new URL(window.location);
-    url.searchParams.delete('transportador');
-    window.location.href = url.toString();
-}
+    // Event listener para cambio de transportador
+    $("#filtroTransportador").on("change", function() {
+        var transportadorId = $(this).val();
+        var termino = $("#buscarProducto").val();
+        buscarProductos(termino, transportadorId);
+    });
+});
 
 // Event listener para botones de descarga
 $(document).on("click", ".btnDescargaDirecta", function(e) {
