@@ -86,7 +86,10 @@ class ModeloUsuariosCentral {
         
         try {
             $stmt = ConexionCentral::conectar()->prepare("
-                SELECT id, nombre, codigo_sucursal, activo
+                SELECT 
+                    id, nombre, codigo_sucursal, activo,
+                    direccion, telefono, email, url_base, url_api,
+                    es_principal, fecha_registro, fecha_actualizacion
                 FROM sucursales 
                 WHERE activo = 1 
                 ORDER BY nombre
@@ -316,9 +319,11 @@ class ModeloUsuariosCentral {
             $conexionCentral = ConexionCentral::conectar();
             $conexionLocal = Conexion::conectar();
             
-            // Obtener información de la sucursal
+            // Obtener información de la sucursal (incluyendo campos de conexión)
             $stmt = $conexionCentral->prepare("
-                SELECT id, nombre, codigo_sucursal, url_api, activo
+                SELECT 
+                    id, nombre, codigo_sucursal, url_api, activo,
+                    usuario_bd, password_bd, nombre_bd, host_bd, puerto_bd
                 FROM sucursales 
                 WHERE activo = 1
                 " . ($sucursalId ? "AND id = ?" : "") . "
@@ -335,50 +340,16 @@ class ModeloUsuariosCentral {
             $resultado = [];
             
             foreach($sucursales as $sucursal) {
-                // Intentar conectar a la sucursal
-                try {
-                    $urlApi = rtrim($sucursal['url_api'], '/') . '/usuarios.ajax.php';
-                    
-                    // Hacer petición HTTP para obtener usuarios
-                    $context = stream_context_create([
-                        'http' => [
-                            'method' => 'POST',
-                            'header' => 'Content-Type: application/x-www-form-urlencoded',
-                            'content' => 'consultarUsuariosSucursal=true',
-                            'timeout' => 10
-                        ]
-                    ]);
-                    
-                    $response = @file_get_contents($urlApi, false, $context);
-                    
-                    if($response !== false) {
-                        $usuarios = json_decode($response, true);
-                        
-                        $resultado[] = [
-                            'sucursal' => $sucursal,
-                            'usuarios' => $usuarios ?: [],
-                            'estado_conexion' => 'conectado',
-                            'total_usuarios' => count($usuarios ?: [])
-                        ];
-                    } else {
-                        $resultado[] = [
-                            'sucursal' => $sucursal,
-                            'usuarios' => [],
-                            'estado_conexion' => 'error_conexion',
-                            'total_usuarios' => 0,
-                            'error' => 'No se pudo conectar a la sucursal'
-                        ];
-                    }
-                    
-                } catch(Exception $e) {
-                    $resultado[] = [
-                        'sucursal' => $sucursal,
-                        'usuarios' => [],
-                        'estado_conexion' => 'error',
-                        'total_usuarios' => 0,
-                        'error' => $e->getMessage()
-                    ];
-                }
+                // Intentar conectar directamente a la BD de la sucursal
+                $usuariosSucursal = self::mdlConsultarUsuariosSucursalRemota($sucursal);
+                
+                $resultado[] = [
+                    'sucursal' => $sucursal,
+                    'usuarios' => $usuariosSucursal['usuarios'],
+                    'estado_conexion' => $usuariosSucursal['estado'],
+                    'total_usuarios' => $usuariosSucursal['total'],
+                    'error' => $usuariosSucursal['error']
+                ];
             }
             
             return $resultado;
@@ -386,6 +357,59 @@ class ModeloUsuariosCentral {
         } catch(Exception $e) {
             error_log("Error en mdlConsultarUsuariosSucursales: " . $e->getMessage());
             return [];
+        }
+    }
+
+    /*=============================================
+    CONSULTAR USUARIOS DE SUCURSAL REMOTA VIA BD
+    =============================================*/
+    static public function mdlConsultarUsuariosSucursalRemota($sucursal) {
+        
+        try {
+            // Crear conexión directa a la BD de la sucursal
+            $dsn = "mysql:host=" . $sucursal['host_bd'] . ";port=" . $sucursal['puerto_bd'] . ";dbname=" . $sucursal['nombre_bd'] . ";charset=utf8";
+            
+            $conexionRemota = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd'], [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+            ]);
+            
+            // Consultar usuarios de la sucursal remota
+            $stmt = $conexionRemota->prepare("
+                SELECT 
+                    id, nombre, usuario, perfil, foto, estado, ultimo_login, fecha, empresa, telefono, direccion
+                FROM usuarios 
+                ORDER BY nombre
+            ");
+            
+            $stmt->execute();
+            $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Formatear datos
+            foreach($usuarios as &$usuario) {
+                $usuario['fecha_creacion_formateada'] = date('d/m/Y H:i', strtotime($usuario['fecha']));
+                $usuario['ultimo_login_formateado'] = $usuario['ultimo_login'] && $usuario['ultimo_login'] != '0000-00-00 00:00:00' 
+                    ? date('d/m/Y H:i', strtotime($usuario['ultimo_login'])) 
+                    : 'Nunca';
+                $usuario['estado_texto'] = $usuario['estado'] ? 'Activo' : 'Inactivo';
+                $usuario['empresa_actual'] = $usuario['empresa'] ?: 'Sin empresa asignada';
+            }
+            
+            return [
+                'usuarios' => $usuarios,
+                'total' => count($usuarios),
+                'estado' => 'conectado',
+                'error' => null
+            ];
+            
+        } catch(Exception $e) {
+            error_log("Error conectando a sucursal {$sucursal['nombre']}: " . $e->getMessage());
+            return [
+                'usuarios' => [],
+                'total' => 0,
+                'estado' => 'error',
+                'error' => $e->getMessage()
+            ];
         }
     }
 
