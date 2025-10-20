@@ -2,8 +2,8 @@
 
 session_start();
 
-require_once "../controladores/productos.controlador.php";
-require_once "../modelos/productos.modelo.php";
+require_once __DIR__ . "/../controladores/productos.controlador.php";
+require_once __DIR__ . "/../modelos/productos.modelo.php";
 
 class AjaxProductosDespacho {
 
@@ -13,7 +13,7 @@ OBTENER INVENTARIO LOCAL PARA DESPACHO - CORREGIDO
 public function ajaxObtenerInventarioLocal() {
     
     try {
-        require_once "../modelos/conexion.php";
+        require_once __DIR__ . "/../modelos/conexion.php";
         
         $stmt = Conexion::conectar()->prepare("
             SELECT 
@@ -54,7 +54,7 @@ public function ajaxBuscarSolicitudes() {
         $termino = $_POST["termino"];
         
         try {
-            require_once "../api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             
             $stmt = ConexionCentral::conectar()->prepare("
                 SELECT 
@@ -107,7 +107,7 @@ public function ajaxBuscarSolicitudes() {
             $idSolicitud = intval($_POST["idSolicitud"]);
             
             try {
-                require_once "../api-transferencias/conexion-central.php";
+                require_once __DIR__ . "/../api-transferencias/conexion-central.php";
                 
                 $stmt = ConexionCentral::conectar()->prepare("
                     SELECT * FROM solicitudes_stock 
@@ -151,7 +151,7 @@ public function ajaxBuscarSolicitudes() {
             $cantidad = intval($_POST["cantidad"]);
             
             try {
-                require_once "../modelos/conexion.php";
+                require_once __DIR__ . "/../modelos/conexion.php";
                 
                 $stmt = Conexion::conectar()->prepare("
                     SELECT stock FROM productos 
@@ -196,7 +196,7 @@ public function ajaxBuscarSolicitudes() {
     public function ajaxObtenerStockActual() {
         
         try {
-            require_once "../modelos/conexion.php";
+            require_once __DIR__ . "/../modelos/conexion.php";
             
             $codigos = $_POST["codigos"];
             
