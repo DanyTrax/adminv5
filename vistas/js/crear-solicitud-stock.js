@@ -78,7 +78,11 @@ $(document).ready(function() {
         // ✅ VALIDAR TIPO DE SOLICITUD OBLIGATORIO
         if(!$('input[name="tipo_solicitud"]:checked').length) {
             $('#errorTipoSolicitud').show();
-            mostrarAlerta('error', 'Debe seleccionar un tipo de solicitud');
+            mostrarModalValidacion(
+                'Tipo de Solicitud Requerido', 
+                'Debe seleccionar un tipo de solicitud antes de continuar. Por favor, elija entre "Por Stock" o "Por Remisión".', 
+                'warning'
+            );
             $('html, body').animate({
                 scrollTop: $('input[name="tipo_solicitud"]').first().offset().top - 100
             }, 500);
@@ -87,7 +91,11 @@ $(document).ready(function() {
 
         // ✅ VALIDAR QUE HAYA PRODUCTOS
         if(productosSeleccionados.length === 0) {
-            mostrarAlerta('warning', 'Debe seleccionar al menos un producto');
+            mostrarModalValidacion(
+                'Productos Requeridos', 
+                'Debe agregar al menos un producto a la solicitud antes de continuar.', 
+                'warning'
+            );
             return false;
         }
 
@@ -150,12 +158,20 @@ function crearSolicitud() {
     // ✅ VALIDAR ANTES DE ENVIAR
     if(!$('input[name="tipo_solicitud"]:checked').length) {
         $('#errorTipoSolicitud').show();
-        mostrarAlerta('error', 'Debe seleccionar un tipo de solicitud');
+        mostrarModalValidacion(
+            'Tipo de Solicitud Requerido', 
+            'Debe seleccionar un tipo de solicitud antes de continuar. Por favor, elija entre "Por Stock" o "Por Remisión".', 
+            'warning'
+        );
         return false;
     }
 
     if(productosSeleccionados.length === 0) {
-        mostrarAlerta('error', 'Debe agregar al menos un producto');
+        mostrarModalValidacion(
+            'Productos Requeridos', 
+            'Debe agregar al menos un producto a la solicitud antes de continuar.', 
+            'warning'
+        );
         return false;
     }
     
@@ -559,6 +575,63 @@ function mostrarAlerta(tipo, mensaje) {
     setTimeout(function() {
         $('.alert').fadeOut();
     }, 5000);
+}
+
+/*=============================================
+MOSTRAR MODAL DE VALIDACIÓN
+=============================================*/
+function mostrarModalValidacion(titulo, mensaje, tipo = 'warning') {
+    var icono = 'fa-warning';
+    var claseBoton = 'btn-warning';
+    
+    switch(tipo) {
+        case 'error':
+            icono = 'fa-times-circle';
+            claseBoton = 'btn-danger';
+            break;
+        case 'info':
+            icono = 'fa-info-circle';
+            claseBoton = 'btn-info';
+            break;
+        case 'success':
+            icono = 'fa-check-circle';
+            claseBoton = 'btn-success';
+            break;
+    }
+    
+    var modalHtml = `
+        <div class="modal fade" id="modalValidacion" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header ${tipo === 'error' ? 'bg-danger' : tipo === 'success' ? 'bg-success' : 'bg-warning'}">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title">
+                            <i class="fa ${icono}"></i> ${titulo}
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>${mensaje}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn ${claseBoton}" data-dismiss="modal">
+                            <i class="fa fa-check"></i> Entendido
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remover modal existente si hay uno
+    $('#modalValidacion').remove();
+    
+    // Agregar modal al body
+    $('body').append(modalHtml);
+    
+    // Mostrar modal
+    $('#modalValidacion').modal('show');
 }
 
 /*=============================================
