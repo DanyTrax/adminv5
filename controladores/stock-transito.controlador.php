@@ -1261,4 +1261,97 @@ class ControladorStockTransito {
             ];
         }
     }
+
+    /*=============================================
+    ELIMINAR STOCK EN TRÁNSITO
+    =============================================*/
+    static public function ctrEliminarStockTransito($codigoProducto, $usuarioId, $nombreUsuario, $sucursalDestino, $motivoEliminacion) {
+        
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            
+            $conexionCentral = ConexionCentral::conectar();
+            
+            // Obtener todos los registros de stock en tránsito para este producto
+            $stmt = $conexionCentral->prepare("
+                SELECT st.*, d.numero_despacho, d.sucursal_origen
+                FROM stock_transito st
+                INNER JOIN despachos d ON st.id_despacho_origen = d.id
+                WHERE st.codigo_producto = ? 
+                AND st.cantidad_disponible > 0
+            ");
+            $stmt->execute([$codigoProducto]);
+            $stocks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if(empty($stocks)) {
+                throw new Exception("No hay stock en tránsito para el producto $codigoProducto");
+            }
+            
+            // Calcular cantidad total a eliminar
+            $cantidadTotalEliminar = array_sum(array_column($stocks, 'cantidad_disponible'));
+            
+            // Iniciar transacción
+            $conexionCentral->beginTransaction();
+            
+            try {
+                // Eliminar todos los registros de stock en tránsito para este producto
+                $stmt = $conexionCentral->prepare("
+                    DELETE FROM stock_transito 
+                    WHERE codigo_producto = ? 
+                    AND cantidad_disponible > 0
+                ");
+                $stmt->execute([$codigoProducto]);
+                
+                $registrosEliminados = $stmt->rowCount();
+                
+                // Registrar en historial de tránsito
+                $despachosStr = implode(", ", array_map(function($stock) {
+                    return "{$stock['numero_despacho']} ({$stock['sucursal_origen']}: {$stock['cantidad_disponible']})";
+                }, $stocks));
+                
+                self::registrarHistoricoTransito(
+                    $codigoProducto,
+                    $stocks[0]["descripcion_producto"],
+                    $cantidadTotalEliminar,
+                    "eliminacion_admin",
+                    $stocks[0]["transportador_id"],
+                    $stocks[0]["nombre_transportador"],
+                    "Múltiples sucursales",
+                    $sucursalDestino,
+                    $stocks[0]["usuario_origen"] ?? null,
+                    $stocks[0]["nombre_usuario_origen"] ?? null,
+                    $usuarioId,
+                    $nombreUsuario,
+                    $stocks[0]["id_despacho_origen"] ?? null,
+                    $despachosStr,
+                    null, // No hay solicitud de descarga
+                    "ELIMINACIÓN ADMINISTRATIVA: " . $motivoEliminacion . " | Despachos afectados: " . $despachosStr
+                );
+                
+                // Confirmar transacción
+                $conexionCentral->commit();
+                
+                $mensaje = "Se eliminaron $registrosEliminados registros de stock en tránsito para el producto $codigoProducto (Total: $cantidadTotalEliminar unidades)";
+                
+                return [
+                    "success" => true,
+                    "message" => $mensaje,
+                    "registros_eliminados" => $registrosEliminados,
+                    "cantidad_total" => $cantidadTotalEliminar,
+                    "despachos_afectados" => $despachosStr
+                ];
+                
+            } catch(Exception $e) {
+                $conexionCentral->rollBack();
+                throw $e;
+            }
+            
+        } catch(Exception $e) {
+            error_log("Error en ctrEliminarStockTransito: " . $e->getMessage());
+            return [
+                "success" => false,
+                "error" => $e->getMessage()
+            ];
+        }
+    }
 }

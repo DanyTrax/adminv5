@@ -252,9 +252,20 @@ foreach($transportadores as $productos) {
                                                                data-cantidad="<?php echo $producto['cantidad_total']; ?>"
                                                                data-transportador="<?php echo $producto['nombre_transportador']; ?>"
                                                                data-detalles='<?php echo json_encode($producto['detalles']); ?>'
-                                                               style="width: 100%; font-size: 12px; padding: 8px 12px;">
+                                                               style="width: 100%; margin-bottom: 5px; font-size: 12px; padding: 8px 12px;">
                                                            <i class="fa fa-download"></i> Descargar
                                                        </button>
+                                                       <?php if($_SESSION["perfil"] == "Administrador"): ?>
+                                                       <button class="btn btn-danger btn-sm btnEliminarStock" 
+                                                               data-codigo="<?php echo $producto['codigo_producto']; ?>"
+                                                               data-descripcion="<?php echo $producto['descripcion_producto']; ?>"
+                                                               data-cantidad="<?php echo $producto['cantidad_total']; ?>"
+                                                               data-transportador="<?php echo $producto['nombre_transportador']; ?>"
+                                                               data-detalles='<?php echo json_encode($producto['detalles']); ?>'
+                                                               style="width: 100%; font-size: 12px; padding: 8px 12px;">
+                                                           <i class="fa fa-trash"></i> Eliminar
+                                                       </button>
+                                                       <?php endif; ?>
                                                    </div>
                                                </td>
                                            </tr>
@@ -410,6 +421,72 @@ foreach($transportadores as $productos) {
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ELIMINAR STOCK EN TRÁNSITO -->
+<div class="modal fade" id="modalEliminarStock" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">
+                    <i class="fa fa-trash"></i> Eliminar Stock en Tránsito
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fa fa-warning"></i>
+                    <strong>¡Atención!</strong> Esta acción eliminará permanentemente el stock en tránsito del producto seleccionado.
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <h4>Información del Producto:</h4>
+                        <table class="table table-bordered">
+                            <tr>
+                                <td><strong>Código:</strong></td>
+                                <td id="eliminarCodigo">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Descripción:</strong></td>
+                                <td id="eliminarDescripcion">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Transportador:</strong></td>
+                                <td id="eliminarTransportador">-</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cantidad Total:</strong></td>
+                                <td id="eliminarCantidad">-</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="motivoEliminacion">Motivo de Eliminación:</label>
+                            <textarea class="form-control" id="motivoEliminacion" rows="3" 
+                                      placeholder="Escriba el motivo de la eliminación..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <input type="hidden" id="eliminarCodigoProducto">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarEliminarStock">
+                    <i class="fa fa-trash"></i> Eliminar Stock
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -871,6 +948,104 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
                 type: "error",
                 title: "Error de Conexión",
                 text: "No se pudo procesar la descarga",
+                showConfirmButton: true,
+                confirmButtonText: "Cerrar"
+            });
+        }
+       });
+
+// Event listener para botón de eliminar stock
+$(document).on("click", ".btnEliminarStock", function(e) {
+    e.preventDefault();
+    
+    var codigo = $(this).data('codigo');
+    var descripcion = $(this).data('descripcion');
+    var cantidad = $(this).data('cantidad');
+    var transportador = $(this).data('transportador');
+    
+    console.log("🗑️ DEBUG: Iniciando eliminación de stock:", {
+        codigo, descripcion, cantidad, transportador
+    });
+    
+    // Llenar modal de eliminación
+    $("#eliminarCodigo").text(codigo);
+    $("#eliminarDescripcion").text(descripcion);
+    $("#eliminarTransportador").text(transportador);
+    $("#eliminarCantidad").text(cantidad);
+    $("#eliminarCodigoProducto").val(codigo);
+    $("#motivoEliminacion").val("");
+    
+    // Mostrar modal
+    $("#modalEliminarStock").modal("show");
+});
+
+// Event listener para confirmar eliminación
+$(document).on("click", "#btnConfirmarEliminarStock", function(e) {
+    e.preventDefault();
+    
+    var codigoProducto = $("#eliminarCodigoProducto").val();
+    var motivo = $("#motivoEliminacion").val();
+    
+    if(!motivo.trim()) {
+        swal({
+            type: "error",
+            title: "Motivo requerido",
+            text: "Debe escribir un motivo para la eliminación",
+            showConfirmButton: true,
+            confirmButtonText: "Cerrar"
+        });
+        return;
+    }
+    
+    console.log("🗑️ DEBUG: Confirmando eliminación:", {
+        codigoProducto, motivo
+    });
+    
+    // Enviar datos por AJAX
+    var datos = new FormData();
+    datos.append("eliminarStockTransito", true);
+    datos.append("codigoProducto", codigoProducto);
+    datos.append("motivoEliminacion", motivo);
+    
+    $.ajax({
+        url: "ajax/stock-transito.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function(respuesta) {
+            if(respuesta.success) {
+                swal({
+                    type: "success",
+                    title: "¡Stock Eliminado!",
+                    text: respuesta.message,
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                }).then(function(result) {
+                    if(result.value) {
+                        $("#modalEliminarStock").modal("hide");
+                        // Recargar la página para actualizar la lista
+                        location.reload(); 
+                    }
+                });
+            } else {
+                swal({
+                    type: "error",
+                    title: "Error al eliminar",
+                    text: respuesta.error,
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error("Error AJAX:", textStatus, errorThrown, jqXHR.responseText);
+            swal({
+                type: "error",
+                title: "Error de conexión",
+                text: "No se pudo procesar la eliminación. Intente nuevamente.",
                 showConfirmButton: true,
                 confirmButtonText: "Cerrar"
             });

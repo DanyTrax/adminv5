@@ -328,4 +328,47 @@ if(isset($_POST["descargarStockDirecto"])) {
     }
 }
 
+/*=============================================
+ELIMINAR STOCK EN TRÁNSITO
+=============================================*/
+if(isset($_POST["eliminarStockTransito"])) {
+    
+    try {
+        $codigoProducto = $_POST["codigoProducto"];
+        $motivoEliminacion = $_POST["motivoEliminacion"] ?? "";
+        
+        error_log("🗑️ ELIMINACIÓN STOCK - Código: $codigoProducto, Motivo: $motivoEliminacion");
+        error_log("🗑️ DATOS POST: " . json_encode($_POST));
+        
+        // Validar datos básicos
+        if(empty($codigoProducto) || empty($motivoEliminacion)) {
+            error_log("❌ DATOS INVÁLIDOS - Código: '$codigoProducto', Motivo: '$motivoEliminacion'");
+            echo json_encode(["success" => false, "error" => "Datos inválidos - Código y motivo son requeridos"]);
+            return;
+        }
+        
+        error_log("✅ DATOS VÁLIDOS - Código: $codigoProducto, Motivo: $motivoEliminacion");
+        
+        // Obtener información de la sesión
+        $usuarioId = $_SESSION["id"] ?? 1;
+        $nombreUsuario = $_SESSION["nombre"] ?? "Usuario";
+        $sucursalDestino = $_SESSION["sucursal"] ?? "Sucursal";
+        
+        // Ejecutar eliminación
+        $resultado = ControladorStockTransito::ctrEliminarStockTransito(
+            $codigoProducto,
+            $usuarioId,
+            $nombreUsuario,
+            $sucursalDestino,
+            $motivoEliminacion
+        );
+        
+        echo json_encode($resultado);
+        
+    } catch (Exception $e) {
+        error_log("❌ ERROR en stock-transito.ajax.php (eliminarStockTransito): " . $e->getMessage());
+        echo json_encode(["success" => false, "error" => $e->getMessage()]);
+    }
+}
+
 ?>
