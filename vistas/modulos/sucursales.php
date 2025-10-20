@@ -300,6 +300,56 @@ MODAL EDITAR SUCURSAL
             </div>
           </div>
 
+          <!-- Campos de conexión a BD -->
+          <div class="box box-info">
+            <div class="box-header with-border">
+              <h3 class="box-title">Configuración de Base de Datos</h3>
+            </div>
+            <div class="box-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Usuario BD:</label>
+                    <input type="text" class="form-control" name="editarUsuarioBd" id="editarUsuarioBd" placeholder="usuario_bd">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Contraseña BD:</label>
+                    <input type="password" class="form-control" name="editarPasswordBd" id="editarPasswordBd" placeholder="password_bd">
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Nombre BD:</label>
+                    <input type="text" class="form-control" name="editarNombreBd" id="editarNombreBd" placeholder="nombre_bd">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Host BD:</label>
+                    <input type="text" class="form-control" name="editarHostBd" id="editarHostBd" placeholder="localhost" value="localhost">
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Puerto BD:</label>
+                    <input type="number" class="form-control" name="editarPuertoBd" id="editarPuertoBd" placeholder="3306" value="3306">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <!-- Espacio vacío para mantener el layout -->
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="form-group">
             <label>
               <input type="checkbox" name="editarActivo" id="editarActivo"> Sucursal Activa

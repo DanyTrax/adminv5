@@ -193,6 +193,11 @@ class ControladorSucursales {
                     "email" => $_POST["editarEmail"],
                     "url_base" => $_POST["editarUrlBase"],
                     "url_api" => $_POST["editarUrlApi"],
+                    "usuario_bd" => $_POST["editarUsuarioBd"],
+                    "password_bd" => $_POST["editarPasswordBd"],
+                    "nombre_bd" => $_POST["editarNombreBd"],
+                    "host_bd" => $_POST["editarHostBd"],
+                    "puerto_bd" => $_POST["editarPuertoBd"],
                     "activo" => isset($_POST["editarActivo"]) ? 1 : 0
                 );
 

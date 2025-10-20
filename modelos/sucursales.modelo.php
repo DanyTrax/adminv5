@@ -258,7 +258,9 @@ class ModeloSucursales {
             
             $stmt = $pdo->prepare("UPDATE sucursales SET 
                 nombre = ?, direccion = ?, telefono = ?, email = ?,
-                url_base = ?, url_api = ?, activo = ?, fecha_actualizacion = NOW()
+                url_base = ?, url_api = ?, 
+                usuario_bd = ?, password_bd = ?, nombre_bd = ?, host_bd = ?, puerto_bd = ?,
+                activo = ?, fecha_actualizacion = NOW()
                 WHERE id = ?");
             
             $resultado = $stmt->execute([
@@ -268,6 +270,11 @@ class ModeloSucursales {
                 $datos["email"],
                 $datos["url_base"],
                 $datos["url_api"],
+                $datos["usuario_bd"],
+                $datos["password_bd"],
+                $datos["nombre_bd"],
+                $datos["host_bd"],
+                $datos["puerto_bd"],
                 $datos["activo"],
                 $datos["id"]
             ]);

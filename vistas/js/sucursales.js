@@ -471,6 +471,11 @@ $(document).on("click", ".btnEditarSucursal", function() {
                 $("#editarEmail").val(datos.email);
                 $("#editarUrlBase").val(datos.url_base);
                 $("#editarUrlApi").val(datos.url_api);
+                $("#editarUsuarioBd").val(datos.usuario_bd || '');
+                $("#editarPasswordBd").val(datos.password_bd || '');
+                $("#editarNombreBd").val(datos.nombre_bd || '');
+                $("#editarHostBd").val(datos.host_bd || 'localhost');
+                $("#editarPuertoBd").val(datos.puerto_bd || '3306');
                 $("#editarActivo").prop('checked', datos.activo == 1);
                 
                 $("#modalEditarSucursal").modal("show");
