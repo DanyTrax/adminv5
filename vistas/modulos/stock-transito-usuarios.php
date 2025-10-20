@@ -235,38 +235,36 @@ foreach($transportadores as $productos) {
                                                    </span>
                                                </td>
                                                <td style="text-align: center; vertical-align: middle;">
-                                                   <div class="btn-group-vertical" style="width: 100%;">
-                                                       <button class="btn btn-info btn-xs btnVerDetalle" 
-                                                               data-codigo="<?php echo $producto['codigo_producto']; ?>"
-                                                               data-descripcion="<?php echo $producto['descripcion_producto']; ?>"
-                                                               data-detalles='<?php echo json_encode($producto['detalles']); ?>'
-                                                               data-cronologia='<?php echo json_encode($producto['cronologia_completa']); ?>'
-                                                               data-cantidad-total="<?php echo $producto['cantidad_total']; ?>"
-                                                               data-transportador="<?php echo $producto['nombre_transportador']; ?>"
-                                                               title="Ver Detalle">
-                                                           <i class="fa fa-info-circle"></i>
-                                                       </button>
-                                                       <button class="btn btn-success btn-xs btnDescargaDirecta" 
-                                                               data-codigo="<?php echo $producto['codigo_producto']; ?>"
-                                                               data-descripcion="<?php echo $producto['descripcion_producto']; ?>"
-                                                               data-cantidad="<?php echo $producto['cantidad_total']; ?>"
-                                                               data-transportador="<?php echo $producto['nombre_transportador']; ?>"
-                                                               data-detalles='<?php echo json_encode($producto['detalles']); ?>'
-                                                               title="Descargar">
-                                                           <i class="fa fa-download"></i>
-                                                       </button>
-                                                       <?php if($_SESSION["perfil"] == "Administrador"): ?>
-                                                       <button class="btn btn-danger btn-xs btnEliminarStock" 
-                                                               data-codigo="<?php echo $producto['codigo_producto']; ?>"
-                                                               data-descripcion="<?php echo $producto['descripcion_producto']; ?>"
-                                                               data-cantidad="<?php echo $producto['cantidad_total']; ?>"
-                                                               data-transportador="<?php echo $producto['nombre_transportador']; ?>"
-                                                               data-detalles='<?php echo json_encode($producto['detalles']); ?>'
-                                                               title="Eliminar">
-                                                           <i class="fa fa-trash"></i>
-                                                       </button>
-                                                       <?php endif; ?>
-                                                   </div>
+                                                   <button class="btn btn-info btn-xs btnVerDetalle" 
+                                                           data-codigo="<?php echo $producto['codigo_producto']; ?>"
+                                                           data-descripcion="<?php echo $producto['descripcion_producto']; ?>"
+                                                           data-detalles='<?php echo json_encode($producto['detalles']); ?>'
+                                                           data-cronologia='<?php echo json_encode($producto['cronologia_completa']); ?>'
+                                                           data-cantidad-total="<?php echo $producto['cantidad_total']; ?>"
+                                                           data-transportador="<?php echo $producto['nombre_transportador']; ?>"
+                                                           title="Ver Detalle">
+                                                       <i class="fa fa-info-circle"></i>
+                                                   </button>
+                                                   <button class="btn btn-success btn-xs btnDescargaDirecta" 
+                                                           data-codigo="<?php echo $producto['codigo_producto']; ?>"
+                                                           data-descripcion="<?php echo $producto['descripcion_producto']; ?>"
+                                                           data-cantidad="<?php echo $producto['cantidad_total']; ?>"
+                                                           data-transportador="<?php echo $producto['nombre_transportador']; ?>"
+                                                           data-detalles='<?php echo json_encode($producto['detalles']); ?>'
+                                                           title="Descargar">
+                                                       <i class="fa fa-download"></i>
+                                                   </button>
+                                                   <?php if($_SESSION["perfil"] == "Administrador"): ?>
+                                                   <button class="btn btn-danger btn-xs btnEliminarStock" 
+                                                           data-codigo="<?php echo $producto['codigo_producto']; ?>"
+                                                           data-descripcion="<?php echo $producto['descripcion_producto']; ?>"
+                                                           data-cantidad="<?php echo $producto['cantidad_total']; ?>"
+                                                           data-transportador="<?php echo $producto['nombre_transportador']; ?>"
+                                                           data-detalles='<?php echo json_encode($producto['detalles']); ?>'
+                                                           title="Eliminar">
+                                                       <i class="fa fa-trash"></i>
+                                                   </button>
+                                                   <?php endif; ?>
                                                </td>
                                            </tr>
                                        <?php endforeach; ?>
@@ -587,46 +585,13 @@ foreach($transportadores as $productos) {
            word-spacing: 0.1em;
        }
        
-         /* Mejorar botones de acción - Tamaño btn-xs */
-         .btn-group-vertical .btn {
-             border-radius: 3px;
-             transition: all 0.3s ease;
-             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-             margin-bottom: 2px;
-             padding: 4px 8px;
-             font-size: 11px;
+         /* Botones de acción - Estilo como despachos */
+         .btn-xs {
+             margin-right: 2px;
          }
          
-         .btn-group-vertical .btn:hover {
-             transform: translateY(-1px);
-             box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-         }
-         
-         .btn-group-vertical .btn-info {
-             background: linear-gradient(135deg, #5bc0de 0%, #46b8da 100%);
-             border-color: #46b8da;
-         }
-         
-         .btn-group-vertical .btn-success {
-             background: linear-gradient(135deg, #5cb85c 0%, #449d44 100%);
-             border-color: #449d44;
-         }
-         
-         .btn-group-vertical .btn-danger {
-             background: linear-gradient(135deg, #d9534f 0%, #c9302c 100%);
-             border-color: #c9302c;
-         }
-         
-         .btn-group-vertical .btn-info:hover {
-             background: linear-gradient(135deg, #46b8da 0%, #31b0d5 100%);
-         }
-         
-         .btn-group-vertical .btn-success:hover {
-             background: linear-gradient(135deg, #449d44 0%, #398439 100%);
-         }
-         
-         .btn-group-vertical .btn-danger:hover {
-             background: linear-gradient(135deg, #c9302c 0%, #ac2925 100%);
+         .btn-xs:last-child {
+             margin-right: 0;
          }
        
        /* Responsive */
@@ -648,7 +613,7 @@ foreach($transportadores as $productos) {
                margin-top: 10px;
            }
            
-             .btn-group-vertical .btn {
+             .btn-xs {
                  font-size: 10px;
                  padding: 3px 6px;
              }
