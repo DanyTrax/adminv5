@@ -821,7 +821,16 @@ $(document).on("click", ".btnFiltroEstado", function(){
     if(estado === "" || estado === "todos") {
         $('.tablaDespachos').DataTable().columns(4).search("").draw();
     } else {
-        $('.tablaDespachos').DataTable().columns(4).search(estado).draw();
+        // Mapear estados a texto mostrado en tabla
+        var estadoTexto = {
+            'pendiente': 'PENDIENTE',
+            'en_transito': 'EN TRÁNSITO',
+            'entregado': 'ENTREGADO',
+            'cancelado': 'CANCELADO'
+        };
+        
+        var textoBuscar = estadoTexto[estado] || estado;
+        $('.tablaDespachos').DataTable().columns(4).search(textoBuscar).draw();
     }
 });
 
