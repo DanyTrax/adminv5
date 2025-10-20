@@ -86,9 +86,9 @@ class ModeloUsuariosCentral {
         
         try {
             $stmt = ConexionCentral::conectar()->prepare("
-                SELECT id, nombre, codigo_sucursal, activa
+                SELECT id, nombre, codigo_sucursal, activo
                 FROM sucursales 
-                WHERE activa = 1 
+                WHERE activo = 1 
                 ORDER BY nombre
             ");
             
@@ -137,7 +137,7 @@ class ModeloUsuariosCentral {
             $stmt = ConexionCentral::conectar()->prepare("
                 SELECT id, nombre, codigo_sucursal, url_api
                 FROM sucursales 
-                WHERE activa = 1 AND id != ?
+                WHERE activo = 1 AND id != ?
                 ORDER BY nombre
             ");
             
