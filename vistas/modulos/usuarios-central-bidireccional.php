@@ -413,14 +413,15 @@ $(document).ready(function() {
             if(sucursal.estado_conexion === 'conectado' && sucursal.usuarios.length > 0) {
                 html += '<div class="table-responsive">';
                 html += '<table class="table table-bordered table-striped">';
-                html += '<thead><tr><th>Usuario</th><th>Nombre</th><th>Perfil</th><th>Estado</th><th>Acciones</th></tr></thead>';
+                html += '<thead><tr><th>Usuario</th><th>Nombre</th><th>Perfil</th><th>Empresa Actual</th><th>Estado</th><th>Acciones</th></tr></thead>';
                 html += '<tbody>';
                 
                 sucursal.usuarios.forEach(function(usuario) {
                     html += '<tr>';
-                    html += '<td>' + (usuario.usuario || 'N/A') + '</td>';
+                    html += '<td><strong>' + (usuario.usuario || 'N/A') + '</strong></td>';
                     html += '<td>' + (usuario.nombre || 'N/A') + '</td>';
                     html += '<td><span class="label label-info">' + (usuario.perfil || 'N/A') + '</span></td>';
+                    html += '<td><span class="label label-' + (usuario.empresa_actual && usuario.empresa_actual !== 'Sin empresa asignada' ? 'success' : 'warning') + '">' + (usuario.empresa_actual || 'Sin empresa') + '</span></td>';
                     html += '<td><span class="label label-' + (usuario.estado ? 'success' : 'danger') + '">' + (usuario.estado ? 'Activo' : 'Inactivo') + '</span></td>';
                     html += '<td><button class="btn btn-xs btn-info btnImportarUsuario" data-usuario=\'' + JSON.stringify(usuario) + '\' data-sucursal=\'' + JSON.stringify(sucursal.sucursal) + '\'><i class="fa fa-download"></i> Importar</button></td>';
                     html += '</tr>';

@@ -13,16 +13,16 @@ class ModeloSincronizacionUsuarios {
         try {
             $conexionLocal = Conexion::conectar();
             
-            // Verificar si el usuario ya existe en la sucursal local
+            // Verificar si el usuario ya existe en la sucursal local (por usuario, no por empresa)
             $stmt = $conexionLocal->prepare("
                 SELECT id FROM usuarios 
-                WHERE usuario = ? AND empresa = ?
+                WHERE usuario = ?
             ");
-            $stmt->execute([$usuarioCentral['usuario'], $usuarioCentral['sucursal_nombre']]);
+            $stmt->execute([$usuarioCentral['usuario']]);
             $usuarioExistente = $stmt->fetch();
             
             if($usuarioExistente) {
-                // Actualizar usuario existente
+                // Actualizar usuario existente (incluyendo empresa)
                 $stmt = $conexionLocal->prepare("
                     UPDATE usuarios SET 
                         nombre = ?,
@@ -32,6 +32,7 @@ class ModeloSincronizacionUsuarios {
                         estado = ?,
                         telefono = ?,
                         direccion = ?,
+                        empresa = ?,
                         fecha = NOW()
                     WHERE id = ?
                 ");
@@ -44,6 +45,7 @@ class ModeloSincronizacionUsuarios {
                     $usuarioCentral['activo'] ? 1 : 0,
                     $usuarioCentral['telefono'] ?? '',
                     $usuarioCentral['direccion'] ?? '',
+                    $usuarioCentral['sucursal_nombre'],
                     $usuarioExistente['id']
                 ]);
                 
@@ -180,29 +182,30 @@ class ModeloSincronizacionUsuarios {
     }
 
     /*=============================================
-    CONSULTAR USUARIOS DE SUCURSAL LOCAL
+    CONSULTAR USUARIOS DE SUCURSAL LOCAL (SIN RESTRICCIÓN DE EMPRESA)
     =============================================*/
     static public function mdlConsultarUsuariosSucursalLocal($sucursalId, $sucursalNombre) {
         
         try {
             $conexionLocal = Conexion::conectar();
             
+            // Consultar TODOS los usuarios sin restricción de empresa
             $stmt = $conexionLocal->prepare("
                 SELECT 
                     id, nombre, usuario, password, perfil, foto, estado,
                     ultimo_login, empresa, telefono, direccion, fecha
                 FROM usuarios 
-                WHERE empresa = ?
                 ORDER BY nombre
             ");
             
-            $stmt->execute([$sucursalNombre]);
+            $stmt->execute();
             $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // Agregar información de sucursal
             foreach($usuarios as &$usuario) {
                 $usuario['sucursal_id'] = $sucursalId;
                 $usuario['sucursal_nombre'] = $sucursalNombre;
+                $usuario['empresa_actual'] = $usuario['empresa'] ?: 'Sin empresa asignada';
                 $usuario['fecha_creacion_formateada'] = date('d/m/Y H:i', strtotime($usuario['fecha']));
                 $usuario['ultimo_login_formateado'] = $usuario['ultimo_login'] && $usuario['ultimo_login'] != '0000-00-00 00:00:00' 
                     ? date('d/m/Y H:i', strtotime($usuario['ultimo_login'])) 

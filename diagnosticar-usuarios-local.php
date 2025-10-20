@@ -65,8 +65,8 @@ try {
         echo "<p style='color: red;'>❌ Error conectando a BD Central: " . htmlspecialchars($e->getMessage()) . "</p>";
     }
     
-    // 4. Proponer corrección
-    echo "<h3>🔧 Corrección Propuesta:</h3>";
+    // 4. Análisis de usuarios (SIN MODIFICAR ESTRUCTURA LOCAL)
+    echo "<h3>📊 Análisis de Usuarios Locales:</h3>";
     
     if($sucursalLocal && !empty($usuarios)) {
         $nombreSucursal = $sucursalLocal['nombre'];
@@ -75,86 +75,84 @@ try {
             return !empty($u['empresa']) && $u['empresa'] !== $nombreSucursal; 
         });
         
-        echo "<p><strong>Análisis de usuarios:</strong></p>";
+        echo "<p><strong>Distribución de usuarios por empresa:</strong></p>";
         echo "<ul>";
         echo "<li>Usuarios sin empresa: " . count($usuariosSinEmpresa) . "</li>";
         echo "<li>Usuarios con empresa diferente: " . count($usuariosConEmpresaDiferente) . "</li>";
         echo "<li>Usuarios con empresa correcta: " . (count($usuarios) - count($usuariosSinEmpresa) - count($usuariosConEmpresaDiferente)) . "</li>";
         echo "</ul>";
         
+        echo "<div style='background: #e8f4fd; padding: 15px; border-radius: 4px; margin: 15px 0;'>";
+        echo "<h4>💡 Nueva Estrategia de Sincronización:</h4>";
+        echo "<p><strong>✅ NO se modificará la estructura local</strong></p>";
+        echo "<p>• El sistema importará <strong>TODOS</strong> los usuarios locales sin restricción de empresa</p>";
+        echo "<p>• Al sincronizar desde central → local, se asignará automáticamente la empresa correcta</p>";
+        echo "<p>• Al importar desde local → central, se puede asignar la empresa deseada</p>";
+        echo "</div>";
+        
         if(!empty($usuariosSinEmpresa) || !empty($usuariosConEmpresaDiferente)) {
-            echo "<p style='color: orange;'>⚠️ Hay usuarios con empresa incorrecta o vacía</p>";
-            echo "<p><strong>Acción sugerida:</strong> Actualizar campo 'empresa' con el nombre de la sucursal: <strong>" . htmlspecialchars($nombreSucursal) . "</strong></p>";
-            
-            // Mostrar usuarios que se van a actualizar
-            echo "<h4>Usuarios que se actualizarán:</h4>";
+            echo "<div style='background: #fff3cd; padding: 15px; border-radius: 4px; margin: 15px 0;'>";
+            echo "<h4>📋 Usuarios que se pueden importar:</h4>";
             echo "<ul>";
             foreach($usuarios as $usuario) {
                 if(empty($usuario['empresa']) || $usuario['empresa'] !== $nombreSucursal) {
-                    $tipo = empty($usuario['empresa']) ? 'sin empresa' : 'empresa diferente';
-                    echo "<li>" . htmlspecialchars($usuario['usuario']) . " (" . htmlspecialchars($usuario['nombre']) . ") - " . $tipo . "</li>";
+                    $tipo = empty($usuario['empresa']) ? 'sin empresa' : 'empresa: ' . $usuario['empresa'];
+                    echo "<li><strong>" . htmlspecialchars($usuario['usuario']) . "</strong> (" . htmlspecialchars($usuario['nombre']) . ") - " . $tipo . "</li>";
                 }
             }
             echo "</ul>";
-            
-            echo "<form method='post' style='margin: 20px 0;'>";
-            echo "<input type='hidden' name='accion' value='corregir_empresa'>";
-            echo "<input type='hidden' name='nombre_sucursal' value='" . htmlspecialchars($nombreSucursal) . "'>";
-            echo "<button type='submit' style='background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;'>";
-            echo "🔧 Corregir Campo Empresa";
-            echo "</button>";
-            echo "</form>";
+            echo "<p><em>Estos usuarios se pueden importar al sistema central y asignar la empresa correcta.</em></p>";
+            echo "</div>";
         } else {
             echo "<p style='color: green;'>✅ Todos los usuarios tienen empresa asignada correctamente</p>";
         }
     }
     
-    // 5. Procesar corrección si se envió
-    if(isset($_POST['accion']) && $_POST['accion'] === 'corregir_empresa') {
-        $nombreSucursal = $_POST['nombre_sucursal'];
-        
-        try {
-            // Actualizar usuarios sin empresa (incluyendo admin)
-            $stmt = $conexion->prepare("UPDATE usuarios SET empresa = ? WHERE empresa = '' OR empresa IS NULL");
-            $resultado1 = $stmt->execute([$nombreSucursal]);
-            
-            // Actualizar usuarios con empresa diferente (excepto admin si es superadministrador)
-            $stmt = $conexion->prepare("UPDATE usuarios SET empresa = ? WHERE empresa != ? AND usuario != 'admin'");
-            $resultado2 = $stmt->execute([$nombreSucursal, $nombreSucursal]);
-            
-            if($resultado1 || $resultado2) {
-                echo "<div style='background: #e8f5e8; padding: 10px; border-radius: 4px; margin: 10px 0;'>";
-                echo "<p style='color: green;'>✅ Campo 'empresa' actualizado correctamente</p>";
-                echo "<p>Se asignó la empresa: <strong>" . htmlspecialchars($nombreSucursal) . "</strong></p>";
-                echo "<p><strong>Nota:</strong> El usuario 'admin' se actualizó como superadministrador</p>";
-                echo "</div>";
-                
-                // Recargar página para mostrar cambios
-                echo "<script>setTimeout(function(){ window.location.reload(); }, 2000);</script>";
-            } else {
-                echo "<p style='color: red;'>❌ Error al actualizar campo empresa</p>";
-            }
-        } catch(Exception $e) {
-            echo "<p style='color: red;'>❌ Error: " . htmlspecialchars($e->getMessage()) . "</p>";
-        }
-    }
+    // 5. Información adicional
+    echo "<div style='background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 15px 0;'>";
+    echo "<h4>🔧 Cómo usar el sistema bidireccional:</h4>";
+    echo "<ol>";
+    echo "<li><strong>Importar usuarios locales:</strong> Ve a 'Usuarios Centrales Bidireccional' y usa el botón 'Importar' en cada usuario</li>";
+    echo "<li><strong>Asignar empresa:</strong> Al importar, se puede asignar la empresa correcta para la sucursal</li>";
+    echo "<li><strong>Sincronizar desde central:</strong> Los usuarios centrales se sincronizan automáticamente con la empresa correcta</li>";
+    echo "<li><strong>Mantener estructura local:</strong> No se modifica la tabla local, solo se asigna empresa al sincronizar</li>";
+    echo "</ol>";
+    echo "</div>";
     
-    // 6. Probar consulta de sincronización
-    echo "<h3>🧪 Prueba de Consulta de Sincronización:</h3>";
+    // 6. Prueba de consulta de sincronización (NUEVA ESTRATEGIA)
+    echo "<h3>🧪 Prueba de Consulta de Sincronización (Nueva Estrategia):</h3>";
     
     if($sucursalLocal) {
         $nombreSucursal = $sucursalLocal['nombre'];
         
-        $stmt = $conexion->prepare("SELECT COUNT(*) as total FROM usuarios WHERE empresa = ?");
-        $stmt->execute([$nombreSucursal]);
-        $totalConEmpresa = $stmt->fetch()['total'];
-        
-        echo "<p><strong>Usuarios con empresa = '" . htmlspecialchars($nombreSucursal) . "':</strong> " . $totalConEmpresa . "</p>";
-        
-        if($totalConEmpresa > 0) {
-            echo "<p style='color: green;'>✅ La consulta de sincronización debería funcionar correctamente</p>";
-        } else {
-            echo "<p style='color: red;'>❌ La consulta de sincronización no encontrará usuarios</p>";
+        try {
+            // Consulta anterior (con restricción de empresa)
+            $stmt = $conexion->prepare("SELECT COUNT(*) as total FROM usuarios WHERE empresa = ?");
+            $stmt->execute([$nombreSucursal]);
+            $resultadoAnterior = $stmt->fetch();
+            
+            // Nueva consulta (SIN restricción de empresa)
+            $stmt = $conexion->prepare("SELECT COUNT(*) as total FROM usuarios");
+            $stmt->execute();
+            $resultadoNuevo = $stmt->fetch();
+            
+            echo "<div style='background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 10px 0;'>";
+            echo "<h4>📊 Comparación de estrategias:</h4>";
+            echo "<ul>";
+            echo "<li><strong>Estrategia anterior:</strong> Usuarios con empresa = '" . htmlspecialchars($nombreSucursal) . "': <strong>" . $resultadoAnterior['total'] . "</strong></li>";
+            echo "<li><strong>Nueva estrategia:</strong> TODOS los usuarios locales: <strong>" . $resultadoNuevo['total'] . "</strong></li>";
+            echo "</ul>";
+            echo "</div>";
+            
+            if($resultadoNuevo['total'] > 0) {
+                echo "<p style='color: green;'>✅ La nueva consulta encontrará " . $resultadoNuevo['total'] . " usuarios para importar</p>";
+                echo "<p><em>Estos usuarios se pueden importar al sistema central y asignar la empresa correcta.</em></p>";
+            } else {
+                echo "<p style='color: red;'>❌ No hay usuarios en la base de datos local</p>";
+            }
+            
+        } catch(Exception $e) {
+            echo "<p style='color: red;'>❌ Error en consulta: " . htmlspecialchars($e->getMessage()) . "</p>";
         }
     }
     
