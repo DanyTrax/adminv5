@@ -398,7 +398,7 @@ class ModeloUsuariosCentral {
             $conexionLocal = Conexion::conectar();
             
             $stmt = $conexionLocal->prepare("
-                SELECT id, nombre, usuario, perfil, foto, estado, ultimo_login, fecha_creacion
+                SELECT id, nombre, usuario, perfil, foto, estado, ultimo_login, fecha, empresa, telefono, direccion
                 FROM usuarios 
                 ORDER BY nombre
             ");
@@ -408,9 +408,12 @@ class ModeloUsuariosCentral {
             
             // Formatear datos
             foreach($usuarios as &$usuario) {
-                $usuario['fecha_creacion_formateada'] = date('d/m/Y H:i', strtotime($usuario['fecha_creacion']));
-                $usuario['ultimo_login_formateado'] = $usuario['ultimo_login'] ? date('d/m/Y H:i', strtotime($usuario['ultimo_login'])) : 'Nunca';
+                $usuario['fecha_creacion_formateada'] = date('d/m/Y H:i', strtotime($usuario['fecha']));
+                $usuario['ultimo_login_formateado'] = $usuario['ultimo_login'] && $usuario['ultimo_login'] != '0000-00-00 00:00:00' 
+                    ? date('d/m/Y H:i', strtotime($usuario['ultimo_login'])) 
+                    : 'Nunca';
                 $usuario['estado_texto'] = $usuario['estado'] ? 'Activo' : 'Inactivo';
+                $usuario['empresa_actual'] = $usuario['empresa'] ?: 'Sin empresa asignada';
             }
             
             return $usuarios;
