@@ -1,6 +1,6 @@
 <?php
 
-// NOTA: Ya no necesitas estas 3 l¨ªneas si tu servidor est¨¢ configurado para mostrar errores, pero no hacen da0Š9o.
+// NOTA: Ya no necesitas estas 3 lï¿½ï¿½neas si tu servidor estï¿½ï¿½ configurado para mostrar errores, pero no hacen daï¿½0ï¿½9o.
 // ini_set('display_errors', 1);
 // ini_set('display_startup_errors', 1);
 // error_reporting(E_ALL);
@@ -16,6 +16,9 @@ require_once "../../../modelos/usuarios.modelo.php";
 
 require_once "../../../controladores/productos.controlador.php";
 require_once "../../../modelos/productos.modelo.php";
+
+require_once "../../../controladores/sucursales.controlador.php";
+require_once "../../../modelos/sucursales.modelo.php";
 
 class imprimirFactura
 {
@@ -39,51 +42,61 @@ class imprimirFactura
 		$ultabono = number_format($respuestaVenta["Ult_abono"] ?? 0, 2, ',', '.');
         $mpago = substr($respuestaVenta["metodo_pago"], 0);
 
-		//TRAEMOS LA INFORMACI0ˆ7N DEL CLIENTE
+		//TRAEMOS LA INFORMACIï¿½0ï¿½7N DEL CLIENTE
 		$itemCliente = "id";
 		$valorCliente = $respuestaVenta["id_cliente"];
 		$respuestaCliente = ControladorClientes::ctrMostrarClientes($itemCliente, $valorCliente);
 
-		//TRAEMOS LA INFORMACI0ˆ7N DEL VENDEDOR
+		//TRAEMOS LA INFORMACIï¿½0ï¿½7N DEL VENDEDOR
 		$itemVendedor = "id";
 		$valorVendedor = $respuestaVenta["id_vendedor"];
 		$desdetalle = $respuestaVenta["detalle"];
 		$respuestaVendedor = ControladorUsuarios::ctrMostrarUsuarios($itemVendedor, $valorVendedor);
 
-		// Pedimos la informaci¨®n del segundo vendedor
+		// Pedimos la informaciï¿½ï¿½n del segundo vendedor
 		$vendAbono = ControladorUsuarios::ctrMostrarUsuarios("id", $respuestaVenta["id_vend_abono"]);
 
-		//INFORMACION EMPRESA
+		//INFORMACION EMPRESA - Obtener desde BD Central
 		$tikempresa = "";
 		$tiknumero = "";
 		$tikdirecc = "";
 		$tikcorreo = "NO HAY CORREO";
 		
-        if (isset($respuestaVendedor['empresa'])) {
-            if ($respuestaVendedor['empresa'] == "Infinito") {
-                $tikempresa = "ACRILICOS INFINITO";
-                $tiknumero = "322 9460 339 / 211 04 93";
-                $tikdirecc = "CARRERA 20B # 73-43";
-                $tikcorreo = "ventas2@acrilicosinfinito.com";
-            } elseif ($respuestaVendedor['empresa'] == "Lema") {
-                $tikempresa = "LEMA PUBLICIDAD";
-                $tiknumero = "322 9460 339";
-                $tikdirecc = "CARRERA 20B # 73-43";
-                $tikcorreo = "ventas2@acrilicosinfinito.com";
-            } elseif ($respuestaVendedor['empresa'] == "Epico") {
-                $tikempresa = "EPICO SIEMPRE MAS";
-                $tiknumero = "322 7445 631 / 621 24 21";
-                $tikdirecc = "CARRERA 17 #71-63";
-                $tikcorreo = "creativo@epicosiempremas.com";
-            } else {
-                $tikempresa = "ACPLASTICOS";
-    			$tiknumero = "305 3177135 / 322 744 5631";
-    			$tikdirecc = "CARRERA 27 # 10-65<br> LOCAL 116 BARRIO RICAURTE <br> CENTRO COMERCIAL C-KREA";
-    			$tikcorreo = "ventas1@acplasticos.com";
-            }
-        }
+		// Obtener informaciÃ³n de la sucursal desde BD Central
+		if (isset($respuestaVendedor['empresa']) && !empty($respuestaVendedor['empresa'])) {
+			try {
+				// Buscar la sucursal por nombre en la BD central
+				$sucursalInfo = ModeloSucursales::mdlMostrarSucursal("nombre", $respuestaVendedor['empresa']);
+				
+				if ($sucursalInfo) {
+					$tikempresa = strtoupper($sucursalInfo['nombre']);
+					$tiknumero = $sucursalInfo['telefono'] ?: "NO DISPONIBLE";
+					$tikdirecc = $sucursalInfo['direccion'] ?: "NO DISPONIBLE";
+					$tikcorreo = $sucursalInfo['email'] ?: "NO HAY CORREO";
+				} else {
+					// Fallback a datos por defecto si no se encuentra la sucursal
+					$tikempresa = strtoupper($respuestaVendedor['empresa']);
+					$tiknumero = "NO DISPONIBLE";
+					$tikdirecc = "NO DISPONIBLE";
+					$tikcorreo = "NO HAY CORREO";
+				}
+			} catch (Exception $e) {
+				// En caso de error, usar datos por defecto
+				error_log("Error obteniendo datos de sucursal: " . $e->getMessage());
+				$tikempresa = strtoupper($respuestaVendedor['empresa']);
+				$tiknumero = "NO DISPONIBLE";
+				$tikdirecc = "NO DISPONIBLE";
+				$tikcorreo = "NO HAY CORREO";
+			}
+		} else {
+			// Si no hay empresa definida, usar datos por defecto
+			$tikempresa = "SUCURSAL NO DEFINIDA";
+			$tiknumero = "NO DISPONIBLE";
+			$tikdirecc = "NO DISPONIBLE";
+			$tikcorreo = "NO HAY CORREO";
+		}
 		
-		// L0ˆ1NEA 94 ELIMINADA Y L0ˆ7GICA DE ABONO CORREGIDA
+		// Lï¿½0ï¿½1NEA 94 ELIMINADA Y Lï¿½0ï¿½7GICA DE ABONO CORREGIDA
 		$sumab_tot = ($respuestaVenta["total"] - $respuestaVenta["abono"]);
         $restabono = "";
         $tikUl = "";
@@ -118,7 +131,7 @@ class imprimirFactura
 		$pdf->setPrintFooter(false);
 		$pdf->SetMargins(4, 0, 0, 0);
 		$pdf->SetFooterMargin(0);
-		$pdf->SetAutoPageBreak(true, 0); // Modificado para evitar saltos de p¨¢gina autom¨¢ticos no deseados
+		$pdf->SetAutoPageBreak(true, 0); // Modificado para evitar saltos de pï¿½ï¿½gina automï¿½ï¿½ticos no deseados
 
 		$pdf->AddPage('P', array(75, 280));
         $numVendedor = $respuestaVendedor['telefono'] ?? 'N/A';
