@@ -71,10 +71,31 @@ try {
     if($sucursalLocal && !empty($usuarios)) {
         $nombreSucursal = $sucursalLocal['nombre'];
         $usuariosSinEmpresa = array_filter($usuarios, function($u) { return empty($u['empresa']); });
+        $usuariosConEmpresaDiferente = array_filter($usuarios, function($u) use ($nombreSucursal) { 
+            return !empty($u['empresa']) && $u['empresa'] !== $nombreSucursal; 
+        });
         
-        if(!empty($usuariosSinEmpresa)) {
-            echo "<p style='color: orange;'>⚠️ Hay " . count($usuariosSinEmpresa) . " usuarios sin empresa asignada</p>";
+        echo "<p><strong>Análisis de usuarios:</strong></p>";
+        echo "<ul>";
+        echo "<li>Usuarios sin empresa: " . count($usuariosSinEmpresa) . "</li>";
+        echo "<li>Usuarios con empresa diferente: " . count($usuariosConEmpresaDiferente) . "</li>";
+        echo "<li>Usuarios con empresa correcta: " . (count($usuarios) - count($usuariosSinEmpresa) - count($usuariosConEmpresaDiferente)) . "</li>";
+        echo "</ul>";
+        
+        if(!empty($usuariosSinEmpresa) || !empty($usuariosConEmpresaDiferente)) {
+            echo "<p style='color: orange;'>⚠️ Hay usuarios con empresa incorrecta o vacía</p>";
             echo "<p><strong>Acción sugerida:</strong> Actualizar campo 'empresa' con el nombre de la sucursal: <strong>" . htmlspecialchars($nombreSucursal) . "</strong></p>";
+            
+            // Mostrar usuarios que se van a actualizar
+            echo "<h4>Usuarios que se actualizarán:</h4>";
+            echo "<ul>";
+            foreach($usuarios as $usuario) {
+                if(empty($usuario['empresa']) || $usuario['empresa'] !== $nombreSucursal) {
+                    $tipo = empty($usuario['empresa']) ? 'sin empresa' : 'empresa diferente';
+                    echo "<li>" . htmlspecialchars($usuario['usuario']) . " (" . htmlspecialchars($usuario['nombre']) . ") - " . $tipo . "</li>";
+                }
+            }
+            echo "</ul>";
             
             echo "<form method='post' style='margin: 20px 0;'>";
             echo "<input type='hidden' name='accion' value='corregir_empresa'>";
@@ -84,7 +105,7 @@ try {
             echo "</button>";
             echo "</form>";
         } else {
-            echo "<p style='color: green;'>✅ Todos los usuarios tienen empresa asignada</p>";
+            echo "<p style='color: green;'>✅ Todos los usuarios tienen empresa asignada correctamente</p>";
         }
     }
     
@@ -93,13 +114,19 @@ try {
         $nombreSucursal = $_POST['nombre_sucursal'];
         
         try {
+            // Actualizar usuarios sin empresa (incluyendo admin)
             $stmt = $conexion->prepare("UPDATE usuarios SET empresa = ? WHERE empresa = '' OR empresa IS NULL");
-            $resultado = $stmt->execute([$nombreSucursal]);
+            $resultado1 = $stmt->execute([$nombreSucursal]);
             
-            if($resultado) {
+            // Actualizar usuarios con empresa diferente (excepto admin si es superadministrador)
+            $stmt = $conexion->prepare("UPDATE usuarios SET empresa = ? WHERE empresa != ? AND usuario != 'admin'");
+            $resultado2 = $stmt->execute([$nombreSucursal, $nombreSucursal]);
+            
+            if($resultado1 || $resultado2) {
                 echo "<div style='background: #e8f5e8; padding: 10px; border-radius: 4px; margin: 10px 0;'>";
                 echo "<p style='color: green;'>✅ Campo 'empresa' actualizado correctamente</p>";
                 echo "<p>Se asignó la empresa: <strong>" . htmlspecialchars($nombreSucursal) . "</strong></p>";
+                echo "<p><strong>Nota:</strong> El usuario 'admin' se actualizó como superadministrador</p>";
                 echo "</div>";
                 
                 // Recargar página para mostrar cambios
