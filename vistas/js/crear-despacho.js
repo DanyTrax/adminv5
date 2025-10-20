@@ -32,6 +32,12 @@ $(document).ready(function() {
     // Activar tooltips
     $('[data-toggle="tooltip"]').tooltip();
     
+    // Configurar evento del botón de confirmar agregar producto
+    $("#confirmarAgregarProductoDespacho").on("click", function() {
+        console.log("🔍 DEBUG: Botón confirmarAgregarProductoDespacho clickeado");
+        confirmarAgregarProducto();
+    });
+    
 });
 
 /*=============================================
