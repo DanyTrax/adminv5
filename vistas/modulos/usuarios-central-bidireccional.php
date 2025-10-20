@@ -375,11 +375,11 @@ $(document).ready(function() {
         $.ajax({
             url: "ajax/consultar-usuarios-sucursales.ajax.php",
             method: "POST",
-            data: { tipo_consulta: "remotas" },
+            data: { tipo_consulta: "todas" },
             dataType: "json",
             success: function(respuesta) {
                 if(respuesta.success) {
-                    mostrarUsuariosSucursales(respuesta.data.sucursales);
+                    mostrarUsuariosSucursales(respuesta.data.sucursales, respuesta.data.local);
                 } else {
                     $("#contenidoUsuariosSucursales").html('<div class="alert alert-danger">Error: ' + respuesta.error + '</div>');
                 }
@@ -391,10 +391,46 @@ $(document).ready(function() {
     }
 
     // Función para mostrar usuarios de sucursales
-    function mostrarUsuariosSucursales(sucursales) {
+    function mostrarUsuariosSucursales(sucursales, usuariosLocal) {
         var html = '';
         
-        sucursales.forEach(function(sucursal) {
+        // Mostrar usuarios locales primero
+        if(usuariosLocal && usuariosLocal.length > 0) {
+            html += '<div class="box box-primary">';
+            html += '<div class="box-header with-border">';
+            html += '<h3 class="box-title">';
+            html += '<i class="fa fa-home"></i> Sucursal Local (Pruebas)';
+            html += '<small class="label label-primary">' + usuariosLocal.length + ' usuarios</small>';
+            html += '</h3>';
+            html += '<div class="box-tools pull-right">';
+            html += '<span class="label label-success">Conectado</span>';
+            html += '</div>';
+            html += '</div>';
+            html += '<div class="box-body">';
+            
+            html += '<div class="table-responsive">';
+            html += '<table class="table table-bordered table-striped">';
+            html += '<thead><tr><th>Usuario</th><th>Nombre</th><th>Perfil</th><th>Empresa Actual</th><th>Estado</th><th>Acciones</th></tr></thead>';
+            html += '<tbody>';
+            
+            usuariosLocal.forEach(function(usuario) {
+                html += '<tr>';
+                html += '<td><strong>' + (usuario.usuario || 'N/A') + '</strong></td>';
+                html += '<td>' + (usuario.nombre || 'N/A') + '</td>';
+                html += '<td><span class="label label-info">' + (usuario.perfil || 'N/A') + '</span></td>';
+                html += '<td><span class="label label-' + (usuario.empresa_actual && usuario.empresa_actual !== 'Sin empresa asignada' ? 'success' : 'warning') + '">' + (usuario.empresa_actual || 'Sin empresa') + '</span></td>';
+                html += '<td><span class="label label-' + (usuario.estado ? 'success' : 'danger') + '">' + (usuario.estado ? 'Activo' : 'Inactivo') + '</span></td>';
+                html += '<td><button class="btn btn-xs btn-info btnImportarUsuario" data-usuario=\'' + JSON.stringify(usuario) + '\' data-sucursal=\'{"id": 1, "nombre": "Pruebas", "codigo_sucursal": "SUC001"}\'><i class="fa fa-download"></i> Importar</button></td>';
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            html += '</div></div>';
+        }
+        
+        // Mostrar sucursales remotas
+        if(sucursales && sucursales.length > 0) {
+            sucursales.forEach(function(sucursal) {
             var estadoClass = sucursal.estado_conexion === 'conectado' ? 'success' : 'danger';
             var estadoText = sucursal.estado_conexion === 'conectado' ? 'Conectado' : 'Error';
             
@@ -435,7 +471,8 @@ $(document).ready(function() {
             }
             
             html += '</div></div>';
-        });
+            });
+        }
         
         $("#contenidoUsuariosSucursales").html(html);
     }
