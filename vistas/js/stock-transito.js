@@ -259,7 +259,8 @@ function actualizarTabla() {
 DESCARGA DIRECTA
 =============================================*/
 // COMENTADO: Event listener duplicado - se maneja en stock-transito-usuarios.php
-// $(document).on("click", ".btnDescargaDirecta", function(e) {
+/*
+$(document).on("click", ".btnDescargaDirecta", function(e) {
     e.preventDefault();
     
     console.log("🔍 Evento click detectado en .btnDescargaDirecta");
@@ -299,6 +300,7 @@ DESCARGA DIRECTA
     $("#modalDescargaDirecta").modal("show");
     console.log("🔍 Modal mostrado");
 });
+*/
 
 /*=============================================
 ENVIAR DESCARGA DIRECTA
@@ -368,7 +370,8 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
 EVENTO DE PRUEBA PARA BOTÓN DESCARGA
 =============================================*/
 // COMENTADO: Event listener duplicado - se maneja en stock-transito-usuarios.php
-// $(document).on("click", ".btnDescargaDirecta", function(e) {
+/*
+$(document).on("click", ".btnDescargaDirecta", function(e) {
     e.preventDefault();
     console.log("🎯 Botón de descarga directa clickeado!");
     
@@ -409,6 +412,7 @@ EVENTO DE PRUEBA PARA BOTÓN DESCARGA
     $("#modalDescargaDirecta").modal("show");
     console.log("🔍 Modal mostrado");
 });
+*/
 
 /*=============================================
 FUNCIÓN DIRECTA PARA ABRIR MODAL
