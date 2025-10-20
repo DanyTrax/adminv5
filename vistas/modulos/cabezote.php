@@ -42,15 +42,30 @@
 			<ul class="nav navbar-nav">
 
 				<?php 
-				// MOSTRAR SUCURSALES SOLO PARA ADMINISTRADORES
+				// MOSTRAR GESTIÓN CENTRAL SOLO PARA ADMINISTRADORES
 				if($_SESSION["perfil"] == "Administrador"){ ?>
 				
-				<!-- ICONO SUCURSALES -->
+				<!-- MENÚ GESTIÓN CENTRAL -->
 				<li class="dropdown">
-					<a href="sucursales" title="Administrar Sucursales" class="dropdown-toggle-sucursales">
-						<i class="fa fa-building" style="font-size: 18px; color: #fff;"></i>
-						<span class="hidden-xs" style="margin-left: 5px;">Sucursales</span>
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" title="Gestión Central">
+						<i class="fa fa-cogs" style="font-size: 18px; color: #fff;"></i>
+						<span class="hidden-xs" style="margin-left: 5px;">Gestión Central</span>
+						<i class="fa fa-caret-down" style="margin-left: 5px;"></i>
 					</a>
+					<ul class="dropdown-menu" style="width: 200px; left: auto; right: 0;">
+						<li>
+							<a href="usuarios-central" style="padding: 10px 15px;">
+								<i class="fa fa-users" style="margin-right: 8px; color: #337ab7;"></i>
+								Usuarios Centrales
+							</a>
+						</li>
+						<li>
+							<a href="sucursales" style="padding: 10px 15px;">
+								<i class="fa fa-building" style="margin-right: 8px; color: #5cb85c;"></i>
+								Sucursales
+							</a>
+						</li>
+					</ul>
 				</li>
 
 				<?php } ?>
