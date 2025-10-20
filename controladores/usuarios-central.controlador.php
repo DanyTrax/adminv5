@@ -1,6 +1,6 @@
 <?php
 
-require_once "../modelos/usuarios-central.modelo.php";
+require_once __DIR__ . "/../modelos/usuarios-central.modelo.php";
 
 class ControladorUsuariosCentral {
 
