@@ -1027,3 +1027,6 @@ if($modoEdicion && isset($_POST["editarDespacho"])) {
     }
 }
 ?>
+
+<!-- Incluir JavaScript específico para crear despacho -->
+<script src="vistas/js/crear-despacho.js"></script>
