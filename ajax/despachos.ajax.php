@@ -188,11 +188,12 @@ if(isset($_POST["aceptarDespacho"])){
                             descripcion_producto, 
                             cantidad_disponible, 
                             numero_despacho_origen, 
+                            id_despacho_origen,
                             transportador_id, 
                             nombre_transportador,
                             sucursal_origen,
                             fecha_carga
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
                     ");
                     
                     $stmtInsert->execute([
@@ -200,10 +201,13 @@ if(isset($_POST["aceptarDespacho"])){
                         $producto["descripcion"],
                         $producto["cantidad"],
                         $despacho["numero_despacho"],
+                        $idDespacho,
                         $_SESSION["id"],
                         $_SESSION["nombre"],
                         $despacho["sucursal_origen"]
                     ]);
+                    
+                    Logger::info("✅ Nuevo stock creado - Código: {$producto['codigo']}, Cantidad: {$producto['cantidad']}, Despacho: {$despacho['numero_despacho']}", "despachos.ajax.php", "aceptarDespacho");
                 }
             }
             
