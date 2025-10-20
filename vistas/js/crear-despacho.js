@@ -655,16 +655,29 @@ CONFIRMAR AGREGAR PRODUCTO - VERSIÓN CORREGIDA
 =============================================*/
 function confirmarAgregarProducto() {
     
+    console.log("🔍 DEBUG: Iniciando confirmarAgregarProducto");
+    
     var codigo = $("#codigoProductoDespachoModal").val();
     var descripcion = $("#descripcionProductoDespachoModal").val();
     var cantidadNueva = parseInt($("#cantidadProductoDespachoModal").val());
     var stock = parseInt($("#stockActualProductoDespachoModal").val());
     var observacionNueva = $("#observacionProductoDespachoModal").val();
     
+    console.log("🔍 DEBUG: Datos del producto:", {
+        codigo: codigo,
+        descripcion: descripcion,
+        cantidadNueva: cantidadNueva,
+        stock: stock,
+        observacionNueva: observacionNueva
+    });
+    
     // Validar que no exista ya el producto
     var existente = productosDespacho.find(function(p) {
         return p.codigo === codigo;
     });
+    
+    console.log("🔍 DEBUG: Producto existente:", existente);
+    console.log("🔍 DEBUG: Array productosDespacho actual:", productosDespacho);
     
     if(existente) {
         // Producto existe: SUMAR cantidades y CONCATENAR observaciones
@@ -765,17 +778,25 @@ function confirmarAgregarProducto() {
     }
     
     // Producto nuevo: agregar al despacho
+    console.log("🔍 DEBUG: Agregando producto nuevo al despacho");
+    
     var observacionFinal = observacionNueva.length > 0 ? 
                           `${cantidadNueva} (${observacionNueva})` : 
                           "";
     
-    productosDespacho.push({
+    var nuevoProducto = {
         codigo: codigo,
         descripcion: descripcion,
         cantidad: cantidadNueva,
         stock_disponible: stock,
         observacion: observacionFinal
-    });
+    };
+    
+    console.log("🔍 DEBUG: Nuevo producto a agregar:", nuevoProducto);
+    
+    productosDespacho.push(nuevoProducto);
+    
+    console.log("🔍 DEBUG: Array productosDespacho después de agregar:", productosDespacho);
     
     actualizarVistaProductosDespacho();
     $("#modalCantidadProductoDespacho").modal("hide");
@@ -793,6 +814,9 @@ function confirmarAgregarProducto() {
 ACTUALIZAR VISTA DE PRODUCTOS DESPACHO
 =============================================*/
 function actualizarVistaProductosDespacho() {
+    
+    console.log("🔍 DEBUG: actualizarVistaProductosDespacho - productosDespacho.length:", productosDespacho.length);
+    console.log("🔍 DEBUG: productosDespacho:", productosDespacho);
     
     if(productosDespacho.length === 0) {
         $("#productosDespachoSeleccionados").html(`
