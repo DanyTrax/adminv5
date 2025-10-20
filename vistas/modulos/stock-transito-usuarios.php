@@ -209,8 +209,8 @@ foreach($transportadores as $productos) {
                                                    </strong>
                                                </td>
                                                <td>
-                                                   <div style="max-width: 300px;">
-                                                       <strong><?php echo $producto['descripcion_producto']; ?></strong>
+                                                   <div style="max-width: 300px; line-height: 1.3;">
+                                                       <strong style="word-wrap: break-word; white-space: normal;"><?php echo $producto['descripcion_producto']; ?></strong>
                                                    </div>
                                                </td>
                                                <td>
@@ -234,23 +234,25 @@ foreach($transportadores as $productos) {
                                                        <i class="fa fa-check"></i> Disponible
                                                    </span>
                                                </td>
-                                               <td style="text-align: center;">
-                                                   <div class="btn-group">
+                                               <td style="text-align: center; vertical-align: middle;">
+                                                   <div class="btn-group-vertical" style="width: 100%;">
                                                        <button class="btn btn-info btn-sm btnVerDetalle" 
                                                                data-codigo="<?php echo $producto['codigo_producto']; ?>"
                                                                data-descripcion="<?php echo $producto['descripcion_producto']; ?>"
                                                                data-detalles='<?php echo json_encode($producto['detalles']); ?>'
                                                                data-cronologia='<?php echo json_encode($producto['cronologia_completa']); ?>'
                                                                data-cantidad-total="<?php echo $producto['cantidad_total']; ?>"
-                                                               data-transportador="<?php echo $producto['nombre_transportador']; ?>">
-                                                           <i class="fa fa-info-circle"></i> Detalle
+                                                               data-transportador="<?php echo $producto['nombre_transportador']; ?>"
+                                                               style="width: 100%; margin-bottom: 5px; font-size: 12px; padding: 8px 12px;">
+                                                           <i class="fa fa-info-circle"></i> Ver Detalle
                                                        </button>
                                                        <button class="btn btn-success btn-sm btnDescargaDirecta" 
                                                                data-codigo="<?php echo $producto['codigo_producto']; ?>"
                                                                data-descripcion="<?php echo $producto['descripcion_producto']; ?>"
                                                                data-cantidad="<?php echo $producto['cantidad_total']; ?>"
                                                                data-transportador="<?php echo $producto['nombre_transportador']; ?>"
-                                                               data-detalles='<?php echo json_encode($producto['detalles']); ?>'>
+                                                               data-detalles='<?php echo json_encode($producto['detalles']); ?>'
+                                                               style="width: 100%; font-size: 12px; padding: 8px 12px;">
                                                            <i class="fa fa-download"></i> Descargar
                                                        </button>
                                                    </div>
@@ -496,25 +498,72 @@ foreach($transportadores as $productos) {
     font-size: 12px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .productos-table {
-        font-size: 12px;
-    }
-    
-    .productos-table thead th,
-    .productos-table tbody td {
-        padding: 10px 5px;
-    }
-    
-    .transportador-section .box-header .row {
-        text-align: center;
-    }
-    
-    .transportador-section .box-header .col-md-4 {
-        margin-top: 10px;
-    }
-}
+       /* Mejorar espaciado de descripción */
+       .productos-table tbody td:nth-child(2) {
+           vertical-align: top;
+           padding-top: 12px;
+           padding-bottom: 12px;
+       }
+       
+       .productos-table tbody td:nth-child(2) div {
+           line-height: 1.4;
+           word-spacing: 0.1em;
+       }
+       
+       /* Mejorar botones de acción */
+       .btn-group-vertical .btn {
+           border-radius: 4px;
+           transition: all 0.3s ease;
+           box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+       }
+       
+       .btn-group-vertical .btn:hover {
+           transform: translateY(-1px);
+           box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+       }
+       
+       .btn-group-vertical .btn-info {
+           background: linear-gradient(135deg, #5bc0de 0%, #46b8da 100%);
+           border-color: #46b8da;
+       }
+       
+       .btn-group-vertical .btn-success {
+           background: linear-gradient(135deg, #5cb85c 0%, #449d44 100%);
+           border-color: #449d44;
+       }
+       
+       .btn-group-vertical .btn-info:hover {
+           background: linear-gradient(135deg, #46b8da 0%, #31b0d5 100%);
+       }
+       
+       .btn-group-vertical .btn-success:hover {
+           background: linear-gradient(135deg, #449d44 0%, #398439 100%);
+       }
+       
+       /* Responsive */
+       @media (max-width: 768px) {
+           .productos-table {
+               font-size: 12px;
+           }
+           
+           .productos-table thead th,
+           .productos-table tbody td {
+               padding: 10px 5px;
+           }
+           
+           .transportador-section .box-header .row {
+               text-align: center;
+           }
+           
+           .transportador-section .box-header .col-md-4 {
+               margin-top: 10px;
+           }
+           
+           .btn-group-vertical .btn {
+               font-size: 11px;
+               padding: 6px 8px;
+           }
+       }
 </style>
 
 <script>
