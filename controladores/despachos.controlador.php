@@ -78,6 +78,50 @@ static public function ctrObtenerUltimoDespacho() {
         $respuesta = ModeloDespachos::mdlMostrarDespachos($tabla, $item, $valor);
         return $respuesta;
     }
+    
+    /*=============================================
+    MOSTRAR DESPACHOS PARA TRANSPORTADOR
+    =============================================*/
+    static public function ctrMostrarDespachosTransportador($transportadorId) {
+        
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            $conexion = ConexionCentral::conectar();
+            
+            $sql = "
+                SELECT d.*, 
+                       CASE 
+                           WHEN d.estado = 'pendiente' THEN 'Pendiente de Aceptación'
+                           WHEN d.estado = 'en_transito' AND d.transportador_id = ? THEN 'En Mi Poder'
+                           WHEN d.estado = 'en_transito' AND d.transportador_id != ? THEN 'Asignado a Otro'
+                           WHEN d.estado = 'entregado' THEN 'Entregado'
+                           WHEN d.estado = 'cancelado' THEN 'Cancelado'
+                           ELSE d.estado
+                       END as estado_display
+                FROM despachos d
+                WHERE d.estado IN ('pendiente', 'en_transito', 'entregado', 'cancelado')
+                AND (d.transportador_id = ? OR d.transportador_id IS NULL)
+                ORDER BY 
+                    CASE d.estado 
+                        WHEN 'pendiente' THEN 1
+                        WHEN 'en_transito' THEN 2
+                        WHEN 'entregado' THEN 3
+                        WHEN 'cancelado' THEN 4
+                    END,
+                    d.fecha_creacion DESC
+            ";
+            
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute([$transportadorId, $transportadorId, $transportadorId]);
+            $despachos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return $despachos;
+            
+        } catch(Exception $e) {
+            error_log("Error en ctrMostrarDespachosTransportador: " . $e->getMessage());
+            return [];
+        }
+    }
 
 /*=============================================
 EDITAR DESPACHO - VERSIÓN CORREGIDA

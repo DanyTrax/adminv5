@@ -7,7 +7,7 @@ $idUsuario = $_SESSION["id"];
 if($perfilUsuario == "Transportador") {
     // Mostrar vista específica para transportadores
     include "vistas/modulos/stock-transito-transportador.php";
-} else {
+                } else {
     // Mostrar vista para usuarios (Administrador, Vendedor, etc.)
     include "vistas/modulos/stock-transito-usuarios.php";
 }

@@ -1,5 +1,15 @@
 <div class="content-wrapper">
     <section class="content-header">
+        <?php if($_SESSION["perfil"] == "Transportador"): ?>
+        <h1>
+            <i class="fa fa-truck"></i> Mis Despachos
+            <small>Gestionar despachos asignados</small>
+        </h1>
+        <ol class="breadcrumb">
+            <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
+            <li class="active">Mis Despachos</li>
+        </ol>
+        <?php else: ?>
         <h1>
             Despachos
             <small>Gestión de despachos de mercancía</small>
@@ -8,13 +18,76 @@
             <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
             <li class="active">Despachos</li>
         </ol>
+        <?php endif; ?>
     </section>
 
     <section class="content">
+        <?php if($_SESSION["perfil"] == "Transportador"): ?>
+        <!-- INFORMACIÓN ESPECÍFICA PARA TRANSPORTADOR -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-info">
+                    <h4><i class="fa fa-info-circle"></i> Información para Transportador</h4>
+                    <p>Como transportador, puedes <strong>aceptar</strong> despachos pendientes y gestionar tu <strong>stock en tránsito</strong>. 
+                    Los despachos que aceptes se agregarán a tu inventario de productos en tránsito.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ESTADÍSTICAS RÁPIDAS PARA TRANSPORTADOR -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="info-box bg-yellow">
+                    <span class="info-box-icon"><i class="fa fa-clock-o"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Pendientes</span>
+                        <span class="info-box-number" id="contadorPendientes">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box bg-blue">
+                    <span class="info-box-icon"><i class="fa fa-truck"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">En Tránsito</span>
+                        <span class="info-box-number" id="contadorEnTransito">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box bg-green">
+                    <span class="info-box-icon"><i class="fa fa-check"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Entregados</span>
+                        <span class="info-box-number" id="contadorEntregados">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-box bg-red">
+                    <span class="info-box-icon"><i class="fa fa-times"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Cancelados</span>
+                        <span class="info-box-number" id="contadorCancelados">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+        
         <div class="box">
             
             <!-- HEADER CON CONTROLES -->
             <div class="box-header with-border">
+                <?php if($_SESSION["perfil"] == "Transportador"): ?>
+                <h3 class="box-title">
+                    <i class="fa fa-truck"></i> Mis Despachos Asignados
+                </h3>
+                <?php else: ?>
+                <h3 class="box-title">
+                    <i class="fa fa-list-alt"></i> Gestión de Despachos
+                </h3>
+                <?php endif; ?>
                 
                 <div class="row">
                     <div class="col-md-6">

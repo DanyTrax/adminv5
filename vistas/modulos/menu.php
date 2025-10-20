@@ -138,15 +138,22 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" 
           </a>
           <ul class="treeview-menu">';
     
-    // OPCIÓN "DESPACHOS" - Para todos menos Transportador
-    if ($_SESSION["perfil"] != "Transportador") {
-        echo '<li>
-                <a href="despachos">
-                  <i class="fa fa-list-alt"></i>
-                  <span>Gestión de Despachos</span>
-                </a>
-              </li>';
-        
+    // OPCIÓN "DESPACHOS" - Para todos los perfiles
+    echo '<li>
+            <a href="despachos">
+              <i class="fa fa-list-alt"></i>
+              <span>Gestión de Despachos</span>';
+    
+    // Badge de notificación para transportadores (despachos pendientes)
+    if ($_SESSION["perfil"] == "Transportador") {
+        echo '<small class="label pull-right bg-orange" id="badgeDespachosPendientes" style="display: none;">0</small>';
+    }
+    
+    echo '    </a>
+          </li>';
+    
+    // OPCIÓN "CREAR DESPACHO" - Solo para Administrador, Vendedor y Contador
+    if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor" || $_SESSION["perfil"] == "Contador") {
         echo '<li>
                 <a href="crear-despacho">
                   <i class="fa fa-plus-circle"></i>
