@@ -181,24 +181,10 @@ function configurarEventos() {
         filtrarProductosLocal($(this).val());
     });
     
-    // Búsqueda de solicitudes
-    console.log("🔍 Configurando event listener para numeroSolicitudBuscar...");
-    console.log("🔍 Elemento existe:", $("#numeroSolicitudBuscar").length > 0);
-    
-    $("#numeroSolicitudBuscar").on("keyup", function() {
-        var termino = $(this).val();
-        console.log("⌨️ Tecla presionada en numeroSolicitudBuscar. Término:", termino, "Longitud:", termino.length);
-        
-        if(termino.length >= 3) {
-            console.log("🔍 Iniciando búsqueda con término:", termino);
-            buscarSolicitudesStock(termino);
-        } else {
-            console.log("❌ Término muy corto, ocultando resultados");
-            ocultarResultadosSolicitudes();
-        }
-    });
-    
-    console.log("✅ Event listener configurado para numeroSolicitudBuscar");
+    // Búsqueda de solicitudes - configurar después de un pequeño delay
+    setTimeout(function() {
+        configurarBusquedaSolicitudes();
+    }, 100);
     
     // Confirmar agregar producto
     $("#confirmarAgregarProductoDespacho").on("click", function() {
@@ -209,6 +195,33 @@ function configurarEventos() {
     $("#cantidadProductoDespachoModal").on("input", function() {
         validarCantidadModal();
     });
+}
+
+/*=============================================
+CONFIGURAR BÚSQUEDA DE SOLICITUDES
+=============================================*/
+function configurarBusquedaSolicitudes() {
+    console.log("🔍 Configurando event listener para numeroSolicitudBuscar...");
+    console.log("🔍 Elemento existe:", $("#numeroSolicitudBuscar").length > 0);
+    
+    if ($("#numeroSolicitudBuscar").length > 0) {
+        $("#numeroSolicitudBuscar").on("keyup", function() {
+            var termino = $(this).val();
+            console.log("⌨️ Tecla presionada en numeroSolicitudBuscar. Término:", termino, "Longitud:", termino.length);
+            
+            if(termino.length >= 3) {
+                console.log("🔍 Iniciando búsqueda con término:", termino);
+                buscarSolicitudesStock(termino);
+            } else {
+                console.log("❌ Término muy corto, ocultando resultados");
+                ocultarResultadosSolicitudes();
+            }
+        });
+        
+        console.log("✅ Event listener configurado para numeroSolicitudBuscar");
+    } else {
+        console.log("❌ Elemento numeroSolicitudBuscar no encontrado");
+    }
 }
 
 /*=============================================
