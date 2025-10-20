@@ -12,7 +12,7 @@ if (!headers_sent()) {
     header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 }
 
-require_once "../modelos/usuarios-central.modelo.php";
+require_once __DIR__ . "/../modelos/usuarios-central.modelo.php";
 
 class AjaxTablaUsuariosCentral {
 
