@@ -877,4 +877,7 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
         }
     });
 });
+
+// Incluir script limpio
 </script>
+<script src="vistas/js/stock-transito-clean.js"></script>

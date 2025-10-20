@@ -258,7 +258,8 @@ function actualizarTabla() {
 /*=============================================
 DESCARGA DIRECTA
 =============================================*/
-$(document).on("click", ".btnDescargaDirecta", function(e) {
+// COMENTADO: Event listener duplicado - se maneja en stock-transito-usuarios.php
+// $(document).on("click", ".btnDescargaDirecta", function(e) {
     e.preventDefault();
     
     console.log("🔍 Evento click detectado en .btnDescargaDirecta");
@@ -326,7 +327,7 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
     
     var datos = new FormData();
     datos.append("descargarStockDirecto", true);
-    datos.append("idStockTransito", idStockTransito);
+    datos.append("codigoProducto", idStockTransito); // Usar como código de producto
     datos.append("cantidadDescargar", cantidadDescargar);
     datos.append("observaciones", observaciones);
     
@@ -366,7 +367,8 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
 /*=============================================
 EVENTO DE PRUEBA PARA BOTÓN DESCARGA
 =============================================*/
-$(document).on("click", ".btnDescargaDirecta", function(e) {
+// COMENTADO: Event listener duplicado - se maneja en stock-transito-usuarios.php
+// $(document).on("click", ".btnDescargaDirecta", function(e) {
     e.preventDefault();
     console.log("🎯 Botón de descarga directa clickeado!");
     
