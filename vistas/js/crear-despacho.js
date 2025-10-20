@@ -184,9 +184,13 @@ function configurarEventos() {
     // Búsqueda de solicitudes
     $("#numeroSolicitudBuscar").on("keyup", function() {
         var termino = $(this).val();
+        console.log("⌨️ Tecla presionada en numeroSolicitudBuscar. Término:", termino, "Longitud:", termino.length);
+        
         if(termino.length >= 3) {
+            console.log("🔍 Iniciando búsqueda con término:", termino);
             buscarSolicitudesStock(termino);
         } else {
+            console.log("❌ Término muy corto, ocultando resultados");
             ocultarResultadosSolicitudes();
         }
     });
@@ -234,6 +238,7 @@ function filtrarProductosLocal(termino) {
 BUSCAR SOLICITUDES DE STOCK
 =============================================*/
 function buscarSolicitudesStock(termino) {
+    console.log("🔍 buscarSolicitudesStock llamada con término:", termino);
     
     $.ajax({
         url: "ajax/productos-despacho.ajax.php",
@@ -243,16 +248,24 @@ function buscarSolicitudesStock(termino) {
             termino: termino
         },
         dataType: "json",
+        beforeSend: function() {
+            console.log("📤 Enviando petición AJAX...");
+        },
         success: function(respuesta) {
+            console.log("✅ Respuesta recibida:", respuesta);
             
-            if(respuesta.success && respuesta.solicitudes.length > 0) {
+            if(respuesta.success && respuesta.solicitudes && respuesta.solicitudes.length > 0) {
+                console.log("📋 Mostrando resultados:", respuesta.solicitudes.length, "solicitudes");
                 mostrarResultadosSolicitudes(respuesta.solicitudes);
             } else {
+                console.log("❌ No hay resultados o error en respuesta");
                 mostrarSinResultadosSolicitudes();
             }
         },
         error: function(xhr, status, error) {
-            console.error("Error buscando solicitudes:", error);
+            console.error("❌ Error AJAX buscando solicitudes:", error);
+            console.error("Status:", status);
+            console.error("Response:", xhr.responseText);
             mostrarErrorBusquedaSolicitudes();
         }
     });
