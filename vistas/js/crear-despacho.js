@@ -56,11 +56,23 @@ $(document).ready(function() {
             
             // Probar función de búsqueda directamente
             window.probarBusqueda = function() {
-                console.log("🧪 Probando búsqueda con 'test'");
-                buscarSolicitudesStock("test");
+                console.log("🧪 Probando búsqueda con 'SOL000005'");
+                buscarSolicitudesStock("SOL000005");
             };
             
-            console.log("🧪 Función de prueba disponible: probarBusqueda()");
+            // Probar función de búsqueda con término corto
+            window.probarBusquedaCorta = function() {
+                console.log("🧪 Probando búsqueda con 'SOL'");
+                buscarSolicitudesStock("SOL");
+            };
+            
+            console.log("🧪 Funciones de prueba disponibles:");
+            console.log("   - probarBusqueda() - busca 'SOL000005'");
+            console.log("   - probarBusquedaCorta() - busca 'SOL'");
+            
+            // Probar inmediatamente con un término que sabemos que funciona
+            console.log("🧪 Probando búsqueda automática con 'SOL'");
+            buscarSolicitudesStock("SOL");
         }
     }, 1000);
     
@@ -209,6 +221,7 @@ function configurarEventos() {
     
     // Búsqueda de solicitudes - configurar después de un delay
     setTimeout(function() {
+        console.log("⏰ Ejecutando configurarBusquedaSolicitudes después de delay");
         configurarBusquedaSolicitudes();
     }, 500);
     

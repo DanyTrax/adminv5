@@ -8,7 +8,7 @@ $_SESSION["perfil"] = "Administrador";
 
 // Simular POST request
 $_POST["buscarSolicitudes"] = true;
-$_POST["termino"] = "test";
+$_POST["termino"] = "SOL000005";
 
 echo "<h1>Test Endpoint AJAX</h1>";
 echo "<p>Probando endpoint: ajax/productos-despacho.ajax.php</p>";
