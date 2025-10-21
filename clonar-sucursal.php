@@ -48,12 +48,27 @@ class ClonadorSucursal {
      * Obtener datos de la sucursal origen
      */
     private function obtenerSucursalOrigen($id) {
-        $stmt = $this->conexionCentral->prepare("
-            SELECT * FROM sucursales WHERE id = :id
-        ");
-        $stmt->bindParam(":id", $id);
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        // Si no se especifica ID o es 0, obtener la primera sucursal disponible
+        if($id <= 0) {
+            $stmt = $this->conexionCentral->prepare("
+                SELECT * FROM sucursales WHERE activo = 1 ORDER BY id ASC LIMIT 1
+            ");
+            $stmt->execute();
+        } else {
+            $stmt = $this->conexionCentral->prepare("
+                SELECT * FROM sucursales WHERE id = :id
+            ");
+            $stmt->bindParam(":id", $id);
+            $stmt->execute();
+        }
+        
+        $sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if(!$sucursal) {
+            throw new Exception("No se encontró sucursal origen. Verifica que existan sucursales en la BD Central.");
+        }
+        
+        return $sucursal;
     }
     
     /**
@@ -333,8 +348,17 @@ if(isset($_GET['ejecutar']) && $_GET['ejecutar'] == '1') {
         }
         echo "<p>✅ Conexión a BD Local: OK</p>";
         
-        // Crear clonador
-        $clonador = new ClonadorSucursal(1, $datosNuevaSucursal); // ID 1 = sucursal origen
+        // Mostrar información de la sucursal origen
+        $stmt = $conexionCentral->prepare("SELECT * FROM sucursales WHERE activo = 1 ORDER BY id ASC LIMIT 1");
+        $stmt->execute();
+        $sucursalOrigen = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if($sucursalOrigen) {
+            echo "<p>📋 Sucursal origen: <strong>{$sucursalOrigen['nombre']}</strong> (ID: {$sucursalOrigen['id']})</p>";
+        }
+        
+        // Crear clonador (0 = usar primera sucursal disponible)
+        $clonador = new ClonadorSucursal(0, $datosNuevaSucursal);
         $resultado = $clonador->ejecutarClonacion();
         
         if($resultado['success']) {
