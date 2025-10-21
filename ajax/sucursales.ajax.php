@@ -94,7 +94,7 @@ class AjaxSucursales {
                     // Botón probar conexión
                     if ($sucursal['codigo_sucursal'] !== $codigoActual) {
                         $acciones .= '<button class="btn btn-info btn-xs btnProbarConexion" 
-                                        apiUrl="' . htmlspecialchars($sucursal['url_api']) . '" 
+                                        idSucursal="' . $sucursal['id'] . '" 
                                         nombreSucursal="' . htmlspecialchars($sucursal['nombre']) . '"
                                         title="Probar conexión">
                                         <i class="fa fa-wifi"></i>
