@@ -1964,21 +1964,23 @@ function cargarProductosDesdeSolicitud() {
     $("#idSolicitudOrigenHidden").val(solicitudSeleccionada.id);
     
     // Cargar productos automáticamente después de que el inventario esté cargado
-    setTimeout(function() {
-        if(inventarioLocal.length > 0) {
-            cargarProductosDeSolicitud();
-        } else {
-            console.log("⏳ Esperando inventario local...");
-            // Esperar un poco más y volver a intentar
-            setTimeout(function() {
-                if(inventarioLocal.length > 0) {
-                    cargarProductosDeSolicitud();
-                } else {
-                    console.log("❌ No se pudo cargar el inventario local");
-                }
-            }, 1000);
-        }
-    }, 500);
+    if(inventarioLocal.length > 0) {
+        console.log("✅ Inventario ya cargado, procediendo con solicitud");
+        cargarProductosDeSolicitud();
+    } else {
+        console.log("⏳ Inventario no cargado, cargando primero...");
+        cargarProductosInventario();
+        
+        // Esperar a que se cargue el inventario y luego cargar la solicitud
+        setTimeout(function() {
+            if(inventarioLocal.length > 0) {
+                console.log("✅ Inventario cargado, procediendo con solicitud");
+                cargarProductosDeSolicitud();
+            } else {
+                console.log("❌ No se pudo cargar el inventario local");
+            }
+        }, 2000);
+    }
     
     console.log("✅ Solicitud cargada automáticamente desde:", window.solicitudOrigen.numero_solicitud);
 }
