@@ -601,9 +601,12 @@ function seleccionarSolicitud(idSolicitud) {
                         </div>
                         
                         <div style="margin-top: 10px; text-align: center;">
-                            <span style="background: #28a745; color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px;">
+                            <span style="background: #28a745; color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px; margin-right: 10px;">
                                 <i class="fa fa-check"></i> Solicitud seleccionada - Lista para agregar al despacho
                             </span>
+                            <button type="button" class="btn btn-sm btn-warning" onclick="limpiarSolicitudSeleccionada()" style="padding: 4px 8px; font-size: 11px;">
+                                <i class="fa fa-times"></i> Limpiar
+                            </button>
                         </div>
                     </div>
                 `;
@@ -876,6 +879,9 @@ console.log("✅ Nota agregada al campo detalleAdicional:", notaGeneral);
             text: mensaje,
             type: tipoMensaje,
             confirmButtonText: "Entendido"
+        }).then(function() {
+            // Limpiar solicitud seleccionada después de cargar productos
+            limpiarSolicitudSeleccionada();
         });
         
         // Limpiar campo de búsqueda para permitir agregar otra solicitud
@@ -1952,9 +1958,12 @@ function cargarProductosDesdeSolicitud() {
             </div>
             
             <div style="margin-top: 10px; text-align: center;">
-                <span style="background: #28a745; color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px;">
+                <span style="background: #28a745; color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px; margin-right: 10px;">
                     <i class="fa fa-check"></i> Solicitud cargada automáticamente - Lista para agregar al despacho
                 </span>
+                <button type="button" class="btn btn-sm btn-warning" onclick="limpiarSolicitudSeleccionada()" style="padding: 4px 8px; font-size: 11px;">
+                    <i class="fa fa-times"></i> Limpiar
+                </button>
             </div>
         </div>
     `;
@@ -1983,4 +1992,32 @@ function cargarProductosDesdeSolicitud() {
     }
     
     console.log("✅ Solicitud cargada automáticamente desde:", window.solicitudOrigen.numero_solicitud);
+}
+
+/*=============================================
+LIMPIAR SOLICITUD SELECCIONADA
+=============================================*/
+function limpiarSolicitudSeleccionada() {
+    
+    console.log("🧹 Limpiando solicitud seleccionada...");
+    
+    // Limpiar variable global
+    solicitudSeleccionada = null;
+    
+    // Limpiar campo de búsqueda
+    $("#numeroSolicitudBuscar").val("");
+    
+    // Ocultar sección de información de solicitud
+    $("#infoSolicitudEncontrada").hide();
+    
+    // Limpiar contenido de la sección
+    $("#datosSolicitudEncontrada").html("");
+    
+    // Limpiar campo oculto
+    $("#idSolicitudOrigenHidden").val("");
+    
+    // Ocultar resultados de búsqueda si están visibles
+    ocultarResultadosSolicitudes();
+    
+    console.log("✅ Solicitud seleccionada limpiada correctamente");
 }
