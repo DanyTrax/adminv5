@@ -320,12 +320,14 @@ class ModeloUsuariosCentral {
             $conexionLocal = Conexion::conectar();
             
             // Obtener información de la sucursal (incluyendo campos de conexión)
+            // Excluir sucursales que apunten a la misma BD local
             $stmt = $conexionCentral->prepare("
                 SELECT 
                     id, nombre, codigo_sucursal, url_api, activo,
                     usuario_bd, password_bd, nombre_bd, host_bd, puerto_bd
                 FROM sucursales 
-                WHERE activo = 1
+                WHERE activo = 1 
+                AND NOT (host_bd = 'localhost' AND nombre_bd = 'epicosie_pruebas')
                 " . ($sucursalId ? "AND id = ?" : "") . "
                 ORDER BY nombre
             ");
