@@ -38,6 +38,32 @@ $(document).ready(function() {
         confirmarAgregarProducto();
     });
     
+    // PRUEBA INMEDIATA DEL ELEMENTO
+    setTimeout(function() {
+        console.log("🧪 PRUEBA INMEDIATA - Verificando elemento numeroSolicitudBuscar");
+        console.log("🧪 Elemento existe:", $("#numeroSolicitudBuscar").length > 0);
+        console.log("🧪 Elemento visible:", $("#numeroSolicitudBuscar").is(":visible"));
+        console.log("🧪 Elemento habilitado:", !$("#numeroSolicitudBuscar").prop("disabled"));
+        console.log("🧪 Valor actual:", $("#numeroSolicitudBuscar").val());
+        
+        if($("#numeroSolicitudBuscar").length > 0) {
+            console.log("✅ Elemento encontrado - configurando eventos de prueba");
+            
+            // Agregar evento de prueba simple
+            $("#numeroSolicitudBuscar").on("click", function() {
+                console.log("🖱️ CLICK detectado en numeroSolicitudBuscar");
+            });
+            
+            // Probar función de búsqueda directamente
+            window.probarBusqueda = function() {
+                console.log("🧪 Probando búsqueda con 'test'");
+                buscarSolicitudesStock("test");
+            };
+            
+            console.log("🧪 Función de prueba disponible: probarBusqueda()");
+        }
+    }, 1000);
+    
 });
 
 /*=============================================
@@ -240,6 +266,21 @@ function configurarBusquedaSolicitudes() {
         // Agregar evento de blur para debugging
         $("#numeroSolicitudBuscar").on("blur", function() {
             console.log("👋 Campo numeroSolicitudBuscar perdió focus");
+        });
+        
+        // Agregar evento específico para Enter
+        $("#numeroSolicitudBuscar").on("keydown", function(e) {
+            console.log("⌨️ Keydown detectado, tecla:", e.keyCode);
+            if(e.keyCode === 13) { // Enter
+                console.log("⏎ ENTER presionado - ejecutando búsqueda");
+                e.preventDefault();
+                var termino = $(this).val();
+                if(termino.length >= 3) {
+                    buscarSolicitudesStock(termino);
+                } else {
+                    console.log("❌ Término muy corto para buscar");
+                }
+            }
         });
         
         console.log("✅ Event listeners configurados para numeroSolicitudBuscar");
