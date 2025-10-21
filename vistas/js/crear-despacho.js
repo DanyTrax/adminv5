@@ -38,6 +38,12 @@ $(document).ready(function() {
         confirmarAgregarProducto();
     });
     
+    // CARGAR DESDE SOLICITUD SI ES NECESARIO
+    if(typeof window.cargarDesdeSolicitud !== 'undefined' && window.cargarDesdeSolicitud) {
+        console.log("🚛 Cargando despacho desde solicitud...");
+        cargarProductosDesdeSolicitud();
+    }
+    
     // PRUEBA INMEDIATA DEL ELEMENTO
     setTimeout(function() {
         console.log("🧪 PRUEBA INMEDIATA - Verificando elemento numeroSolicitudBuscar");
@@ -1861,3 +1867,91 @@ $(document).ready(function() {
     });
     
 });
+
+/*=============================================
+CARGAR PRODUCTOS DESDE SOLICITUD
+=============================================*/
+function cargarProductosDesdeSolicitud() {
+    
+    if(!window.solicitudOrigen || !window.productosDesdeSolicitud) {
+        console.log("❌ No hay datos de solicitud para cargar");
+        return;
+    }
+    
+    console.log("🚛 Cargando productos desde solicitud:", window.solicitudOrigen.numero_solicitud);
+    console.log("📦 Productos a cargar:", window.productosDesdeSolicitud);
+    
+    // Llenar el campo de búsqueda con el número de solicitud
+    $("#numeroSolicitudBuscar").val(window.solicitudOrigen.numero_solicitud);
+    
+    // Simular la selección de la solicitud
+    solicitudSeleccionada = window.solicitudOrigen;
+    
+    // Mostrar información de la solicitud
+    var estadoColor = solicitudSeleccionada.estado === 'aprobado' ? '#5cb85c' : '#f0ad4e';
+    var fecha = new Date(solicitudSeleccionada.fecha_solicitud).toLocaleDateString();
+    
+    var infoHtml = `
+        <div style="background: #e8f5e8; padding: 15px; border-radius: 5px; border-left: 4px solid ${estadoColor};">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 style="margin: 0; color: #333;">
+                    <i class="fa fa-file-text"></i> ${solicitudSeleccionada.numero_solicitud}
+                    <span style="background: ${estadoColor}; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px; margin-left: 8px;">
+                        ${solicitudSeleccionada.estado.toUpperCase()}
+                    </span>
+                </h4>
+                <small style="color: #666;">${fecha}</small>
+            </div>
+            
+            <div style="margin-bottom: 10px; font-size: 13px; color: #666;">
+                <strong><i class="fa fa-user"></i> Usuario:</strong> ${solicitudSeleccionada.nombre_usuario_solicitante}<br>
+                <strong><i class="fa fa-building"></i> Sucursal:</strong> ${solicitudSeleccionada.nombre_sucursal_solicitante}<br>
+                <strong><i class="fa fa-cubes"></i> Resumen:</strong> ${solicitudSeleccionada.total_productos} productos (${solicitudSeleccionada.total_cantidad} unidades)
+            </div>
+            
+            <div style="background: white; padding: 10px; border-radius: 4px; border: 1px solid #dee2e6;">
+                <strong style="color: #333; font-size: 13px; display: block; margin-bottom: 8px;">
+                    <i class="fa fa-list"></i> Productos solicitados:
+                </strong>
+                <div style="max-height: 150px; overflow-y: auto;">
+    `;
+    
+    if(window.productosDesdeSolicitud.length > 0) {
+        window.productosDesdeSolicitud.forEach(function(producto, index) {
+            infoHtml += `
+                <div style="padding: 6px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;">
+                        <span style="color: #666; font-family: monospace; font-size: 12px;">${producto.codigo}</span>
+                        <span style="color: #333; font-size: 12px; margin-left: 8px;">${producto.descripcion}</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="background: #007bff; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold;">
+                            ${producto.cantidad} unidades
+                        </span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    infoHtml += `
+                </div>
+            </div>
+            
+            <div style="margin-top: 10px; text-align: center;">
+                <span style="background: #28a745; color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px;">
+                    <i class="fa fa-check"></i> Solicitud cargada automáticamente - Lista para agregar al despacho
+                </span>
+            </div>
+        </div>
+    `;
+    
+    $("#datosSolicitudEncontrada").html(infoHtml);
+    $("#infoSolicitudEncontrada").show();
+    $("#idSolicitudOrigenHidden").val(solicitudSeleccionada.id);
+    
+    // Cargar productos automáticamente
+    cargarProductosDeSolicitud();
+    
+    console.log("✅ Solicitud cargada automáticamente desde:", window.solicitudOrigen.numero_solicitud);
+}

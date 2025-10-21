@@ -20,6 +20,41 @@ if($_SESSION["perfil"] == "Limitado" || $_SESSION["perfil"] == "Transportador"){
     return;
 }}
 
+// LÓGICA PARA CARGAR DESDE SOLICITUD
+$cargarDesdeSolicitud = false;
+$solicitudOrigen = null;
+$productosDesdeSolicitud = [];
+
+if(isset($_GET["desde_solicitud"]) && $_GET["desde_solicitud"] == "1" && isset($_GET["id_solicitud"])) {
+    
+    $cargarDesdeSolicitud = true;
+    $idSolicitud = $_GET["id_solicitud"];
+    $numeroSolicitud = $_GET["numero_solicitud"] ?? '';
+    
+    error_log("🚛 Cargando despacho desde solicitud ID: " . $idSolicitud);
+    
+    try {
+        require_once "api-transferencias/conexion-central.php";
+        
+        $stmt = ConexionCentral::conectar()->prepare("
+            SELECT * FROM solicitudes_stock 
+            WHERE id = :id AND estado = 'aprobado'
+        ");
+        $stmt->bindParam(":id", $idSolicitud);
+        $stmt->execute();
+        $solicitudOrigen = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if($solicitudOrigen) {
+            $productosDesdeSolicitud = json_decode($solicitudOrigen['productos_solicitados'] ?? '[]', true);
+            error_log("✅ Solicitud encontrada: " . $solicitudOrigen['numero_solicitud'] . " con " . count($productosDesdeSolicitud) . " productos");
+        } else {
+            error_log("❌ Solicitud no encontrada o no está aprobada");
+        }
+        
+    } catch(Exception $e) {
+        error_log("❌ Error cargando solicitud: " . $e->getMessage());
+    }
+}
 
 // LÓGICA DE EDICIÓN
 $modoEdicion = false;
@@ -1027,6 +1062,19 @@ if($modoEdicion && isset($_POST["editarDespacho"])) {
     }
 }
 ?>
+
+<!-- Variables JavaScript para cargar desde solicitud -->
+<script>
+    // Variables para cargar desde solicitud
+    window.cargarDesdeSolicitud = <?php echo $cargarDesdeSolicitud ? 'true' : 'false'; ?>;
+    window.solicitudOrigen = <?php echo json_encode($solicitudOrigen); ?>;
+    window.productosDesdeSolicitud = <?php echo json_encode($productosDesdeSolicitud); ?>;
+    
+    console.log("🚛 Variables de solicitud cargadas:");
+    console.log("- Cargar desde solicitud:", window.cargarDesdeSolicitud);
+    console.log("- Solicitud origen:", window.solicitudOrigen);
+    console.log("- Productos desde solicitud:", window.productosDesdeSolicitud);
+</script>
 
 <!-- Incluir JavaScript específico para crear despacho -->
 <script src="vistas/js/crear-despacho.js"></script>

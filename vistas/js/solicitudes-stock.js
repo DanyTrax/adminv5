@@ -484,6 +484,82 @@ $(document).on('keydown', '#cantidadProductoModal', function(e) {
 });
 
 /*=============================================
+CREAR DESPACHO DESDE SOLICITUD
+=============================================*/
+$(document).on('click', '.btnCrearDespachoDesdeSolicitud', function() {
+    
+    var idSolicitud = $(this).attr('idSolicitud');
+    var numeroSolicitud = $(this).attr('numeroSolicitud');
+    
+    console.log("🚛 Crear despacho desde solicitud ID:", idSolicitud, "Número:", numeroSolicitud);
+    
+    // Mostrar loading
+    $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+    
+    // Obtener detalles de la solicitud
+    $.ajax({
+        url: 'ajax/solicitudes-stock.ajax.php',
+        type: 'POST',
+        data: {
+            accion: 'ver_detalle',
+            id_solicitud: idSolicitud
+        },
+        dataType: 'json',
+        success: function(response) {
+            if(response.success) {
+                // Redirigir a crear despacho con los datos de la solicitud
+                var solicitud = response.data;
+                var productos = JSON.parse(solicitud.productos_solicitados || '[]');
+                
+                // Crear URL con parámetros
+                var url = 'crear-despacho?desde_solicitud=1&id_solicitud=' + idSolicitud + '&numero_solicitud=' + encodeURIComponent(numeroSolicitud);
+                
+                // Mostrar confirmación
+                swal({
+                    title: '¿Crear despacho desde solicitud?',
+                    html: `
+                        <p><strong>Solicitud:</strong> ${numeroSolicitud}</p>
+                        <p><strong>Productos:</strong> ${productos.length} productos</p>
+                        <p><strong>Total unidades:</strong> ${solicitud.total_cantidad}</p>
+                        <p>Se abrirá la página de crear despacho con los productos ya cargados.</p>
+                    `,
+                    type: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, crear despacho',
+                    cancelButtonText: 'Cancelar'
+                }).then(function(result) {
+                    if(result.value) {
+                        window.location.href = url;
+                    }
+                });
+                
+            } else {
+                swal({
+                    title: 'Error',
+                    text: response.message || 'No se pudieron obtener los detalles de la solicitud',
+                    type: 'error',
+                    confirmButtonText: 'Cerrar'
+                });
+            }
+        },
+        error: function() {
+            swal({
+                title: 'Error',
+                text: 'Error de conexión al obtener detalles de la solicitud',
+                type: 'error',
+                confirmButtonText: 'Cerrar'
+            });
+        },
+        complete: function() {
+            // Restaurar botón
+            $('.btnCrearDespachoDesdeSolicitud[idSolicitud="' + idSolicitud + '"]')
+                .prop('disabled', false)
+                .html('<i class="fa fa-truck"></i>');
+        }
+    });
+});
+
+/*=============================================
 VER DETALLES DE SOLICITUD
 =============================================*/
 $(document).on('click', '.btnVerSolicitud', function() {

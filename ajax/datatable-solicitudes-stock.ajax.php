@@ -85,6 +85,16 @@ try {
                             <i class='fa fa-eye'></i>
                         </button>";
             
+            // ✅ BOTÓN CREAR DESPACHO - Solo para solicitudes aprobadas
+            if($estado == "aprobado") {
+                $acciones .= " <button class='btn btn-primary btn-xs btnCrearDespachoDesdeSolicitud' 
+                                idSolicitud='{$solicitud["id"]}' 
+                                numeroSolicitud='{$solicitud["numero_solicitud"]}'
+                                title='Crear despacho desde esta solicitud'>
+                                <i class='fa fa-truck'></i>
+                            </button>";
+            }
+            
             // ✅ BOTONES DE ACCIÓN - Solo Transportador/Administrador
             if($usuario_actual["perfil"] == "Transportador" || $usuario_actual["perfil"] == "Administrador") {
                 if($estado == "pendiente") {
