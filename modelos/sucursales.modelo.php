@@ -656,8 +656,9 @@ class ModeloSucursales {
         try {
             $inicioTiempo = microtime(true);
             
-            // Obtener datos de conexión de la sucursal
-            $stmt = Conexion::conectar()->prepare("
+            // Obtener datos de conexión de la sucursal desde la BD central
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            $stmt = ConexionCentral::conectar()->prepare("
                 SELECT nombre, usuario_bd, password_bd, nombre_bd, host_bd, puerto_bd 
                 FROM sucursales 
                 WHERE id = :id
