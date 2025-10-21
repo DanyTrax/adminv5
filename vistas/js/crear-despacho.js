@@ -529,12 +529,77 @@ function seleccionarSolicitud(idSolicitud) {
                 // Mostrar información de la solicitud
                 $("#numeroSolicitudBuscar").val(solicitudSeleccionada.numero_solicitud);
                 
+                // Parsear productos de la solicitud
+                var productos = [];
+                try {
+                    productos = JSON.parse(solicitudSeleccionada.productos_solicitados || '[]');
+                } catch(e) {
+                    console.warn("Error parseando productos de solicitud seleccionada:", e);
+                    productos = [];
+                }
+                
+                var estadoColor = solicitudSeleccionada.estado === 'aprobado' ? '#5cb85c' : '#f0ad4e';
+                var fecha = new Date(solicitudSeleccionada.fecha_solicitud).toLocaleDateString();
+                
                 var infoHtml = `
-                    <strong>Código:</strong> ${solicitudSeleccionada.numero_solicitud}<br>
-                    <strong>Usuario:</strong> ${solicitudSeleccionada.nombre_usuario_solicitante}<br>
-                    <strong>Origen:</strong> ${solicitudSeleccionada.nombre_sucursal_solicitante}<br>
-                    <strong>Estado:</strong> <span class="label label-${solicitudSeleccionada.estado === 'aprobado' ? 'success' : 'warning'}">${solicitudSeleccionada.estado.toUpperCase()}</span><br>
-                    <strong>Productos:</strong> ${solicitudSeleccionada.total_productos} (${solicitudSeleccionada.total_cantidad} unidades)
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid ${estadoColor};">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <h4 style="margin: 0; color: #333;">
+                                <i class="fa fa-file-text"></i> ${solicitudSeleccionada.numero_solicitud}
+                                <span style="background: ${estadoColor}; color: white; padding: 2px 8px; border-radius: 3px; font-size: 12px; margin-left: 8px;">
+                                    ${solicitudSeleccionada.estado.toUpperCase()}
+                                </span>
+                            </h4>
+                            <small style="color: #666;">${fecha}</small>
+                        </div>
+                        
+                        <div style="margin-bottom: 10px; font-size: 13px; color: #666;">
+                            <strong><i class="fa fa-user"></i> Usuario:</strong> ${solicitudSeleccionada.nombre_usuario_solicitante}<br>
+                            <strong><i class="fa fa-building"></i> Sucursal:</strong> ${solicitudSeleccionada.nombre_sucursal_solicitante}<br>
+                            <strong><i class="fa fa-cubes"></i> Resumen:</strong> ${solicitudSeleccionada.total_productos} productos (${solicitudSeleccionada.total_cantidad} unidades)
+                        </div>
+                        
+                        <div style="background: white; padding: 10px; border-radius: 4px; border: 1px solid #dee2e6;">
+                            <strong style="color: #333; font-size: 13px; display: block; margin-bottom: 8px;">
+                                <i class="fa fa-list"></i> Productos solicitados:
+                            </strong>
+                            <div style="max-height: 150px; overflow-y: auto;">
+                `;
+                
+                if(productos.length > 0) {
+                    productos.forEach(function(producto, index) {
+                        infoHtml += `
+                            <div style="padding: 6px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;">
+                                <div style="flex: 1;">
+                                    <span style="color: #666; font-family: monospace; font-size: 12px;">${producto.codigo}</span>
+                                    <span style="color: #333; font-size: 12px; margin-left: 8px;">${producto.descripcion}</span>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span style="background: #007bff; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; font-weight: bold;">
+                                        ${producto.cantidad} unidades
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    infoHtml += `
+                        <div style="text-align: center; padding: 20px; color: #999; font-style: italic;">
+                            <i class="fa fa-exclamation-triangle"></i> No se pudieron cargar los productos
+                        </div>
+                    `;
+                }
+                
+                infoHtml += `
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 10px; text-align: center;">
+                            <span style="background: #28a745; color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px;">
+                                <i class="fa fa-check"></i> Solicitud seleccionada - Lista para agregar al despacho
+                            </span>
+                        </div>
+                    </div>
                 `;
                 
                 $("#datosSolicitudEncontrada").html(infoHtml);
