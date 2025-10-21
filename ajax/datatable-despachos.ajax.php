@@ -151,7 +151,7 @@ GENERAR BOTONES DE ACCIÓN - VERSIÓN CORREGIDA
 private function generarBotonesAccion($despacho) {
     
     $botones = '';
-    $perfil = $_SESSION["perfil"];
+    $perfil = isset($_SESSION["perfil"]) ? $_SESSION["perfil"] : 'Usuario';
     $estado = $despacho["estado"];
     
     // Botón Ver detalles
