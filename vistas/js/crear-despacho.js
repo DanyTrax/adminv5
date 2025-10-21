@@ -879,9 +879,6 @@ console.log("✅ Nota agregada al campo detalleAdicional:", notaGeneral);
             text: mensaje,
             type: tipoMensaje,
             confirmButtonText: "Entendido"
-        }).then(function() {
-            // Mostrar opción de búsqueda inteligente en todas las sucursales
-            mostrarOpcionBusquedaInteligente();
         });
         
         // Limpiar campo de búsqueda para permitir agregar otra solicitud
@@ -2020,43 +2017,6 @@ function limpiarSolicitudSeleccionada() {
     ocultarResultadosSolicitudes();
     
     console.log("✅ Solicitud seleccionada limpiada correctamente");
-}
-
-/*=============================================
-MOSTRAR OPCIÓN DE BÚSQUEDA INTELIGENTE
-=============================================*/
-function mostrarOpcionBusquedaInteligente() {
-    
-    if(!solicitudSeleccionada) {
-        console.log("❌ No hay solicitud seleccionada para búsqueda inteligente");
-        return;
-    }
-    
-    swal({
-        title: "¿Buscar en todas las sucursales?",
-        html: `
-            <p>¿Quieres buscar los productos de esta solicitud en <strong>todas las sucursales</strong>?</p>
-            <p>Esto te permitirá:</p>
-            <ul style="text-align: left; margin: 10px 0;">
-                <li>Ver qué productos están disponibles en cada sucursal</li>
-                <li>Crear despachos parciales desde múltiples sucursales</li>
-                <li>Saber exactamente qué productos faltan</li>
-            </ul>
-        `,
-        type: "question",
-        showCancelButton: true,
-        confirmButtonText: "Sí, buscar en todas",
-        cancelButtonText: "No, solo local",
-        confirmButtonColor: "#5cb85c",
-        cancelButtonColor: "#d33"
-    }).then(function(result) {
-        if(result.value) {
-            buscarProductosEnTodasLasSucursales();
-        } else {
-            // Limpiar solicitud si no quiere búsqueda inteligente
-            limpiarSolicitudSeleccionada();
-        }
-    });
 }
 
 /*=============================================
