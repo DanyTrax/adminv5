@@ -70,9 +70,8 @@ $(document).ready(function() {
             console.log("   - probarBusqueda() - busca 'SOL000005'");
             console.log("   - probarBusquedaCorta() - busca 'SOL'");
             
-            // Probar inmediatamente con un término que sabemos que funciona
-            console.log("🧪 Probando búsqueda automática con 'SOL'");
-            buscarSolicitudesStock("SOL");
+            // NO probar automáticamente al cargar - solo configurar eventos
+            console.log("🧪 Eventos configurados - esperando input del usuario");
         }
     }, 1000);
     
@@ -245,14 +244,15 @@ function configurarBusquedaSolicitudes() {
     console.log("🔍 Elemento HTML:", $("#numeroSolicitudBuscar")[0]);
     
     if ($("#numeroSolicitudBuscar").length > 0) {
-        // Remover event listeners anteriores si existen
-        $("#numeroSolicitudBuscar").off("keyup input");
+        // Remover TODOS los event listeners anteriores
+        $("#numeroSolicitudBuscar").off();
         
-        // Configurar nuevo event listener con timeout para evitar múltiples llamadas
+        // Variable para controlar timeout
         var timeoutBusqueda;
         
-        $("#numeroSolicitudBuscar").on("keyup input", function(e) {
-            console.log("⌨️ EVENTO DETECTADO:", e.type);
+        // Event listener para input y keyup
+        $("#numeroSolicitudBuscar").on("input keyup", function(e) {
+            console.log("⌨️ EVENTO DETECTADO:", e.type, "Tecla:", e.keyCode);
             var termino = $(this).val();
             console.log("⌨️ Término actual:", termino, "Longitud:", termino.length);
             
@@ -260,40 +260,45 @@ function configurarBusquedaSolicitudes() {
             clearTimeout(timeoutBusqueda);
             
             if(termino.length >= 3) {
-                // Esperar 500ms antes de buscar para evitar muchas peticiones
+                // Esperar 300ms antes de buscar
                 timeoutBusqueda = setTimeout(function() {
                     console.log("🔍 Iniciando búsqueda con término:", termino);
                     buscarSolicitudesStock(termino);
-                }, 500);
+                }, 300);
             } else {
                 console.log("❌ Término muy corto, ocultando resultados");
                 ocultarResultadosSolicitudes();
             }
         });
         
-        // Agregar evento de focus para debugging
-        $("#numeroSolicitudBuscar").on("focus", function() {
-            console.log("🎯 Campo numeroSolicitudBuscar recibió focus");
-        });
-        
-        // Agregar evento de blur para debugging
-        $("#numeroSolicitudBuscar").on("blur", function() {
-            console.log("👋 Campo numeroSolicitudBuscar perdió focus");
-        });
-        
-        // Agregar evento específico para Enter
+        // Event listener específico para Enter
         $("#numeroSolicitudBuscar").on("keydown", function(e) {
             console.log("⌨️ Keydown detectado, tecla:", e.keyCode);
             if(e.keyCode === 13) { // Enter
                 console.log("⏎ ENTER presionado - ejecutando búsqueda");
                 e.preventDefault();
+                clearTimeout(timeoutBusqueda); // Cancelar timeout
                 var termino = $(this).val();
                 if(termino.length >= 3) {
                     buscarSolicitudesStock(termino);
                 } else {
                     console.log("❌ Término muy corto para buscar");
+                    ocultarResultadosSolicitudes();
                 }
             }
+        });
+        
+        // Eventos de debugging
+        $("#numeroSolicitudBuscar").on("focus", function() {
+            console.log("🎯 Campo numeroSolicitudBuscar recibió focus");
+        });
+        
+        $("#numeroSolicitudBuscar").on("blur", function() {
+            console.log("👋 Campo numeroSolicitudBuscar perdió focus");
+        });
+        
+        $("#numeroSolicitudBuscar").on("click", function() {
+            console.log("🖱️ CLICK detectado en numeroSolicitudBuscar");
         });
         
         console.log("✅ Event listeners configurados para numeroSolicitudBuscar");
