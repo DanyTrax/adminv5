@@ -940,4 +940,47 @@ $("#modalConfigurarLocal, #modalEditarSucursal").on("hidden.bs.modal", function(
     $(this).find(".has-error, .has-success").removeClass("has-error has-success");
 });
 
+/*=============================================
+CLONAR SUCURSAL
+=============================================*/
+$(document).on('click', '#btnClonarSucursal', function() {
+    
+    swal({
+        title: "¿Clonar Sucursal?",
+        html: `
+            <p>Esta función creará una nueva sucursal completa basada en la estructura actual.</p>
+            <p><strong>¿Qué se clonará?</strong></p>
+            <ul style="text-align: left; margin: 10px 0;">
+                <li>✅ Base de datos LOCAL de la nueva sucursal</li>
+                <li>✅ Estructura completa de tablas locales</li>
+                <li>✅ Datos de ejemplo (categorías, usuarios, productos)</li>
+                <li>✅ Registro en BD CENTRAL (compartida)</li>
+            </ul>
+            <p><strong>📌 Importante:</strong></p>
+            <ul style="text-align: left; margin: 10px 0;">
+                <li>• <strong>BD Central:</strong> Se mantiene igual para todas las sucursales</li>
+                <li>• <strong>BD Local:</strong> Se crea una nueva para la sucursal</li>
+                <li>• <strong>Conexión:</strong> La nueva sucursal se conecta a la misma BD Central</li>
+            </ul>
+            <p><strong>⚠️ Requisitos:</strong></p>
+            <ul style="text-align: left; margin: 10px 0;">
+                <li>• Acceso a servidor de base de datos</li>
+                <li>• Permisos para crear bases de datos locales</li>
+                <li>• Configuración de nueva sucursal</li>
+            </ul>
+        `,
+        type: "question",
+        showCancelButton: true,
+        confirmButtonText: "Sí, abrir clonador",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#f0ad4e",
+        cancelButtonColor: "#d33"
+    }).then(function(result) {
+        if(result.value) {
+            // Abrir el clonador en una nueva ventana
+            window.open('clonar-sucursal.php', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+        }
+    });
+});
+
 //console.log("Módulo de Sucursales cargado correctamente - AdminV5");

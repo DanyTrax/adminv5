@@ -880,8 +880,8 @@ console.log("✅ Nota agregada al campo detalleAdicional:", notaGeneral);
             type: tipoMensaje,
             confirmButtonText: "Entendido"
         }).then(function() {
-            // Limpiar solicitud seleccionada después de cargar productos
-            limpiarSolicitudSeleccionada();
+            // Mostrar opción de búsqueda inteligente en todas las sucursales
+            mostrarOpcionBusquedaInteligente();
         });
         
         // Limpiar campo de búsqueda para permitir agregar otra solicitud
@@ -2020,4 +2020,203 @@ function limpiarSolicitudSeleccionada() {
     ocultarResultadosSolicitudes();
     
     console.log("✅ Solicitud seleccionada limpiada correctamente");
+}
+
+/*=============================================
+MOSTRAR OPCIÓN DE BÚSQUEDA INTELIGENTE
+=============================================*/
+function mostrarOpcionBusquedaInteligente() {
+    
+    if(!solicitudSeleccionada) {
+        console.log("❌ No hay solicitud seleccionada para búsqueda inteligente");
+        return;
+    }
+    
+    swal({
+        title: "¿Buscar en todas las sucursales?",
+        html: `
+            <p>¿Quieres buscar los productos de esta solicitud en <strong>todas las sucursales</strong>?</p>
+            <p>Esto te permitirá:</p>
+            <ul style="text-align: left; margin: 10px 0;">
+                <li>Ver qué productos están disponibles en cada sucursal</li>
+                <li>Crear despachos parciales desde múltiples sucursales</li>
+                <li>Saber exactamente qué productos faltan</li>
+            </ul>
+        `,
+        type: "question",
+        showCancelButton: true,
+        confirmButtonText: "Sí, buscar en todas",
+        cancelButtonText: "No, solo local",
+        confirmButtonColor: "#5cb85c",
+        cancelButtonColor: "#d33"
+    }).then(function(result) {
+        if(result.value) {
+            buscarProductosEnTodasLasSucursales();
+        } else {
+            // Limpiar solicitud si no quiere búsqueda inteligente
+            limpiarSolicitudSeleccionada();
+        }
+    });
+}
+
+/*=============================================
+BUSCAR PRODUCTOS EN TODAS LAS SUCURSALES
+=============================================*/
+function buscarProductosEnTodasLasSucursales() {
+    
+    if(!solicitudSeleccionada) {
+        console.log("❌ No hay solicitud seleccionada");
+        return;
+    }
+    
+    console.log("🔍 Buscando productos en todas las sucursales para solicitud:", solicitudSeleccionada.numero_solicitud);
+    
+    // Mostrar loading
+    swal({
+        title: "Buscando productos...",
+        text: "Consultando inventario en todas las sucursales",
+        type: "info",
+        showConfirmButton: false,
+        allowOutsideClick: false
+    });
+    
+    $.ajax({
+        url: "ajax/buscar-productos-solicitud-sucursales.ajax.php",
+        method: "POST",
+        data: {
+            buscarProductosSolicitudSucursales: true,
+            idSolicitud: solicitudSeleccionada.id
+        },
+        dataType: "json",
+        success: function(respuesta) {
+            swal.close();
+            
+            if(respuesta.success) {
+                mostrarResumenDisponibilidadSucursales(respuesta);
+            } else {
+                swal({
+                    title: "Error",
+                    text: respuesta.error || "No se pudieron consultar las sucursales",
+                    type: "error",
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        },
+        error: function() {
+            swal.close();
+            swal({
+                title: "Error de conexión",
+                text: "No se pudo conectar con las sucursales",
+                type: "error",
+                confirmButtonText: "Cerrar"
+            });
+        }
+    });
+}
+
+/*=============================================
+MOSTRAR RESUMEN DE DISPONIBILIDAD EN SUCURSALES
+=============================================*/
+function mostrarResumenDisponibilidadSucursales(datos) {
+    
+    var resumen = datos.resumen;
+    var productos = datos.productos;
+    var solicitud = datos.solicitud;
+    
+    // Crear HTML del resumen
+    var htmlResumen = `
+        <div style="text-align: left; max-height: 400px; overflow-y: auto;">
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                <h4 style="margin: 0 0 10px 0; color: #333;">
+                    <i class="fa fa-file-text"></i> ${solicitud.numero_solicitud}
+                </h4>
+                <p style="margin: 0; color: #666;">
+                    <strong>Usuario:</strong> ${solicitud.nombre_usuario_solicitante} | 
+                    <strong>Sucursal:</strong> ${solicitud.nombre_sucursal_solicitante}
+                </p>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div style="flex: 1; background: #d4edda; padding: 10px; border-radius: 5px; text-align: center;">
+                    <div style="font-size: 18px; font-weight: bold; color: #155724;">${resumen.disponibles}</div>
+                    <div style="font-size: 12px; color: #155724;">Completos</div>
+                </div>
+                <div style="flex: 1; background: #fff3cd; padding: 10px; border-radius: 5px; text-align: center;">
+                    <div style="font-size: 18px; font-weight: bold; color: #856404;">${resumen.parciales}</div>
+                    <div style="font-size: 12px; color: #856404;">Parciales</div>
+                </div>
+                <div style="flex: 1; background: #f8d7da; padding: 10px; border-radius: 5px; text-align: center;">
+                    <div style="font-size: 18px; font-weight: bold; color: #721c24;">${resumen.faltantes}</div>
+                    <div style="font-size: 12px; color: #721c24;">Faltantes</div>
+                </div>
+            </div>
+            
+            <div style="max-height: 300px; overflow-y: auto;">
+    `;
+    
+    // Agregar cada producto
+    productos.forEach(function(producto) {
+        var estadoColor = producto.estado === 'completo' ? '#d4edda' : 
+                         producto.estado === 'parcial' ? '#fff3cd' : '#f8d7da';
+        var estadoIcon = producto.estado === 'completo' ? 'fa-check-circle' : 
+                        producto.estado === 'parcial' ? 'fa-exclamation-triangle' : 'fa-times-circle';
+        var estadoText = producto.estado === 'completo' ? 'Completo' : 
+                        producto.estado === 'parcial' ? 'Parcial' : 'Faltante';
+        
+        htmlResumen += `
+            <div style="background: ${estadoColor}; padding: 10px; margin-bottom: 8px; border-radius: 5px; border-left: 4px solid ${estadoColor.replace('d', '6')}">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <div>
+                        <strong>${producto.codigo}</strong> - ${producto.descripcion}
+                        <span style="background: ${estadoColor.replace('d', '6')}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin-left: 8px;">
+                            <i class="fa ${estadoIcon}"></i> ${estadoText}
+                        </span>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 12px; color: #666;">Solicitado: ${producto.cantidad_solicitada}</div>
+                        <div style="font-size: 12px; color: #666;">Disponible: ${producto.disponible_total}</div>
+                    </div>
+                </div>
+        `;
+        
+        if(producto.sucursales.length > 0) {
+            htmlResumen += `<div style="font-size: 11px; color: #666; margin-top: 5px;">`;
+            producto.sucursales.forEach(function(sucursal, index) {
+                if(index > 0) htmlResumen += " | ";
+                htmlResumen += `${sucursal.nombre}: ${sucursal.stock}`;
+            });
+            htmlResumen += `</div>`;
+        }
+        
+        htmlResumen += `</div>`;
+    });
+    
+    htmlResumen += `
+            </div>
+        </div>
+    `;
+    
+    // Mostrar modal con opciones
+    swal({
+        title: "Disponibilidad en Sucursales",
+        html: htmlResumen,
+        width: "800px",
+        showCancelButton: true,
+        confirmButtonText: "Crear Despachos Inteligentes",
+        cancelButtonText: "Cerrar",
+        confirmButtonColor: "#5cb85c",
+        cancelButtonColor: "#d33"
+    }).then(function(result) {
+        if(result.value) {
+            // Aquí implementaríamos la creación de despachos inteligentes
+            swal({
+                title: "Próximamente",
+                text: "La creación de despachos inteligentes estará disponible en la próxima versión",
+                type: "info",
+                confirmButtonText: "Entendido"
+            });
+        }
+        // Limpiar solicitud después de mostrar el resumen
+        limpiarSolicitudSeleccionada();
+    });
 }

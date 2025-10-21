@@ -60,6 +60,9 @@
           <i class="fa fa-list"></i> Directorio de Sucursales Registradas
         </h3>
         <div class="box-tools pull-right">
+          <button class="btn btn-warning btn-sm" id="btnClonarSucursal" style="margin-right: 5px;">
+            <i class="fa fa-copy"></i> Clonar Sucursal
+          </button>
           <button class="btn btn-success btn-sm" id="btnSincronizarCatalogo">
             <i class="fa fa-refresh"></i> Sincronizar Catálogo Maestro
           </button>

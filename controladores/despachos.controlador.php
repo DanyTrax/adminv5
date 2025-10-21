@@ -615,6 +615,126 @@ public function ctrEditarDespacho($datos = null) {
     }
 
     /*=============================================
+    BUSCAR PRODUCTOS DE SOLICITUD EN TODAS LAS SUCURSALES
+    =============================================*/
+    static public function ctrBuscarProductosSolicitudEnSucursales($idSolicitud) {
+        
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/../modelos/conexion.php";
+            
+            // Obtener detalles de la solicitud
+            $stmt = ConexionCentral::conectar()->prepare("
+                SELECT * FROM solicitudes_stock 
+                WHERE id = :id AND estado = 'aprobado'
+            ");
+            $stmt->bindParam(":id", $idSolicitud);
+            $stmt->execute();
+            $solicitud = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if(!$solicitud) {
+                return [
+                    'success' => false,
+                    'error' => 'Solicitud no encontrada o no está aprobada'
+                ];
+            }
+            
+            $productosSolicitados = json_decode($solicitud['productos_solicitados'], true);
+            $resultado = [
+                'success' => true,
+                'solicitud' => $solicitud,
+                'productos' => [],
+                'resumen' => [
+                    'total_productos' => count($productosSolicitados),
+                    'total_cantidad' => 0,
+                    'disponibles' => 0,
+                    'faltantes' => 0,
+                    'parciales' => 0
+                ]
+            ];
+            
+            // Obtener sucursales activas
+            $stmt = ConexionCentral::conectar()->prepare("
+                SELECT id, nombre, codigo_sucursal, usuario_bd, password_bd, nombre_bd, host_bd, puerto_bd
+                FROM sucursales 
+                WHERE activo = 1
+            ");
+            $stmt->execute();
+            $sucursales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Para cada producto de la solicitud
+            foreach($productosSolicitados as $producto) {
+                $productoInfo = [
+                    'codigo' => $producto['codigo'],
+                    'descripcion' => $producto['descripcion'],
+                    'cantidad_solicitada' => $producto['cantidad'],
+                    'disponible_total' => 0,
+                    'sucursales' => [],
+                    'estado' => 'faltante' // faltante, parcial, completo
+                ];
+                
+                $resultado['resumen']['total_cantidad'] += $producto['cantidad'];
+                
+                // Buscar en cada sucursal
+                foreach($sucursales as $sucursal) {
+                    try {
+                        // Conectar a la sucursal
+                        $dsn = "mysql:host={$sucursal['host_bd']};port={$sucursal['puerto_bd']};dbname={$sucursal['nombre_bd']}";
+                        $pdo = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd']);
+                        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                        
+                        // Buscar el producto
+                        $stmt = $pdo->prepare("
+                            SELECT codigo, descripcion, stock, precio_venta
+                            FROM productos 
+                            WHERE codigo = :codigo AND estado = 1
+                        ");
+                        $stmt->bindParam(":codigo", $producto['codigo']);
+                        $stmt->execute();
+                        $productoEnSucursal = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        if($productoEnSucursal && $productoEnSucursal['stock'] > 0) {
+                            $productoInfo['sucursales'][] = [
+                                'id' => $sucursal['id'],
+                                'nombre' => $sucursal['nombre'],
+                                'codigo_sucursal' => $sucursal['codigo_sucursal'],
+                                'stock' => intval($productoEnSucursal['stock']),
+                                'precio' => floatval($productoEnSucursal['precio_venta'])
+                            ];
+                            $productoInfo['disponible_total'] += intval($productoEnSucursal['stock']);
+                        }
+                        
+                    } catch(Exception $e) {
+                        error_log("Error conectando a sucursal {$sucursal['nombre']}: " . $e->getMessage());
+                    }
+                }
+                
+                // Determinar estado del producto
+                if($productoInfo['disponible_total'] >= $producto['cantidad']) {
+                    $productoInfo['estado'] = 'completo';
+                    $resultado['resumen']['disponibles']++;
+                } elseif($productoInfo['disponible_total'] > 0) {
+                    $productoInfo['estado'] = 'parcial';
+                    $resultado['resumen']['parciales']++;
+                } else {
+                    $resultado['resumen']['faltantes']++;
+                }
+                
+                $resultado['productos'][] = $productoInfo;
+            }
+            
+            return $resultado;
+            
+        } catch(Exception $e) {
+            error_log("Error en ctrBuscarProductosSolicitudEnSucursales: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error al buscar productos: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /*=============================================
     VALIDAR STOCK PARA DESPACHO
     =============================================*/
     static public function ctrValidarStockDespacho($codigoProducto, $cantidadSolicitada) {
