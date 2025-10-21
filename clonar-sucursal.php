@@ -28,10 +28,20 @@ class ClonadorSucursal {
     private $conexionLocal;
     
     public function __construct($sucursalOrigenId, $datosNuevaSucursal) {
-        $this->sucursalOrigen = $this->obtenerSucursalOrigen($sucursalOrigenId);
         $this->sucursalDestino = $datosNuevaSucursal;
+        
+        // Validar conexiones
         $this->conexionCentral = ConexionCentral::conectar();
+        if(!$this->conexionCentral) {
+            throw new Exception("No se pudo conectar a la base de datos central");
+        }
+        
         $this->conexionLocal = Conexion::conectar();
+        if(!$this->conexionLocal) {
+            throw new Exception("No se pudo conectar a la base de datos local");
+        }
+        
+        $this->sucursalOrigen = $this->obtenerSucursalOrigen($sucursalOrigenId);
     }
     
     /**
@@ -289,38 +299,67 @@ class ClonadorSucursal {
 // Si se ejecuta directamente
 if(isset($_GET['ejecutar']) && $_GET['ejecutar'] == '1') {
     
-    // Datos de ejemplo para la nueva sucursal
+    // Obtener datos del formulario o usar valores por defecto
     $datosNuevaSucursal = [
-        'codigo_sucursal' => 'SUC004',
-        'nombre' => 'Sucursal Prueba 2',
-        'direccion' => 'Calle 123 #45-67',
-        'telefono' => '(555) 123-4567',
-        'email' => 'prueba2@empresa.com',
-        'url_base' => 'https://prueba2.empresa.com',
-        'url_api' => 'https://prueba2.empresa.com/api-transferencias/',
-        'usuario_bd' => 'usuario_prueba2',
-        'password_bd' => 'password123',
-        'nombre_bd' => 'bd_prueba2',
-        'host_bd' => 'localhost',
-        'puerto_bd' => 3306
+        'codigo_sucursal' => $_GET['codigo'] ?? 'SUC004',
+        'nombre' => $_GET['nombre'] ?? 'Sucursal Prueba 2',
+        'direccion' => $_GET['direccion'] ?? 'Calle 123 #45-67',
+        'telefono' => $_GET['telefono'] ?? '(555) 123-4567',
+        'email' => $_GET['email'] ?? 'prueba2@empresa.com',
+        'url_base' => $_GET['url_base'] ?? 'https://prueba2.empresa.com',
+        'url_api' => $_GET['url_api'] ?? 'https://prueba2.empresa.com/api-transferencias/',
+        'usuario_bd' => $_GET['usuario_bd'] ?? 'usuario_prueba2',
+        'password_bd' => $_GET['password_bd'] ?? 'password123',
+        'nombre_bd' => $_GET['nombre_bd'] ?? 'bd_prueba2',
+        'host_bd' => $_GET['host_bd'] ?? 'localhost',
+        'puerto_bd' => intval($_GET['puerto_bd'] ?? 3306)
     ];
-    
-    $clonador = new ClonadorSucursal(1, $datosNuevaSucursal); // ID 1 = sucursal origen
-    $resultado = $clonador->ejecutarClonacion();
     
     echo "<h2>Resultado de la Clonación</h2>";
     
-    if($resultado['success']) {
-        echo "<div style='color: green;'>";
-        foreach($resultado['mensajes'] as $mensaje) {
-            echo "<p>$mensaje</p>";
+    try {
+        // Verificar conexiones antes de crear el clonador
+        echo "<p>🔍 Verificando conexiones...</p>";
+        
+        $conexionCentral = ConexionCentral::conectar();
+        if(!$conexionCentral) {
+            throw new Exception("❌ No se pudo conectar a la base de datos central. Verifica la configuración en api-transferencias/conexion-central.php");
         }
-        echo "</div>";
-    } else {
-        echo "<div style='color: red;'>";
-        foreach($resultado['errores'] as $error) {
-            echo "<p>❌ $error</p>";
+        echo "<p>✅ Conexión a BD Central: OK</p>";
+        
+        $conexionLocal = Conexion::conectar();
+        if(!$conexionLocal) {
+            throw new Exception("❌ No se pudo conectar a la base de datos local. Verifica la configuración en modelos/conexion.php");
         }
+        echo "<p>✅ Conexión a BD Local: OK</p>";
+        
+        // Crear clonador
+        $clonador = new ClonadorSucursal(1, $datosNuevaSucursal); // ID 1 = sucursal origen
+        $resultado = $clonador->ejecutarClonacion();
+        
+        if($resultado['success']) {
+            echo "<div style='color: green; background: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0;'>";
+            foreach($resultado['mensajes'] as $mensaje) {
+                echo "<p>$mensaje</p>";
+            }
+            echo "</div>";
+        } else {
+            echo "<div style='color: red; background: #f8d7da; padding: 15px; border-radius: 5px; margin: 10px 0;'>";
+            foreach($resultado['errores'] as $error) {
+                echo "<p>❌ $error</p>";
+            }
+            echo "</div>";
+        }
+        
+    } catch(Exception $e) {
+        echo "<div style='color: red; background: #f8d7da; padding: 15px; border-radius: 5px; margin: 10px 0;'>";
+        echo "<p><strong>❌ Error:</strong> " . $e->getMessage() . "</p>";
+        echo "<p><strong>💡 Soluciones:</strong></p>";
+        echo "<ul>";
+        echo "<li>Verifica que los archivos de conexión existan y estén configurados correctamente</li>";
+        echo "<li>Revisa las credenciales de base de datos</li>";
+        echo "<li>Asegúrate de que las bases de datos estén accesibles</li>";
+        echo "</ul>";
         echo "</div>";
     }
 }
