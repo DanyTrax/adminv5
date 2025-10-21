@@ -95,6 +95,16 @@ try {
                             </button>";
             }
             
+            // ✅ BOTÓN VER STOCK PARA TRANSPORTADOR - Solo para transportadores y solicitudes aprobadas
+            if($usuario_actual["perfil"] == "Transportador" && $estado == "aprobado") {
+                $acciones .= " <button class='btn btn-info btn-xs btnVerStockTransportador' 
+                                idSolicitud='{$solicitud["id"]}' 
+                                numeroSolicitud='{$solicitud["numero_solicitud"]}'
+                                title='Ver stock disponible en sucursales'>
+                                <i class='fa fa-cubes'></i>
+                            </button>";
+            }
+            
             // ✅ BOTONES DE ACCIÓN - Solo Transportador/Administrador
             if($usuario_actual["perfil"] == "Transportador" || $usuario_actual["perfil"] == "Administrador") {
                 if($estado == "pendiente") {

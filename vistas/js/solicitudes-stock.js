@@ -566,6 +566,235 @@ $(document).on('click', '.btnCrearDespachoDesdeSolicitud', function() {
 });
 
 /*=============================================
+VER STOCK PARA TRANSPORTADOR
+=============================================*/
+$(document).on('click', '.btnVerStockTransportador', function() {
+    
+    var idSolicitud = $(this).attr('idSolicitud');
+    var numeroSolicitud = $(this).attr('numeroSolicitud');
+    
+    console.log("🚛 Transportador - Ver stock para solicitud ID:", idSolicitud, "Número:", numeroSolicitud);
+    
+    // Mostrar loading
+    $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+    
+    // Obtener detalles de la solicitud
+    $.ajax({
+        url: 'ajax/solicitudes-stock.ajax.php',
+        type: 'POST',
+        data: {
+            accion: 'ver_detalle',
+            id_solicitud: idSolicitud
+        },
+        dataType: 'json',
+        success: function(response) {
+            if(response.success) {
+                var solicitud = response.data;
+                var productos = JSON.parse(solicitud.productos_solicitados || '[]');
+                
+                // Mostrar modal de stock para transportador
+                mostrarStockParaTransportador(idSolicitud, numeroSolicitud, productos);
+                
+            } else {
+                swal({
+                    title: 'Error',
+                    text: response.message || 'No se pudieron obtener los detalles de la solicitud',
+                    type: 'error',
+                    confirmButtonText: 'Cerrar'
+                });
+            }
+        },
+        error: function() {
+            swal({
+                title: 'Error',
+                text: 'Error de conexión al obtener detalles de la solicitud',
+                type: 'error',
+                confirmButtonText: 'Cerrar'
+            });
+        },
+        complete: function() {
+            // Restaurar botón
+            $('.btnVerStockTransportador[idSolicitud="' + idSolicitud + '"]')
+                .prop('disabled', false)
+                .html('<i class="fa fa-cubes"></i>');
+        }
+    });
+});
+
+/*=============================================
+MOSTRAR STOCK PARA TRANSPORTADOR
+=============================================*/
+function mostrarStockParaTransportador(idSolicitud, numeroSolicitud, productos) {
+    
+    // Mostrar loading
+    swal({
+        title: "Consultando stock disponible...",
+        text: "Buscando en todas las sucursales",
+        type: "info",
+        showConfirmButton: false,
+        allowOutsideClick: false
+    });
+    
+    // Obtener stock de todas las sucursales
+    $.ajax({
+        url: 'ajax/stock-disponible-sucursales.ajax.php',
+        type: 'POST',
+        data: {
+            accion: 'consultar_stock_sucursales',
+            productos: JSON.stringify(productos)
+        },
+        dataType: 'json',
+        success: function(response) {
+            if(response.success) {
+                mostrarModalStockTransportador(response.data, idSolicitud, numeroSolicitud);
+            } else {
+                swal({
+                    title: 'Error',
+                    text: response.message || 'No se pudo consultar el stock disponible',
+                    type: 'error',
+                    confirmButtonText: 'Cerrar'
+                });
+            }
+        },
+        error: function() {
+            swal({
+                title: 'Error',
+                text: 'Error de conexión al consultar stock disponible',
+                type: 'error',
+                confirmButtonText: 'Cerrar'
+            });
+        }
+    });
+}
+
+/*=============================================
+MOSTRAR MODAL DE STOCK PARA TRANSPORTADOR
+=============================================*/
+function mostrarModalStockTransportador(stockData, idSolicitud, numeroSolicitud) {
+    
+    var html = '<div class="stock-transportador-container">';
+    html += '<div class="alert alert-info">';
+    html += '<h5><i class="fa fa-info-circle"></i> Stock Disponible por Sucursal</h5>';
+    html += '<p><strong>Solicitud:</strong> ' + numeroSolicitud + '</p>';
+    html += '<p>Esta vista muestra el stock disponible de cada producto en todas las sucursales activas.</p>';
+    html += '</div>';
+    
+    html += '<div class="table-responsive" style="max-height: 500px; overflow-y: auto;">';
+    html += '<table class="table table-bordered table-striped">';
+    html += '<thead class="bg-primary">';
+    html += '<tr>';
+    html += '<th>Código</th>';
+    html += '<th>Descripción</th>';
+    html += '<th>Solicitado</th>';
+    html += '<th>Stock Local</th>';
+    
+    // Agregar columnas para cada sucursal
+    Object.keys(stockData.sucursales).forEach(function(codigoSucursal) {
+        var sucursal = stockData.sucursales[codigoSucursal];
+        html += '<th>' + sucursal.nombre + '</th>';
+    });
+    
+    html += '<th>Total Disponible</th>';
+    html += '<th>Estado</th>';
+    html += '</tr>';
+    html += '</thead>';
+    html += '<tbody>';
+    
+    // Procesar cada producto
+    stockData.productos_solicitud.forEach(function(producto) {
+        var stockLocal = stockData.local[producto.codigo] || 0;
+        var totalDisponible = stockLocal;
+        var stockPorSucursal = [];
+        
+        // Calcular total disponible y stock por sucursal
+        Object.keys(stockData.sucursales).forEach(function(codigoSucursal) {
+            var stockSucursal = stockData.sucursales[codigoSucursal].stock[producto.codigo] || 0;
+            totalDisponible += stockSucursal;
+            stockPorSucursal.push({
+                sucursal: stockData.sucursales[codigoSucursal].nombre,
+                stock: stockSucursal
+            });
+        });
+        
+        var estado = '';
+        var estadoClass = '';
+        
+        if(totalDisponible >= producto.cantidad) {
+            estado = '✅ Disponible';
+            estadoClass = 'success';
+        } else if(totalDisponible > 0) {
+            estado = '⚠️ Parcial';
+            estadoClass = 'warning';
+        } else {
+            estado = '❌ Sin stock';
+            estadoClass = 'danger';
+        }
+        
+        html += '<tr>';
+        html += '<td><strong>' + producto.codigo + '</strong></td>';
+        html += '<td>' + producto.descripcion + '</td>';
+        html += '<td><span class="badge badge-info">' + producto.cantidad + '</span></td>';
+        html += '<td><span class="badge badge-primary">' + stockLocal + '</span></td>';
+        
+        // Agregar stock de cada sucursal
+        Object.keys(stockData.sucursales).forEach(function(codigoSucursal) {
+            var stockSucursal = stockData.sucursales[codigoSucursal].stock[producto.codigo] || 0;
+            html += '<td><span class="badge badge-secondary">' + stockSucursal + '</span></td>';
+        });
+        
+        html += '<td><span class="badge badge-success">' + totalDisponible + '</span></td>';
+        html += '<td><span class="badge badge-' + estadoClass + '">' + estado + '</span></td>';
+        html += '</tr>';
+    });
+    
+    html += '</tbody>';
+    html += '</table>';
+    html += '</div>';
+    
+    // Resumen
+    var productosDisponibles = 0;
+    var productosParciales = 0;
+    var productosSinStock = 0;
+    
+    stockData.productos_solicitud.forEach(function(producto) {
+        var stockLocal = stockData.local[producto.codigo] || 0;
+        var totalDisponible = stockLocal;
+        
+        Object.keys(stockData.sucursales).forEach(function(codigoSucursal) {
+            var stockSucursal = stockData.sucursales[codigoSucursal].stock[producto.codigo] || 0;
+            totalDisponible += stockSucursal;
+        });
+        
+        if(totalDisponible >= producto.cantidad) {
+            productosDisponibles++;
+        } else if(totalDisponible > 0) {
+            productosParciales++;
+        } else {
+            productosSinStock++;
+        }
+    });
+    
+    html += '<div class="alert alert-warning mt-3">';
+    html += '<h5><i class="fa fa-exclamation-triangle"></i> Resumen de Disponibilidad:</h5>';
+    html += '<ul class="mb-0">';
+    html += '<li><strong>Productos completamente disponibles:</strong> ' + productosDisponibles + '</li>';
+    html += '<li><strong>Productos parcialmente disponibles:</strong> ' + productosParciales + '</li>';
+    html += '<li><strong>Productos sin stock:</strong> ' + productosSinStock + '</li>';
+    html += '</ul>';
+    html += '</div>';
+    
+    html += '</div>';
+    
+    swal({
+        title: 'Stock Disponible - Vista Transportador',
+        html: html,
+        width: '90%',
+        confirmButtonText: 'Cerrar',
+        confirmButtonColor: '#3c8dbc'
+    });
+}
+
+/*=============================================
 MOSTRAR STOCK POR SUCURSALES
 =============================================*/
 function mostrarStockPorSucursales(idSolicitud, numeroSolicitud, productos) {
