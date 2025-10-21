@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Búsqueda Solicitudes</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Test de Búsqueda de Solicitudes</h1>
+    
+    <div class="form-group">
+        <label>Número de solicitud:</label>
+        <div class="input-group">
+            <input type="text" 
+                   class="form-control" 
+                   id="numeroSolicitudBuscar"
+                   placeholder="Número de solicitud (opcional)">
+            <span class="input-group-btn">
+                <button type="button" class="btn btn-info" onclick="buscarSolicitudesStock($('#numeroSolicitudBuscar').val())">
+                    <i class="fa fa-search"></i> Buscar
+                </button>
+            </span>
+        </div>
+    </div>
+    
+    <div id="resultados"></div>
+    
+    <script>
+        console.log("🔍 Test iniciado");
+        
+        function buscarSolicitudesStock(termino) {
+            console.log("🔍 buscarSolicitudesStock llamada con:", termino);
+            
+            $.ajax({
+                url: "ajax/productos-despacho.ajax.php",
+                method: "POST",
+                data: {
+                    buscarSolicitudes: true,
+                    termino: termino
+                },
+                dataType: "json",
+                success: function(respuesta) {
+                    console.log("✅ Respuesta:", respuesta);
+                    $("#resultados").html("<pre>" + JSON.stringify(respuesta, null, 2) + "</pre>");
+                },
+                error: function(xhr, status, error) {
+                    console.error("❌ Error:", error);
+                    $("#resultados").html("<div style='color: red'>Error: " + error + "</div>");
+                }
+            });
+        }
+        
+        $(document).ready(function() {
+            console.log("📄 Document ready");
+            console.log("🔍 Elemento existe:", $("#numeroSolicitudBuscar").length > 0);
+            
+            // Configurar eventos
+            $("#numeroSolicitudBuscar").on("keyup", function(e) {
+                console.log("⌨️ KEYUP detectado:", $(this).val());
+                var termino = $(this).val();
+                if(termino.length >= 3) {
+                    buscarSolicitudesStock(termino);
+                }
+            });
+            
+            $("#numeroSolicitudBuscar").on("input", function(e) {
+                console.log("⌨️ INPUT detectado:", $(this).val());
+                var termino = $(this).val();
+                if(termino.length >= 3) {
+                    buscarSolicitudesStock(termino);
+                }
+            });
+            
+            console.log("✅ Event listeners configurados");
+        });
+    </script>
+</body>
+</html>

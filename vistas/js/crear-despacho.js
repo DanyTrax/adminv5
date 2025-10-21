@@ -207,41 +207,48 @@ function configurarBusquedaSolicitudes() {
     
     if ($("#numeroSolicitudBuscar").length > 0) {
         // Remover event listeners anteriores si existen
-        $("#numeroSolicitudBuscar").off("keyup");
+        $("#numeroSolicitudBuscar").off("keyup input");
         
-        // Configurar nuevo event listener
-        $("#numeroSolicitudBuscar").on("keyup", function(e) {
-            console.log("⌨️ EVENTO KEYUP DETECTADO!");
+        // Configurar nuevo event listener con timeout para evitar múltiples llamadas
+        var timeoutBusqueda;
+        
+        $("#numeroSolicitudBuscar").on("keyup input", function(e) {
+            console.log("⌨️ EVENTO DETECTADO:", e.type);
             var termino = $(this).val();
-            console.log("⌨️ Tecla presionada en numeroSolicitudBuscar. Término:", termino, "Longitud:", termino.length);
+            console.log("⌨️ Término actual:", termino, "Longitud:", termino.length);
+            
+            // Limpiar timeout anterior
+            clearTimeout(timeoutBusqueda);
             
             if(termino.length >= 3) {
-                console.log("🔍 Iniciando búsqueda con término:", termino);
-                buscarSolicitudesStock(termino);
+                // Esperar 500ms antes de buscar para evitar muchas peticiones
+                timeoutBusqueda = setTimeout(function() {
+                    console.log("🔍 Iniciando búsqueda con término:", termino);
+                    buscarSolicitudesStock(termino);
+                }, 500);
             } else {
                 console.log("❌ Término muy corto, ocultando resultados");
                 ocultarResultadosSolicitudes();
             }
         });
         
-        // También probar con input event
-        $("#numeroSolicitudBuscar").on("input", function(e) {
-            console.log("⌨️ EVENTO INPUT DETECTADO!");
-            var termino = $(this).val();
-            console.log("⌨️ Input en numeroSolicitudBuscar. Término:", termino, "Longitud:", termino.length);
-            
-            if(termino.length >= 3) {
-                console.log("🔍 Iniciando búsqueda con término:", termino);
-                buscarSolicitudesStock(termino);
-            } else {
-                console.log("❌ Término muy corto, ocultando resultados");
-                ocultarResultadosSolicitudes();
-            }
+        // Agregar evento de focus para debugging
+        $("#numeroSolicitudBuscar").on("focus", function() {
+            console.log("🎯 Campo numeroSolicitudBuscar recibió focus");
+        });
+        
+        // Agregar evento de blur para debugging
+        $("#numeroSolicitudBuscar").on("blur", function() {
+            console.log("👋 Campo numeroSolicitudBuscar perdió focus");
         });
         
         console.log("✅ Event listeners configurados para numeroSolicitudBuscar");
     } else {
         console.log("❌ Elemento numeroSolicitudBuscar no encontrado");
+        console.log("🔍 Buscando elementos similares...");
+        console.log("🔍 Inputs con 'solicitud':", $("input[id*='solicitud']").length);
+        console.log("🔍 Inputs con 'numero':", $("input[id*='numero']").length);
+        console.log("🔍 Todos los inputs:", $("input[type='text']").length);
     }
 }
 
@@ -279,6 +286,20 @@ BUSCAR SOLICITUDES DE STOCK
 function buscarSolicitudesStock(termino) {
     console.log("🔍 buscarSolicitudesStock llamada con término:", termino);
     
+    // Validar término
+    if(!termino || termino.length < 3) {
+        console.log("❌ Término inválido o muy corto");
+        ocultarResultadosSolicitudes();
+        return;
+    }
+    
+    // Mostrar indicador de carga
+    $("#numeroSolicitudBuscar").after(`
+        <div id="cargandoSolicitudes" class="text-center" style="margin-top: 5px;">
+            <i class="fa fa-spinner fa-spin"></i> Buscando solicitudes...
+        </div>
+    `);
+    
     $.ajax({
         url: "ajax/productos-despacho.ajax.php",
         method: "POST",
@@ -289,22 +310,33 @@ function buscarSolicitudesStock(termino) {
         dataType: "json",
         beforeSend: function() {
             console.log("📤 Enviando petición AJAX...");
+            console.log("📤 URL:", "ajax/productos-despacho.ajax.php");
+            console.log("📤 Data:", {buscarSolicitudes: true, termino: termino});
         },
         success: function(respuesta) {
             console.log("✅ Respuesta recibida:", respuesta);
+            
+            // Ocultar indicador de carga
+            $("#cargandoSolicitudes").remove();
             
             if(respuesta.success && respuesta.solicitudes && respuesta.solicitudes.length > 0) {
                 console.log("📋 Mostrando resultados:", respuesta.solicitudes.length, "solicitudes");
                 mostrarResultadosSolicitudes(respuesta.solicitudes);
             } else {
                 console.log("❌ No hay resultados o error en respuesta");
+                console.log("❌ Respuesta completa:", respuesta);
                 mostrarSinResultadosSolicitudes();
             }
         },
         error: function(xhr, status, error) {
             console.error("❌ Error AJAX buscando solicitudes:", error);
-            console.error("Status:", status);
-            console.error("Response:", xhr.responseText);
+            console.error("❌ Status:", status);
+            console.error("❌ Response Text:", xhr.responseText);
+            console.error("❌ Response Headers:", xhr.getAllResponseHeaders());
+            
+            // Ocultar indicador de carga
+            $("#cargandoSolicitudes").remove();
+            
             mostrarErrorBusquedaSolicitudes();
         }
     });
