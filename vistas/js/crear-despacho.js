@@ -380,10 +380,14 @@ function buscarSolicitudesStock(termino) {
             
             if(respuesta.success && respuesta.solicitudes && respuesta.solicitudes.length > 0) {
                 console.log("📋 Mostrando resultados:", respuesta.solicitudes.length, "solicitudes");
+                console.log("📋 Datos de solicitudes:", respuesta.solicitudes);
                 mostrarResultadosSolicitudes(respuesta.solicitudes);
             } else {
                 console.log("❌ No hay resultados o error en respuesta");
                 console.log("❌ Respuesta completa:", respuesta);
+                console.log("❌ success:", respuesta.success);
+                console.log("❌ solicitudes:", respuesta.solicitudes);
+                console.log("❌ total:", respuesta.total);
                 mostrarSinResultadosSolicitudes();
             }
         },
@@ -402,48 +406,52 @@ function buscarSolicitudesStock(termino) {
 }
 
 /*=============================================
-MOSTRAR RESULTADOS DE SOLICITUDES - CORREGIDO
+MOSTRAR RESULTADOS DE SOLICITUDES - SIMPLIFICADO
 =============================================*/
 function mostrarResultadosSolicitudes(solicitudes) {
+    console.log("📋 mostrarResultadosSolicitudes llamada con:", solicitudes.length, "solicitudes");
     
     // Eliminar resultados anteriores
     ocultarResultadosSolicitudes();
     
-    var html = '<div class="list-group" style="max-height: 200px; overflow-y: auto;">';
+    var html = '<div style="border: 1px solid #ccc; background: white; max-height: 200px; overflow-y: auto; z-index: 1000; position: relative;">';
     
     solicitudes.forEach(function(solicitud) {
         var fecha = new Date(solicitud.fecha_solicitud).toLocaleDateString();
-        var estadoClass = solicitud.estado === 'aprobado' ? 'success' : 'warning';
+        var estadoColor = solicitud.estado === 'aprobado' ? '#5cb85c' : '#f0ad4e';
         
         html += `
-            <a href="#" 
-               class="list-group-item list-group-item-action" 
-               onclick="seleccionarSolicitud(${solicitud.id})"
-               style="padding: 8px 12px;">
-                <div class="d-flex w-100 justify-content-between">
-                    <h6 class="mb-1">
-                        <code>${solicitud.numero_solicitud}</code>
-                        <span class="label label-${estadoClass}">${solicitud.estado.toUpperCase()}</span>
-                    </h6>
-                    <small>${fecha}</small>
+            <div onclick="seleccionarSolicitud(${solicitud.id})" 
+                 style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; background: #f9f9f9;"
+                 onmouseover="this.style.background='#e9e9e9'" 
+                 onmouseout="this.style.background='#f9f9f9'">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="color: #333;">${solicitud.numero_solicitud}</strong>
+                        <span style="background: ${estadoColor}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin-left: 5px;">
+                            ${solicitud.estado.toUpperCase()}
+                        </span>
+                    </div>
+                    <small style="color: #666;">${fecha}</small>
                 </div>
-                <p class="mb-1">
+                <div style="margin-top: 5px; font-size: 12px; color: #666;">
                     <strong>Usuario:</strong> ${solicitud.nombre_usuario_solicitante}<br>
-                    <strong>Productos:</strong> ${solicitud.total_productos} 
-                    (<strong>${solicitud.total_cantidad}</strong> unidades)
-                </p>
-            </a>
+                    <strong>Productos:</strong> ${solicitud.total_productos} (${solicitud.total_cantidad} unidades)
+                </div>
+            </div>
         `;
     });
     
     html += '</div>';
     
+    // Insertar después del campo de búsqueda
     $("#numeroSolicitudBuscar").after(`
-        <div id="resultadosBusquedaSolicitudes" class="dropdown-menu" 
-             style="display: block; position: relative; width: 100%; margin-top: 5px;">
+        <div id="resultadosBusquedaSolicitudes" style="margin-top: 5px;">
             ${html}
         </div>
     `);
+    
+    console.log("✅ Resultados insertados en el DOM");
 }
 
 /*=============================================
