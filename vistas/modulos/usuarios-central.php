@@ -9,7 +9,7 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
     <section class="content-header">
         <h1>
             <i class="fa fa-users"></i> Gestión de Usuarios Centrales
-            <small>Administrar usuarios para sincronización con sucursales</small>
+            <small>Sistema bidireccional: Central ↔ Sucursales</small>
         </h1>
         <ol class="breadcrumb">
             <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
@@ -19,16 +19,28 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
 
     <section class="content">
         
+        <!-- INFORMACIÓN DEL SISTEMA -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-info">
+                    <h4><i class="fa fa-info-circle"></i> Sistema Bidireccional de Usuarios</h4>
+                    <p><strong>Central → Local:</strong> Crear usuario en Central se sincroniza automáticamente a la sucursal</p>
+                    <p><strong>Local → Central:</strong> Consultar usuarios existentes en sucursales para traerlos a Central</p>
+                    <p><strong>Eliminación:</strong> Eliminar de Central elimina de Local y viceversa</p>
+                </div>
+            </div>
+        </div>
+
         <!-- ESTADÍSTICAS RÁPIDAS -->
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-info">
                     <div class="box-header with-border">
                         <h3 class="box-title">
-                            <i class="fa fa-bar-chart"></i> Estadísticas de Sincronización
+                            <i class="fa fa-bar-chart"></i> Estadísticas del Sistema
                         </h3>
                     </div>
-                    <div class="box-body" id="estadisticasSincronizacion">
+                    <div class="box-body" id="estadisticasSistema">
                         <!-- Las estadísticas se cargan aquí -->
                     </div>
                 </div>
@@ -41,106 +53,178 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                 <div class="box">
                     <div class="box-header with-border">
                         <h3 class="box-title">
-                            <i class="fa fa-cogs"></i> Acciones
+                            <i class="fa fa-cogs"></i> Acciones del Sistema
                         </h3>
                     </div>
                     <div class="box-body">
+                        
+                        <!-- ACCIONES CENTRAL → LOCAL -->
                         <div class="row">
                             <div class="col-md-6">
-                                <button class="btn btn-primary btn-lg" id="btnNuevoUsuarioCentral">
-                                    <i class="fa fa-user-plus"></i> Agregar Usuario
-                                </button>
-                                <button class="btn btn-success btn-lg" id="btnSincronizarUsuarios">
-                                    <i class="fa fa-refresh"></i> Sincronizar Usuarios
-                                </button>
+                                <h4><i class="fa fa-arrow-right text-primary"></i> Central → Local</h4>
+                                <div class="btn-group-vertical" style="width: 100%;">
+                                    <button class="btn btn-primary btn-lg" id="btnNuevoUsuarioCentral">
+                                        <i class="fa fa-plus"></i> Crear Usuario en Central
+                                    </button>
+                                    <button class="btn btn-success btn-lg" id="btnSincronizarUsuarios">
+                                        <i class="fa fa-refresh"></i> Sincronizar a Sucursales
+                                    </button>
+                                </div>
                             </div>
-                            <div class="col-md-6 text-right">
-                                <a href="consultar-usuarios-sucursales" class="btn btn-info btn-lg">
-                                    <i class="fa fa-search"></i> Consultar Usuarios de Sucursales
-                                </a>
-                            </div>
-                            <div class="col-md-6 text-right">
-                                <button class="btn btn-info" id="btnActualizarEstadisticas">
-                                    <i class="fa fa-refresh"></i> Actualizar Estadísticas
-                                </button>
+                            
+                            <!-- ACCIONES LOCAL → CENTRAL -->
+                            <div class="col-md-6">
+                                <h4><i class="fa fa-arrow-left text-info"></i> Local → Central</h4>
+                                <div class="btn-group-vertical" style="width: 100%;">
+                                    <button class="btn btn-info btn-lg" id="btnConsultarUsuariosSucursales">
+                                        <i class="fa fa-search"></i> Consultar Usuarios de Sucursales
+                                    </button>
+                                    <button class="btn btn-warning btn-lg" id="btnImportarUsuariosSucursales">
+                                        <i class="fa fa-download"></i> Importar de Sucursales
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                        
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TABLA DE USUARIOS CENTRALES -->
+        <!-- GESTIÓN DE USUARIOS -->
         <div class="row">
             <div class="col-md-12">
-                <div class="box">
+                <div class="box box-primary">
                     <div class="box-header with-border">
                         <h3 class="box-title">
-                            <i class="fa fa-list"></i> Lista de Usuarios Centrales
+                            <i class="fa fa-users"></i> Gestión de Usuarios
                         </h3>
+                        <div class="box-tools pull-right">
+                            <button class="btn btn-box-tool" data-widget="collapse">
+                                <i class="fa fa-minus"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="box-body">
-                        <table class="table table-bordered table-striped dt-responsive tablaUsuariosCentrales" width="100%">
-                            <thead>
-                                <tr>
-                                    <th style="width:10px">#</th>
-                                    <th>Usuario</th>
-                                    <th>Nombre</th>
-                                    <th>Perfil</th>
-                                    <th>Sucursal</th>
-                                    <th>Teléfono</th>
-                                    <th>Estado Sincronización</th>
-                                    <th>Fecha Creación</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Los datos se cargan con DataTables AJAX -->
-                            </tbody>
-                        </table>
+                        
+                        <!-- PESTAÑAS -->
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li role="presentation" class="active">
+                                <a href="#usuariosCentrales" aria-controls="usuariosCentrales" role="tab" data-toggle="tab">
+                                    <i class="fa fa-database"></i> Usuarios Centrales
+                                </a>
+                            </li>
+                            <li role="presentation">
+                                <a href="#usuariosSucursales" aria-controls="usuariosSucursales" role="tab" data-toggle="tab">
+                                    <i class="fa fa-building"></i> Usuarios de Sucursales
+                                </a>
+                            </li>
+                            <li role="presentation">
+                                <a href="#estadoSincronizacion" aria-controls="estadoSincronizacion" role="tab" data-toggle="tab">
+                                    <i class="fa fa-sync"></i> Estado de Sincronización
+                                </a>
+                            </li>
+                        </ul>
+
+                        <!-- CONTENIDO DE PESTAÑAS -->
+                        <div class="tab-content">
+                            
+                            <!-- PESTAÑA: USUARIOS CENTRALES -->
+                            <div role="tabpanel" class="tab-pane active" id="usuariosCentrales">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-striped" id="tablaUsuariosCentrales">
+                                                <thead>
+                                                    <tr>
+                                                        <th>ID</th>
+                                                        <th>Usuario</th>
+                                                        <th>Nombre</th>
+                                                        <th>Perfil</th>
+                                                        <th>Sucursal</th>
+                                                        <th>Estado</th>
+                                                        <th>Último Login</th>
+                                                        <th>Acciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!-- Los datos se cargan aquí -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PESTAÑA: USUARIOS DE SUCURSALES -->
+                            <div role="tabpanel" class="tab-pane" id="usuariosSucursales">
+                                <div id="contenidoUsuariosSucursales">
+                                    <div class="text-center">
+                                        <i class="fa fa-spinner fa-spin fa-2x"></i>
+                                        <p>Cargando usuarios de sucursales...</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PESTAÑA: ESTADO DE SINCRONIZACIÓN -->
+                            <div role="tabpanel" class="tab-pane" id="estadoSincronizacion">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="alert alert-info">
+                                            <h4><i class="fa fa-info-circle"></i> Estado de Sincronización</h4>
+                                            <p>Aquí se mostrará el estado de sincronización entre Central y las sucursales.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                        
                     </div>
                 </div>
             </div>
         </div>
+
     </section>
 </div>
 
-<!-- MODAL CREAR USUARIO CENTRAL -->
-<div class="modal fade" id="modalCrearUsuarioCentral" tabindex="-1" role="dialog">
+<!-- MODAL: NUEVO USUARIO CENTRAL -->
+<div class="modal fade" id="modalNuevoUsuarioCentral" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <form role="form" method="post" id="formCrearUsuarioCentral" enctype="multipart/form-data">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">
-                        <i class="fa fa-user-plus"></i> Crear Nuevo Usuario Central
-                    </h4>
-                </div>
-                <div class="modal-body">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">
+                    <i class="fa fa-user-plus"></i> Nuevo Usuario Central
+                </h4>
+            </div>
+            <div class="modal-body">
+                <form id="formNuevoUsuarioCentral">
                     <div class="row">
-                        <!-- INFORMACIÓN BÁSICA -->
                         <div class="col-md-6">
-                            <h5><i class="fa fa-user"></i> Información Personal</h5>
-                            <hr>
-                            
                             <div class="form-group">
-                                <label for="nuevoNombre">Nombre Completo: <span class="text-red">*</span></label>
-                                <input type="text" class="form-control" id="nuevoNombre" name="nuevoNombre" required>
+                                <label for="nombreUsuario">Nombre Completo:</label>
+                                <input type="text" class="form-control" id="nombreUsuario" name="nombre" required>
                             </div>
-                            
+                        </div>
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <label for="nuevoUsuario">Usuario: <span class="text-red">*</span></label>
-                                <input type="text" class="form-control" id="nuevoUsuario" name="nuevoUsuario" required>
+                                <label for="usuarioUsuario">Usuario:</label>
+                                <input type="text" class="form-control" id="usuarioUsuario" name="usuario" required>
                             </div>
-                            
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <label for="nuevoPassword">Contraseña: <span class="text-red">*</span></label>
-                                <input type="password" class="form-control" id="nuevoPassword" name="nuevoPassword" required>
+                                <label for="passwordUsuario">Contraseña:</label>
+                                <input type="password" class="form-control" id="passwordUsuario" name="password" required>
                             </div>
-                            
+                        </div>
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <label for="nuevoPerfil">Perfil: <span class="text-red">*</span></label>
-                                <select class="form-control" id="nuevoPerfil" name="nuevoPerfil" required>
+                                <label for="perfilUsuario">Perfil:</label>
+                                <select class="form-control" id="perfilUsuario" name="perfil" required>
                                     <option value="">Seleccionar perfil</option>
                                     <option value="Administrador">Administrador</option>
                                     <option value="Vendedor">Vendedor</option>
@@ -149,90 +233,40 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                                     <option value="Limitado">Limitado</option>
                                 </select>
                             </div>
-                            
-                            <div class="form-group">
-                                <label for="nuevaFoto">Foto:</label>
-                                <input type="file" class="form-control" id="nuevaFoto" name="nuevaFoto" accept="image/*">
-                            </div>
                         </div>
-                        
-                        <!-- INFORMACIÓN DE SUCURSAL Y CONTACTO -->
+                    </div>
+                    <div class="row">
                         <div class="col-md-6">
-                            <h5><i class="fa fa-building"></i> Asignación y Contacto</h5>
-                            <hr>
-                            
                             <div class="form-group">
-                                <label for="nuevaSucursal">Sucursal Principal: <span class="text-red">*</span></label>
-                                <select class="form-control" id="nuevaSucursal" name="nuevaSucursal" required>
+                                <label for="sucursalUsuario">Sucursal:</label>
+                                <select class="form-control" id="sucursalUsuario" name="sucursal_id" required>
                                     <option value="">Seleccionar sucursal</option>
-                                    <?php foreach ($sucursales as $sucursal): ?>
-                                    <option value="<?php echo $sucursal['id']; ?>">
-                                        <?php echo $sucursal['nombre']; ?> (<?php echo $sucursal['codigo_sucursal']; ?>)
-                                    </option>
+                                    <?php foreach($sucursales as $sucursal): ?>
+                                        <option value="<?php echo $sucursal['id']; ?>">
+                                            <?php echo $sucursal['nombre']; ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            
+                        </div>
+                        <div class="col-md-6">
                             <div class="form-group">
-                                <label for="nuevoTelefono">Teléfono:</label>
-                                <input type="text" class="form-control" id="nuevoTelefono" name="nuevoTelefono">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="nuevaDireccion">Dirección:</label>
-                                <textarea class="form-control" id="nuevaDireccion" name="nuevaDireccion" rows="3"></textarea>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="nuevasObservaciones">Observaciones:</label>
-                                <textarea class="form-control" id="nuevasObservaciones" name="nuevasObservaciones" rows="3" placeholder="Notas adicionales sobre el usuario..."></textarea>
+                                <label for="telefonoUsuario">Teléfono:</label>
+                                <input type="text" class="form-control" id="telefonoUsuario" name="telefono">
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default pull-left" data-dismiss="modal">
-                        <i class="fa fa-times"></i> Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa fa-save"></i> Crear Usuario
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL SINCRONIZAR USUARIOS -->
-<div class="modal fade" id="modalSincronizarUsuarios" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-success">
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">
-                    <i class="fa fa-refresh"></i> Sincronizar Usuarios con Sucursales
-                </h4>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info">
-                    <i class="fa fa-info-circle"></i>
-                    <strong>Información:</strong> Esta acción sincronizará todos los usuarios pendientes con sus sucursales correspondientes.
-                </div>
-                
-                <div id="detallesSincronizacion">
-                    <!-- Se llenan dinámicamente -->
-                </div>
+                    <div class="form-group">
+                        <label for="direccionUsuario">Dirección:</label>
+                        <textarea class="form-control" id="direccionUsuario" name="direccion" rows="3"></textarea>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">
-                    <i class="fa fa-times"></i> Cancelar
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarUsuarioCentral">
+                    <i class="fa fa-save"></i> Guardar Usuario
                 </button>
-                <form method="post" style="display: inline;">
-                    <input type="hidden" name="sincronizarUsuarios" value="1">
-                    <button type="submit" class="btn btn-success">
-                        <i class="fa fa-refresh"></i> Iniciar Sincronización
-                    </button>
-                </form>
             </div>
         </div>
     </div>
@@ -241,151 +275,310 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
 <script>
 $(document).ready(function() {
     
-    // Inicializar DataTable
-    var tablaUsuarios = $('.tablaUsuariosCentrales').DataTable({
-        "ajax": {
-            "url": "ajax/datatable-usuarios-central.ajax.php",
-            "type": "POST"
-        },
-        "deferRender": true,
-        "retrieve": true,
-        "processing": true,
-        "language": {
-            "sProcessing": "Procesando...",
-            "sLengthMenu": "Mostrar _MENU_ registros",
-            "sZeroRecords": "No se encontraron resultados",
-            "sEmptyTable": "Ningún dato disponible en esta tabla",
-            "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_",
-            "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0",
-            "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-            "sInfoPostFix": "",
-            "sSearch": "Buscar:",
-            "sUrl": "",
-            "sInfoThousands": ",",
-            "sLoadingRecords": "Cargando...",
-            "oPaginate": {
-                "sFirst": "Primero",
-                "sLast": "Último",
-                "sNext": "Siguiente",
-                "sPrevious": "Anterior"
-            },
-            "oAria": {
-                "sSortAscending": ": Activar para ordenar la columna de manera ascendente",
-                "sSortDescending": ": Activar para ordenar la columna de manera descendente"
-            }
-        },
-        "order": [[7, "desc"]], // Ordenar por fecha de creación
-        "columnDefs": [
-            { "width": "10px", "targets": 0 },
-            { "width": "100px", "targets": 1 },
-            { "width": "150px", "targets": 2 },
-            { "width": "100px", "targets": 3 },
-            { "width": "150px", "targets": 4 },
-            { "width": "120px", "targets": 5 },
-            { "width": "120px", "targets": 6, "className": "text-center" },
-            { "width": "120px", "targets": 7 },
-            { "width": "100px", "targets": 8, "orderable": false, "className": "text-center" }
-        ]
-    });
+    // Cargar estadísticas del sistema
+    cargarEstadisticasSistema();
     
-    // Evento para nuevo usuario
+    // Cargar usuarios centrales
+    cargarUsuariosCentrales();
+    
+    // Eventos de botones principales
     $("#btnNuevoUsuarioCentral").on("click", function() {
-        $("#modalCrearUsuarioCentral").modal("show");
+        $("#modalNuevoUsuarioCentral").modal("show");
     });
     
-    // Evento para sincronizar usuarios
+    $("#btnConsultarUsuariosSucursales").on("click", function() {
+        cargarUsuariosSucursales();
+    });
+    
+    $("#btnImportarUsuariosSucursales").on("click", function() {
+        importarUsuariosSucursales();
+    });
+    
     $("#btnSincronizarUsuarios").on("click", function() {
-        cargarDetallesSincronizacion();
-        $("#modalSincronizarUsuarios").modal("show");
+        sincronizarUsuarios();
     });
     
-    // Evento para actualizar estadísticas
-    $("#btnActualizarEstadisticas").on("click", function() {
-        cargarEstadisticas();
+    // Guardar nuevo usuario central
+    $("#btnGuardarUsuarioCentral").on("click", function() {
+        guardarUsuarioCentral();
     });
-    
-    // Cargar estadísticas iniciales
-    cargarEstadisticas();
     
     // Función para cargar estadísticas
-    function cargarEstadisticas() {
+    function cargarEstadisticasSistema() {
         $.ajax({
-            url: "ajax/estadisticas-usuarios-central.ajax.php",
-            method: "GET",
+            url: "ajax/usuarios-central.ajax.php",
+            method: "POST",
+            data: { accion: "obtener_estadisticas" },
             dataType: "json",
             success: function(respuesta) {
-                if (respuesta.success) {
+                if(respuesta.success) {
                     var html = '<div class="row">';
-                    
-                    html += '<div class="col-md-3">';
-                    html += '<div class="info-box bg-blue">';
-                    html += '<span class="info-box-icon"><i class="fa fa-users"></i></span>';
-                    html += '<div class="info-box-content">';
-                    html += '<span class="info-box-text">Total Usuarios</span>';
-                    html += '<span class="info-box-number">' + respuesta.data.total_usuarios + '</span>';
-                    html += '</div></div></div>';
-                    
-                    html += '<div class="col-md-3">';
-                    html += '<div class="info-box bg-green">';
-                    html += '<span class="info-box-icon"><i class="fa fa-check"></i></span>';
-                    html += '<div class="info-box-content">';
-                    html += '<span class="info-box-text">Sincronizados</span>';
-                    html += '<span class="info-box-number">' + respuesta.data.sincronizados + '</span>';
-                    html += '</div></div></div>';
-                    
-                    html += '<div class="col-md-3">';
-                    html += '<div class="info-box bg-yellow">';
-                    html += '<span class="info-box-icon"><i class="fa fa-clock-o"></i></span>';
-                    html += '<div class="info-box-content">';
-                    html += '<span class="info-box-text">Pendientes</span>';
-                    html += '<span class="info-box-number">' + respuesta.data.pendientes + '</span>';
-                    html += '</div></div></div>';
-                    
-                    html += '<div class="col-md-3">';
-                    html += '<div class="info-box bg-red">';
-                    html += '<span class="info-box-icon"><i class="fa fa-exclamation"></i></span>';
-                    html += '<div class="info-box-content">';
-                    html += '<span class="info-box-text">Errores</span>';
-                    html += '<span class="info-box-number">' + respuesta.data.errores + '</span>';
-                    html += '</div></div></div>';
-                    
+                    html += '<div class="col-md-3"><div class="info-box bg-blue"><span class="info-box-icon"><i class="fa fa-users"></i></span><div class="info-box-content"><span class="info-box-text">Usuarios Centrales</span><span class="info-box-number">' + respuesta.estadisticas.total_usuarios_central + '</span></div></div></div>';
+                    html += '<div class="col-md-3"><div class="info-box bg-green"><span class="info-box-icon"><i class="fa fa-building"></i></span><div class="info-box-content"><span class="info-box-text">Sucursales Activas</span><span class="info-box-number">' + respuesta.estadisticas.sucursales_activas + '</span></div></div></div>';
+                    html += '<div class="col-md-3"><div class="info-box bg-yellow"><span class="info-box-icon"><i class="fa fa-sync"></i></span><div class="info-box-content"><span class="info-box-text">Sincronizaciones</span><span class="info-box-number">' + respuesta.estadisticas.sincronizaciones_hoy + '</span></div></div></div>';
+                    html += '<div class="col-md-3"><div class="info-box bg-red"><span class="info-box-icon"><i class="fa fa-exclamation-triangle"></i></span><div class="info-box-content"><span class="info-box-text">Errores</span><span class="info-box-number">' + respuesta.estadisticas.errores_hoy + '</span></div></div></div>';
                     html += '</div>';
-                    $("#estadisticasSincronizacion").html(html);
+                    $("#estadisticasSistema").html(html);
                 }
             }
         });
     }
     
-    // Función para cargar detalles de sincronización
-    function cargarDetallesSincronizacion() {
+    // Función para cargar usuarios centrales
+    function cargarUsuariosCentrales() {
         $.ajax({
-            url: "ajax/detalles-sincronizacion.ajax.php",
-            method: "GET",
+            url: "ajax/usuarios-central.ajax.php",
+            method: "POST",
+            data: { accion: "obtener_usuarios_centrales" },
             dataType: "json",
             success: function(respuesta) {
-                if (respuesta.success) {
-                    var html = '<h5>Usuarios pendientes de sincronización:</h5>';
-                    html += '<ul class="list-group">';
-                    
-                    respuesta.data.forEach(function(usuario) {
-                        html += '<li class="list-group-item">';
-                        html += '<strong>' + usuario.usuario + '</strong> - ' + usuario.nombre;
-                        html += ' <span class="label label-info">' + usuario.nombre_sucursal + '</span>';
-                        html += '</li>';
+                if(respuesta.success) {
+                    var html = '';
+                    respuesta.usuarios.forEach(function(usuario) {
+                        html += '<tr>';
+                        html += '<td>' + usuario.id + '</td>';
+                        html += '<td><strong>' + usuario.usuario + '</strong></td>';
+                        html += '<td>' + usuario.nombre + '</td>';
+                        html += '<td><span class="label label-info">' + usuario.perfil + '</span></td>';
+                        html += '<td>' + (usuario.sucursal_nombre || 'N/A') + '</td>';
+                        html += '<td><span class="label label-' + (usuario.activo ? 'success' : 'danger') + '">' + (usuario.activo ? 'Activo' : 'Inactivo') + '</span></td>';
+                        html += '<td>' + (usuario.ultimo_login || 'Nunca') + '</td>';
+                        html += '<td>';
+                        html += '<button class="btn btn-warning btn-xs btnEditarUsuario" data-id="' + usuario.id + '"><i class="fa fa-edit"></i></button> ';
+                        html += '<button class="btn btn-danger btn-xs btnEliminarUsuario" data-id="' + usuario.id + '"><i class="fa fa-trash"></i></button>';
+                        html += '</td>';
+                        html += '</tr>';
                     });
-                    
-                    html += '</ul>';
-                    $("#detallesSincronizacion").html(html);
+                    $("#tablaUsuariosCentrales tbody").html(html);
                 }
             }
         });
     }
+    
+    // Función para cargar usuarios de sucursales
+    function cargarUsuariosSucursales() {
+        $("#contenidoUsuariosSucursales").html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-2x"></i><p>Cargando usuarios de sucursales...</p></div>');
+        
+        $.ajax({
+            url: "ajax/consultar-usuarios-sucursales.ajax.php",
+            method: "POST",
+            data: { tipo_consulta: "todas" },
+            dataType: "json",
+            success: function(respuesta) {
+                if(respuesta.success) {
+                    mostrarUsuariosSucursales(respuesta.sucursales, respuesta.local);
+                } else {
+                    $("#contenidoUsuariosSucursales").html('<div class="alert alert-danger">Error: ' + respuesta.error + '</div>');
+                }
+            }
+        });
+    }
+    
+    // Función para mostrar usuarios de sucursales
+    function mostrarUsuariosSucursales(sucursales, usuariosLocal) {
+        var html = '';
+        
+        // Mostrar usuarios locales primero
+        if(usuariosLocal && usuariosLocal.length > 0) {
+            html += '<div class="box box-primary">';
+            html += '<div class="box-header with-border">';
+            html += '<h3 class="box-title">';
+            html += '<i class="fa fa-home"></i> Sucursal Local (Pruebas)';
+            html += '<small class="label label-primary">' + usuariosLocal.length + ' usuarios</small>';
+            html += '</h3>';
+            html += '<div class="box-tools pull-right">';
+            html += '<span class="label label-success">Conectado</span>';
+            html += '</div>';
+            html += '</div>';
+            html += '<div class="box-body">';
+            
+            html += '<div class="table-responsive">';
+            html += '<table class="table table-bordered table-striped">';
+            html += '<thead><tr><th>Usuario</th><th>Nombre</th><th>Perfil</th><th>Empresa Actual</th><th>Estado</th><th>Acciones</th></tr></thead>';
+            html += '<tbody>';
+            
+            usuariosLocal.forEach(function(usuario) {
+                html += '<tr>';
+                html += '<td><strong>' + (usuario.usuario || 'N/A') + '</strong></td>';
+                html += '<td>' + (usuario.nombre || 'N/A') + '</td>';
+                html += '<td><span class="label label-info">' + (usuario.perfil || 'N/A') + '</span></td>';
+                html += '<td>' + (usuario.empresa || 'Sin empresa asignada') + '</td>';
+                html += '<td><span class="label label-' + (usuario.estado == 1 ? 'success' : 'danger') + '">' + (usuario.estado == 1 ? 'Activo' : 'Inactivo') + '</span></td>';
+                html += '<td>';
+                html += '<button class="btn btn-success btn-xs btnImportarUsuario" data-usuario="' + JSON.stringify(usuario).replace(/"/g, '&quot;') + '"><i class="fa fa-download"></i> Importar</button>';
+                html += '</td>';
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            html += '</div>';
+            html += '</div></div>';
+        }
+        
+        // Mostrar sucursales remotas
+        if(sucursales && sucursales.length > 0) {
+            sucursales.forEach(function(sucursal) {
+                var estadoClass = sucursal.estado_conexion === 'conectado' ? 'success' : 'danger';
+                var estadoText = sucursal.estado_conexion === 'conectado' ? 'Conectado' : 'Error';
+                
+                html += '<div class="box box-' + estadoClass + '">';
+                html += '<div class="box-header with-border">';
+                html += '<h3 class="box-title">';
+                html += '<i class="fa fa-building"></i> ' + sucursal.sucursal.nombre;
+                html += '<small class="label label-' + estadoClass + '">' + sucursal.total_usuarios + ' usuarios</small>';
+                html += '</h3>';
+                html += '<div class="box-tools pull-right">';
+                html += '<span class="label label-' + estadoClass + '">' + estadoText + '</span>';
+                html += '</div>';
+                html += '</div>';
+                html += '<div class="box-body">';
+                
+                if(sucursal.estado_conexion === 'conectado' && sucursal.usuarios && sucursal.usuarios.length > 0) {
+                    html += '<div class="table-responsive">';
+                    html += '<table class="table table-bordered table-striped">';
+                    html += '<thead><tr><th>Usuario</th><th>Nombre</th><th>Perfil</th><th>Empresa Actual</th><th>Estado</th><th>Acciones</th></tr></thead>';
+                    html += '<tbody>';
+                    
+                    sucursal.usuarios.forEach(function(usuario) {
+                        html += '<tr>';
+                        html += '<td><strong>' + (usuario.usuario || 'N/A') + '</strong></td>';
+                        html += '<td>' + (usuario.nombre || 'N/A') + '</td>';
+                        html += '<td><span class="label label-info">' + (usuario.perfil || 'N/A') + '</span></td>';
+                        html += '<td>' + (usuario.empresa || 'Sin empresa asignada') + '</td>';
+                        html += '<td><span class="label label-' + (usuario.estado == 1 ? 'success' : 'danger') + '">' + (usuario.estado == 1 ? 'Activo' : 'Inactivo') + '</span></td>';
+                        html += '<td>';
+                        html += '<button class="btn btn-success btn-xs btnImportarUsuario" data-usuario="' + JSON.stringify(usuario).replace(/"/g, '&quot;') + '"><i class="fa fa-download"></i> Importar</button>';
+                        html += '</td>';
+                        html += '</tr>';
+                    });
+                    
+                    html += '</tbody></table>';
+                    html += '</div>';
+                } else {
+                    html += '<div class="alert alert-' + estadoClass + '">';
+                    html += '<i class="fa fa-exclamation-triangle"></i> No se pudo conectar con esta sucursal o no tiene usuarios.';
+                    html += '</div>';
+                }
+                
+                html += '</div></div>';
+            });
+        }
+        
+        $("#contenidoUsuariosSucursales").html(html);
+    }
+    
+    // Función para importar usuarios de sucursales
+    function importarUsuariosSucursales() {
+        swal({
+            title: "Importar Usuarios",
+            text: "¿Desea importar todos los usuarios disponibles de las sucursales?",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, importar",
+            cancelButtonText: "Cancelar"
+        }).then(function(result) {
+            if(result.value) {
+                $.ajax({
+                    url: "ajax/usuarios-central.ajax.php",
+                    method: "POST",
+                    data: { accion: "importar_usuarios_sucursales" },
+                    dataType: "json",
+                    success: function(respuesta) {
+                        if(respuesta.success) {
+                            swal("Éxito", "Usuarios importados correctamente", "success");
+                            cargarUsuariosCentrales();
+                        } else {
+                            swal("Error", respuesta.error, "error");
+                        }
+                    }
+                });
+            }
+        });
+    }
+    
+    // Función para sincronizar usuarios
+    function sincronizarUsuarios() {
+        swal({
+            title: "Sincronizar Usuarios",
+            text: "¿Desea sincronizar todos los usuarios centrales con las sucursales?",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, sincronizar",
+            cancelButtonText: "Cancelar"
+        }).then(function(result) {
+            if(result.value) {
+                $.ajax({
+                    url: "ajax/usuarios-central.ajax.php",
+                    method: "POST",
+                    data: { accion: "sincronizar_usuarios" },
+                    dataType: "json",
+                    success: function(respuesta) {
+                        if(respuesta.success) {
+                            swal("Éxito", "Usuarios sincronizados correctamente", "success");
+                        } else {
+                            swal("Error", respuesta.error, "error");
+                        }
+                    }
+                });
+            }
+        });
+    }
+    
+    // Función para guardar usuario central
+    function guardarUsuarioCentral() {
+        var formData = $("#formNuevoUsuarioCentral").serialize();
+        
+        $.ajax({
+            url: "ajax/usuarios-central.ajax.php",
+            method: "POST",
+            data: formData + "&accion=crear_usuario_central",
+            dataType: "json",
+            success: function(respuesta) {
+                if(respuesta.success) {
+                    swal("Éxito", "Usuario creado correctamente", "success");
+                    $("#modalNuevoUsuarioCentral").modal("hide");
+                    $("#formNuevoUsuarioCentral")[0].reset();
+                    cargarUsuariosCentrales();
+                } else {
+                    swal("Error", respuesta.error, "error");
+                }
+            }
+        });
+    }
+    
+    // Evento para importar usuario individual
+    $(document).on("click", ".btnImportarUsuario", function() {
+        var usuario = JSON.parse($(this).attr("data-usuario"));
+        
+        swal({
+            title: "Importar Usuario",
+            text: "¿Desea importar el usuario '" + usuario.usuario + "' a la base de datos central?",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Sí, importar",
+            cancelButtonText: "Cancelar"
+        }).then(function(result) {
+            if(result.value) {
+                $.ajax({
+                    url: "ajax/usuarios-central.ajax.php",
+                    method: "POST",
+                    data: {
+                        accion: "importar_usuario_individual",
+                        usuario: JSON.stringify(usuario)
+                    },
+                    dataType: "json",
+                    success: function(respuesta) {
+                        if(respuesta.success) {
+                            swal("Éxito", "Usuario importado correctamente", "success");
+                            cargarUsuariosCentrales();
+                        } else {
+                            swal("Error", respuesta.error, "error");
+                        }
+                    }
+                });
+            }
+        });
+    });
+    
 });
 </script>
-
-<?php
-// PROCESAR FORMULARIOS
-$crearUsuario = new ControladorUsuariosCentral();
-$crearUsuario->ctrCrearUsuarioCentral();
-$crearUsuario->ctrSincronizarUsuarios();
-?>

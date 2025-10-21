@@ -161,7 +161,6 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "medios-pago" => ["Administrador"],
         "sucursales" => ["Administrador"], 
         "usuarios-central" => ["Administrador"],
-        "usuarios-central-bidireccional" => ["Administrador"],
         "consultar-usuarios-sucursales" => ["Administrador"],
         "despachos" => ["Administrador", "Vendedor", "Contador", "Transportador"],
         "crear-despacho" => ["Administrador", "Vendedor", "Contador"],
