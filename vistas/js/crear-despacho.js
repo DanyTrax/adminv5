@@ -658,12 +658,21 @@ function cargarProductosDeSolicitud() {
         var productosSinStock = [];           // Productos que no tienen nada de stock
         var productosConFaltantes = [];       // Productos con stock parcial
         
+        console.log("🔍 Inventario local disponible:", inventarioLocal.length, "productos");
+        console.log("🔍 Productos de solicitud:", productos.length, "productos");
+        
         productos.forEach(function(producto) {
+            console.log("🔍 Buscando producto:", producto.codigo, "en inventario local");
             
             // Verificar stock disponible
             var productoInventario = inventarioLocal.find(function(p) {
                 return p.codigo === producto.codigo;
             });
+            
+            console.log("🔍 Producto encontrado en inventario:", productoInventario ? "SÍ" : "NO");
+            if(productoInventario) {
+                console.log("🔍 Stock disponible:", productoInventario.stock);
+            }
             
             if(productoInventario && productoInventario.stock > 0) {
                 
@@ -794,6 +803,10 @@ if(tieneProblemas) {
     }
     
     notaGeneral = `FALTANTES ${solicitudSeleccionada.numero_solicitud}: ${detallesFaltantes.join(', ')}`;
+    
+    console.log("🔍 Nota general creada:", notaGeneral);
+    console.log("🔍 Productos sin stock:", productosSinStock);
+    console.log("🔍 Productos con faltantes:", productosConFaltantes);
     
     // CORRECCIÓN: Buscar el campo de observaciones con múltiples selectores
     var $campoObservaciones = $("#observacionesDespacho").length > 0 ? $("#observacionesDespacho") :
@@ -1950,8 +1963,22 @@ function cargarProductosDesdeSolicitud() {
     $("#infoSolicitudEncontrada").show();
     $("#idSolicitudOrigenHidden").val(solicitudSeleccionada.id);
     
-    // Cargar productos automáticamente
-    cargarProductosDeSolicitud();
+    // Cargar productos automáticamente después de que el inventario esté cargado
+    setTimeout(function() {
+        if(inventarioLocal.length > 0) {
+            cargarProductosDeSolicitud();
+        } else {
+            console.log("⏳ Esperando inventario local...");
+            // Esperar un poco más y volver a intentar
+            setTimeout(function() {
+                if(inventarioLocal.length > 0) {
+                    cargarProductosDeSolicitud();
+                } else {
+                    console.log("❌ No se pudo cargar el inventario local");
+                }
+            }, 1000);
+        }
+    }, 500);
     
     console.log("✅ Solicitud cargada automáticamente desde:", window.solicitudOrigen.numero_solicitud);
 }
