@@ -345,6 +345,36 @@ class AjaxSucursales {
     }
 
     /*=============================================
+    PROBAR CONEXIÓN A BASE DE DATOS DE SUCURSAL
+    =============================================*/
+    public function ajaxProbarConexionBD() {
+
+        // Verificar permisos
+        if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] != "Administrador") {
+            echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+            return;
+        }
+
+        if (!isset($this->idSucursal)) {
+            echo json_encode(['success' => false, 'message' => 'ID de sucursal requerido']);
+            return;
+        }
+
+        try {
+            
+            $respuesta = ModeloSucursales::mdlProbarConexionBDSucursal($this->idSucursal);
+            echo json_encode($respuesta);
+
+        } catch (Exception $e) {
+            error_log("Error en ajaxProbarConexionBD: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al probar conexión a BD: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /*=============================================
     OBTENER ESTADÍSTICAS DE SUCURSALES
     =============================================*/
     public function ajaxObtenerEstadisticas() {
@@ -1013,14 +1043,14 @@ try {
     PROBAR CONEXIÓN CON SUCURSAL
     =============================================*/
     else if (isset($_POST["accion"]) && $_POST["accion"] == "probar_conexion") {
-        if (!isset($_POST["apiUrl"])) {
-            echo json_encode(['success' => false, 'message' => 'URL API requerida']);
+        if (!isset($_POST["idSucursal"])) {
+            echo json_encode(['success' => false, 'message' => 'ID de sucursal requerido']);
             exit;
         }
         
         $ajax = new AjaxSucursales();
-        $ajax->apiUrl = $_POST["apiUrl"];
-        $ajax->ajaxProbarConexion();
+        $ajax->idSucursal = $_POST["idSucursal"];
+        $ajax->ajaxProbarConexionBD();
     }
 
     /*=============================================

@@ -648,6 +648,90 @@ class ModeloSucursales {
             ];
         }
     }
+
+    /*=============================================
+    PROBAR CONEXIÓN DIRECTA A BASE DE DATOS DE SUCURSAL
+    =============================================*/
+    static public function mdlProbarConexionBDSucursal($idSucursal) {
+        try {
+            $inicioTiempo = microtime(true);
+            
+            // Obtener datos de conexión de la sucursal
+            $stmt = Conexion::conectar()->prepare("
+                SELECT nombre, usuario_bd, password_bd, nombre_bd, host_bd, puerto_bd 
+                FROM sucursales 
+                WHERE id = :id
+            ");
+            $stmt->bindParam(":id", $idSucursal, PDO::PARAM_INT);
+            $stmt->execute();
+            $sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$sucursal) {
+                return [
+                    'success' => false,
+                    'message' => 'Sucursal no encontrada'
+                ];
+            }
+            
+            // Verificar que todos los datos de conexión estén disponibles
+            if (empty($sucursal['usuario_bd']) || empty($sucursal['password_bd']) || 
+                empty($sucursal['nombre_bd']) || empty($sucursal['host_bd'])) {
+                return [
+                    'success' => false,
+                    'message' => 'Datos de conexión incompletos para la sucursal'
+                ];
+            }
+            
+            // Intentar conexión directa a la base de datos
+            $dsn = "mysql:host={$sucursal['host_bd']};port={$sucursal['puerto_bd']};dbname={$sucursal['nombre_bd']};charset=utf8";
+            
+            $pdo = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd'], [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_TIMEOUT => 5
+            ]);
+            
+            // Probar consulta simple
+            $stmt = $pdo->prepare("SELECT 1 as test");
+            $stmt->execute();
+            $resultado = $stmt->fetch();
+            
+            $tiempoTranscurrido = round((microtime(true) - $inicioTiempo) * 1000);
+            
+            if ($resultado && $resultado['test'] == 1) {
+                return [
+                    'success' => true,
+                    'message' => 'Conexión exitosa a la base de datos de ' . $sucursal['nombre'],
+                    'tiempo_respuesta' => $tiempoTranscurrido . 'ms',
+                    'sucursal' => $sucursal['nombre'],
+                    'host' => $sucursal['host_bd'],
+                    'database' => $sucursal['nombre_bd']
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Conexión establecida pero consulta de prueba falló'
+                ];
+            }
+            
+        } catch (PDOException $e) {
+            $tiempoTranscurrido = round((microtime(true) - $inicioTiempo) * 1000);
+            error_log("Error PDO en mdlProbarConexionBDSucursal: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error de conexión a BD: ' . $e->getMessage(),
+                'tiempo_respuesta' => $tiempoTranscurrido . 'ms'
+            ];
+        } catch (Exception $e) {
+            $tiempoTranscurrido = round((microtime(true) - $inicioTiempo) * 1000);
+            error_log("Error en mdlProbarConexionBDSucursal: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error al probar conexión: ' . $e->getMessage(),
+                'tiempo_respuesta' => $tiempoTranscurrido . 'ms'
+            ];
+        }
+    }
     /*=============================================
     CREAR SUCURSAL LOCAL (VERSIÓN CORREGIDA)
     =============================================*/

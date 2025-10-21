@@ -365,7 +365,7 @@ $(document).on("click", "#btnRegistrarEsta", function() {
 
 $(document).on("click", ".btnProbarConexion", function() {
     
-    var apiUrl = $(this).attr("apiUrl");
+    var idSucursal = $(this).attr("idSucursal");
     var nombreSucursal = $(this).attr("nombreSucursal");
     var boton = $(this);
     
@@ -378,7 +378,7 @@ $(document).on("click", ".btnProbarConexion", function() {
         method: "POST",
         data: { 
             "accion": "probar_conexion",
-            "apiUrl": apiUrl
+            "idSucursal": idSucursal
         },
         dataType: "json",
         timeout: 15000, // 15 segundos timeout
@@ -386,23 +386,19 @@ $(document).on("click", ".btnProbarConexion", function() {
             
             if (respuesta.success) {
                 
-                // Parsear respuesta anidada si existe
+                // Mostrar información de la conexión a BD
                 var detalleRespuesta = "";
-                if (respuesta.respuesta) {
-                    try {
-                        var datosAPI = JSON.parse(respuesta.respuesta);
-                        if (datosAPI.version) {
-                            detalleRespuesta = "<br><small>Versión API: " + datosAPI.version + "</small>";
-                        }
-                    } catch(e) {
-                        // Si no se puede parsear, continuar normalmente
+                if (respuesta.sucursal) {
+                    detalleRespuesta = "<br><small>Base de datos: " + (respuesta.database || 'N/A') + "</small>";
+                    if (respuesta.host) {
+                        detalleRespuesta += "<br><small>Host: " + respuesta.host + "</small>";
                     }
                 }
                 
                 swal({
                     type: "success",
                     title: "Conexión exitosa",
-                    html: "Conectado con <strong>" + nombreSucursal + "</strong><br>" +
+                    html: "Conectado a la base de datos de <strong>" + (respuesta.sucursal || nombreSucursal) + "</strong><br>" +
                           "Tiempo de respuesta: " + (respuesta.tiempo_respuesta || 'N/A') +
                           detalleRespuesta
                 });
