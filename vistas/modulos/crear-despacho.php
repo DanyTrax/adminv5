@@ -195,25 +195,29 @@ if(isset($_GET["editar"]) && is_numeric($_GET["editar"])) {
                                 <!-- INFO SOLICITUD ENCONTRADA CON BOTÓN CERRAR Y AGREGAR -->
                                 <div id="infoSolicitudEncontrada" class="alert alert-info" style="display: none;">
                                     <div class="row">
-                                        <div class="col-xs-8">
-                                            <strong><i class="fa fa-check-circle"></i> Solicitud Encontrada:</strong>
-                                            <div id="datosSolicitudEncontrada" class="mt-2"></div>
-                                        </div>
-                                        <div class="col-xs-4 text-right">
-                                            <button type="button" 
-                                                    class="btn btn-success btn-xs mr-2" 
-                                                    onclick="cargarProductosDeSolicitud()"
-                                                    data-toggle="tooltip" 
-                                                    title="Agregar productos de esta solicitud al despacho">
-                                                <i class="fa fa-plus"></i> Agregar productos
-                                            </button>
-                                            <button type="button" 
-                                                    class="btn btn-danger btn-xs" 
-                                                    onclick="limpiarSolicitudSeleccionada()"
-                                                    data-toggle="tooltip" 
-                                                    title="Limpiar solicitud seleccionada">
-                                                <i class="fa fa-times"></i>
-                                            </button>
+                                        <div class="col-xs-12">
+                                            <div class="row">
+                                                <div class="col-xs-10">
+                                                    <strong><i class="fa fa-check-circle"></i> Solicitud Encontrada:</strong>
+                                                    <div id="datosSolicitudEncontrada" class="mt-2"></div>
+                                                </div>
+                                                <div class="col-xs-2 text-right">
+                                                    <button type="button" 
+                                                            class="btn btn-success btn-xs mr-2" 
+                                                            onclick="cargarProductosDeSolicitud()"
+                                                            data-toggle="tooltip" 
+                                                            title="Agregar productos de esta solicitud al despacho">
+                                                        <i class="fa fa-plus"></i> Agregar productos
+                                                    </button>
+                                                    <button type="button" 
+                                                            class="btn btn-danger btn-xs" 
+                                                            onclick="limpiarSolicitudSeleccionada()"
+                                                            data-toggle="tooltip" 
+                                                            title="Limpiar solicitud seleccionada">
+                                                        <i class="fa fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
