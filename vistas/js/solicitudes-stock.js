@@ -514,21 +514,27 @@ $(document).on('click', '.btnCrearDespachoDesdeSolicitud', function() {
                 // Crear URL con parámetros
                 var url = 'crear-despacho?desde_solicitud=1&id_solicitud=' + idSolicitud + '&numero_solicitud=' + encodeURIComponent(numeroSolicitud);
                 
-                // Mostrar confirmación
+                // Mostrar confirmación con opciones
                 swal({
                     title: '¿Crear despacho desde solicitud?',
                     html: `
                         <p><strong>Solicitud:</strong> ${numeroSolicitud}</p>
                         <p><strong>Productos:</strong> ${productos.length} productos</p>
                         <p><strong>Total unidades:</strong> ${solicitud.total_cantidad}</p>
-                        <p>Se abrirá la página de crear despacho con los productos ya cargados.</p>
+                        <p>Seleccione cómo desea proceder:</p>
                     `,
                     type: 'question',
                     showCancelButton: true,
-                    confirmButtonText: 'Sí, crear despacho',
-                    cancelButtonText: 'Cancelar'
+                    confirmButtonText: 'Ver Stock por Sucursales',
+                    cancelButtonText: 'Crear Despacho Normal',
+                    confirmButtonColor: '#3c8dbc',
+                    cancelButtonColor: '#28a745'
                 }).then(function(result) {
                     if(result.value) {
+                        // Ver stock por sucursales
+                        mostrarStockPorSucursales(idSolicitud, numeroSolicitud, productos);
+                    } else {
+                        // Crear despacho normal
                         window.location.href = url;
                     }
                 });
@@ -558,6 +564,362 @@ $(document).on('click', '.btnCrearDespachoDesdeSolicitud', function() {
         }
     });
 });
+
+/*=============================================
+MOSTRAR STOCK POR SUCURSALES
+=============================================*/
+function mostrarStockPorSucursales(idSolicitud, numeroSolicitud, productos) {
+    
+    // Mostrar loading
+    swal({
+        title: "Consultando stock disponible...",
+        text: "Buscando en todas las sucursales",
+        type: "info",
+        showConfirmButton: false,
+        allowOutsideClick: false
+    });
+    
+    // Obtener stock de todas las sucursales
+    $.ajax({
+        url: 'ajax/stock-disponible-sucursales.ajax.php',
+        type: 'POST',
+        data: {
+            accion: 'consultar_stock_sucursales',
+            productos: JSON.stringify(productos)
+        },
+        dataType: 'json',
+        success: function(response) {
+            if(response.success) {
+                mostrarModalSeleccionStock(response.data, idSolicitud, numeroSolicitud);
+            } else {
+                swal({
+                    title: 'Error',
+                    text: response.message || 'No se pudo consultar el stock disponible',
+                    type: 'error',
+                    confirmButtonText: 'Cerrar'
+                });
+            }
+        },
+        error: function() {
+            swal({
+                title: 'Error',
+                text: 'Error de conexión al consultar stock disponible',
+                type: 'error',
+                confirmButtonText: 'Cerrar'
+            });
+        }
+    });
+}
+
+/*=============================================
+MOSTRAR MODAL DE SELECCIÓN DE STOCK
+=============================================*/
+function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
+    
+    var html = '<div class="stock-seleccion-container">';
+    html += '<div class="alert alert-info">';
+    html += '<h5><i class="fa fa-info-circle"></i> Seleccione las cantidades por sucursal</h5>';
+    html += '<p>Para cada producto, seleccione cuántas unidades tomar de cada sucursal disponible.</p>';
+    html += '</div>';
+    
+    html += '<div class="table-responsive" style="max-height: 500px; overflow-y: auto;">';
+    html += '<table class="table table-bordered table-striped">';
+    html += '<thead class="bg-primary">';
+    html += '<tr>';
+    html += '<th>Producto</th>';
+    html += '<th>Solicitado</th>';
+    html += '<th>Stock Local</th>';
+    
+    // Agregar columnas para cada sucursal
+    Object.keys(stockData.sucursales).forEach(function(codigoSucursal) {
+        var sucursal = stockData.sucursales[codigoSucursal];
+        html += '<th>' + sucursal.nombre + '</th>';
+    });
+    
+    html += '<th>Total Seleccionado</th>';
+    html += '<th>Estado</th>';
+    html += '</tr>';
+    html += '</thead>';
+    html += '<tbody>';
+    
+    // Procesar cada producto
+    stockData.productos_solicitud.forEach(function(producto) {
+        var stockLocal = stockData.local[producto.codigo] || 0;
+        var totalDisponible = stockLocal;
+        
+        // Calcular total disponible
+        Object.keys(stockData.sucursales).forEach(function(codigoSucursal) {
+            var stockSucursal = stockData.sucursales[codigoSucursal].stock[producto.codigo] || 0;
+            totalDisponible += stockSucursal;
+        });
+        
+        html += '<tr data-producto="' + producto.codigo + '">';
+        html += '<td><strong>' + producto.codigo + '</strong><br><small>' + producto.descripcion + '</small></td>';
+        html += '<td><span class="badge badge-info">' + producto.cantidad + '</span></td>';
+        html += '<td>';
+        html += '<input type="number" class="form-control stock-input" data-sucursal="local" data-producto="' + producto.codigo + '" min="0" max="' + stockLocal + '" value="0" style="width: 80px;">';
+        html += '<small class="text-muted">Disponible: ' + stockLocal + '</small>';
+        html += '</td>';
+        
+        // Agregar inputs para cada sucursal
+        Object.keys(stockData.sucursales).forEach(function(codigoSucursal) {
+            var sucursal = stockData.sucursales[codigoSucursal];
+            var stockSucursal = sucursal.stock[producto.codigo] || 0;
+            
+            html += '<td>';
+            html += '<input type="number" class="form-control stock-input" data-sucursal="' + codigoSucursal + '" data-producto="' + producto.codigo + '" min="0" max="' + stockSucursal + '" value="0" style="width: 80px;">';
+            html += '<small class="text-muted">Disponible: ' + stockSucursal + '</small>';
+            html += '</td>';
+        });
+        
+        html += '<td><span class="total-seleccionado badge badge-success" data-producto="' + producto.codigo + '">0</span></td>';
+        html += '<td><span class="estado-producto badge badge-warning" data-producto="' + producto.codigo + '">Pendiente</span></td>';
+        html += '</tr>';
+    });
+    
+    html += '</tbody>';
+    html += '</table>';
+    html += '</div>';
+    
+    // Resumen
+    html += '<div class="alert alert-warning mt-3">';
+    html += '<h5><i class="fa fa-exclamation-triangle"></i> Resumen de Selección:</h5>';
+    html += '<div id="resumen-seleccion">Calculando...</div>';
+    html += '</div>';
+    
+    html += '</div>';
+    
+    swal({
+        title: 'Seleccionar Stock por Sucursal',
+        html: html,
+        width: '90%',
+        showCancelButton: true,
+        confirmButtonText: 'Crear Despachos',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#3c8dbc',
+        cancelButtonColor: '#d33',
+        onOpen: function() {
+            // Configurar eventos para los inputs
+            $('.stock-input').on('input', function() {
+                actualizarTotalesProducto($(this).data('producto'));
+                actualizarResumen();
+            });
+            
+            // Actualizar resumen inicial
+            actualizarResumen();
+        }
+    }).then(function(result) {
+        if(result.value) {
+            crearDespachosPorSucursal(stockData, idSolicitud, numeroSolicitud);
+        }
+    });
+}
+
+/*=============================================
+ACTUALIZAR TOTALES POR PRODUCTO
+=============================================*/
+function actualizarTotalesProducto(codigoProducto) {
+    var total = 0;
+    var solicitado = 0;
+    
+    // Obtener cantidad solicitada
+    $('tr[data-producto="' + codigoProducto + '"]').find('.badge-info').each(function() {
+        solicitado = parseInt($(this).text());
+    });
+    
+    // Sumar todas las cantidades seleccionadas
+    $('input[data-producto="' + codigoProducto + '"]').each(function() {
+        var cantidad = parseInt($(this).val()) || 0;
+        total += cantidad;
+    });
+    
+    // Actualizar total seleccionado
+    $('.total-seleccionado[data-producto="' + codigoProducto + '"]').text(total);
+    
+    // Actualizar estado
+    var estado = $('.estado-producto[data-producto="' + codigoProducto + '"]');
+    if(total == solicitado) {
+        estado.removeClass('badge-warning badge-danger').addClass('badge-success').text('Completo');
+    } else if(total > solicitado) {
+        estado.removeClass('badge-warning badge-success').addClass('badge-danger').text('Exceso');
+    } else if(total > 0) {
+        estado.removeClass('badge-success badge-danger').addClass('badge-warning').text('Parcial');
+    } else {
+        estado.removeClass('badge-success badge-danger').addClass('badge-warning').text('Pendiente');
+    }
+}
+
+/*=============================================
+ACTUALIZAR RESUMEN GENERAL
+=============================================*/
+function actualizarResumen() {
+    var productosCompletos = 0;
+    var productosParciales = 0;
+    var productosPendientes = 0;
+    var productosConExceso = 0;
+    
+    $('.estado-producto').each(function() {
+        var estado = $(this).text();
+        if(estado == 'Completo') productosCompletos++;
+        else if(estado == 'Parcial') productosParciales++;
+        else if(estado == 'Pendiente') productosPendientes++;
+        else if(estado == 'Exceso') productosConExceso++;
+    });
+    
+    var html = '<ul class="mb-0">';
+    html += '<li><strong>Productos completos:</strong> ' + productosCompletos + '</li>';
+    html += '<li><strong>Productos parciales:</strong> ' + productosParciales + '</li>';
+    html += '<li><strong>Productos pendientes:</strong> ' + productosPendientes + '</li>';
+    if(productosConExceso > 0) {
+        html += '<li><strong>Productos con exceso:</strong> ' + productosConExceso + '</li>';
+    }
+    html += '</ul>';
+    
+    $('#resumen-seleccion').html(html);
+}
+
+/*=============================================
+CREAR DESPACHOS POR SUCURSAL
+=============================================*/
+function crearDespachosPorSucursal(stockData, idSolicitud, numeroSolicitud) {
+    
+    // Recopilar datos de despachos por sucursal
+    var despachosData = {};
+    
+    $('.stock-input').each(function() {
+        var sucursal = $(this).data('sucursal');
+        var producto = $(this).data('producto');
+        var cantidad = parseInt($(this).val()) || 0;
+        
+        if(cantidad > 0) {
+            if(!despachosData[sucursal]) {
+                despachosData[sucursal] = {
+                    id_solicitud_origen: idSolicitud,
+                    productos: []
+                };
+            }
+            
+            // Buscar descripción del producto
+            var descripcion = '';
+            stockData.productos_solicitud.forEach(function(p) {
+                if(p.codigo == producto) {
+                    descripcion = p.descripcion;
+                }
+            });
+            
+            despachosData[sucursal].productos.push({
+                codigo: producto,
+                descripcion: descripcion,
+                cantidad: cantidad
+            });
+        }
+    });
+    
+    // Verificar que hay despachos para crear
+    if(Object.keys(despachosData).length == 0) {
+        swal({
+            title: 'Sin selección',
+            text: 'No se seleccionaron cantidades para crear despachos',
+            type: 'warning',
+            confirmButtonText: 'Cerrar'
+        });
+        return;
+    }
+    
+    // Mostrar loading
+    swal({
+        title: "Creando despachos...",
+        text: "Procesando " + Object.keys(despachosData).length + " despachos",
+        type: "info",
+        showConfirmButton: false,
+        allowOutsideClick: false
+    });
+    
+    // Enviar datos para crear despachos
+    $.ajax({
+        url: 'ajax/crear-despachos-sucursales.ajax.php',
+        type: 'POST',
+        data: {
+            accion: 'crear_despachos_sucursales',
+            despachos_data: JSON.stringify(despachosData)
+        },
+        dataType: 'json',
+        success: function(response) {
+            if(response.success) {
+                mostrarResultadoDespachos(response);
+            } else {
+                swal({
+                    title: 'Error',
+                    text: response.message || 'No se pudieron crear los despachos',
+                    type: 'error',
+                    confirmButtonText: 'Cerrar'
+                });
+            }
+        },
+        error: function() {
+            swal({
+                title: 'Error',
+                text: 'Error de conexión al crear despachos',
+                type: 'error',
+                confirmButtonText: 'Cerrar'
+            });
+        }
+    });
+}
+
+/*=============================================
+MOSTRAR RESULTADO DE DESPACHOS
+=============================================*/
+function mostrarResultadoDespachos(response) {
+    
+    var html = '<div class="alert alert-success">';
+    html += '<h5><i class="fa fa-check-circle"></i> Despachos Creados Exitosamente</h5>';
+    html += '<p><strong>Total despachos creados:</strong> ' + response.total_despachos + '</p>';
+    html += '</div>';
+    
+    if(response.despachos_creados.length > 0) {
+        html += '<div class="table-responsive">';
+        html += '<table class="table table-bordered table-striped">';
+        html += '<thead class="bg-success">';
+        html += '<tr><th>Sucursal</th><th>Productos</th><th>Cantidad Total</th></tr>';
+        html += '</thead>';
+        html += '<tbody>';
+        
+        response.despachos_creados.forEach(function(despacho) {
+            html += '<tr>';
+            html += '<td><strong>' + despacho.sucursal + '</strong></td>';
+            html += '<td><span class="badge badge-primary">' + despacho.productos + '</span></td>';
+            html += '<td><span class="badge badge-success">' + despacho.cantidad_total + '</span></td>';
+            html += '</tr>';
+        });
+        
+        html += '</tbody>';
+        html += '</table>';
+        html += '</div>';
+    }
+    
+    if(response.errores.length > 0) {
+        html += '<div class="alert alert-danger">';
+        html += '<h5><i class="fa fa-exclamation-triangle"></i> Errores Encontrados</h5>';
+        html += '<ul>';
+        response.errores.forEach(function(error) {
+            html += '<li>' + error + '</li>';
+        });
+        html += '</ul>';
+        html += '</div>';
+    }
+    
+    swal({
+        title: 'Despachos Creados',
+        html: html,
+        width: '70%',
+        confirmButtonText: 'Cerrar',
+        confirmButtonColor: '#3c8dbc'
+    }).then(function() {
+        // Recargar la página para mostrar los nuevos despachos
+        location.reload();
+    });
+}
 
 /*=============================================
 VER DETALLES DE SOLICITUD
