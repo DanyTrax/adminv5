@@ -414,29 +414,82 @@ function mostrarResultadosSolicitudes(solicitudes) {
     // Eliminar resultados anteriores
     ocultarResultadosSolicitudes();
     
-    var html = '<div style="border: 1px solid #ccc; background: white; max-height: 200px; overflow-y: auto; z-index: 1000; position: relative;">';
+    var html = '<div style="border: 1px solid #ccc; background: white; max-height: 400px; overflow-y: auto; z-index: 1000; position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">';
     
     solicitudes.forEach(function(solicitud) {
         var fecha = new Date(solicitud.fecha_solicitud).toLocaleDateString();
         var estadoColor = solicitud.estado === 'aprobado' ? '#5cb85c' : '#f0ad4e';
         
+        // Parsear productos de la solicitud
+        var productos = [];
+        try {
+            productos = JSON.parse(solicitud.productos_solicitados || '[]');
+        } catch(e) {
+            console.warn("Error parseando productos de solicitud:", e);
+            productos = [];
+        }
+        
         html += `
             <div onclick="seleccionarSolicitud(${solicitud.id})" 
-                 style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; background: #f9f9f9;"
+                 style="padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; background: #f9f9f9;"
                  onmouseover="this.style.background='#e9e9e9'" 
                  onmouseout="this.style.background='#f9f9f9'">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <div>
-                        <strong style="color: #333;">${solicitud.numero_solicitud}</strong>
-                        <span style="background: ${estadoColor}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin-left: 5px;">
+                        <strong style="color: #333; font-size: 14px;">${solicitud.numero_solicitud}</strong>
+                        <span style="background: ${estadoColor}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-left: 5px;">
                             ${solicitud.estado.toUpperCase()}
                         </span>
                     </div>
                     <small style="color: #666;">${fecha}</small>
                 </div>
-                <div style="margin-top: 5px; font-size: 12px; color: #666;">
-                    <strong>Usuario:</strong> ${solicitud.nombre_usuario_solicitante}<br>
-                    <strong>Productos:</strong> ${solicitud.total_productos} (${solicitud.total_cantidad} unidades)
+                
+                <div style="margin-bottom: 8px; font-size: 12px; color: #666;">
+                    <strong>Usuario:</strong> ${solicitud.nombre_usuario_solicitante} | 
+                    <strong>Sucursal:</strong> ${solicitud.nombre_sucursal_solicitante}
+                </div>
+                
+                <div style="margin-bottom: 8px; font-size: 12px; color: #666;">
+                    <strong>Resumen:</strong> ${solicitud.total_productos} productos (${solicitud.total_cantidad} unidades)
+                </div>
+                
+                <div style="background: white; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                    <strong style="font-size: 11px; color: #333; display: block; margin-bottom: 5px;">📦 Productos solicitados:</strong>
+                    <div style="max-height: 80px; overflow-y: auto;">
+        `;
+        
+        if(productos.length > 0) {
+            productos.forEach(function(producto, index) {
+                if(index < 5) { // Mostrar máximo 5 productos
+                    html += `
+                        <div style="font-size: 11px; padding: 2px 0; border-bottom: 1px solid #f0f0f0;">
+                            <span style="color: #666;">${producto.codigo}</span> - 
+                            <span style="color: #333;">${producto.descripcion}</span> 
+                            <span style="color: #007bff; font-weight: bold;">(${producto.cantidad})</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            if(productos.length > 5) {
+                html += `<div style="font-size: 10px; color: #999; text-align: center; padding: 5px;">
+                    ... y ${productos.length - 5} productos más
+                </div>`;
+            }
+        } else {
+            html += `<div style="font-size: 11px; color: #999; text-align: center; padding: 5px;">
+                No se pudieron cargar los productos
+            </div>`;
+        }
+        
+        html += `
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 8px;">
+                    <span style="background: #007bff; color: white; padding: 4px 8px; border-radius: 3px; font-size: 11px;">
+                        👆 Click para seleccionar esta solicitud
+                    </span>
                 </div>
             </div>
         `;
