@@ -122,7 +122,7 @@
 
 					?>
 						
-						<span class="hidden-xs"><?php echo $_SESSION["nombre"]; ?></span>
+						<span class="hidden-xs"><?php echo isset($_SESSION["nombre"]) ? $_SESSION["nombre"] : 'Usuario'; ?></span>
 
 					</a>
 

@@ -962,8 +962,8 @@ if(isset($_POST["crearDespacho"])){
         // Preparar datos para el controlador
         $datosDespacho = array(
             "id_solicitud_origen" => $_POST["idSolicitudOrigen"] ?? null,
-            "id_usuario_creador" => $_SESSION["id"],
-            "nombre_usuario_creador" => $_SESSION["nombre"],
+            "id_usuario_creador" => isset($_SESSION["id"]) ? $_SESSION["id"] : 0,
+            "nombre_usuario_creador" => isset($_SESSION["nombre"]) ? $_SESSION["nombre"] : 'Usuario',
             "productos_despacho" => $_POST["productosDespacho"],
             "total_productos" => intval($_POST["totalProductos"]),
             "total_cantidad" => intval($_POST["totalCantidad"]),
