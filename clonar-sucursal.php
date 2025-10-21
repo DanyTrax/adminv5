@@ -3,11 +3,14 @@
 /**
  * SCRIPT DE CLONACIÓN DE SUCURSAL
  * 
- * Este script permite clonar una sucursal existente con toda su estructura:
- * - Base de datos completa
- * - Archivos de configuración
- * - Estructura de directorios
- * - Datos de ejemplo
+ * Este script permite clonar una sucursal existente con toda su estructura LOCAL:
+ * - Base de datos LOCAL de la nueva sucursal
+ * - Estructura de tablas idéntica a la sucursal origen
+ * - Datos de ejemplo (categorías, usuarios, productos)
+ * - Registro en la BD CENTRAL (compartida por todas las sucursales)
+ * 
+ * IMPORTANTE: Todas las sucursales comparten la misma BD CENTRAL
+ * Solo se clona la BD LOCAL de cada sucursal
  */
 
 ini_set('display_errors', 1);
@@ -342,8 +345,42 @@ if(isset($_GET['ejecutar']) && $_GET['ejecutar'] == '1') {
     <h1>🔧 Clonador de Sucursales</h1>
     
     <div class="warning">
-        <strong>⚠️ Advertencia:</strong> Este proceso creará una nueva sucursal completa con base de datos, tablas y datos de ejemplo. 
-        Asegúrate de tener los permisos necesarios y de que la base de datos de destino no exista.
+        <strong>⚠️ Información Importante:</strong> 
+        <ul style="margin: 10px 0; padding-left: 20px;">
+            <li><strong>BD Central:</strong> Todas las sucursales comparten la misma base de datos central</li>
+            <li><strong>BD Local:</strong> Solo se crea la base de datos LOCAL de la nueva sucursal</li>
+            <li><strong>Estructura:</strong> Se clona la estructura de tablas de la sucursal origen</li>
+            <li><strong>Datos:</strong> Se copian datos de ejemplo (categorías, usuarios, productos)</li>
+        </ul>
+        Asegúrate de tener los permisos necesarios y de que la base de datos LOCAL de destino no exista.
+    </div>
+    
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #007bff;">
+        <h4 style="margin: 0 0 10px 0; color: #007bff;">🏗️ Arquitectura del Sistema</h4>
+        <div style="font-family: monospace; font-size: 12px; line-height: 1.4;">
+            <div style="background: #e3f2fd; padding: 8px; margin: 5px 0; border-radius: 3px;">
+                <strong>BD CENTRAL (Compartida)</strong><br>
+                ├── sucursales (registro de todas las sucursales)<br>
+                ├── usuarios_central (usuarios centrales)<br>
+                ├── catalogo_maestro (productos maestros)<br>
+                ├── despachos (despachos entre sucursales)<br>
+                └── stock_transito (stock en tránsito)
+            </div>
+            <div style="background: #f3e5f5; padding: 8px; margin: 5px 0; border-radius: 3px;">
+                <strong>BD LOCAL Sucursal A</strong><br>
+                ├── usuarios (usuarios locales)<br>
+                ├── productos (inventario local)<br>
+                ├── ventas (ventas locales)<br>
+                └── sucursal_local (configuración local)
+            </div>
+            <div style="background: #f3e5f5; padding: 8px; margin: 5px 0; border-radius: 3px;">
+                <strong>BD LOCAL Sucursal B (Nueva)</strong><br>
+                ├── usuarios (usuarios locales)<br>
+                ├── productos (inventario local)<br>
+                ├── ventas (ventas locales)<br>
+                └── sucursal_local (configuración local)
+            </div>
+        </div>
     </div>
     
     <form method="GET">
@@ -384,30 +421,34 @@ if(isset($_GET['ejecutar']) && $_GET['ejecutar'] == '1') {
             <input type="url" name="url_api" value="https://prueba2.empresa.com/api-transferencias/" required>
         </div>
         
-        <h3>Configuración de Base de Datos</h3>
+        <h3>Configuración de Base de Datos LOCAL</h3>
+        <div style="background: #e7f3ff; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+            <strong>📌 Nota:</strong> Esta es la configuración de la base de datos LOCAL de la nueva sucursal. 
+            La BD Central se mantiene igual para todas las sucursales.
+        </div>
         
         <div class="form-group">
-            <label>Usuario BD:</label>
+            <label>Usuario BD Local:</label>
             <input type="text" name="usuario_bd" value="usuario_prueba2" required>
         </div>
         
         <div class="form-group">
-            <label>Contraseña BD:</label>
+            <label>Contraseña BD Local:</label>
             <input type="password" name="password_bd" value="password123" required>
         </div>
         
         <div class="form-group">
-            <label>Nombre BD:</label>
+            <label>Nombre BD Local:</label>
             <input type="text" name="nombre_bd" value="bd_prueba2" required>
         </div>
         
         <div class="form-group">
-            <label>Host BD:</label>
+            <label>Host BD Local:</label>
             <input type="text" name="host_bd" value="localhost" required>
         </div>
         
         <div class="form-group">
-            <label>Puerto BD:</label>
+            <label>Puerto BD Local:</label>
             <input type="number" name="puerto_bd" value="3306" required>
         </div>
         
