@@ -875,6 +875,36 @@ class ModeloUsuariosCentral {
             
             $resultados = [];
             
+            // Obtener sucursales que NO están seleccionadas (para eliminar)
+            $stmt = $conexion->prepare("
+                SELECT * FROM sucursales 
+                WHERE id NOT IN (" . implode(',', array_fill(0, count($sucursales), '?')) . ")
+                AND activo = 1
+            ");
+            $stmt->execute($sucursales);
+            $sucursalesNoSeleccionadas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Eliminar usuario de sucursales no seleccionadas
+            foreach ($sucursalesNoSeleccionadas as $sucursal) {
+                try {
+                    $dsn = "mysql:host={$sucursal['host_bd']};port={$sucursal['puerto_bd']};dbname={$sucursal['nombre_bd']};charset=utf8";
+                    $pdoSucursal = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd'], [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                    ]);
+                    
+                    // Eliminar usuario de esta sucursal
+                    $stmt = $pdoSucursal->prepare("DELETE FROM usuarios WHERE usuario = :usuario");
+                    $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+                    $stmt->execute();
+                    
+                    error_log("Usuario '{$usuario['usuario']}' eliminado de sucursal '{$sucursal['nombre']}'");
+                    
+                } catch (Exception $e) {
+                    error_log("Error eliminando usuario de sucursal '{$sucursal['nombre']}': " . $e->getMessage());
+                }
+            }
+            
             // Sincronizar a cada sucursal seleccionada
             foreach ($sucursalesData as $sucursal) {
                 $resultados[$sucursal['id']] = [
@@ -909,8 +939,7 @@ class ModeloUsuariosCentral {
                                 nombre = :nombre, 
                                 password = :password, 
                                 perfil = :perfil, 
-                                telefono = :telefono, 
-                                direccion = :direccion,
+                                telefono = :telefono,
                                 empresa = :empresa
                             WHERE usuario = :usuario
                         ");
@@ -918,7 +947,6 @@ class ModeloUsuariosCentral {
                         $stmt->bindParam(":password", $usuario['password'], PDO::PARAM_STR);
                         $stmt->bindParam(":perfil", $usuario['perfil'], PDO::PARAM_STR);
                         $stmt->bindParam(":telefono", $usuario['telefono'], PDO::PARAM_STR);
-                        $stmt->bindParam(":direccion", $usuario['direccion'], PDO::PARAM_STR);
                         $stmt->bindParam(":empresa", $sucursal['nombre'], PDO::PARAM_STR);
                         $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
                         $stmt->execute();
@@ -929,10 +957,10 @@ class ModeloUsuariosCentral {
                         $stmt = $pdoSucursal->prepare("
                             INSERT INTO usuarios (
                                 nombre, usuario, password, perfil, foto, 
-                                telefono, direccion, empresa, estado, fecha
+                                telefono, empresa, estado, fecha
                             ) VALUES (
                                 :nombre, :usuario, :password, :perfil, :foto,
-                                :telefono, :direccion, :empresa, 1, NOW()
+                                :telefono, :empresa, 1, NOW()
                             )
                         ");
                         $stmt->bindParam(":nombre", $usuario['nombre'], PDO::PARAM_STR);
@@ -941,7 +969,6 @@ class ModeloUsuariosCentral {
                         $stmt->bindParam(":perfil", $usuario['perfil'], PDO::PARAM_STR);
                         $stmt->bindParam(":foto", $usuario['foto'], PDO::PARAM_STR);
                         $stmt->bindParam(":telefono", $usuario['telefono'], PDO::PARAM_STR);
-                        $stmt->bindParam(":direccion", $usuario['direccion'], PDO::PARAM_STR);
                         $stmt->bindParam(":empresa", $sucursal['nombre'], PDO::PARAM_STR);
                         $stmt->execute();
                         error_log("Usuario '{$usuario['usuario']}' creado en sucursal '{$sucursal['nombre']}' con empresa = '{$sucursal['nombre']}'");

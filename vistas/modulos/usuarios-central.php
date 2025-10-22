@@ -77,49 +77,20 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                     </div>
                     <div class="box-body">
                         
-                        <!-- ACCIONES DEL SISTEMA - COMPACTAS -->
+                        <!-- ACCIONES DEL SISTEMA - SIMPLIFICADAS -->
                         <div class="row">
                             <div class="col-md-12">
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <button class="btn btn-primary btn-sm" id="btnNuevoUsuarioCentral" title="Crear Usuario en Central">
-                                        <i class="fa fa-plus"></i> Crear Usuario
+                                <div class="text-center">
+                                    <button class="btn btn-primary btn-lg" id="btnNuevoUsuarioCentral" title="Crear Usuario en Central">
+                                        <i class="fa fa-plus"></i> Crear Usuario Central
                                     </button>
-                                    <button class="btn btn-success btn-sm" id="btnSincronizarUsuarios" title="Sincronizar a Sucursales">
-                                        <i class="fa fa-refresh"></i> Sincronizar
-                                    </button>
-                                    <button class="btn btn-info btn-sm" id="btnConsultarUsuariosSucursales" title="Consultar Usuarios de Sucursales">
-                                        <i class="fa fa-search"></i> Consultar
-                                    </button>
-                                    <button class="btn btn-warning btn-sm" id="btnImportarUsuariosSucursales" title="Importar de Sucursales">
-                                        <i class="fa fa-download"></i> Importar
-                                    </button>
+                                    <p class="text-muted" style="margin-top: 10px;">
+                                        <small>La sincronización se realiza desde el botón "Asignar Sucursales" de cada usuario</small>
+                                    </p>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- SELECCIÓN MÚLTIPLE DE SUCURSALES -->
-                        <div class="row" style="margin-top: 15px;">
-                            <div class="col-md-12">
-                                <div class="box box-warning">
-                                    <div class="box-header with-border">
-                                        <h3 class="box-title">
-                                            <i class="fa fa-building"></i> Selección de Sucursales para Sincronización
-                                        </h3>
-                                    </div>
-                                    <div class="box-body">
-                                        <p><strong>Selecciona las sucursales donde quieres sincronizar los usuarios:</strong></p>
-                                        <div id="sucursalesSeleccion" class="row">
-                                            <!-- Las sucursales se cargarán aquí dinámicamente -->
-                                        </div>
-                                        <div class="text-center" style="margin-top: 15px;">
-                                            <button class="btn btn-success btn-sm" id="btnSincronizarSeleccionadas" disabled>
-                                                <i class="fa fa-refresh"></i> Sincronizar a Sucursales Seleccionadas
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         
                     </div>
                 </div>
@@ -209,6 +180,8 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                                     <option value="">Seleccionar perfil</option>
                                     <option value="Administrador">Administrador</option>
                                     <option value="Especial">Especial</option>
+                                    <option value="Contador">Contador</option>
+                                    <option value="Transportador">Transportador</option>
                                     <option value="Vendedor">Vendedor</option>
                                 </select>
                             </div>
@@ -220,12 +193,6 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                             <div class="form-group">
                                 <label for="telefonoUsuario">Teléfono:</label>
                                 <input type="text" class="form-control" id="telefonoUsuario" name="telefono">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="direccionUsuario">Dirección:</label>
-                                <input type="text" class="form-control" id="direccionUsuario" name="direccion">
                             </div>
                         </div>
                     </div>

@@ -424,8 +424,7 @@ $(document).ready(function() {
             usuario: usuario.usuario,
             password: usuario.password,
             perfil: usuario.perfil,
-            telefono: usuario.telefono || '',
-            direccion: usuario.direccion || ''
+            telefono: usuario.telefono || ''
         };
         
         // Abrir modal en modo edición
@@ -597,7 +596,6 @@ $(document).ready(function() {
             $("#passwordUsuario").val(usuario.password || '');
             $("#perfilUsuario").val(usuario.perfil);
             $("#telefonoUsuario").val(usuario.telefono || '');
-            $("#direccionUsuario").val(usuario.direccion || '');
             
             console.log("Campos llenados - ID:", $("#idUsuarioCentral").val());
             console.log("Campos llenados - Nombre:", $("#nombreUsuario").val());
@@ -666,8 +664,7 @@ $(document).ready(function() {
             usuario: $("#usuarioLogin").val(),
             password: $("#passwordUsuario").val(),
             perfil: $("#perfilUsuario").val(),
-            telefono: $("#telefonoUsuario").val(),
-            direccion: $("#direccionUsuario").val()
+            telefono: $("#telefonoUsuario").val()
         };
         
         var accion = formData.id ? "editar_usuario_central" : "crear_usuario_central";
