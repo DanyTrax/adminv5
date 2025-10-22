@@ -327,7 +327,6 @@ class ModeloUsuariosCentral {
                     usuario_bd, password_bd, nombre_bd, host_bd, puerto_bd
                 FROM sucursales 
                 WHERE activo = 1 
-                AND NOT (host_bd = 'localhost' AND nombre_bd = 'epicosie_pruebas')
                 " . ($sucursalId ? "AND id = ?" : "") . "
                 ORDER BY nombre
             ");
