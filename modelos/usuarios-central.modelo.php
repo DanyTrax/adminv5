@@ -462,7 +462,6 @@ class ModeloUsuariosCentral {
                 UPDATE usuarios_central 
                 SET nombre = :nombre, 
                     perfil = :perfil, 
-                    sucursal_id = :sucursal_id,
                     telefono = :telefono,
                     direccion = :direccion,
                     observaciones = :observaciones,
@@ -472,7 +471,6 @@ class ModeloUsuariosCentral {
             
             $stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
             $stmt->bindParam(":perfil", $datos["perfil"], PDO::PARAM_STR);
-            $stmt->bindParam(":sucursal_id", $datos["sucursal_id"], PDO::PARAM_INT);
             $stmt->bindParam(":telefono", $datos["telefono"], PDO::PARAM_STR);
             $stmt->bindParam(":direccion", $datos["direccion"], PDO::PARAM_STR);
             $stmt->bindParam(":observaciones", $datos["observaciones"], PDO::PARAM_STR);
@@ -697,7 +695,14 @@ class ModeloUsuariosCentral {
                 WHERE id = :id
             ");
             
-            $sucursalesAsignadas = implode(',', $datos['sucursales_asignadas']);
+            $sucursalesAsignadas = '';
+            if (!empty($datos['sucursales_asignadas'])) {
+                if (is_array($datos['sucursales_asignadas'])) {
+                    $sucursalesAsignadas = implode(',', $datos['sucursales_asignadas']);
+                } else {
+                    $sucursalesAsignadas = $datos['sucursales_asignadas'];
+                }
+            }
             
             $stmt->bindParam(":id", $datos['id'], PDO::PARAM_INT);
             $stmt->bindParam(":nombre", $datos['nombre'], PDO::PARAM_STR);
