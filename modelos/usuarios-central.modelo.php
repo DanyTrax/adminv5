@@ -1042,10 +1042,10 @@ class ModeloUsuariosCentral {
                         $stmt = $pdoSucursal->prepare("
                             INSERT INTO usuarios (
                                 nombre, usuario, password, perfil, foto, 
-                                telefono, empresa, estado, fecha
+                                telefono, empresa, estado, fecha, ultimo_login
                             ) VALUES (
                                 :nombre, :usuario, :password, :perfil, :foto,
-                                :telefono, :empresa, 1, NOW()
+                                :telefono, :empresa, 1, NOW(), NOW()
                             )
                         ");
                         $stmt->bindParam(":nombre", $usuario['nombre'], PDO::PARAM_STR);
