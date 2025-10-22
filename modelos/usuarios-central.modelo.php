@@ -42,7 +42,7 @@ class ModeloUsuariosCentral {
             ");
             
             $foto = !empty($datos['foto']) ? $datos['foto'] : 'vistas/img/usuarios/default/anonymous.png';
-            $sucursalesAsignadas = implode(',', $datos['sucursales_asignadas']);
+            $sucursalesAsignadas = !empty($datos['sucursales_asignadas']) ? implode(',', $datos['sucursales_asignadas']) : '';
             
             $stmt->bindParam(":nombre", $datos['nombre'], PDO::PARAM_STR);
             $stmt->bindParam(":usuario", $datos['usuario'], PDO::PARAM_STR);
