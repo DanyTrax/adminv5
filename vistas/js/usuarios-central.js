@@ -625,9 +625,13 @@ $(document).ready(function() {
             $("#idUsuarioCentral").val(usuario.id);
             $("#nombreUsuario").val(usuario.nombre);
             $("#usuarioLogin").val(usuario.usuario);
-            $("#passwordUsuario").val(usuario.password || '');
+            // NO llenar el campo de contraseña en modo edición
+            $("#passwordUsuario").val('');
             $("#perfilUsuario").val(usuario.perfil);
             $("#telefonoUsuario").val(usuario.telefono || '');
+            
+            // Agregar placeholder informativo para contraseña
+            $("#passwordUsuario").attr('placeholder', 'Dejar vacío para mantener contraseña actual');
             
             console.log("Campos llenados - ID:", $("#idUsuarioCentral").val());
             console.log("Campos llenados - Nombre:", $("#nombreUsuario").val());
@@ -637,6 +641,9 @@ $(document).ready(function() {
             $("#tituloModalUsuario").html('<i class="fa fa-user"></i> Crear Usuario Central');
             $("#formUsuarioCentral")[0].reset();
             $("#idUsuarioCentral").val('');
+            
+            // Restaurar placeholder normal para contraseña
+            $("#passwordUsuario").attr('placeholder', 'Ingrese la contraseña');
         }
         
         $("#modalUsuarioCentral").modal("show");
@@ -707,6 +714,12 @@ $(document).ready(function() {
             telefono: $("#telefonoUsuario").val().trim()
         };
         
+        // En modo edición, si no se proporciona contraseña, no enviarla
+        var esEdicion = formData.id !== '';
+        if (esEdicion && formData.password === '') {
+            delete formData.password; // No enviar contraseña vacía en edición
+        }
+        
         var accion = formData.id ? "editar_usuario_central" : "crear_usuario_central";
         
         $.ajax({
@@ -767,15 +780,25 @@ $(document).ready(function() {
             esValido = false;
         }
         
-        // Validar contraseña
+        // Validar contraseña solo si se está proporcionando una nueva
         var password = $("#passwordUsuario").val();
-        if (password.length < 4) {
-            mostrarErrorCampo("errorPassword", "La contraseña debe tener al menos 4 caracteres");
-            esValido = false;
-        } else if (password.length > 50) {
-            mostrarErrorCampo("errorPassword", "La contraseña no puede tener más de 50 caracteres");
+        var esEdicion = $("#idUsuarioCentral").val() !== '';
+        
+        if (password.length > 0) {
+            // Solo validar si se está proporcionando una contraseña
+            if (password.length < 4) {
+                mostrarErrorCampo("errorPassword", "La contraseña debe tener al menos 4 caracteres");
+                esValido = false;
+            } else if (password.length > 50) {
+                mostrarErrorCampo("errorPassword", "La contraseña no puede tener más de 50 caracteres");
+                esValido = false;
+            }
+        } else if (!esEdicion) {
+            // En modo creación, la contraseña es obligatoria
+            mostrarErrorCampo("errorPassword", "La contraseña es obligatoria");
             esValido = false;
         }
+        // En modo edición, si no se proporciona contraseña, se mantiene la actual
         
         // Validar perfil
         var perfil = $("#perfilUsuario").val();

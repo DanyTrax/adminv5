@@ -682,19 +682,32 @@ class ModeloUsuariosCentral {
                 ];
             }
             
-            // Actualizar usuario
-            $stmt = $conexion->prepare("
-                UPDATE usuarios_central SET 
-                    nombre = :nombre, 
-                    usuario = :usuario, 
-                    password = :password, 
-                    perfil = :perfil, 
-                    telefono = :telefono, 
-                    direccion = :direccion,
-                    sucursales_asignadas = :sucursales_asignadas
-                WHERE id = :id
-            ");
+            // Construir query dinámicamente según los campos proporcionados
+            $campos = [];
+            $valores = [];
             
+            $campos[] = "nombre = :nombre";
+            $valores[':nombre'] = $datos['nombre'];
+            
+            $campos[] = "usuario = :usuario";
+            $valores[':usuario'] = $datos['usuario'];
+            
+            // Solo actualizar contraseña si se proporciona
+            if (!empty($datos['password'])) {
+                $campos[] = "password = :password";
+                $valores[':password'] = $datos['password'];
+            }
+            
+            $campos[] = "perfil = :perfil";
+            $valores[':perfil'] = $datos['perfil'];
+            
+            $campos[] = "telefono = :telefono";
+            $valores[':telefono'] = $datos['telefono'];
+            
+            $campos[] = "direccion = :direccion";
+            $valores[':direccion'] = $datos['direccion'];
+            
+            // Manejar sucursales asignadas
             $sucursalesAsignadas = '';
             if (!empty($datos['sucursales_asignadas'])) {
                 if (is_array($datos['sucursales_asignadas'])) {
@@ -703,15 +716,18 @@ class ModeloUsuariosCentral {
                     $sucursalesAsignadas = $datos['sucursales_asignadas'];
                 }
             }
+            $campos[] = "sucursales_asignadas = :sucursales_asignadas";
+            $valores[':sucursales_asignadas'] = $sucursalesAsignadas;
             
-            $stmt->bindParam(":id", $datos['id'], PDO::PARAM_INT);
-            $stmt->bindParam(":nombre", $datos['nombre'], PDO::PARAM_STR);
-            $stmt->bindParam(":usuario", $datos['usuario'], PDO::PARAM_STR);
-            $stmt->bindParam(":password", $datos['password'], PDO::PARAM_STR);
-            $stmt->bindParam(":perfil", $datos['perfil'], PDO::PARAM_STR);
-            $stmt->bindParam(":telefono", $datos['telefono'], PDO::PARAM_STR);
-            $stmt->bindParam(":direccion", $datos['direccion'], PDO::PARAM_STR);
-            $stmt->bindParam(":sucursales_asignadas", $sucursalesAsignadas, PDO::PARAM_STR);
+            $valores[':id'] = $datos['id'];
+            
+            $query = "UPDATE usuarios_central SET " . implode(', ', $campos) . " WHERE id = :id";
+            $stmt = $conexion->prepare($query);
+            
+            // Bind de todos los parámetros
+            foreach ($valores as $param => $value) {
+                $stmt->bindValue($param, $value, PDO::PARAM_STR);
+            }
             
             if ($stmt->execute()) {
                 return [
