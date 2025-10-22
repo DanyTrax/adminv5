@@ -888,7 +888,7 @@ $(document).on("click", ".btnSincronizarProducto", function(){
 SINCRONIZACIÓN MASIVA
 =============================================*/
 
-$("#btnSincronizarTodos").click(function(){
+$("#btnSincronizarTodosProductos").click(function(){
 
     var btnElement = $(this);
     

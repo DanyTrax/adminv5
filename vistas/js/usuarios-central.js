@@ -43,7 +43,7 @@ $(document).ready(function() {
         abrirModalUsuario();
     });
     
-    $(document).on("click", "#btnSincronizarTodos", function() {
+    $(document).on("click", "#btnSincronizarTodosUsuarios", function() {
         sincronizarTodosUsuarios();
     });
     
