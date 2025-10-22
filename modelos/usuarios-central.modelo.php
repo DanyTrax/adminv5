@@ -1009,8 +1009,14 @@ class ModeloUsuariosCentral {
                                 estado = 1
                             WHERE id = :id_local
                         ");
-                        // Encriptar contraseña para sucursal local
-                        $passwordEncriptada = crypt($usuario['password'], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+                        // Verificar si la contraseña ya está encriptada
+                        if (strlen($usuario['password']) === 60 && strpos($usuario['password'], '$2a$') === 0) {
+                            // Ya está encriptada, usar tal como está
+                            $passwordEncriptada = $usuario['password'];
+                        } else {
+                            // No está encriptada, encriptarla
+                            $passwordEncriptada = crypt($usuario['password'], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+                        }
                         
                         $stmt->bindParam(":nombre", $usuario['nombre'], PDO::PARAM_STR);
                         $stmt->bindParam(":password", $passwordEncriptada, PDO::PARAM_STR);
@@ -1024,8 +1030,14 @@ class ModeloUsuariosCentral {
                         // Crear nuevo usuario
                         error_log("Usuario '{$usuario['usuario']}' no existe en sucursal '{$sucursal['nombre']}', creando...");
                         
-                        // Encriptar contraseña para sucursal local
-                        $passwordEncriptada = crypt($usuario['password'], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+                        // Verificar si la contraseña ya está encriptada
+                        if (strlen($usuario['password']) === 60 && strpos($usuario['password'], '$2a$') === 0) {
+                            // Ya está encriptada, usar tal como está
+                            $passwordEncriptada = $usuario['password'];
+                        } else {
+                            // No está encriptada, encriptarla
+                            $passwordEncriptada = crypt($usuario['password'], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+                        }
                         
                         $stmt = $pdoSucursal->prepare("
                             INSERT INTO usuarios (
