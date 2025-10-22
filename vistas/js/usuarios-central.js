@@ -6,8 +6,30 @@ $(document).ready(function() {
     var sucursalesDisponibles = [];
     var sucursalesSeleccionadas = [];
     
-    // Inicializar la interfaz
-    inicializarInterfaz();
+    // Verificar si SweetAlert está disponible
+    console.log("Verificando SweetAlert al cargar script...");
+    console.log("SweetAlert disponible:", typeof Swal !== 'undefined');
+    
+    // Esperar a que SweetAlert se cargue si no está disponible
+    if (typeof Swal === 'undefined') {
+        console.log("SweetAlert no está disponible, esperando...");
+        
+        // Función para verificar SweetAlert periódicamente
+        function waitForSweetAlert() {
+            if (typeof Swal !== 'undefined') {
+                console.log("SweetAlert cargado correctamente");
+                inicializarInterfaz();
+            } else {
+                console.log("Esperando SweetAlert...");
+                setTimeout(waitForSweetAlert, 100);
+            }
+        }
+        
+        waitForSweetAlert();
+    } else {
+        console.log("SweetAlert ya está disponible");
+        inicializarInterfaz();
+    }
     
     // Cargar estadísticas
     cargarEstadisticas();
@@ -820,35 +842,59 @@ $(document).ready(function() {
     }
     
     function sincronizarTodosUsuarios() {
-        // Verificar si SweetAlert está disponible
-        if (typeof Swal === 'undefined') {
-            console.error("SweetAlert no está disponible");
-            alert("Error: SweetAlert no está cargado. Por favor recarga la página.");
-            return;
+        // Función auxiliar para mostrar alerta
+        function showAlert(title, text, icon = 'info') {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: icon,
+                    confirmButtonText: 'Aceptar'
+                });
+            } else {
+                alert(title + ': ' + text);
+            }
         }
         
-        Swal.fire({
-            title: '¿Sincronizar todos los usuarios?',
-            text: 'Esto sincronizará todos los usuarios centrales con sus sucursales asignadas',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, sincronizar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
+        // Función auxiliar para mostrar confirmación
+        function showConfirm(title, text, callback) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, sincronizar',
+                    cancelButtonText: 'Cancelar'
+                }).then(callback);
+            } else {
+                if (confirm(title + ': ' + text)) {
+                    callback({isConfirmed: true});
+                } else {
+                    callback({isConfirmed: false});
+                }
+            }
+        }
+        
+        showConfirm('¿Sincronizar todos los usuarios?', 'Esto sincronizará todos los usuarios centrales con sus sucursales asignadas', function(result) {
             if (result.isConfirmed) {
                 // Mostrar loading
-                Swal.fire({
-                    title: 'Sincronizando...',
-                    text: 'Por favor espera mientras se sincronizan todos los usuarios',
-                    icon: 'info',
-                    allowOutsideClick: false,
-                    showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Sincronizando...',
+                        text: 'Por favor espera mientras se sincronizan todos los usuarios',
+                        icon: 'info',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                } else {
+                    alert('Sincronizando usuarios...');
+                }
                 
                 $.ajax({
                     url: "ajax/sincronizar-usuarios.ajax.php",
@@ -857,24 +903,17 @@ $(document).ready(function() {
                     dataType: "json",
                     success: function(respuesta) {
                         console.log("Respuesta AJAX sincronización:", respuesta);
-                        Swal.close();
+                        
+                        if (typeof Swal !== 'undefined') {
+                            Swal.close();
+                        }
+                        
                         if (respuesta.success) {
-                            Swal.fire({
-                                title: '¡Sincronización exitosa!',
-                                text: respuesta.message,
-                                icon: 'success',
-                                confirmButtonText: 'Aceptar'
-                            });
+                            showAlert('¡Sincronización exitosa!', respuesta.message, 'success');
                             cargarUsuariosCentrales();
                             cargarEstadisticas();
                         } else {
-                            console.error("Error en respuesta:", respuesta.error);
-                            Swal.fire({
-                                title: 'Error en sincronización',
-                                text: respuesta.error,
-                                icon: 'error',
-                                confirmButtonText: 'Aceptar'
-                            });
+                            showAlert('Error en sincronización', respuesta.error, 'error');
                         }
                     },
                     error: function(xhr, status, error) {
@@ -884,13 +923,12 @@ $(document).ready(function() {
                             error: error,
                             responseText: xhr.responseText
                         });
-                        Swal.close();
-                        Swal.fire({
-                            title: 'Error de conexión',
-                            text: 'No se pudo completar la sincronización. Ver consola para detalles.',
-                            icon: 'error',
-                            confirmButtonText: 'Aceptar'
-                        });
+                        
+                        if (typeof Swal !== 'undefined') {
+                            Swal.close();
+                        }
+                        
+                        showAlert('Error de conexión', 'No se pudo completar la sincronización. Ver consola para detalles.', 'error');
                     }
                 });
             }
