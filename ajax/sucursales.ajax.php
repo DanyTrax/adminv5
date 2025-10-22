@@ -1315,6 +1315,20 @@ try {
                 $cambios[] = "Estado: " . ($configLocal['activo'] ? 'Activo' : 'Inactivo') . " → " . ($sucursalCentral['activo'] ? 'Activo' : 'Inactivo');
             }
             
+            // Comparar URL Base
+            if (isset($configLocal['url_base']) && isset($sucursalCentral['url_base']) && 
+                $configLocal['url_base'] !== $sucursalCentral['url_base']) {
+                $necesitaSincronizacion = true;
+                $cambios[] = "URL Base: '{$configLocal['url_base']}' → '{$sucursalCentral['url_base']}'";
+            }
+            
+            // Comparar URL API
+            if (isset($configLocal['url_api']) && isset($sucursalCentral['url_api']) && 
+                $configLocal['url_api'] !== $sucursalCentral['url_api']) {
+                $necesitaSincronizacion = true;
+                $cambios[] = "URL API: '{$configLocal['url_api']}' → '{$sucursalCentral['url_api']}'";
+            }
+            
             // Comparar campos de conexión BD
             if (isset($configLocal['usuario_bd']) && isset($sucursalCentral['usuario_bd']) && 
                 $configLocal['usuario_bd'] !== $sucursalCentral['usuario_bd']) {
@@ -1357,6 +1371,8 @@ try {
                     'direccion' => $configLocal['direccion'],
                     'telefono' => $configLocal['telefono'],
                     'email' => $configLocal['email'],
+                    'url_base' => $configLocal['url_base'] ?? '',
+                    'url_api' => $configLocal['url_api'] ?? '',
                     'activo' => $configLocal['activo']
                 ];
                 
@@ -1387,6 +1403,8 @@ try {
                         'direccion' => $sucursalCentral['direccion'],
                         'telefono' => $sucursalCentral['telefono'],
                         'email' => $sucursalCentral['email'],
+                        'url_base' => $sucursalCentral['url_base'] ?? '',
+                        'url_api' => $sucursalCentral['url_api'] ?? '',
                         'activo' => $sucursalCentral['activo']
                     ];
                     
