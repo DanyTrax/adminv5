@@ -155,6 +155,18 @@ $(document).ready(function() {
         // Mostrar loading
         $("#usuariosCentrales").html('<div class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando usuarios centrales...</div>');
         
+        // Asegurar que las sucursales estén cargadas antes de mostrar usuarios
+        if (sucursalesDisponibles.length === 0) {
+            console.log("Sucursales no cargadas, cargando primero...");
+            cargarSucursalesDisponibles();
+            
+            // Esperar un poco y reintentar
+            setTimeout(function() {
+                cargarUsuariosCentrales();
+            }, 1000);
+            return;
+        }
+        
         $.ajax({
             url: "ajax/usuarios-central.ajax.php",
             method: "POST",
@@ -163,6 +175,8 @@ $(document).ready(function() {
             success: function(respuesta) {
                 if (respuesta.success) {
                     usuariosCentrales = respuesta.usuarios;
+                    console.log("Usuarios centrales cargados:", usuariosCentrales);
+                    console.log("Sucursales disponibles:", sucursalesDisponibles);
                     mostrarUsuariosCentrales(respuesta.usuarios);
                 } else {
                     console.error("Error cargando usuarios centrales:", respuesta.error);
