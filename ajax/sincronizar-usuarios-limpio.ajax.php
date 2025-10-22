@@ -14,32 +14,32 @@ if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] != "Administrador") {
     exit;
 }
 
+// Deshabilitar completamente el error_log
+ini_set('log_errors', 0);
+ini_set('display_errors', 0);
+
 // Limpiar cualquier output previo
 while (ob_get_level()) {
     ob_end_clean();
 }
 
-// Iniciar nuevo buffer de salida
+// Iniciar nuevo buffer
 ob_start();
-
-// Deshabilitar completamente el error_log para evitar corrupción
-ini_set('log_errors', 0);
-ini_set('display_errors', 0);
 
 try {
     $resultado = ControladorUsuariosCentral::ctrSincronizarTodosUsuarios();
     
-    // Limpiar buffer y enviar solo JSON
+    // Limpiar buffer completamente
     ob_clean();
     
-    // Asegurar que solo se envíe JSON
+    // Enviar solo JSON
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-cache, must-revalidate');
     
     echo json_encode($resultado, JSON_UNESCAPED_UNICODE);
     
 } catch (Exception $e) {
-    // Limpiar buffer y enviar solo JSON
+    // Limpiar buffer completamente
     ob_clean();
     
     header('Content-Type: application/json; charset=utf-8');

@@ -1076,7 +1076,11 @@ class ModeloUsuariosCentral {
                 ob_end_clean();
             }
             
-            error_log("Iniciando sincronización de todos los usuarios");
+            // Deshabilitar error_log temporalmente
+            $old_log_errors = ini_get('log_errors');
+            $old_display_errors = ini_get('display_errors');
+            ini_set('log_errors', 0);
+            ini_set('display_errors', 0);
             
             $conexion = ConexionCentral::conectar();
             
@@ -1119,7 +1123,9 @@ class ModeloUsuariosCentral {
                 }
             }
             
-            error_log("Sincronización completada - Usuarios: $usuariosSincronizados, Errores: $errores");
+            // Restaurar configuración
+            ini_set('log_errors', $old_log_errors);
+            ini_set('display_errors', $old_display_errors);
             
             return [
                 'success' => true,
@@ -1130,7 +1136,10 @@ class ModeloUsuariosCentral {
             ];
             
         } catch (Exception $e) {
-            error_log("Error en mdlSincronizarTodosUsuarios: " . $e->getMessage());
+            // Restaurar configuración
+            ini_set('log_errors', $old_log_errors);
+            ini_set('display_errors', $old_display_errors);
+            
             return [
                 'success' => false,
                 'error' => 'Error interno del servidor'

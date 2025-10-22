@@ -820,40 +820,53 @@ $(document).ready(function() {
     }
     
     function sincronizarTodosUsuarios() {
-        if (confirm('¿Sincronizar todos los usuarios?\n\nEsto sincronizará todos los usuarios centrales con sus sucursales asignadas')) {
-            // Mostrar loading simple
-            var loadingDiv = $('<div id="loading-sync" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid #ccc; border-radius: 5px; z-index: 9999;"><i class="fa fa-spinner fa-spin"></i> Sincronizando usuarios...</div>');
-            $('body').append(loadingDiv);
-            
-            $.ajax({
-                url: "ajax/sincronizar-usuarios.ajax.php",
-                method: "POST",
-                data: {},
-                dataType: "json",
-                success: function(respuesta) {
-                    console.log("Respuesta AJAX sincronización:", respuesta);
-                    $('#loading-sync').remove();
-                    
-                    if (respuesta.success) {
-                        alert('¡Sincronización exitosa!\n\n' + respuesta.message);
+        // Mostrar loading inmediatamente
+        var loadingDiv = $('<div id="loading-sync" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid #ccc; border-radius: 5px; z-index: 9999; box-shadow: 0 4px 8px rgba(0,0,0,0.3);"><i class="fa fa-spinner fa-spin"></i> Sincronizando usuarios...</div>');
+        $('body').append(loadingDiv);
+        
+        $.ajax({
+            url: "ajax/sincronizar-usuarios-final.ajax.php",
+            method: "POST",
+            data: {},
+            dataType: "json",
+            success: function(respuesta) {
+                console.log("Respuesta AJAX sincronización:", respuesta);
+                $('#loading-sync').remove();
+                
+                if (respuesta && respuesta.success) {
+                    alert('¡Sincronización exitosa!\n\n' + (respuesta.message || 'Usuarios sincronizados correctamente'));
+                    cargarUsuariosCentrales();
+                    cargarEstadisticas();
+                } else {
+                    alert('Error en sincronización:\n\n' + (respuesta.error || 'Error desconocido'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error AJAX sincronización:", {
+                    xhr: xhr,
+                    status: status,
+                    error: error,
+                    responseText: xhr.responseText
+                });
+                $('#loading-sync').remove();
+                
+                // Intentar parsear la respuesta como texto
+                var responseText = xhr.responseText;
+                try {
+                    var jsonResponse = JSON.parse(responseText);
+                    if (jsonResponse.success) {
+                        alert('¡Sincronización exitosa!\n\n' + (jsonResponse.message || 'Usuarios sincronizados correctamente'));
                         cargarUsuariosCentrales();
                         cargarEstadisticas();
-                    } else {
-                        alert('Error en sincronización:\n\n' + respuesta.error);
+                        return;
                     }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error AJAX sincronización:", {
-                        xhr: xhr,
-                        status: status,
-                        error: error,
-                        responseText: xhr.responseText
-                    });
-                    $('#loading-sync').remove();
-                    alert('Error de conexión:\n\nNo se pudo completar la sincronización.\nVer consola para detalles.');
+                } catch (e) {
+                    console.log("No se pudo parsear como JSON:", responseText);
                 }
-            });
-        }
+                
+                alert('Error de conexión:\n\nNo se pudo completar la sincronización.\nVer consola para detalles.');
+            }
+        });
     }
     
 });
