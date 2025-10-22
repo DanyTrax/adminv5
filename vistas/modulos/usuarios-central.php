@@ -582,3 +582,6 @@ $(document).ready(function() {
     
 });
 </script>
+
+<!-- Incluir JavaScript específico para usuarios centrales -->
+<script src="vistas/js/usuarios-central.js"></script>
