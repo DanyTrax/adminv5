@@ -30,7 +30,9 @@ try {
     $resultado = ControladorUsuariosCentral::ctrSincronizarTodosUsuarios();
     
     // Limpiar buffer completamente
-    ob_clean();
+    if (ob_get_level()) {
+        ob_clean();
+    }
     
     // Enviar solo JSON
     header('Content-Type: application/json; charset=utf-8');
@@ -43,7 +45,9 @@ try {
     
 } catch (Exception $e) {
     // Limpiar buffer completamente
-    ob_clean();
+    if (ob_get_level()) {
+        ob_clean();
+    }
     
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode([

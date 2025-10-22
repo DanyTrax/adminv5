@@ -80,7 +80,7 @@ class ControladorUsuariosCentral {
             $datos['activo'] = 1;
             $datos['sincronizado'] = 0;
             
-            return ModeloUsuariosCentral::mdlIngresarUsuarioCentral("usuarios_central", $datos);
+            return ModeloUsuariosCentral::mdlCrearUsuarioCentral($datos);
         } catch (Exception $e) {
             error_log("Error en ctrCrearUsuarioCentral: " . $e->getMessage());
             return [

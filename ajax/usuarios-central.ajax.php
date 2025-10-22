@@ -60,9 +60,7 @@ try {
                 'usuario' => $_POST['usuario'],
                 'password' => $_POST['password'],
                 'perfil' => $_POST['perfil'],
-                'sucursal_id' => $_POST['sucursal_id'],
-                'telefono' => $_POST['telefono'] ?? '',
-                'direccion' => $_POST['direccion'] ?? ''
+                'telefono' => $_POST['telefono'] ?? ''
             ];
             
             $resultado = ControladorUsuariosCentral::ctrCrearUsuarioCentral($datos);
@@ -90,10 +88,9 @@ try {
                 'id' => $_POST['id'],
                 'nombre' => $_POST['nombre'],
                 'usuario' => $_POST['usuario'],
+                'password' => $_POST['password'],
                 'perfil' => $_POST['perfil'],
-                'sucursal_id' => $_POST['sucursal_id'],
                 'telefono' => $_POST['telefono'] ?? '',
-                'direccion' => $_POST['direccion'] ?? '',
                 'activo' => $_POST['activo'] ?? 1
             ];
             
