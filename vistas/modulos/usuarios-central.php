@@ -265,5 +265,48 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
     </div>
 </div>
 
+<!-- MODAL PARA CONFIRMAR ELIMINACIÓN -->
+<div class="modal fade" id="modalConfirmarEliminacion" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">
+                    <i class="fa fa-exclamation-triangle text-red"></i> Confirmar Eliminación de Usuario
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <strong><i class="fa fa-warning"></i> ¡ATENCIÓN!</strong><br>
+                    Estás a punto de eliminar el usuario: <strong id="nombreUsuarioEliminar"></strong>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <strong>Esta acción eliminará el usuario de:</strong>
+                </div>
+                
+                <div id="sucursalesEliminar" class="row">
+                    <!-- Las sucursales se cargarán aquí dinámicamente -->
+                </div>
+                
+                <div class="alert alert-info">
+                    <strong><i class="fa fa-info-circle"></i> Información:</strong><br>
+                    • El usuario será eliminado de todas las sucursales asignadas<br>
+                    • El usuario será eliminado de la lista de usuarios centrales<br>
+                    • Esta acción no se puede deshacer
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarEliminacion">
+                    <i class="fa fa-trash"></i> Sí, Eliminar Usuario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Incluir JavaScript específico para usuarios centrales -->
 <script src="vistas/js/usuarios-central.js"></script>

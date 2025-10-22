@@ -83,6 +83,11 @@ $(document).ready(function() {
         guardarAsignacionSucursales();
     });
     
+    // Event listener para el botón de confirmar eliminación
+    $(document).on("click", "#btnConfirmarEliminacion", function() {
+        confirmarEliminacionUsuario();
+    });
+    
     // Validación en tiempo real
     $(document).on("input", "#nombreUsuario", function() {
         limpiarErrorCampo("errorNombre");
@@ -467,30 +472,108 @@ $(document).ready(function() {
     }
     
     function eliminarUsuario(id) {
-        if (confirm("¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.")) {
-            $.ajax({
-                url: "ajax/usuarios-central.ajax.php",
-                method: "POST",
-                data: { 
-                    accion: "eliminar_usuario_central",
-                    id: id
-                },
-                dataType: "json",
-                success: function(respuesta) {
-                    if (respuesta.success) {
-                        alert("Usuario eliminado exitosamente");
-                        cargarUsuariosCentrales();
-                        cargarEstadisticas();
-                    } else {
-                        alert("Error eliminando usuario: " + (respuesta.error || "Error desconocido"));
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error AJAX eliminando usuario:", {xhr, status, error});
-                    alert("Error eliminando usuario: Error de conexión");
-                }
-            });
+        console.log("Preparando eliminación de usuario:", id);
+        
+        // Buscar el usuario en la lista
+        var usuario = usuariosCentrales.find(function(u) {
+            return u.id == id;
+        });
+        
+        if (!usuario) {
+            mostrarError("Usuario no encontrado");
+            return;
         }
+        
+        // Configurar modal de confirmación
+        $("#nombreUsuarioEliminar").text(usuario.nombre + " (" + usuario.usuario + ")");
+        
+        // Cargar sucursales asignadas
+        cargarSucursalesEliminacion(usuario.sucursales_asignadas);
+        
+        // Mostrar modal
+        $("#modalConfirmarEliminacion").modal("show");
+        
+        // Guardar ID del usuario a eliminar
+        window.usuarioEliminarId = id;
+    }
+    
+    function cargarSucursalesEliminacion(sucursalesAsignadas) {
+        var html = '';
+        
+        if (!sucursalesAsignadas || sucursalesAsignadas === '') {
+            html = '<div class="col-md-12"><div class="alert alert-info">No hay sucursales asignadas</div></div>';
+        } else {
+            var sucursalesIds = sucursalesAsignadas.split(',').map(function(id) {
+                return id.trim();
+            }).filter(function(id) {
+                return id !== '';
+            });
+            
+            if (sucursalesIds.length === 0) {
+                html = '<div class="col-md-12"><div class="alert alert-info">No hay sucursales asignadas</div></div>';
+            } else {
+                sucursalesIds.forEach(function(sucursalId) {
+                    var sucursal = sucursalesDisponibles.find(function(s) {
+                        return s.id == sucursalId;
+                    });
+                    
+                    if (sucursal) {
+                        html += '<div class="col-md-6">';
+                        html += '<div class="alert alert-warning">';
+                        html += '<i class="fa fa-building"></i> <strong>' + sucursal.nombre + '</strong>';
+                        html += '</div>';
+                        html += '</div>';
+                    }
+                });
+            }
+        }
+        
+        $("#sucursalesEliminar").html(html);
+    }
+    
+    function confirmarEliminacionUsuario() {
+        var usuarioId = window.usuarioEliminarId;
+        
+        if (!usuarioId) {
+            mostrarError("No se ha seleccionado un usuario para eliminar");
+            return;
+        }
+        
+        console.log("Confirmando eliminación de usuario:", usuarioId);
+        
+        // Mostrar loading
+        $("#btnConfirmarEliminacion").html('<i class="fa fa-spinner fa-spin"></i> Eliminando...');
+        $("#btnConfirmarEliminacion").prop('disabled', true);
+        
+        $.ajax({
+            url: "ajax/usuarios-central.ajax.php",
+            method: "POST",
+            data: { 
+                accion: "eliminar_usuario_central",
+                id: usuarioId
+            },
+            dataType: "json",
+            success: function(respuesta) {
+                if (respuesta.success) {
+                    mostrarExito("Usuario eliminado exitosamente de todas las sucursales y del sistema central");
+                    $("#modalConfirmarEliminacion").modal("hide");
+                    cargarUsuariosCentrales();
+                    cargarEstadisticas();
+                } else {
+                    mostrarError("Error eliminando usuario: " + (respuesta.error || "Error desconocido"));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error AJAX eliminando usuario:", {xhr, status, error});
+                mostrarError("Error eliminando usuario: Error de conexión");
+            },
+            complete: function() {
+                // Restaurar botón
+                $("#btnConfirmarEliminacion").html('<i class="fa fa-trash"></i> Sí, Eliminar Usuario');
+                $("#btnConfirmarEliminacion").prop('disabled', false);
+                window.usuarioEliminarId = null;
+            }
+        });
     }
     
     function mostrarExito(mensaje) {
@@ -742,6 +825,9 @@ $(document).ready(function() {
                         setTimeout(function() {
                             mostrarInfo("Usuario creado exitosamente. Ahora puedes asignarle sucursales usando el botón 'Asignar Sucursales'.");
                         }, 1000);
+                    } else {
+                        // Si es edición, sincronizar con sucursales asignadas
+                        sincronizarUsuarioEditado(formData.id);
                     }
                 } else {
                     mostrarError(respuesta.error);
@@ -836,6 +922,58 @@ $(document).ready(function() {
     function limpiarErrorCampo(campoId) {
         $("#" + campoId).hide();
         $("#" + campoId.replace("error", "")).removeClass("has-error");
+    }
+    
+    function sincronizarUsuarioEditado(usuarioId) {
+        console.log("Sincronizando usuario editado:", usuarioId);
+        
+        // Buscar el usuario en la lista para obtener sus sucursales asignadas
+        var usuario = usuariosCentrales.find(function(u) {
+            return u.id == usuarioId;
+        });
+        
+        if (!usuario || !usuario.sucursales_asignadas) {
+            console.log("Usuario no encontrado o sin sucursales asignadas");
+            return;
+        }
+        
+        var sucursalesAsignadas = usuario.sucursales_asignadas.split(',').map(function(id) {
+            return id.trim();
+        }).filter(function(id) {
+            return id !== '';
+        });
+        
+        if (sucursalesAsignadas.length === 0) {
+            console.log("No hay sucursales asignadas para sincronizar");
+            return;
+        }
+        
+        console.log("Sincronizando con sucursales:", sucursalesAsignadas);
+        
+        // Sincronizar con las sucursales asignadas
+        $.ajax({
+            url: "ajax/usuarios-central.ajax.php",
+            method: "POST",
+            data: {
+                accion: "asignar_sucursales_usuario",
+                usuario_id: usuarioId,
+                sucursales: JSON.stringify(sucursalesAsignadas)
+            },
+            dataType: "json",
+            success: function(respuesta) {
+                if (respuesta.success) {
+                    console.log("Usuario sincronizado exitosamente con sucursales");
+                    mostrarInfo("Usuario actualizado y sincronizado con todas las sucursales asignadas");
+                } else {
+                    console.error("Error sincronizando usuario:", respuesta.error);
+                    mostrarError("Usuario actualizado pero error sincronizando con sucursales: " + respuesta.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error AJAX sincronizando usuario:", error);
+                mostrarError("Usuario actualizado pero error de conexión sincronizando con sucursales");
+            }
+        });
     }
     
     // Variables para asignación de sucursales

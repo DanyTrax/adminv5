@@ -437,18 +437,91 @@ class ModeloUsuariosCentral {
     static public function mdlEliminarUsuarioCentral($usuarioId) {
         
         try {
-            $stmt = ConexionCentral::conectar()->prepare("
+            $conexion = ConexionCentral::conectar();
+            
+            // Obtener información del usuario antes de eliminarlo
+            $stmt = $conexion->prepare("
+                SELECT usuario, sucursales_asignadas 
+                FROM usuarios_central 
+                WHERE id = ? AND activo = 1
+            ");
+            $stmt->execute([$usuarioId]);
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$usuario) {
+                return [
+                    'success' => false,
+                    'error' => 'Usuario no encontrado o ya eliminado'
+                ];
+            }
+            
+            // Eliminar usuario de todas las sucursales asignadas
+            if (!empty($usuario['sucursales_asignadas'])) {
+                $sucursalesIds = explode(',', $usuario['sucursales_asignadas']);
+                
+                foreach ($sucursalesIds as $sucursalId) {
+                    $sucursalId = trim($sucursalId);
+                    if ($sucursalId !== '') {
+                        try {
+                            // Obtener datos de conexión de la sucursal
+                            $stmtSucursal = $conexion->prepare("
+                                SELECT nombre, host_bd, usuario_bd, password_bd, nombre_bd, puerto_bd
+                                FROM sucursales 
+                                WHERE id = ? AND activo = 1
+                            ");
+                            $stmtSucursal->execute([$sucursalId]);
+                            $sucursal = $stmtSucursal->fetch(PDO::FETCH_ASSOC);
+                            
+                            if ($sucursal) {
+                                // Conectar a la sucursal
+                                $dsn = "mysql:host={$sucursal['host_bd']};port={$sucursal['puerto_bd']};dbname={$sucursal['nombre_bd']};charset=utf8";
+                                $pdoSucursal = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd']);
+                                $pdoSucursal->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                                
+                                // Eliminar usuario de la sucursal
+                                $stmtEliminar = $pdoSucursal->prepare("
+                                    DELETE FROM usuarios 
+                                    WHERE usuario = :usuario OR id = :id_central
+                                ");
+                                $stmtEliminar->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+                                $stmtEliminar->bindParam(":id_central", $usuarioId, PDO::PARAM_INT);
+                                $stmtEliminar->execute();
+                                
+                                error_log("Usuario '{$usuario['usuario']}' eliminado de sucursal '{$sucursal['nombre']}'");
+                            }
+                        } catch (Exception $e) {
+                            error_log("Error eliminando usuario de sucursal {$sucursalId}: " . $e->getMessage());
+                            // Continuar con las demás sucursales aunque falle una
+                        }
+                    }
+                }
+            }
+            
+            // Eliminar usuario de la base de datos central
+            $stmt = $conexion->prepare("
                 UPDATE usuarios_central 
                 SET activo = 0, fecha_actualizacion = NOW()
                 WHERE id = ?
             ");
             
-            $stmt->execute([$usuarioId]);
-            return "ok";
+            if ($stmt->execute([$usuarioId])) {
+                return [
+                    'success' => true,
+                    'message' => 'Usuario eliminado exitosamente de todas las sucursales y del sistema central'
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'error' => 'Error eliminando usuario del sistema central'
+                ];
+            }
             
         } catch (Exception $e) {
             error_log("Error en mdlEliminarUsuarioCentral: " . $e->getMessage());
-            return "error";
+            return [
+                'success' => false,
+                'error' => 'Error interno del servidor: ' . $e->getMessage()
+            ];
         }
     }
 
