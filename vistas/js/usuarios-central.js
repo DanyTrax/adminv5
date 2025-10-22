@@ -154,16 +154,23 @@ $(document).ready(function() {
         if (usuarios.length === 0) {
             html = '<div class="alert alert-info">No hay sucursales configuradas</div>';
         } else {
-            usuarios.forEach(function(sucursal, index) {
-                html += '<div class="box box-primary">';
-                html += '<div class="box-header with-border">';
-                html += '<h3 class="box-title"><i class="fa fa-building"></i> ' + sucursal.sucursal.nombre + '</h3>';
-                html += '<div class="box-tools pull-right">';
-                html += '<span class="label label-' + (sucursal.estado_conexion === 'conectado' ? 'success' : 'danger') + '">';
-                html += sucursal.estado_conexion === 'conectado' ? 'Conectado' : 'Error';
-                html += '</span>';
-                html += '</div>';
-                html += '</div>';
+        usuarios.forEach(function(sucursal, index) {
+            html += '<div class="box box-primary">';
+            html += '<div class="box-header with-border">';
+            html += '<h3 class="box-title"><i class="fa fa-building"></i> ' + sucursal.sucursal.nombre;
+            
+            // Mostrar identificador de sucursal actual
+            if (sucursal.es_actual) {
+                html += ' <span class="label label-info"><i class="fa fa-home"></i> ACTUAL</span>';
+            }
+            
+            html += '</h3>';
+            html += '<div class="box-tools pull-right">';
+            html += '<span class="label label-' + (sucursal.estado_conexion === 'conectado' ? 'success' : 'danger') + '">';
+            html += sucursal.estado_conexion === 'conectado' ? 'Conectado' : 'Error';
+            html += '</span>';
+            html += '</div>';
+            html += '</div>';
                 html += '<div class="box-body">';
                 
                 if (sucursal.estado_conexion === 'conectado' && sucursal.usuarios.length > 0) {

@@ -340,16 +340,28 @@ class ModeloUsuariosCentral {
             $sucursales = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $resultado = [];
             
+            // Obtener información de la sucursal actual (local)
+            $sucursalActual = self::mdlObtenerSucursalActual();
+            
             foreach($sucursales as $sucursal) {
                 // Intentar conectar directamente a la BD de la sucursal
                 $usuariosSucursal = self::mdlConsultarUsuariosSucursalRemota($sucursal);
+                
+                // Determinar si es la sucursal actual
+                $esActual = false;
+                if ($sucursalActual && 
+                    $sucursal['host_bd'] === $sucursalActual['host_bd'] && 
+                    $sucursal['nombre_bd'] === $sucursalActual['nombre_bd']) {
+                    $esActual = true;
+                }
                 
                 $resultado[] = [
                     'sucursal' => $sucursal,
                     'usuarios' => $usuariosSucursal['usuarios'],
                     'estado_conexion' => $usuariosSucursal['estado'],
                     'total_usuarios' => $usuariosSucursal['total'],
-                    'error' => $usuariosSucursal['error']
+                    'error' => $usuariosSucursal['error'],
+                    'es_actual' => $esActual
                 ];
             }
             
@@ -358,6 +370,27 @@ class ModeloUsuariosCentral {
         } catch(Exception $e) {
             error_log("Error en mdlConsultarUsuariosSucursales: " . $e->getMessage());
             return [];
+        }
+    }
+
+    /*=============================================
+    OBTENER SUCURSAL ACTUAL (LOCAL)
+    =============================================*/
+    static public function mdlObtenerSucursalActual() {
+        
+        try {
+            // Obtener configuración de la BD local desde config.php
+            $hostLocal = defined('HOST') ? HOST : 'localhost';
+            $nombreBDLocal = defined('DB') ? DB : 'epicosie_pruebas';
+            
+            return [
+                'host_bd' => $hostLocal,
+                'nombre_bd' => $nombreBDLocal
+            ];
+            
+        } catch(Exception $e) {
+            error_log("Error en mdlObtenerSucursalActual: " . $e->getMessage());
+            return null;
         }
     }
 
