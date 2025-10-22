@@ -1346,6 +1346,9 @@ try {
                 $cambios[] = "Puerto BD: '{$configLocal['puerto_bd']}' → '{$sucursalCentral['puerto_bd']}'";
             }
             
+            // Siempre sincronizar, no solo cuando hay diferencias
+            $necesitaSincronizacion = true;
+            
             if ($necesitaSincronizacion) {
                 // Sincronizar datos locales al central
                 $datosSincronizacion = [
@@ -1405,13 +1408,20 @@ try {
                     }
                     
                     // Actualizar configuración local
-                    ModeloSucursales::mdlConfigurarSucursalLocal('sucursal_local', $datosLocal);
+                    $resultadoLocal = ModeloSucursales::mdlConfigurarSucursalLocal('sucursal_local', $datosLocal);
                     
-                    echo json_encode([
-                        'success' => true,
-                        'message' => 'Sincronización bidireccional completada',
-                        'cambios' => $cambios
-                    ]);
+                    if ($resultadoLocal && $resultadoLocal['success']) {
+                        echo json_encode([
+                            'success' => true,
+                            'message' => 'Sincronización bidireccional completada exitosamente',
+                            'cambios' => $cambios
+                        ]);
+                    } else {
+                        echo json_encode([
+                            'success' => false,
+                            'error' => 'Error sincronizando configuración local: ' . ($resultadoLocal['error'] ?? 'Error desconocido')
+                        ]);
+                    }
                 } else {
                     echo json_encode([
                         'success' => false,
@@ -1430,6 +1440,70 @@ try {
             echo json_encode([
                 'success' => false,
                 'error' => 'Error en sincronización bidireccional: ' . $e->getMessage()
+            ]);
+        }
+        
+    } else if ($_POST["accion"] == "actualizar_estado_sucursal") {
+        
+        try {
+            $id = $_POST["id"];
+            $activo = $_POST["activo"];
+            
+            // Actualizar estado en central
+            $datos = [
+                'id' => $id,
+                'activo' => $activo
+            ];
+            
+            $resultado = ModeloSucursales::mdlActualizarSucursalCentral($datos);
+            
+            if ($resultado && $resultado['success']) {
+                // Si es la sucursal actual, actualizar también la configuración local
+                $configLocal = ModeloSucursales::mdlObtenerConfiguracionLocal();
+                if ($configLocal) {
+                    $sucursalesCentral = ModeloSucursales::mdlObtenerSucursales();
+                    if ($sucursalesCentral && $sucursalesCentral['success']) {
+                        foreach ($sucursalesCentral['data'] as $sucursal) {
+                            if ($sucursal['id'] == $id) {
+                                $datosLocal = [
+                                    'codigo_sucursal' => $sucursal['codigo_sucursal'],
+                                    'nombre' => $sucursal['nombre'],
+                                    'direccion' => $sucursal['direccion'],
+                                    'telefono' => $sucursal['telefono'],
+                                    'email' => $sucursal['email'],
+                                    'url_base' => $sucursal['url_base'] ?? '',
+                                    'url_api' => $sucursal['url_api'] ?? '',
+                                    'usuario_bd' => $sucursal['usuario_bd'] ?? '',
+                                    'password_bd' => $sucursal['password_bd'] ?? '',
+                                    'nombre_bd' => $sucursal['nombre_bd'] ?? '',
+                                    'host_bd' => $sucursal['host_bd'] ?? 'localhost',
+                                    'puerto_bd' => $sucursal['puerto_bd'] ?? 3306,
+                                    'es_principal' => $sucursal['es_principal'] ?? 0,
+                                    'activo' => $sucursal['activo']
+                                ];
+                                
+                                ModeloSucursales::mdlConfigurarSucursalLocal('sucursal_local', $datosLocal);
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Estado de sucursal actualizado correctamente'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Error actualizando estado: ' . ($resultado['error'] ?? 'Error desconocido')
+                ]);
+            }
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Error actualizando estado: ' . $e->getMessage()
             ]);
         }
     }
