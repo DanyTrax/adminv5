@@ -1242,6 +1242,119 @@ try {
         }
     }
 
+    else if (isset($_POST["accion"]) && $_POST["accion"] == "sincronizar_bidireccional") {
+        
+        try {
+            // Obtener configuración local
+            $configLocal = ModeloSucursales::mdlObtenerConfiguracionLocal();
+            
+            if (!$configLocal) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'No hay configuración local de sucursal'
+                ]);
+                return;
+            }
+            
+            // Obtener sucursales centrales
+            $sucursalesCentral = ModeloSucursales::mdlObtenerSucursales();
+            
+            if (!$sucursalesCentral || !$sucursalesCentral['success']) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'No se pudieron obtener sucursales centrales'
+                ]);
+                return;
+            }
+            
+            // Buscar sucursal central con el mismo código
+            $codigoLocal = $configLocal['codigo_sucursal'];
+            $sucursalCentral = null;
+            
+            foreach ($sucursalesCentral['data'] as $sucursal) {
+                if ($sucursal['codigo_sucursal'] === $codigoLocal) {
+                    $sucursalCentral = $sucursal;
+                    break;
+                }
+            }
+            
+            if (!$sucursalCentral) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'No se encontró sucursal central con el código ' . $codigoLocal
+                ]);
+                return;
+            }
+            
+            $cambios = [];
+            $necesitaSincronizacion = false;
+            
+            // Comparar y sincronizar datos
+            if ($configLocal['nombre'] !== $sucursalCentral['nombre']) {
+                $necesitaSincronizacion = true;
+                $cambios[] = "Nombre: '{$configLocal['nombre']}' → '{$sucursalCentral['nombre']}'";
+            }
+            
+            if ($configLocal['direccion'] !== $sucursalCentral['direccion']) {
+                $necesitaSincronizacion = true;
+                $cambios[] = "Dirección: '{$configLocal['direccion']}' → '{$sucursalCentral['direccion']}'";
+            }
+            
+            if ($configLocal['telefono'] !== $sucursalCentral['telefono']) {
+                $necesitaSincronizacion = true;
+                $cambios[] = "Teléfono: '{$configLocal['telefono']}' → '{$sucursalCentral['telefono']}'";
+            }
+            
+            if ($configLocal['email'] !== $sucursalCentral['email']) {
+                $necesitaSincronizacion = true;
+                $cambios[] = "Email: '{$configLocal['email']}' → '{$sucursalCentral['email']}'";
+            }
+            
+            if ($configLocal['activo'] != $sucursalCentral['activo']) {
+                $necesitaSincronizacion = true;
+                $cambios[] = "Estado: " . ($configLocal['activo'] ? 'Activo' : 'Inactivo') . " → " . ($sucursalCentral['activo'] ? 'Activo' : 'Inactivo');
+            }
+            
+            if ($necesitaSincronizacion) {
+                // Sincronizar datos locales al central
+                $datosSincronizacion = [
+                    'id' => $sucursalCentral['id'],
+                    'nombre' => $configLocal['nombre'],
+                    'direccion' => $configLocal['direccion'],
+                    'telefono' => $configLocal['telefono'],
+                    'email' => $configLocal['email'],
+                    'activo' => $configLocal['activo']
+                ];
+                
+                $resultado = ModeloSucursales::mdlActualizarSucursalCentral($datosSincronizacion);
+                
+                if ($resultado && $resultado['success']) {
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Sincronización bidireccional completada',
+                        'cambios' => $cambios
+                    ]);
+                } else {
+                    echo json_encode([
+                        'success' => false,
+                        'error' => 'Error sincronizando datos: ' . ($resultado['error'] ?? 'Error desconocido')
+                    ]);
+                }
+            } else {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Los datos están sincronizados',
+                    'cambios' => []
+                ]);
+            }
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Error en sincronización bidireccional: ' . $e->getMessage()
+            ]);
+        }
+    }
     /*=============================================
     ACCIÓN NO RECONOCIDA
     =============================================*/

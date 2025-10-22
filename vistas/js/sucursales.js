@@ -10,6 +10,9 @@ CARGAR DATATABLE DE SUCURSALES
 =============================================*/
 $(document).ready(function() {
     
+    // Sincronizar sucursales al cargar la página
+    sincronizarSucursalesBidireccional();
+    
     // Cargar estado inicial de la sucursal
     cargarEstadoSucursalActual();
     
@@ -70,6 +73,56 @@ $(document).ready(function() {
         }
     }, 120000);
 });
+
+/*=============================================
+SINCRONIZACIÓN BIDIRECCIONAL DE SUCURSALES
+=============================================*/
+function sincronizarSucursalesBidireccional() {
+    console.log("Iniciando sincronización bidireccional de sucursales...");
+    
+    $.ajax({
+        url: "ajax/sucursales.ajax.php",
+        method: "POST",
+        data: { "accion": "sincronizar_bidireccional" },
+        dataType: "json",
+        success: function(respuesta) {
+            if (respuesta.success) {
+                console.log("Sincronización bidireccional exitosa:", respuesta.message);
+                
+                // Si hay cambios, mostrar notificación
+                if (respuesta.cambios && respuesta.cambios.length > 0) {
+                    mostrarNotificacionSincronizacion(respuesta.cambios);
+                }
+                
+                // Recargar datos después de la sincronización
+                cargarEstadoSucursalActual();
+                if (tablaSucursales) {
+                    tablaSucursales.ajax.reload(null, false);
+                }
+            } else {
+                console.error("Error en sincronización bidireccional:", respuesta.error);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error AJAX en sincronización bidireccional:", error);
+        }
+    });
+}
+
+function mostrarNotificacionSincronizacion(cambios) {
+    var mensaje = "Se sincronizaron los siguientes datos:\n\n";
+    cambios.forEach(function(cambio) {
+        mensaje += "• " + cambio + "\n";
+    });
+    
+    swal({
+        type: "info",
+        title: "Sincronización Completada",
+        text: mensaje,
+        showConfirmButton: true,
+        confirmButtonText: "Entendido"
+    });
+}
 
 /*=============================================
 CARGAR ESTADO DE SUCURSAL ACTUAL
