@@ -1013,24 +1013,40 @@ class ModeloUsuariosCentral {
             }
             
             // Obtener sucursales seleccionadas
-            $stmt = $conexion->prepare("
-                SELECT * FROM sucursales 
-                WHERE id IN (" . implode(',', array_fill(0, count($sucursales), '?')) . ")
-                AND activo = 1
-            ");
-            $stmt->execute($sucursales);
-            $sucursalesData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $sucursalesData = [];
+            if (!empty($sucursales)) {
+                $placeholders = implode(',', array_fill(0, count($sucursales), '?'));
+                $stmt = $conexion->prepare("
+                    SELECT * FROM sucursales 
+                    WHERE id IN ($placeholders)
+                    AND activo = 1
+                ");
+                $stmt->execute($sucursales);
+                $sucursalesData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
             
             $resultados = [];
             
             // Obtener sucursales que NO están seleccionadas (para eliminar)
-            $stmt = $conexion->prepare("
-                SELECT * FROM sucursales 
-                WHERE id NOT IN (" . implode(',', array_fill(0, count($sucursales), '?')) . ")
-                AND activo = 1
-            ");
-            $stmt->execute($sucursales);
-            $sucursalesNoSeleccionadas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $sucursalesNoSeleccionadas = [];
+            if (!empty($sucursales)) {
+                $placeholders = implode(',', array_fill(0, count($sucursales), '?'));
+                $stmt = $conexion->prepare("
+                    SELECT * FROM sucursales 
+                    WHERE id NOT IN ($placeholders)
+                    AND activo = 1
+                ");
+                $stmt->execute($sucursales);
+                $sucursalesNoSeleccionadas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } else {
+                // Si no hay sucursales seleccionadas, obtener todas las sucursales activas para eliminar
+                $stmt = $conexion->prepare("
+                    SELECT * FROM sucursales 
+                    WHERE activo = 1
+                ");
+                $stmt->execute();
+                $sucursalesNoSeleccionadas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
             
             // Eliminar usuario de sucursales no seleccionadas
             foreach ($sucursalesNoSeleccionadas as $sucursal) {
