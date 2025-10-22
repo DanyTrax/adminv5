@@ -197,6 +197,13 @@ $(document).on("click", "#btnEditarSucursalLocal", function() {
                 $("#urlApiLocal").val(datos.url_api);
                 $("#esPrincipal").prop('checked', datos.es_principal == 1);
                 
+                // Llenar campos de BD
+                $("#usuarioBdLocal").val(datos.usuario_bd || '');
+                $("#passwordBdLocal").val(datos.password_bd || '');
+                $("#nombreBdLocal").val(datos.nombre_bd || '');
+                $("#hostBdLocal").val(datos.host_bd || 'localhost');
+                $("#puertoBdLocal").val(datos.puerto_bd || 3306);
+                
             } else {
                 
                 // Limpiar formulario para nueva configuración

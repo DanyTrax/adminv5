@@ -33,6 +33,11 @@ class ControladorSucursales {
                     "email" => $_POST["emailLocal"],
                     "url_base" => $_POST["urlBaseLocal"],
                     "url_api" => $_POST["urlApiLocal"],
+                    "usuario_bd" => $_POST["usuarioBdLocal"] ?? '',
+                    "password_bd" => $_POST["passwordBdLocal"] ?? '',
+                    "nombre_bd" => $_POST["nombreBdLocal"] ?? '',
+                    "host_bd" => $_POST["hostBdLocal"] ?? 'localhost',
+                    "puerto_bd" => $_POST["puertoBdLocal"] ?? 3306,
                     "es_principal" => isset($_POST["esPrincipal"]) ? 1 : 0,
                     "activo" => 1,
                     "registrada_en_central" => 0
@@ -40,7 +45,7 @@ class ControladorSucursales {
 
                 $respuesta = ModeloSucursales::mdlConfigurarSucursalLocal($tabla, $datos);
 
-                if ($respuesta == "ok") {
+                if ($respuesta && $respuesta['success']) {
                     
                     // Actualizar config.php
                     self::actualizarConfigPHP($_POST["codigoLocal"]);

@@ -211,6 +211,71 @@ MODAL CONFIGURAR SUCURSAL LOCAL
             </div>
           </div>
 
+          <!-- Campos de conexión a BD -->
+          <div class="box box-info">
+            <div class="box-header with-border">
+              <h3 class="box-title">Configuración de Base de Datos</h3>
+            </div>
+            <div class="box-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Usuario BD:</label>
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                      <input type="text" class="form-control" name="usuarioBdLocal" id="usuarioBdLocal" placeholder="usuario_bd">
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Contraseña BD:</label>
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+                      <input type="password" class="form-control" name="passwordBdLocal" id="passwordBdLocal" placeholder="password_bd">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Nombre BD:</label>
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-database"></i></span>
+                      <input type="text" class="form-control" name="nombreBdLocal" id="nombreBdLocal" placeholder="nombre_bd">
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Host BD:</label>
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-server"></i></span>
+                      <input type="text" class="form-control" name="hostBdLocal" id="hostBdLocal" placeholder="localhost" value="localhost">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Puerto BD:</label>
+                    <div class="input-group">
+                      <span class="input-group-addon"><i class="fa fa-plug"></i></span>
+                      <input type="number" class="form-control" name="puertoBdLocal" id="puertoBdLocal" placeholder="3306" value="3306">
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <!-- Espacio vacío para mantener el layout -->
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="row">
             <div class="col-md-12">
               <div class="form-group">
