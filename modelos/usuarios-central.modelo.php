@@ -830,10 +830,15 @@ class ModeloUsuariosCentral {
     =============================================*/
     static public function mdlAsignarSucursalesUsuario($usuario_id, $sucursales) {
         try {
+            error_log("Iniciando mdlAsignarSucursalesUsuario - Usuario ID: $usuario_id, Sucursales: " . json_encode($sucursales));
+            
             $conexion = ConexionCentral::conectar();
+            error_log("Conexión a BD central establecida correctamente");
             
             // Actualizar sucursales asignadas en usuarios_central
             $sucursalesAsignadas = implode(',', $sucursales);
+            error_log("Sucursales asignadas (string): $sucursalesAsignadas");
+            
             $stmt = $conexion->prepare("
                 UPDATE usuarios_central 
                 SET sucursales_asignadas = :sucursales_asignadas 
@@ -842,12 +847,17 @@ class ModeloUsuariosCentral {
             $stmt->bindParam(":sucursales_asignadas", $sucursalesAsignadas, PDO::PARAM_STR);
             $stmt->bindParam(":id", $usuario_id, PDO::PARAM_INT);
             
+            error_log("Ejecutando UPDATE en usuarios_central...");
             if (!$stmt->execute()) {
+                $errorInfo = $stmt->errorInfo();
+                error_log("Error ejecutando UPDATE: " . json_encode($errorInfo));
                 return [
                     'success' => false,
-                    'error' => 'Error actualizando asignaciones de sucursales'
+                    'error' => 'Error actualizando asignaciones de sucursales: ' . $errorInfo[2]
                 ];
             }
+            
+            error_log("UPDATE ejecutado correctamente");
             
             // Obtener datos del usuario
             $stmt = $conexion->prepare("

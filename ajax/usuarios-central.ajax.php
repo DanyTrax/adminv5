@@ -122,9 +122,12 @@ try {
             break;
             
         case "asignar_sucursales_usuario":
+            error_log("AJAX: Asignando sucursales - Usuario ID: " . $_POST['usuario_id'] . ", Sucursales: " . $_POST['sucursales']);
             $usuario_id = $_POST['usuario_id'];
             $sucursales = json_decode($_POST['sucursales'], true);
+            error_log("AJAX: Datos decodificados - Usuario ID: $usuario_id, Sucursales: " . json_encode($sucursales));
             $resultado = ControladorUsuariosCentral::ctrAsignarSucursalesUsuario($usuario_id, $sucursales);
+            error_log("AJAX: Resultado: " . json_encode($resultado));
             echo json_encode($resultado);
             break;
             
