@@ -1315,18 +1315,20 @@ try {
                 $cambios[] = "Estado: " . ($configLocal['activo'] ? 'Activo' : 'Inactivo') . " → " . ($sucursalCentral['activo'] ? 'Activo' : 'Inactivo');
             }
             
-            // Comparar URL Base
-            if (isset($configLocal['url_base']) && isset($sucursalCentral['url_base']) && 
-                $configLocal['url_base'] !== $sucursalCentral['url_base']) {
+            // Comparar URL Base (solo si ambos tienen valores)
+            $urlBaseLocal = $configLocal['url_base'] ?? '';
+            $urlBaseCentral = $sucursalCentral['url_base'] ?? '';
+            if (!empty($urlBaseLocal) && !empty($urlBaseCentral) && $urlBaseLocal !== $urlBaseCentral) {
                 $necesitaSincronizacion = true;
-                $cambios[] = "URL Base: '{$configLocal['url_base']}' → '{$sucursalCentral['url_base']}'";
+                $cambios[] = "URL Base: '{$urlBaseLocal}' → '{$urlBaseCentral}'";
             }
             
-            // Comparar URL API
-            if (isset($configLocal['url_api']) && isset($sucursalCentral['url_api']) && 
-                $configLocal['url_api'] !== $sucursalCentral['url_api']) {
+            // Comparar URL API (solo si ambos tienen valores)
+            $urlApiLocal = $configLocal['url_api'] ?? '';
+            $urlApiCentral = $sucursalCentral['url_api'] ?? '';
+            if (!empty($urlApiLocal) && !empty($urlApiCentral) && $urlApiLocal !== $urlApiCentral) {
                 $necesitaSincronizacion = true;
-                $cambios[] = "URL API: '{$configLocal['url_api']}' → '{$sucursalCentral['url_api']}'";
+                $cambios[] = "URL API: '{$urlApiLocal}' → '{$urlApiCentral}'";
             }
             
             // Comparar campos de conexión BD
@@ -1360,8 +1362,8 @@ try {
                 $cambios[] = "Puerto BD: '{$configLocal['puerto_bd']}' → '{$sucursalCentral['puerto_bd']}'";
             }
             
-            // Siempre sincronizar, no solo cuando hay diferencias
-            $necesitaSincronizacion = true;
+            // Solo sincronizar si hay diferencias reales
+            // $necesitaSincronizacion ya se establece en las comparaciones anteriores
             
             if ($necesitaSincronizacion) {
                 // Sincronizar datos locales al central
