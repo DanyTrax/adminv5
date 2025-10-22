@@ -259,12 +259,13 @@ class ModeloUsuariosCentral {
         try {
             $conexion = ConexionCentral::conectar();
             
-            // Verificar si el usuario ya existe
+            // Verificar si el usuario ya existe por ID local o usuario
             $stmt = $conexion->prepare("
                 SELECT id FROM usuarios_central 
-                WHERE usuario = :usuario
+                WHERE usuario = :usuario OR id_local = :id_local
             ");
             $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+            $stmt->bindParam(":id_local", $usuario['id'], PDO::PARAM_INT);
             $stmt->execute();
             
             if ($stmt->fetch()) {
@@ -279,11 +280,11 @@ class ModeloUsuariosCentral {
                 INSERT INTO usuarios_central (
                     nombre, usuario, password, perfil, foto, 
                     sucursal_id, telefono, direccion, activo, 
-                    sincronizado, fecha_creacion
+                    sincronizado, fecha_creacion, id_local
                 ) VALUES (
                     :nombre, :usuario, :password, :perfil, :foto,
                     :sucursal_id, :telefono, :direccion, 1,
-                    0, NOW()
+                    0, NOW(), :id_local
                 )
             ");
             
@@ -295,6 +296,7 @@ class ModeloUsuariosCentral {
             $stmt->bindParam(":sucursal_id", $usuario['sucursal_id'], PDO::PARAM_INT);
             $stmt->bindParam(":telefono", $usuario['telefono'], PDO::PARAM_STR);
             $stmt->bindParam(":direccion", $usuario['direccion'], PDO::PARAM_STR);
+            $stmt->bindParam(":id_local", $usuario['id'], PDO::PARAM_INT);
             
             if ($stmt->execute()) {
                 return [

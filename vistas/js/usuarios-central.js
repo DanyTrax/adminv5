@@ -3,12 +3,17 @@ $(document).ready(function() {
     // Variables globales
     var usuariosSucursales = [];
     var usuariosCentrales = [];
+    var sucursalesDisponibles = [];
+    var sucursalesSeleccionadas = [];
     
     // Inicializar la interfaz
     inicializarInterfaz();
     
     // Cargar estadísticas
     cargarEstadisticas();
+    
+    // Cargar sucursales disponibles
+    cargarSucursalesDisponibles();
     
     // Cargar usuarios de sucursales
     cargarUsuariosSucursales();
@@ -42,6 +47,14 @@ $(document).ready(function() {
     $(document).on("click", ".btnEliminarUsuario", function() {
         var id = $(this).data("id");
         eliminarUsuario(id);
+    });
+    
+    $(document).on("change", ".checkbox-sucursal", function() {
+        actualizarSucursalesSeleccionadas();
+    });
+    
+    $(document).on("click", "#btnSincronizarSeleccionadas", function() {
+        sincronizarUsuariosSeleccionadas();
     });
     
     // Funciones principales
@@ -384,6 +397,98 @@ $(document).ready(function() {
             type: "error",
             title: "Error",
             text: mensaje
+        });
+    }
+    
+    function cargarSucursalesDisponibles() {
+        console.log("Cargando sucursales disponibles...");
+        
+        $.ajax({
+            url: "ajax/usuarios-central.ajax.php",
+            method: "POST",
+            data: { accion: "obtener_sucursales_disponibles" },
+            dataType: "json",
+            success: function(respuesta) {
+                if (respuesta.success) {
+                    sucursalesDisponibles = respuesta.sucursales;
+                    mostrarSucursalesSeleccion();
+                } else {
+                    console.error("Error cargando sucursales:", respuesta.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error AJAX cargando sucursales:", error);
+            }
+        });
+    }
+    
+    function mostrarSucursalesSeleccion() {
+        var html = '';
+        
+        sucursalesDisponibles.forEach(function(sucursal) {
+            html += '<div class="col-md-4">';
+            html += '<div class="checkbox">';
+            html += '<label>';
+            html += '<input type="checkbox" class="checkbox-sucursal" value="' + sucursal.id + '" data-sucursal=\'' + JSON.stringify(sucursal) + '\'>';
+            html += '<strong>' + sucursal.nombre + '</strong>';
+            if (sucursal.es_actual) {
+                html += ' <span class="label label-info">ACTUAL</span>';
+            }
+            html += '</label>';
+            html += '</div>';
+            html += '</div>';
+        });
+        
+        $("#sucursalesSeleccion").html(html);
+    }
+    
+    function actualizarSucursalesSeleccionadas() {
+        sucursalesSeleccionadas = [];
+        
+        $(".checkbox-sucursal:checked").each(function() {
+            var sucursalData = $(this).data("sucursal");
+            sucursalesSeleccionadas.push(sucursalData);
+        });
+        
+        // Habilitar/deshabilitar botón de sincronización
+        if (sucursalesSeleccionadas.length > 0) {
+            $("#btnSincronizarSeleccionadas").prop("disabled", false);
+        } else {
+            $("#btnSincronizarSeleccionadas").prop("disabled", true);
+        }
+        
+        console.log("Sucursales seleccionadas:", sucursalesSeleccionadas.length);
+    }
+    
+    function sincronizarUsuariosSeleccionadas() {
+        if (sucursalesSeleccionadas.length === 0) {
+            mostrarError("Selecciona al menos una sucursal para sincronizar");
+            return;
+        }
+        
+        console.log("Sincronizando usuarios a sucursales seleccionadas:", sucursalesSeleccionadas);
+        
+        $.ajax({
+            url: "ajax/usuarios-central.ajax.php",
+            method: "POST",
+            data: { 
+                accion: "sincronizar_usuarios_sucursales",
+                sucursales: JSON.stringify(sucursalesSeleccionadas)
+            },
+            dataType: "json",
+            success: function(respuesta) {
+                if (respuesta.success) {
+                    mostrarExito("Usuarios sincronizados exitosamente a " + sucursalesSeleccionadas.length + " sucursales");
+                    cargarUsuariosCentrales();
+                    cargarEstadisticas();
+                } else {
+                    mostrarError("Error sincronizando usuarios: " + respuesta.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error AJAX sincronizando usuarios:", error);
+                mostrarError("Error de conexión sincronizando usuarios");
+            }
         });
     }
     

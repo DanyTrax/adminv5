@@ -67,6 +67,30 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                             </div>
                         </div>
                         
+                        <!-- SELECCIÓN MÚLTIPLE DE SUCURSALES -->
+                        <div class="row" style="margin-top: 15px;">
+                            <div class="col-md-12">
+                                <div class="box box-warning">
+                                    <div class="box-header with-border">
+                                        <h3 class="box-title">
+                                            <i class="fa fa-building"></i> Selección de Sucursales para Sincronización
+                                        </h3>
+                                    </div>
+                                    <div class="box-body">
+                                        <p><strong>Selecciona las sucursales donde quieres sincronizar los usuarios:</strong></p>
+                                        <div id="sucursalesSeleccion" class="row">
+                                            <!-- Las sucursales se cargarán aquí dinámicamente -->
+                                        </div>
+                                        <div class="text-center" style="margin-top: 15px;">
+                                            <button class="btn btn-success btn-sm" id="btnSincronizarSeleccionadas" disabled>
+                                                <i class="fa fa-refresh"></i> Sincronizar a Sucursales Seleccionadas
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                     </div>
                 </div>
             </div>

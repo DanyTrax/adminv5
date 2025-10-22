@@ -107,6 +107,20 @@ try {
             echo json_encode($resultado);
             break;
             
+        case "obtener_sucursales_disponibles":
+            $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
+            echo json_encode([
+                'success' => true,
+                'sucursales' => $sucursales
+            ]);
+            break;
+            
+        case "sincronizar_usuarios_sucursales":
+            $sucursales = json_decode($_POST['sucursales'], true);
+            $resultado = ControladorUsuariosCentral::ctrSincronizarUsuariosSucursales($sucursales);
+            echo json_encode($resultado);
+            break;
+            
         default:
             echo json_encode([
                 'success' => false,
