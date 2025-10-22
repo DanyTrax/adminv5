@@ -84,8 +84,11 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                                     <button class="btn btn-primary btn-lg" id="btnNuevoUsuarioCentral" title="Crear Usuario en Central">
                                         <i class="fa fa-plus"></i> Crear Usuario Central
                                     </button>
+                                    <button class="btn btn-success btn-lg" id="btnSincronizarTodos" title="Sincronizar Todos los Usuarios">
+                                        <i class="fa fa-refresh"></i> Sincronizar Todos
+                                    </button>
                                     <p class="text-muted" style="margin-top: 10px;">
-                                        <small>La sincronización se realiza desde el botón "Asignar Sucursales" de cada usuario</small>
+                                        <small>La sincronización se realiza desde el botón "Asignar Sucursales" de cada usuario o usando "Sincronizar Todos"</small>
                                     </p>
                                 </div>
                             </div>

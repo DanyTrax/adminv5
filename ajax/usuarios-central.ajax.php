@@ -131,6 +131,11 @@ try {
             echo json_encode($resultado);
             break;
             
+        case "sincronizar_todos_usuarios":
+            $resultado = ControladorUsuariosCentral::ctrSincronizarTodosUsuarios();
+            echo json_encode($resultado);
+            break;
+            
         default:
             echo json_encode([
                 'success' => false,

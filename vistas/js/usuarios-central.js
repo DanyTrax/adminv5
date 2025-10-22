@@ -43,6 +43,10 @@ $(document).ready(function() {
         abrirModalUsuario();
     });
     
+    $(document).on("click", "#btnSincronizarTodos", function() {
+        sincronizarTodosUsuarios();
+    });
+    
     $(document).on("click", ".btnEditarUsuario", function() {
         var id = $(this).data("id");
         editarUsuario(id);
@@ -797,6 +801,71 @@ $(document).ready(function() {
             error: function(xhr, status, error) {
                 console.error("Error AJAX asignando sucursales:", error);
                 mostrarError("Error de conexión asignando sucursales");
+            }
+        });
+    }
+    
+    function sincronizarTodosUsuarios() {
+        Swal.fire({
+            title: '¿Sincronizar todos los usuarios?',
+            text: 'Esto sincronizará todos los usuarios centrales con sus sucursales asignadas',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, sincronizar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Mostrar loading
+                Swal.fire({
+                    title: 'Sincronizando...',
+                    text: 'Por favor espera mientras se sincronizan todos los usuarios',
+                    icon: 'info',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                $.ajax({
+                    url: "ajax/usuarios-central.ajax.php",
+                    method: "POST",
+                    data: {
+                        accion: "sincronizar_todos_usuarios"
+                    },
+                    dataType: "json",
+                    success: function(respuesta) {
+                        Swal.close();
+                        if (respuesta.success) {
+                            Swal.fire({
+                                title: '¡Sincronización exitosa!',
+                                text: respuesta.message,
+                                icon: 'success',
+                                confirmButtonText: 'Aceptar'
+                            });
+                            cargarUsuariosCentrales();
+                            cargarEstadisticas();
+                        } else {
+                            Swal.fire({
+                                title: 'Error en sincronización',
+                                text: respuesta.error,
+                                icon: 'error',
+                                confirmButtonText: 'Aceptar'
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.close();
+                        Swal.fire({
+                            title: 'Error de conexión',
+                            text: 'No se pudo completar la sincronización',
+                            icon: 'error',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    }
+                });
             }
         });
     }

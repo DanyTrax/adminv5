@@ -82,11 +82,8 @@ class ModeloUsuariosCentral {
         try {
             $sql = "
                 SELECT 
-                    uc.*,
-                    s.nombre as nombre_sucursal,
-                    s.codigo_sucursal
+                    uc.*
                 FROM usuarios_central uc
-                LEFT JOIN sucursales s ON uc.sucursal_id = s.id
                 WHERE uc.activo = 1
             ";
             
@@ -1055,6 +1052,73 @@ class ModeloUsuariosCentral {
             
         } catch (Exception $e) {
             error_log("Error en mdlAsignarSucursalesUsuario: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error interno del servidor'
+            ];
+        }
+    }
+    
+    /*=============================================
+    SINCRONIZAR TODOS LOS USUARIOS
+    =============================================*/
+    static public function mdlSincronizarTodosUsuarios() {
+        try {
+            error_log("Iniciando sincronización de todos los usuarios");
+            
+            $conexion = ConexionCentral::conectar();
+            
+            // Obtener todos los usuarios centrales con sucursales asignadas
+            $stmt = $conexion->prepare("
+                SELECT * FROM usuarios_central 
+                WHERE activo = 1 
+                AND sucursales_asignadas IS NOT NULL 
+                AND sucursales_asignadas != ''
+            ");
+            $stmt->execute();
+            $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("Usuarios encontrados para sincronizar: " . count($usuarios));
+            
+            $resultados = [];
+            $usuariosSincronizados = 0;
+            $errores = 0;
+            
+            foreach ($usuarios as $usuario) {
+                $sucursales = explode(',', $usuario['sucursales_asignadas']);
+                error_log("Sincronizando usuario '{$usuario['usuario']}' a sucursales: " . json_encode($sucursales));
+                
+                $resultado = self::mdlAsignarSucursalesUsuario($usuario['id'], $sucursales);
+                
+                if ($resultado['success']) {
+                    $usuariosSincronizados++;
+                    $resultados[] = [
+                        'usuario' => $usuario['usuario'],
+                        'estado' => 'sincronizado',
+                        'sucursales' => $sucursales
+                    ];
+                } else {
+                    $errores++;
+                    $resultados[] = [
+                        'usuario' => $usuario['usuario'],
+                        'estado' => 'error',
+                        'error' => $resultado['error']
+                    ];
+                }
+            }
+            
+            error_log("Sincronización completada - Usuarios: $usuariosSincronizados, Errores: $errores");
+            
+            return [
+                'success' => true,
+                'message' => "Sincronización completada. Usuarios sincronizados: $usuariosSincronizados, Errores: $errores",
+                'usuarios_sincronizados' => $usuariosSincronizados,
+                'errores' => $errores,
+                'resultados' => $resultados
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlSincronizarTodosUsuarios: " . $e->getMessage());
             return [
                 'success' => false,
                 'error' => 'Error interno del servidor'

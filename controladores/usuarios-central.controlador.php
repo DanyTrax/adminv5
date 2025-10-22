@@ -194,5 +194,20 @@ class ControladorUsuariosCentral {
             ];
         }
     }
+    
+    /*=============================================
+    SINCRONIZAR TODOS LOS USUARIOS
+    =============================================*/
+    static public function ctrSincronizarTodosUsuarios() {
+        try {
+            return ModeloUsuariosCentral::mdlSincronizarTodosUsuarios();
+        } catch (Exception $e) {
+            error_log("Error en ctrSincronizarTodosUsuarios: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error interno del servidor'
+            ];
+        }
+    }
 }
 ?>
