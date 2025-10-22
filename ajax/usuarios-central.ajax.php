@@ -46,6 +46,14 @@ try {
             ]);
             break;
             
+        case "obtener_usuarios_sucursales":
+            $usuarios = ControladorUsuariosCentral::ctrConsultarUsuariosSucursales();
+            echo json_encode([
+                'success' => true,
+                'usuarios' => $usuarios
+            ]);
+            break;
+            
         case "crear_usuario_central":
             $datos = [
                 'nombre' => $_POST['nombre'],
