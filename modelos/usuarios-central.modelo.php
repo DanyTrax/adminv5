@@ -252,6 +252,151 @@ class ModeloUsuariosCentral {
     }
 
     /*=============================================
+    IMPORTAR USUARIO INDIVIDUAL
+    =============================================*/
+    static public function mdlImportarUsuarioIndividual($usuario) {
+        
+        try {
+            $conexion = ConexionCentral::conectar();
+            
+            // Verificar si el usuario ya existe
+            $stmt = $conexion->prepare("
+                SELECT id FROM usuarios_central 
+                WHERE usuario = :usuario
+            ");
+            $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+            $stmt->execute();
+            
+            if ($stmt->fetch()) {
+                return [
+                    'success' => false,
+                    'error' => 'El usuario ya existe en el sistema central'
+                ];
+            }
+            
+            // Insertar usuario en usuarios_central
+            $stmt = $conexion->prepare("
+                INSERT INTO usuarios_central (
+                    nombre, usuario, password, perfil, foto, 
+                    sucursal_id, telefono, direccion, activo, 
+                    sincronizado, fecha_creacion
+                ) VALUES (
+                    :nombre, :usuario, :password, :perfil, :foto,
+                    :sucursal_id, :telefono, :direccion, 1,
+                    0, NOW()
+                )
+            ");
+            
+            $stmt->bindParam(":nombre", $usuario['nombre'], PDO::PARAM_STR);
+            $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+            $stmt->bindParam(":password", $usuario['password'], PDO::PARAM_STR);
+            $stmt->bindParam(":perfil", $usuario['perfil'], PDO::PARAM_STR);
+            $stmt->bindParam(":foto", $usuario['foto'], PDO::PARAM_STR);
+            $stmt->bindParam(":sucursal_id", $usuario['sucursal_id'], PDO::PARAM_INT);
+            $stmt->bindParam(":telefono", $usuario['telefono'], PDO::PARAM_STR);
+            $stmt->bindParam(":direccion", $usuario['direccion'], PDO::PARAM_STR);
+            
+            if ($stmt->execute()) {
+                return [
+                    'success' => true,
+                    'message' => 'Usuario importado exitosamente'
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'error' => 'Error al insertar usuario en base de datos'
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlImportarUsuarioIndividual: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error al importar usuario: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /*=============================================
+    IMPORTAR TODOS LOS USUARIOS DE SUCURSALES
+    =============================================*/
+    static public function mdlImportarUsuariosSucursales() {
+        
+        try {
+            $conexion = ConexionCentral::conectar();
+            $usuariosImportados = 0;
+            $errores = [];
+            
+            // Obtener usuarios de todas las sucursales
+            $sucursales = self::mdlConsultarUsuariosSucursales();
+            
+            foreach ($sucursales as $sucursal) {
+                if ($sucursal['estado_conexion'] === 'conectado' && !empty($sucursal['usuarios'])) {
+                    foreach ($sucursal['usuarios'] as $usuario) {
+                        // Verificar si el usuario ya existe
+                        $stmt = $conexion->prepare("
+                            SELECT id FROM usuarios_central 
+                            WHERE usuario = :usuario
+                        ");
+                        $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+                        $stmt->execute();
+                        
+                        if (!$stmt->fetch()) {
+                            // Insertar usuario
+                            $stmt = $conexion->prepare("
+                                INSERT INTO usuarios_central (
+                                    nombre, usuario, password, perfil, foto, 
+                                    sucursal_id, telefono, direccion, activo, 
+                                    sincronizado, fecha_creacion
+                                ) VALUES (
+                                    :nombre, :usuario, :password, :perfil, :foto,
+                                    :sucursal_id, :telefono, :direccion, 1,
+                                    0, NOW()
+                                )
+                            ");
+                            
+                            // Asegurar que todos los campos tengan valores por defecto
+                            $password = !empty($usuario['password']) ? $usuario['password'] : 'password123';
+                            $telefono = !empty($usuario['telefono']) ? $usuario['telefono'] : '';
+                            $direccion = !empty($usuario['direccion']) ? $usuario['direccion'] : '';
+                            $foto = !empty($usuario['foto']) ? $usuario['foto'] : 'vistas/img/usuarios/default/anonymous.png';
+                            
+                            $stmt->bindParam(":nombre", $usuario['nombre'], PDO::PARAM_STR);
+                            $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+                            $stmt->bindParam(":password", $password, PDO::PARAM_STR);
+                            $stmt->bindParam(":perfil", $usuario['perfil'], PDO::PARAM_STR);
+                            $stmt->bindParam(":foto", $foto, PDO::PARAM_STR);
+                            $stmt->bindParam(":sucursal_id", $sucursal['sucursal']['id'], PDO::PARAM_INT);
+                            $stmt->bindParam(":telefono", $telefono, PDO::PARAM_STR);
+                            $stmt->bindParam(":direccion", $direccion, PDO::PARAM_STR);
+                            
+                            if ($stmt->execute()) {
+                                $usuariosImportados++;
+                            } else {
+                                $errores[] = "Error importando usuario: " . $usuario['usuario'];
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return [
+                'success' => true,
+                'message' => "Se importaron {$usuariosImportados} usuarios exitosamente",
+                'usuarios_importados' => $usuariosImportados,
+                'errores' => $errores
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlImportarUsuariosSucursales: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error al importar usuarios: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /*=============================================
     ELIMINAR USUARIO CENTRAL
     =============================================*/
     static public function mdlEliminarUsuarioCentral($usuarioId) {
