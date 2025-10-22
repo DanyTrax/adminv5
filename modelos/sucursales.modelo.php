@@ -73,17 +73,25 @@ class ModeloSucursales {
                     email = :email,
                     url_base = :url_base,
                     url_api = :url_api,
+                    usuario_bd = :usuario_bd,
+                    password_bd = :password_bd,
+                    nombre_bd = :nombre_bd,
+                    host_bd = :host_bd,
+                    puerto_bd = :puerto_bd,
                     es_principal = :es_principal,
+                    activo = :activo,
                     fecha_actualizacion = NOW()
                     WHERE id = 1");
             } else {
                 // Crear nueva configuración
                 $stmt = Conexion::conectar()->prepare("INSERT INTO $tabla (
                     codigo_sucursal, nombre, direccion, telefono, email, 
-                    url_base, url_api, es_principal, activo, fecha_registro, fecha_actualizacion
+                    url_base, url_api, usuario_bd, password_bd, nombre_bd, host_bd, puerto_bd,
+                    es_principal, activo, fecha_registro, fecha_actualizacion
                 ) VALUES (
                     :codigo_sucursal, :nombre, :direccion, :telefono, :email,
-                    :url_base, :url_api, :es_principal, 1, NOW(), NOW()
+                    :url_base, :url_api, :usuario_bd, :password_bd, :nombre_bd, :host_bd, :puerto_bd,
+                    :es_principal, :activo, NOW(), NOW()
                 )");
             }
             
@@ -94,17 +102,32 @@ class ModeloSucursales {
             $stmt->bindParam(":email", $datos["email"], PDO::PARAM_STR);
             $stmt->bindParam(":url_base", $datos["url_base"], PDO::PARAM_STR);
             $stmt->bindParam(":url_api", $datos["url_api"], PDO::PARAM_STR);
+            $stmt->bindParam(":usuario_bd", $datos["usuario_bd"], PDO::PARAM_STR);
+            $stmt->bindParam(":password_bd", $datos["password_bd"], PDO::PARAM_STR);
+            $stmt->bindParam(":nombre_bd", $datos["nombre_bd"], PDO::PARAM_STR);
+            $stmt->bindParam(":host_bd", $datos["host_bd"], PDO::PARAM_STR);
+            $stmt->bindParam(":puerto_bd", $datos["puerto_bd"], PDO::PARAM_INT);
             $stmt->bindParam(":es_principal", $datos["es_principal"], PDO::PARAM_INT);
+            $stmt->bindParam(":activo", $datos["activo"], PDO::PARAM_INT);
             
             if ($stmt->execute()) {
-                return "ok";
+                return [
+                    'success' => true,
+                    'message' => 'Configuración local actualizada correctamente'
+                ];
             } else {
-                return "error";
+                return [
+                    'success' => false,
+                    'error' => 'Error actualizando configuración local'
+                ];
             }
             
         } catch (Exception $e) {
             error_log("Error en mdlConfigurarSucursalLocal: " . $e->getMessage());
-            return "error";
+            return [
+                'success' => false,
+                'error' => 'Error interno: ' . $e->getMessage()
+            ];
         }
     }
 
@@ -264,18 +287,18 @@ class ModeloSucursales {
                 activo = ?, fecha_actualizacion = NOW()
                 WHERE id = ?");
             
-            $resultado = $stmt->execute([
+            $resultado =             $stmt->execute([
                 $datos["nombre"],
                 $datos["direccion"],
                 $datos["telefono"],
                 $datos["email"],
-                $datos["url_base"],
-                $datos["url_api"],
-                $datos["usuario_bd"],
-                $datos["password_bd"],
-                $datos["nombre_bd"],
-                $datos["host_bd"],
-                $datos["puerto_bd"],
+                $datos["url_base"] ?? '',
+                $datos["url_api"] ?? '',
+                $datos["usuario_bd"] ?? '',
+                $datos["password_bd"] ?? '',
+                $datos["nombre_bd"] ?? '',
+                $datos["host_bd"] ?? 'localhost',
+                $datos["puerto_bd"] ?? 3306,
                 $datos["activo"],
                 $datos["id"]
             ]);
@@ -329,8 +352,16 @@ class ModeloSucursales {
             }
             
             // Primero, desactivar usuarios centrales que referencian esta sucursal
-            $stmt = $pdo->prepare("UPDATE usuarios_central SET activo = 0 WHERE sucursal_id = ?");
+            $stmt = $pdo->prepare("UPDATE usuarios_central SET activo = 0, sucursal_id = NULL WHERE sucursal_id = ?");
             $stmt->execute([$id]);
+            
+            // También limpiar referencias en otras tablas que puedan tener FK
+            $stmt = $pdo->prepare("UPDATE usuarios_central SET sucursales_asignadas = REPLACE(sucursales_asignadas, ?, '') WHERE sucursales_asignadas LIKE ?");
+            $stmt->execute([$id, '%' . $id . '%']);
+            
+            // Limpiar referencias múltiples (ej: "1,2,3" -> "1,3" si eliminamos 2)
+            $stmt = $pdo->prepare("UPDATE usuarios_central SET sucursales_asignadas = TRIM(BOTH ',' FROM REPLACE(REPLACE(sucursales_asignadas, ?, ''), ',,', ',')) WHERE sucursales_asignadas LIKE ?");
+            $stmt->execute([$id . ',', '%' . $id . ',%']);
             
             // Luego, eliminar la sucursal
             $stmt = $pdo->prepare("DELETE FROM sucursales WHERE id = ?");

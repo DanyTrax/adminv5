@@ -189,17 +189,18 @@ class ControladorSucursales {
                 
                 $datos = array(
                     "id" => $_POST["editarId"],
+                    "codigo_sucursal" => $_POST["editarCodigo"],
                     "nombre" => $_POST["editarNombre"],
                     "direccion" => $_POST["editarDireccion"],
                     "telefono" => $_POST["editarTelefono"],
                     "email" => $_POST["editarEmail"],
-                    "url_base" => $_POST["editarUrlBase"],
-                    "url_api" => $_POST["editarUrlApi"],
-                    "usuario_bd" => $_POST["editarUsuarioBd"],
-                    "password_bd" => $_POST["editarPasswordBd"],
-                    "nombre_bd" => $_POST["editarNombreBd"],
-                    "host_bd" => $_POST["editarHostBd"],
-                    "puerto_bd" => $_POST["editarPuertoBd"],
+                    "url_base" => $_POST["editarUrlBase"] ?? '',
+                    "url_api" => $_POST["editarUrlApi"] ?? '',
+                    "usuario_bd" => $_POST["editarUsuarioBd"] ?? '',
+                    "password_bd" => $_POST["editarPasswordBd"] ?? '',
+                    "nombre_bd" => $_POST["editarNombreBd"] ?? '',
+                    "host_bd" => $_POST["editarHostBd"] ?? 'localhost',
+                    "puerto_bd" => $_POST["editarPuertoBd"] ?? 3306,
                     "activo" => isset($_POST["editarActivo"]) ? 1 : 0
                 );
 
