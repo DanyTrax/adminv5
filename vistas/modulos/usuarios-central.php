@@ -158,14 +158,21 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="nombreUsuario">Nombre Completo:</label>
-                                <input type="text" class="form-control" id="nombreUsuario" name="nombre" required>
+                                <label for="nombreUsuario">Nombre Completo: <span class="text-red">*</span></label>
+                                <input type="text" class="form-control" id="nombreUsuario" name="nombre" 
+                                       placeholder="Ingrese el nombre completo" required 
+                                       minlength="2" maxlength="100">
+                                <div class="help-block text-red" id="errorNombre" style="display: none;"></div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="usuarioLogin">Usuario de Login:</label>
-                                <input type="text" class="form-control" id="usuarioLogin" name="usuario" required>
+                                <label for="usuarioLogin">Usuario de Login: <span class="text-red">*</span></label>
+                                <input type="text" class="form-control" id="usuarioLogin" name="usuario" 
+                                       placeholder="Ingrese el nombre de usuario" required 
+                                       minlength="3" maxlength="50" pattern="[a-zA-Z0-9]+"
+                                       title="Solo se permiten letras y números">
+                                <div class="help-block text-red" id="errorUsuario" style="display: none;"></div>
                             </div>
                         </div>
                     </div>
@@ -173,13 +180,16 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="passwordUsuario">Contraseña:</label>
-                                <input type="password" class="form-control" id="passwordUsuario" name="password" required>
+                                <label for="passwordUsuario">Contraseña: <span class="text-red">*</span></label>
+                                <input type="password" class="form-control" id="passwordUsuario" name="password" 
+                                       placeholder="Ingrese la contraseña" required 
+                                       minlength="4" maxlength="50">
+                                <div class="help-block text-red" id="errorPassword" style="display: none;"></div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="perfilUsuario">Perfil:</label>
+                                <label for="perfilUsuario">Perfil: <span class="text-red">*</span></label>
                                 <select class="form-control" id="perfilUsuario" name="perfil" required>
                                     <option value="">Seleccionar perfil</option>
                                     <option value="Administrador">Administrador</option>
@@ -188,6 +198,7 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                                     <option value="Transportador">Transportador</option>
                                     <option value="Vendedor">Vendedor</option>
                                 </select>
+                                <div class="help-block text-red" id="errorPerfil" style="display: none;"></div>
                             </div>
                         </div>
                     </div>
@@ -195,10 +206,19 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="telefonoUsuario">Teléfono:</label>
-                                <input type="text" class="form-control" id="telefonoUsuario" name="telefono">
+                                <label for="telefonoUsuario">Teléfono: <span class="text-red">*</span></label>
+                                <input type="text" class="form-control" id="telefonoUsuario" name="telefono" 
+                                       placeholder="Ingrese el número de teléfono" required 
+                                       pattern="[0-9+\-\s()]+" minlength="7" maxlength="20"
+                                       title="Ingrese un número de teléfono válido">
+                                <div class="help-block text-red" id="errorTelefono" style="display: none;"></div>
                             </div>
                         </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle"></i> 
+                        <strong>Nota:</strong> Los campos marcados con <span class="text-red">*</span> son obligatorios.
                     </div>
                 </form>
             </div>

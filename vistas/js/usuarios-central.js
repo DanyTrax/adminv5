@@ -83,6 +83,23 @@ $(document).ready(function() {
         guardarAsignacionSucursales();
     });
     
+    // Validación en tiempo real
+    $(document).on("input", "#nombreUsuario", function() {
+        limpiarErrorCampo("errorNombre");
+    });
+    $(document).on("input", "#usuarioLogin", function() {
+        limpiarErrorCampo("errorUsuario");
+    });
+    $(document).on("input", "#passwordUsuario", function() {
+        limpiarErrorCampo("errorPassword");
+    });
+    $(document).on("change", "#perfilUsuario", function() {
+        limpiarErrorCampo("errorPerfil");
+    });
+    $(document).on("input", "#telefonoUsuario", function() {
+        limpiarErrorCampo("errorTelefono");
+    });
+    
     // Funciones principales
     function inicializarInterfaz() {
         console.log("Inicializando interfaz de usuarios centrales...");
@@ -665,13 +682,21 @@ $(document).ready(function() {
     }
     
     function guardarUsuario() {
+        // Limpiar errores anteriores
+        limpiarErrores();
+        
+        // Validar formulario
+        if (!validarFormularioUsuario()) {
+            return;
+        }
+        
         var formData = {
             id: $("#idUsuarioCentral").val(),
-            nombre: $("#nombreUsuario").val(),
-            usuario: $("#usuarioLogin").val(),
+            nombre: $("#nombreUsuario").val().trim(),
+            usuario: $("#usuarioLogin").val().trim(),
             password: $("#passwordUsuario").val(),
             perfil: $("#perfilUsuario").val(),
-            telefono: $("#telefonoUsuario").val()
+            telefono: $("#telefonoUsuario").val().trim()
         };
         
         var accion = formData.id ? "editar_usuario_central" : "crear_usuario_central";
@@ -699,6 +724,80 @@ $(document).ready(function() {
                 mostrarError("Error de conexión guardando usuario");
             }
         });
+    }
+    
+    function validarFormularioUsuario() {
+        var esValido = true;
+        
+        // Validar nombre
+        var nombre = $("#nombreUsuario").val().trim();
+        if (nombre.length < 2) {
+            mostrarErrorCampo("errorNombre", "El nombre debe tener al menos 2 caracteres");
+            esValido = false;
+        } else if (nombre.length > 100) {
+            mostrarErrorCampo("errorNombre", "El nombre no puede tener más de 100 caracteres");
+            esValido = false;
+        }
+        
+        // Validar usuario
+        var usuario = $("#usuarioLogin").val().trim();
+        if (usuario.length < 3) {
+            mostrarErrorCampo("errorUsuario", "El usuario debe tener al menos 3 caracteres");
+            esValido = false;
+        } else if (usuario.length > 50) {
+            mostrarErrorCampo("errorUsuario", "El usuario no puede tener más de 50 caracteres");
+            esValido = false;
+        } else if (!/^[a-zA-Z0-9]+$/.test(usuario)) {
+            mostrarErrorCampo("errorUsuario", "El usuario solo puede contener letras y números");
+            esValido = false;
+        }
+        
+        // Validar contraseña
+        var password = $("#passwordUsuario").val();
+        if (password.length < 4) {
+            mostrarErrorCampo("errorPassword", "La contraseña debe tener al menos 4 caracteres");
+            esValido = false;
+        } else if (password.length > 50) {
+            mostrarErrorCampo("errorPassword", "La contraseña no puede tener más de 50 caracteres");
+            esValido = false;
+        }
+        
+        // Validar perfil
+        var perfil = $("#perfilUsuario").val();
+        if (!perfil) {
+            mostrarErrorCampo("errorPerfil", "Debe seleccionar un perfil");
+            esValido = false;
+        }
+        
+        // Validar teléfono
+        var telefono = $("#telefonoUsuario").val().trim();
+        if (telefono.length < 7) {
+            mostrarErrorCampo("errorTelefono", "El teléfono debe tener al menos 7 caracteres");
+            esValido = false;
+        } else if (telefono.length > 20) {
+            mostrarErrorCampo("errorTelefono", "El teléfono no puede tener más de 20 caracteres");
+            esValido = false;
+        } else if (!/^[0-9+\-\s()]+$/.test(telefono)) {
+            mostrarErrorCampo("errorTelefono", "El teléfono contiene caracteres no válidos");
+            esValido = false;
+        }
+        
+        return esValido;
+    }
+    
+    function mostrarErrorCampo(campoId, mensaje) {
+        $("#" + campoId).text(mensaje).show();
+        $("#" + campoId.replace("error", "")).addClass("has-error");
+    }
+    
+    function limpiarErrores() {
+        $(".help-block").hide();
+        $(".form-group").removeClass("has-error");
+    }
+    
+    function limpiarErrorCampo(campoId) {
+        $("#" + campoId).hide();
+        $("#" + campoId.replace("error", "")).removeClass("has-error");
     }
     
     // Variables para asignación de sucursales
