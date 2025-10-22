@@ -835,29 +835,55 @@ class ModeloUsuariosCentral {
             $conexion = ConexionCentral::conectar();
             error_log("Conexión a BD central establecida correctamente");
             
-            // Actualizar sucursales asignadas en usuarios_central
-            $sucursalesAsignadas = implode(',', $sucursales);
-            error_log("Sucursales asignadas (string): $sucursalesAsignadas");
+            // Verificar si la columna sucursales_asignadas existe
+            $stmt = $conexion->prepare("SHOW COLUMNS FROM usuarios_central LIKE 'sucursales_asignadas'");
+            $stmt->execute();
+            $columnaExiste = $stmt->fetch();
             
-            $stmt = $conexion->prepare("
-                UPDATE usuarios_central 
-                SET sucursales_asignadas = :sucursales_asignadas 
-                WHERE id = :id
-            ");
-            $stmt->bindParam(":sucursales_asignadas", $sucursalesAsignadas, PDO::PARAM_STR);
-            $stmt->bindParam(":id", $usuario_id, PDO::PARAM_INT);
-            
-            error_log("Ejecutando UPDATE en usuarios_central...");
-            if (!$stmt->execute()) {
-                $errorInfo = $stmt->errorInfo();
-                error_log("Error ejecutando UPDATE: " . json_encode($errorInfo));
-                return [
-                    'success' => false,
-                    'error' => 'Error actualizando asignaciones de sucursales: ' . $errorInfo[2]
-                ];
+            if ($columnaExiste) {
+                // Actualizar sucursales asignadas en usuarios_central
+                $sucursalesAsignadas = implode(',', $sucursales);
+                error_log("Sucursales asignadas (string): $sucursalesAsignadas");
+                
+                $stmt = $conexion->prepare("
+                    UPDATE usuarios_central 
+                    SET sucursales_asignadas = :sucursales_asignadas 
+                    WHERE id = :id
+                ");
+                $stmt->bindParam(":sucursales_asignadas", $sucursalesAsignadas, PDO::PARAM_STR);
+                $stmt->bindParam(":id", $usuario_id, PDO::PARAM_INT);
+                
+                error_log("Ejecutando UPDATE en usuarios_central...");
+                if (!$stmt->execute()) {
+                    $errorInfo = $stmt->errorInfo();
+                    error_log("Error ejecutando UPDATE: " . json_encode($errorInfo));
+                    return [
+                        'success' => false,
+                        'error' => 'Error actualizando asignaciones de sucursales: ' . $errorInfo[2]
+                    ];
+                }
+                
+                error_log("UPDATE ejecutado correctamente");
+            } else {
+                error_log("Columna sucursales_asignadas no existe, creándola...");
+                
+                // Crear la columna si no existe
+                $stmt = $conexion->prepare("ALTER TABLE usuarios_central ADD COLUMN sucursales_asignadas TEXT NULL AFTER id_local");
+                $stmt->execute();
+                
+                // Ahora actualizar
+                $sucursalesAsignadas = implode(',', $sucursales);
+                $stmt = $conexion->prepare("
+                    UPDATE usuarios_central 
+                    SET sucursales_asignadas = :sucursales_asignadas 
+                    WHERE id = :id
+                ");
+                $stmt->bindParam(":sucursales_asignadas", $sucursalesAsignadas, PDO::PARAM_STR);
+                $stmt->bindParam(":id", $usuario_id, PDO::PARAM_INT);
+                $stmt->execute();
+                
+                error_log("Columna creada y UPDATE ejecutado correctamente");
             }
-            
-            error_log("UPDATE ejecutado correctamente");
             
             // Obtener datos del usuario
             $stmt = $conexion->prepare("
@@ -903,9 +929,13 @@ class ModeloUsuariosCentral {
                         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
                     ]);
                     
-                    // Eliminar usuario de esta sucursal
-                    $stmt = $pdoSucursal->prepare("DELETE FROM usuarios WHERE usuario = :usuario");
+                    // Eliminar usuario de esta sucursal (buscar por usuario o id_local)
+                    $stmt = $pdoSucursal->prepare("
+                        DELETE FROM usuarios 
+                        WHERE usuario = :usuario OR id = :id_local
+                    ");
                     $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+                    $stmt->bindParam(":id_local", $usuario['id'], PDO::PARAM_INT);
                     $stmt->execute();
                     
                     error_log("Usuario '{$usuario['usuario']}' eliminado de sucursal '{$sucursal['nombre']}'");
@@ -933,32 +963,35 @@ class ModeloUsuariosCentral {
                         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
                     ]);
                     
-                    // Verificar si ya existe en la sucursal
+                    // Verificar si ya existe en la sucursal (buscar por usuario o por id_local si existe)
                     $stmt = $pdoSucursal->prepare("
                         SELECT id FROM usuarios 
-                        WHERE usuario = :usuario
+                        WHERE usuario = :usuario OR id = :id_local
                     ");
                     $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+                    $stmt->bindParam(":id_local", $usuario['id'], PDO::PARAM_INT);
                     $stmt->execute();
+                    $usuarioExistente = $stmt->fetch();
                     
-                    if ($stmt->fetch()) {
+                    if ($usuarioExistente) {
                         // Actualizar usuario existente
-                        error_log("Usuario '{$usuario['usuario']}' ya existe en sucursal '{$sucursal['nombre']}', actualizando...");
+                        error_log("Usuario '{$usuario['usuario']}' ya existe en sucursal '{$sucursal['nombre']}' (ID local: {$usuarioExistente['id']}), actualizando...");
                         $stmt = $pdoSucursal->prepare("
                             UPDATE usuarios SET 
                                 nombre = :nombre, 
                                 password = :password, 
                                 perfil = :perfil, 
                                 telefono = :telefono,
-                                empresa = :empresa
-                            WHERE usuario = :usuario
+                                empresa = :empresa,
+                                estado = 1
+                            WHERE id = :id_local
                         ");
                         $stmt->bindParam(":nombre", $usuario['nombre'], PDO::PARAM_STR);
                         $stmt->bindParam(":password", $usuario['password'], PDO::PARAM_STR);
                         $stmt->bindParam(":perfil", $usuario['perfil'], PDO::PARAM_STR);
                         $stmt->bindParam(":telefono", $usuario['telefono'], PDO::PARAM_STR);
                         $stmt->bindParam(":empresa", $sucursal['nombre'], PDO::PARAM_STR);
-                        $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+                        $stmt->bindParam(":id_local", $usuarioExistente['id'], PDO::PARAM_INT);
                         $stmt->execute();
                         error_log("Usuario '{$usuario['usuario']}' actualizado en sucursal '{$sucursal['nombre']}' con empresa = '{$sucursal['nombre']}'");
                     } else {
@@ -981,7 +1014,20 @@ class ModeloUsuariosCentral {
                         $stmt->bindParam(":telefono", $usuario['telefono'], PDO::PARAM_STR);
                         $stmt->bindParam(":empresa", $sucursal['nombre'], PDO::PARAM_STR);
                         $stmt->execute();
-                        error_log("Usuario '{$usuario['usuario']}' creado en sucursal '{$sucursal['nombre']}' con empresa = '{$sucursal['nombre']}'");
+                        
+                        // Obtener el ID del usuario creado para actualizar id_local en central
+                        $nuevoIdLocal = $pdoSucursal->lastInsertId();
+                        error_log("Usuario '{$usuario['usuario']}' creado en sucursal '{$sucursal['nombre']}' con ID local: $nuevoIdLocal");
+                        
+                        // Actualizar id_local en la BD central
+                        $stmtCentral = $conexion->prepare("
+                            UPDATE usuarios_central 
+                            SET id_local = :id_local 
+                            WHERE id = :id_central
+                        ");
+                        $stmtCentral->bindParam(":id_local", $nuevoIdLocal, PDO::PARAM_INT);
+                        $stmtCentral->bindParam(":id_central", $usuario['id'], PDO::PARAM_INT);
+                        $stmtCentral->execute();
                     }
                     
                     $resultados[$sucursal['id']]['usuario_creado'] = true;
