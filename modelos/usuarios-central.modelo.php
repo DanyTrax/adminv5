@@ -8,38 +8,69 @@ class ModeloUsuariosCentral {
     /*=============================================
     CREAR USUARIO EN BD CENTRAL
     =============================================*/
-    static public function mdlCrearUsuarioCentral($tabla, $datos) {
+    static public function mdlCrearUsuarioCentral($datos) {
         
         try {
-            $stmt = ConexionCentral::conectar()->prepare("
-                INSERT INTO $tabla(
+            $conexion = ConexionCentral::conectar();
+            
+            // Verificar si el usuario ya existe
+            $stmt = $conexion->prepare("
+                SELECT id FROM usuarios_central 
+                WHERE usuario = :usuario
+            ");
+            $stmt->bindParam(":usuario", $datos['usuario'], PDO::PARAM_STR);
+            $stmt->execute();
+            
+            if ($stmt->fetch()) {
+                return [
+                    'success' => false,
+                    'error' => 'El usuario ya existe en el sistema central'
+                ];
+            }
+            
+            // Insertar usuario en usuarios_central
+            $stmt = $conexion->prepare("
+                INSERT INTO usuarios_central (
                     nombre, usuario, password, perfil, foto, 
-                    sucursal_id, telefono, direccion, observaciones, activo
+                    telefono, direccion, activo, 
+                    sincronizado, fecha_creacion, sucursales_asignadas
                 ) VALUES (
                     :nombre, :usuario, :password, :perfil, :foto,
-                    :sucursal_id, :telefono, :direccion, :observaciones, 1
+                    :telefono, :direccion, 1,
+                    0, NOW(), :sucursales_asignadas
                 )
             ");
             
-            $stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
-            $stmt->bindParam(":usuario", $datos["usuario"], PDO::PARAM_STR);
-            $stmt->bindParam(":password", $datos["password"], PDO::PARAM_STR);
-            $stmt->bindParam(":perfil", $datos["perfil"], PDO::PARAM_STR);
-            $stmt->bindParam(":foto", $datos["foto"], PDO::PARAM_STR);
-            $stmt->bindParam(":sucursal_id", $datos["sucursal_id"], PDO::PARAM_INT);
-            $stmt->bindParam(":telefono", $datos["telefono"], PDO::PARAM_STR);
-            $stmt->bindParam(":direccion", $datos["direccion"], PDO::PARAM_STR);
-            $stmt->bindParam(":observaciones", $datos["observaciones"], PDO::PARAM_STR);
+            $foto = !empty($datos['foto']) ? $datos['foto'] : 'vistas/img/usuarios/default/anonymous.png';
+            $sucursalesAsignadas = implode(',', $datos['sucursales_asignadas']);
+            
+            $stmt->bindParam(":nombre", $datos['nombre'], PDO::PARAM_STR);
+            $stmt->bindParam(":usuario", $datos['usuario'], PDO::PARAM_STR);
+            $stmt->bindParam(":password", $datos['password'], PDO::PARAM_STR);
+            $stmt->bindParam(":perfil", $datos['perfil'], PDO::PARAM_STR);
+            $stmt->bindParam(":foto", $foto, PDO::PARAM_STR);
+            $stmt->bindParam(":telefono", $datos['telefono'], PDO::PARAM_STR);
+            $stmt->bindParam(":direccion", $datos['direccion'], PDO::PARAM_STR);
+            $stmt->bindParam(":sucursales_asignadas", $sucursalesAsignadas, PDO::PARAM_STR);
             
             if ($stmt->execute()) {
-                return "ok";
+                return [
+                    'success' => true,
+                    'message' => 'Usuario central creado exitosamente'
+                ];
             } else {
-                return "error";
+                return [
+                    'success' => false,
+                    'error' => 'Error creando usuario central'
+                ];
             }
             
         } catch (Exception $e) {
             error_log("Error en mdlCrearUsuarioCentral: " . $e->getMessage());
-            return $e->getMessage();
+            return [
+                'success' => false,
+                'error' => 'Error interno del servidor'
+            ];
         }
     }
 
@@ -630,74 +661,6 @@ class ModeloUsuariosCentral {
     }
     
     /*=============================================
-    CREAR USUARIO CENTRAL
-    =============================================*/
-    static public function mdlCrearUsuarioCentral($datos) {
-        try {
-            $conexion = ConexionCentral::conectar();
-            
-            // Verificar si el usuario ya existe
-            $stmt = $conexion->prepare("
-                SELECT id FROM usuarios_central 
-                WHERE usuario = :usuario
-            ");
-            $stmt->bindParam(":usuario", $datos['usuario'], PDO::PARAM_STR);
-            $stmt->execute();
-            
-            if ($stmt->fetch()) {
-                return [
-                    'success' => false,
-                    'error' => 'El usuario ya existe en el sistema central'
-                ];
-            }
-            
-            // Insertar usuario en usuarios_central
-            $stmt = $conexion->prepare("
-                INSERT INTO usuarios_central (
-                    nombre, usuario, password, perfil, foto, 
-                    telefono, direccion, activo, 
-                    sincronizado, fecha_creacion, sucursales_asignadas
-                ) VALUES (
-                    :nombre, :usuario, :password, :perfil, :foto,
-                    :telefono, :direccion, 1,
-                    0, NOW(), :sucursales_asignadas
-                )
-            ");
-            
-            $foto = !empty($datos['foto']) ? $datos['foto'] : 'vistas/img/usuarios/default/anonymous.png';
-            $sucursalesAsignadas = implode(',', $datos['sucursales_asignadas']);
-            
-            $stmt->bindParam(":nombre", $datos['nombre'], PDO::PARAM_STR);
-            $stmt->bindParam(":usuario", $datos['usuario'], PDO::PARAM_STR);
-            $stmt->bindParam(":password", $datos['password'], PDO::PARAM_STR);
-            $stmt->bindParam(":perfil", $datos['perfil'], PDO::PARAM_STR);
-            $stmt->bindParam(":foto", $foto, PDO::PARAM_STR);
-            $stmt->bindParam(":telefono", $datos['telefono'], PDO::PARAM_STR);
-            $stmt->bindParam(":direccion", $datos['direccion'], PDO::PARAM_STR);
-            $stmt->bindParam(":sucursales_asignadas", $sucursalesAsignadas, PDO::PARAM_STR);
-            
-            if ($stmt->execute()) {
-                return [
-                    'success' => true,
-                    'message' => 'Usuario central creado exitosamente'
-                ];
-            } else {
-                return [
-                    'success' => false,
-                    'error' => 'Error creando usuario central'
-                ];
-            }
-            
-        } catch (Exception $e) {
-            error_log("Error en mdlCrearUsuarioCentral: " . $e->getMessage());
-            return [
-                'success' => false,
-                'error' => 'Error interno del servidor'
-            ];
-        }
-    }
-    
-    /*=============================================
     EDITAR USUARIO CENTRAL
     =============================================*/
     static public function mdlEditarUsuarioCentral($datos) {
@@ -861,5 +824,6 @@ class ModeloUsuariosCentral {
             ];
         }
     }
+    
 }
 ?>
