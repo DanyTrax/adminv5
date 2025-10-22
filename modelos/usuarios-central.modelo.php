@@ -827,6 +827,12 @@ class ModeloUsuariosCentral {
     =============================================*/
     static public function mdlAsignarSucursalesUsuario($usuario_id, $sucursales) {
         try {
+            // Deshabilitar output para evitar corrupción de JSON
+            $old_output_handler = ob_get_level();
+            if ($old_output_handler) {
+                ob_end_clean();
+            }
+            
             error_log("Iniciando mdlAsignarSucursalesUsuario - Usuario ID: $usuario_id, Sucursales: " . json_encode($sucursales));
             
             $conexion = ConexionCentral::conectar();
@@ -1064,6 +1070,12 @@ class ModeloUsuariosCentral {
     =============================================*/
     static public function mdlSincronizarTodosUsuarios() {
         try {
+            // Deshabilitar output para evitar corrupción de JSON
+            $old_output_handler = ob_get_level();
+            if ($old_output_handler) {
+                ob_end_clean();
+            }
+            
             error_log("Iniciando sincronización de todos los usuarios");
             
             $conexion = ConexionCentral::conectar();

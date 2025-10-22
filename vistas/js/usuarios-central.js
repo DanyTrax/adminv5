@@ -851,6 +851,7 @@ $(document).ready(function() {
                     },
                     dataType: "json",
                     success: function(respuesta) {
+                        console.log("Respuesta AJAX sincronización:", respuesta);
                         Swal.close();
                         if (respuesta.success) {
                             Swal.fire({
@@ -862,6 +863,7 @@ $(document).ready(function() {
                             cargarUsuariosCentrales();
                             cargarEstadisticas();
                         } else {
+                            console.error("Error en respuesta:", respuesta.error);
                             Swal.fire({
                                 title: 'Error en sincronización',
                                 text: respuesta.error,
@@ -871,10 +873,16 @@ $(document).ready(function() {
                         }
                     },
                     error: function(xhr, status, error) {
+                        console.error("Error AJAX sincronización:", {
+                            xhr: xhr,
+                            status: status,
+                            error: error,
+                            responseText: xhr.responseText
+                        });
                         Swal.close();
                         Swal.fire({
                             title: 'Error de conexión',
-                            text: 'No se pudo completar la sincronización',
+                            text: 'No se pudo completar la sincronización. Ver consola para detalles.',
                             icon: 'error',
                             confirmButtonText: 'Aceptar'
                         });
