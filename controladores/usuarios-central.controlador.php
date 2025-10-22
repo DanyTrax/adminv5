@@ -140,9 +140,13 @@ class ControladorUsuariosCentral {
     =============================================*/
     static public function ctrEditarUsuarioCentral($datos) {
         try {
-            // Encriptar contraseña si se proporciona
+            // Verificar si la contraseña ya está encriptada
             if (!empty($datos['password'])) {
-                $datos['password'] = crypt($datos['password'], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+                // Si la contraseña no está encriptada (longitud < 60 o no empieza con $2a$), encriptarla
+                if (strlen($datos['password']) < 60 || strpos($datos['password'], '$2a$') !== 0) {
+                    $datos['password'] = crypt($datos['password'], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+                }
+                // Si ya está encriptada, dejarla como está
             }
             
             return ModeloUsuariosCentral::mdlEditarUsuarioCentral($datos);
