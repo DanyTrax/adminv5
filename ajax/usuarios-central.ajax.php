@@ -121,6 +121,13 @@ try {
             echo json_encode($resultado);
             break;
             
+        case "asignar_sucursales_usuario":
+            $usuario_id = $_POST['usuario_id'];
+            $sucursales = json_decode($_POST['sucursales'], true);
+            $resultado = ControladorUsuariosCentral::ctrAsignarSucursalesUsuario($usuario_id, $sucursales);
+            echo json_encode($resultado);
+            break;
+            
         default:
             echo json_encode([
                 'success' => false,

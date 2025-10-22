@@ -179,5 +179,20 @@ class ControladorUsuariosCentral {
             ];
         }
     }
+    
+    /*=============================================
+    ASIGNAR SUCURSALES A USUARIO
+    =============================================*/
+    static public function ctrAsignarSucursalesUsuario($usuario_id, $sucursales) {
+        try {
+            return ModeloUsuariosCentral::mdlAsignarSucursalesUsuario($usuario_id, $sucursales);
+        } catch (Exception $e) {
+            error_log("Error en ctrAsignarSucursalesUsuario: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error interno del servidor'
+            ];
+        }
+    }
 }
 ?>

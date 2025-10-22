@@ -69,6 +69,16 @@ $(document).ready(function() {
         guardarUsuario();
     });
     
+    $(document).on("click", ".btnAsignarSucursales", function() {
+        var id = $(this).data("id");
+        var nombre = $(this).data("nombre");
+        asignarSucursales(id, nombre);
+    });
+    
+    $(document).on("click", "#btnGuardarAsignacion", function() {
+        guardarAsignacionSucursales();
+    });
+    
     // Funciones principales
     function inicializarInterfaz() {
         console.log("Inicializando interfaz de usuarios centrales...");
@@ -293,6 +303,9 @@ $(document).ready(function() {
                 html += '<td>';
                 html += '<button class="btn btn-warning btn-xs btnEditarUsuario" data-id="' + usuario.id + '" title="Editar usuario">';
                 html += '<i class="fa fa-edit"></i>';
+                html += '</button>';
+                html += '<button class="btn btn-info btn-xs btnAsignarSucursales" data-id="' + usuario.id + '" data-nombre="' + usuario.nombre + '" title="Asignar sucursales">';
+                html += '<i class="fa fa-building"></i>';
                 html += '</button>';
                 html += '<button class="btn btn-danger btn-xs btnEliminarUsuario" data-id="' + usuario.id + '" title="Eliminar usuario">';
                 html += '<i class="fa fa-trash"></i>';
@@ -659,19 +672,8 @@ $(document).ready(function() {
             password: $("#passwordUsuario").val(),
             perfil: $("#perfilUsuario").val(),
             telefono: $("#telefonoUsuario").val(),
-            direccion: $("#direccionUsuario").val(),
-            sucursales_asignadas: []
+            direccion: $("#direccionUsuario").val()
         };
-        
-        // Recopilar sucursales seleccionadas
-        $(".checkbox-sucursal-asignada:checked").each(function() {
-            formData.sucursales_asignadas.push($(this).val());
-        });
-        
-        if (formData.sucursales_asignadas.length === 0) {
-            mostrarError("Selecciona al menos una sucursal para el usuario");
-            return;
-        }
         
         var accion = formData.id ? "editar_usuario_central" : "crear_usuario_central";
         
@@ -696,6 +698,113 @@ $(document).ready(function() {
             error: function(xhr, status, error) {
                 console.error("Error AJAX guardando usuario:", error);
                 mostrarError("Error de conexión guardando usuario");
+            }
+        });
+    }
+    
+    // Variables para asignación de sucursales
+    var usuarioAsignacionId = null;
+    var sucursalesAsignacion = [];
+    
+    function asignarSucursales(id, nombre) {
+        console.log("Asignando sucursales al usuario:", id, nombre);
+        
+        usuarioAsignacionId = id;
+        $("#nombreUsuarioAsignar").text(nombre);
+        
+        // Buscar el usuario para obtener sus sucursales actuales
+        var usuario = usuariosCentrales.find(function(u) {
+            return u.id == id;
+        });
+        
+        var sucursalesActuales = [];
+        if (usuario && usuario.sucursales_asignadas) {
+            sucursalesActuales = usuario.sucursales_asignadas.split(',');
+        }
+        
+        // Cargar sucursales en el modal de asignación
+        cargarSucursalesAsignacion(sucursalesActuales);
+        
+        $("#modalAsignarSucursales").modal("show");
+    }
+    
+    function cargarSucursalesAsignacion(sucursalesActuales = []) {
+        console.log("Cargando sucursales para asignación:", sucursalesActuales);
+        
+        var html = '';
+        
+        if (sucursalesDisponibles.length === 0) {
+            html = '<div class="alert alert-warning">Cargando sucursales...</div>';
+            $("#sucursalesAsignar").html(html);
+            
+            // Cargar sucursales si no están disponibles
+            cargarSucursalesDisponibles();
+            return;
+        }
+        
+        sucursalesDisponibles.forEach(function(sucursal) {
+            var checked = '';
+            if (sucursalesActuales.includes(sucursal.id.toString())) {
+                checked = 'checked';
+            }
+            
+            html += '<div class="col-md-4">';
+            html += '<div class="checkbox">';
+            html += '<label>';
+            html += '<input type="checkbox" class="checkbox-sucursal-asignacion" value="' + sucursal.id + '" data-sucursal=\'' + JSON.stringify(sucursal) + '\' ' + checked + '>';
+            html += '<strong>' + sucursal.nombre + '</strong>';
+            if (sucursal.es_actual) {
+                html += ' <span class="label label-info">ACTUAL</span>';
+            }
+            html += '</label>';
+            html += '</div>';
+            html += '</div>';
+        });
+        
+        $("#sucursalesAsignar").html(html);
+    }
+    
+    function guardarAsignacionSucursales() {
+        if (!usuarioAsignacionId) {
+            mostrarError("No se ha seleccionado un usuario");
+            return;
+        }
+        
+        // Recopilar sucursales seleccionadas
+        var sucursalesSeleccionadas = [];
+        $(".checkbox-sucursal-asignacion:checked").each(function() {
+            sucursalesSeleccionadas.push($(this).val());
+        });
+        
+        if (sucursalesSeleccionadas.length === 0) {
+            mostrarError("Selecciona al menos una sucursal para el usuario");
+            return;
+        }
+        
+        console.log("Guardando asignación de sucursales:", sucursalesSeleccionadas);
+        
+        $.ajax({
+            url: "ajax/usuarios-central.ajax.php",
+            method: "POST",
+            data: {
+                accion: "asignar_sucursales_usuario",
+                usuario_id: usuarioAsignacionId,
+                sucursales: JSON.stringify(sucursalesSeleccionadas)
+            },
+            dataType: "json",
+            success: function(respuesta) {
+                if (respuesta.success) {
+                    mostrarExito("Sucursales asignadas y sincronizadas exitosamente");
+                    $("#modalAsignarSucursales").modal("hide");
+                    cargarUsuariosCentrales();
+                    cargarEstadisticas();
+                } else {
+                    mostrarError("Error asignando sucursales: " + respuesta.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error AJAX asignando sucursales:", error);
+                mostrarError("Error de conexión asignando sucursales");
             }
         });
     }
