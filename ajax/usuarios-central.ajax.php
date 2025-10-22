@@ -133,13 +133,26 @@ try {
             
         case "sincronizar_todos_usuarios":
             // Limpiar cualquier output previo
-            if (ob_get_level()) {
-                ob_clean();
+            while (ob_get_level()) {
+                ob_end_clean();
             }
+            
+            // Iniciar nuevo buffer
+            ob_start();
+            
+            // Deshabilitar error_log temporalmente
+            $old_error_log = ini_set('log_errors', 0);
+            $old_display_errors = ini_set('display_errors', 0);
             
             $resultado = ControladorUsuariosCentral::ctrSincronizarTodosUsuarios();
             
-            // Asegurar que solo se envíe JSON
+            // Restaurar configuraciones
+            ini_set('log_errors', $old_error_log);
+            ini_set('display_errors', $old_display_errors);
+            
+            // Limpiar buffer y enviar solo JSON
+            ob_clean();
+            
             header('Content-Type: application/json');
             echo json_encode($resultado);
             exit;

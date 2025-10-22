@@ -820,6 +820,13 @@ $(document).ready(function() {
     }
     
     function sincronizarTodosUsuarios() {
+        // Verificar si SweetAlert está disponible
+        if (typeof Swal === 'undefined') {
+            console.error("SweetAlert no está disponible");
+            alert("Error: SweetAlert no está cargado. Por favor recarga la página.");
+            return;
+        }
+        
         Swal.fire({
             title: '¿Sincronizar todos los usuarios?',
             text: 'Esto sincronizará todos los usuarios centrales con sus sucursales asignadas',
@@ -844,11 +851,9 @@ $(document).ready(function() {
                 });
                 
                 $.ajax({
-                    url: "ajax/usuarios-central.ajax.php",
+                    url: "ajax/sincronizar-usuarios.ajax.php",
                     method: "POST",
-                    data: {
-                        accion: "sincronizar_todos_usuarios"
-                    },
+                    data: {},
                     dataType: "json",
                     success: function(respuesta) {
                         console.log("Respuesta AJAX sincronización:", respuesta);
