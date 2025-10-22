@@ -587,5 +587,92 @@ $(document).ready(function() {
 });
 </script>
 
+<!-- MODAL PARA CREAR/EDITAR USUARIO CENTRAL -->
+<div class="modal fade" id="modalUsuarioCentral" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" id="tituloModalUsuario">
+                    <i class="fa fa-user"></i> Crear Usuario Central
+                </h4>
+            </div>
+            <div class="modal-body">
+                <form id="formUsuarioCentral">
+                    <input type="hidden" id="idUsuarioCentral" name="id">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nombreUsuario">Nombre Completo:</label>
+                                <input type="text" class="form-control" id="nombreUsuario" name="nombre" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="usuarioLogin">Usuario de Login:</label>
+                                <input type="text" class="form-control" id="usuarioLogin" name="usuario" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="passwordUsuario">Contraseña:</label>
+                                <input type="password" class="form-control" id="passwordUsuario" name="password" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="perfilUsuario">Perfil:</label>
+                                <select class="form-control" id="perfilUsuario" name="perfil" required>
+                                    <option value="">Seleccionar perfil</option>
+                                    <option value="Administrador">Administrador</option>
+                                    <option value="Especial">Especial</option>
+                                    <option value="Vendedor">Vendedor</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="telefonoUsuario">Teléfono:</label>
+                                <input type="text" class="form-control" id="telefonoUsuario" name="telefono">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="direccionUsuario">Dirección:</label>
+                                <input type="text" class="form-control" id="direccionUsuario" name="direccion">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fa fa-building"></i> Sucursales Asignadas:</label>
+                        <div class="alert alert-info">
+                            <strong>Selecciona las sucursales donde este usuario tendrá acceso:</strong>
+                        </div>
+                        <div id="sucursalesAsignadas" class="row">
+                            <!-- Las sucursales se cargarán aquí dinámicamente -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGuardarUsuario">
+                    <i class="fa fa-save"></i> Guardar Usuario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Incluir JavaScript específico para usuarios centrales -->
 <script src="vistas/js/usuarios-central.js"></script>

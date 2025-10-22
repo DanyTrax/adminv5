@@ -489,7 +489,13 @@ $(document).ready(function() {
             success: function(respuesta) {
                 if (respuesta.success) {
                     sucursalesDisponibles = respuesta.sucursales;
+                    console.log("Sucursales cargadas:", sucursalesDisponibles);
                     mostrarSucursalesSeleccion();
+                    
+                    // Si el modal está abierto, actualizar las sucursales
+                    if ($("#modalUsuarioCentral").hasClass('in') || $("#modalUsuarioCentral").is(':visible')) {
+                        cargarSucursalesAsignadas();
+                    }
                 } else {
                     console.error("Error cargando sucursales:", respuesta.error);
                 }
@@ -571,15 +577,7 @@ $(document).ready(function() {
     }
     
     function abrirModalUsuario(usuario = null) {
-        // Asegurar que las sucursales estén cargadas
-        if (sucursalesDisponibles.length === 0) {
-            cargarSucursalesDisponibles();
-            // Esperar un momento para que se carguen las sucursales
-            setTimeout(function() {
-                abrirModalUsuario(usuario);
-            }, 500);
-            return;
-        }
+        console.log("Abriendo modal usuario:", usuario);
         
         if (usuario) {
             // Modo edición
@@ -607,7 +605,19 @@ $(document).ready(function() {
     }
     
     function cargarSucursalesAsignadas(sucursalesAsignadas = null) {
+        console.log("Cargando sucursales asignadas:", sucursalesAsignadas);
+        console.log("Sucursales disponibles:", sucursalesDisponibles);
+        
         var html = '';
+        
+        if (sucursalesDisponibles.length === 0) {
+            html = '<div class="alert alert-warning">Cargando sucursales...</div>';
+            $("#sucursalesAsignadas").html(html);
+            
+            // Cargar sucursales si no están disponibles
+            cargarSucursalesDisponibles();
+            return;
+        }
         
         sucursalesDisponibles.forEach(function(sucursal) {
             var checked = '';
