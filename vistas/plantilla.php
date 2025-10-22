@@ -54,23 +54,6 @@ $url = $protocol . $host . $script_name;
   <script src="<?php echo $url; ?>vistas/bower_components/datatables.net-bs/js/dataTables.responsive.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/datatables.net-bs/js/responsive.bootstrap.min.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/sweetalert2/sweetalert2.all.js"></script>
-  <script>
-    // Verificar si SweetAlert se cargó correctamente
-    if (typeof Swal === 'undefined') {
-      console.log("SweetAlert local no cargado, cargando desde CDN...");
-      var script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
-      script.onload = function() {
-        console.log("SweetAlert cargado desde CDN");
-      };
-      script.onerror = function() {
-        console.error("Error cargando SweetAlert desde CDN");
-      };
-      document.head.appendChild(script);
-    } else {
-      console.log("SweetAlert cargado correctamente desde archivo local");
-    }
-  </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/core-js/2.4.1/core.js"></script>
   <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/iCheck/icheck.min.js"></script>
