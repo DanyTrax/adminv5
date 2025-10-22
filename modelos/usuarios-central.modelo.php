@@ -1006,8 +1006,11 @@ class ModeloUsuariosCentral {
                                 estado = 1
                             WHERE id = :id_local
                         ");
+                        // Encriptar contraseña para sucursal local
+                        $passwordEncriptada = crypt($usuario['password'], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+                        
                         $stmt->bindParam(":nombre", $usuario['nombre'], PDO::PARAM_STR);
-                        $stmt->bindParam(":password", $usuario['password'], PDO::PARAM_STR);
+                        $stmt->bindParam(":password", $passwordEncriptada, PDO::PARAM_STR);
                         $stmt->bindParam(":perfil", $usuario['perfil'], PDO::PARAM_STR);
                         $stmt->bindParam(":telefono", $usuario['telefono'], PDO::PARAM_STR);
                         $stmt->bindParam(":empresa", $sucursal['nombre'], PDO::PARAM_STR);
@@ -1017,6 +1020,10 @@ class ModeloUsuariosCentral {
                     } else {
                         // Crear nuevo usuario
                         error_log("Usuario '{$usuario['usuario']}' no existe en sucursal '{$sucursal['nombre']}', creando...");
+                        
+                        // Encriptar contraseña para sucursal local
+                        $passwordEncriptada = crypt($usuario['password'], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+                        
                         $stmt = $pdoSucursal->prepare("
                             INSERT INTO usuarios (
                                 nombre, usuario, password, perfil, foto, 
@@ -1028,7 +1035,7 @@ class ModeloUsuariosCentral {
                         ");
                         $stmt->bindParam(":nombre", $usuario['nombre'], PDO::PARAM_STR);
                         $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
-                        $stmt->bindParam(":password", $usuario['password'], PDO::PARAM_STR);
+                        $stmt->bindParam(":password", $passwordEncriptada, PDO::PARAM_STR);
                         $stmt->bindParam(":perfil", $usuario['perfil'], PDO::PARAM_STR);
                         $stmt->bindParam(":foto", $usuario['foto'], PDO::PARAM_STR);
                         $stmt->bindParam(":telefono", $usuario['telefono'], PDO::PARAM_STR);

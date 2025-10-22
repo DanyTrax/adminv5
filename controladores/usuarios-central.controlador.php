@@ -72,7 +72,7 @@ class ControladorUsuariosCentral {
     =============================================*/
     static public function ctrCrearUsuarioCentral($datos) {
         try {
-            // Encriptar contraseña
+            // Encriptar contraseña con el mismo salt que usuarios locales
             $datos['password'] = crypt($datos['password'], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
             
             // Agregar foto por defecto
@@ -140,6 +140,11 @@ class ControladorUsuariosCentral {
     =============================================*/
     static public function ctrEditarUsuarioCentral($datos) {
         try {
+            // Encriptar contraseña si se proporciona
+            if (!empty($datos['password'])) {
+                $datos['password'] = crypt($datos['password'], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
+            }
+            
             return ModeloUsuariosCentral::mdlEditarUsuarioCentral($datos);
         } catch (Exception $e) {
             error_log("Error en ctrEditarUsuarioCentral: " . $e->getMessage());
