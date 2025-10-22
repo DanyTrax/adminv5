@@ -509,6 +509,14 @@ $(document).ready(function() {
         });
     }
     
+    function mostrarInfo(mensaje) {
+        swal({
+            type: "info",
+            title: "Información",
+            text: mensaje
+        });
+    }
+    
     function cargarSucursalesDisponibles() {
         console.log("Cargando sucursales disponibles...");
         
@@ -715,6 +723,13 @@ $(document).ready(function() {
                     $("#modalUsuarioCentral").modal("hide");
                     cargarUsuariosCentrales();
                     cargarEstadisticas();
+                    
+                    // Si es un usuario nuevo, mostrar mensaje sobre asignación de sucursales
+                    if (!formData.id) {
+                        setTimeout(function() {
+                            mostrarInfo("Usuario creado exitosamente. Ahora puedes asignarle sucursales usando el botón 'Asignar Sucursales'.");
+                        }, 1000);
+                    }
                 } else {
                     mostrarError(respuesta.error);
                 }
