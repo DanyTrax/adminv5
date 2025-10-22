@@ -255,15 +255,40 @@ $(document).ready(function() {
         } else {
             html += '<div class="table-responsive">';
             html += '<table class="table table-striped">';
-            html += '<thead><tr><th>Usuario</th><th>Nombre</th><th>Perfil</th><th>Sucursal</th><th>Estado</th><th>Acciones</th></tr></thead>';
+            html += '<thead><tr><th>Usuario</th><th>Nombre</th><th>Perfil</th><th>Sucursales Asignadas</th><th>Estado</th><th>Acciones</th></tr></thead>';
             html += '<tbody>';
             
             usuarios.forEach(function(usuario) {
+                // Obtener nombres de sucursales asignadas
+                var sucursalesNombres = [];
+                if (usuario.sucursales_asignadas) {
+                    var sucursalesIds = usuario.sucursales_asignadas.split(',');
+                    sucursalesIds.forEach(function(sucursalId) {
+                        var sucursal = sucursalesDisponibles.find(function(s) {
+                            return s.id == sucursalId;
+                        });
+                        if (sucursal) {
+                            sucursalesNombres.push(sucursal.nombre);
+                        }
+                    });
+                }
+                
                 html += '<tr>';
                 html += '<td>' + usuario.usuario + '</td>';
                 html += '<td>' + usuario.nombre + '</td>';
                 html += '<td><span class="label label-info">' + usuario.perfil + '</span></td>';
-                html += '<td>' + usuario.sucursal_nombre + '</td>';
+                html += '<td>';
+                if (sucursalesNombres.length > 0) {
+                    sucursalesNombres.forEach(function(nombre, index) {
+                        html += '<span class="label label-primary" style="margin-right: 3px;">' + nombre + '</span>';
+                        if (index < sucursalesNombres.length - 1) {
+                            html += ' ';
+                        }
+                    });
+                } else {
+                    html += '<span class="text-muted">Sin sucursales asignadas</span>';
+                }
+                html += '</td>';
                 html += '<td><span class="label label-' + (usuario.activo == 1 ? 'success' : 'danger') + '">' + (usuario.activo == 1 ? 'Activo' : 'Inactivo') + '</span></td>';
                 html += '<td>';
                 html += '<button class="btn btn-warning btn-xs btnEditarUsuario" data-id="' + usuario.id + '" title="Editar usuario">';
@@ -365,35 +390,76 @@ $(document).ready(function() {
     }
     
     function editarUsuario(id) {
-        // Implementar edición de usuario
         console.log("Editando usuario:", id);
+        
+        // Buscar el usuario en la lista de usuarios centrales
+        var usuario = usuariosCentrales.find(function(u) {
+            return u.id == id;
+        });
+        
+        if (!usuario) {
+            mostrarError("Usuario no encontrado");
+            return;
+        }
+        
+        // Convertir sucursales_asignadas de string a array
+        var sucursalesAsignadas = [];
+        if (usuario.sucursales_asignadas) {
+            sucursalesAsignadas = usuario.sucursales_asignadas.split(',');
+        }
+        
+        // Crear objeto usuario con sucursales como array
+        var usuarioEdit = {
+            id: usuario.id,
+            nombre: usuario.nombre,
+            usuario: usuario.usuario,
+            password: usuario.password,
+            perfil: usuario.perfil,
+            telefono: usuario.telefono || '',
+            direccion: usuario.direccion || '',
+            sucursales_asignadas: sucursalesAsignadas
+        };
+        
+        // Abrir modal en modo edición
+        abrirModalUsuario(usuarioEdit);
     }
     
     function eliminarUsuario(id) {
-        if (confirm("¿Está seguro de eliminar este usuario?")) {
-            $.ajax({
-                url: "ajax/usuarios-central.ajax.php",
-                method: "POST",
-                data: { 
-                    accion: "eliminar_usuario_central",
-                    id: id
-                },
-                dataType: "json",
-                success: function(respuesta) {
-                    if (respuesta.success) {
-                        mostrarExito("Usuario eliminado exitosamente");
-                        cargarUsuariosCentrales();
-                        cargarEstadisticas();
-                    } else {
-                        mostrarError("Error eliminando usuario: " + respuesta.error);
+        swal({
+            title: "¿Eliminar Usuario?",
+            text: "Esta acción no se puede deshacer",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar"
+        }).then((result) => {
+            if (result.value) {
+                $.ajax({
+                    url: "ajax/usuarios-central.ajax.php",
+                    method: "POST",
+                    data: { 
+                        accion: "eliminar_usuario_central",
+                        id: id
+                    },
+                    dataType: "json",
+                    success: function(respuesta) {
+                        if (respuesta.success) {
+                            mostrarExito("Usuario eliminado exitosamente");
+                            cargarUsuariosCentrales();
+                            cargarEstadisticas();
+                        } else {
+                            mostrarError("Error eliminando usuario: " + respuesta.error);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error AJAX eliminando usuario:", error);
+                        mostrarError("Error de conexión eliminando usuario");
                     }
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error AJAX eliminando usuario:", error);
-                    mostrarError("Error de conexión eliminando usuario");
-                }
-            });
-        }
+                });
+            }
+        });
     }
     
     function mostrarExito(mensaje) {
@@ -505,6 +571,16 @@ $(document).ready(function() {
     }
     
     function abrirModalUsuario(usuario = null) {
+        // Asegurar que las sucursales estén cargadas
+        if (sucursalesDisponibles.length === 0) {
+            cargarSucursalesDisponibles();
+            // Esperar un momento para que se carguen las sucursales
+            setTimeout(function() {
+                abrirModalUsuario(usuario);
+            }, 500);
+            return;
+        }
+        
         if (usuario) {
             // Modo edición
             $("#tituloModalUsuario").html('<i class="fa fa-edit"></i> Editar Usuario Central');
