@@ -450,41 +450,30 @@ $(document).ready(function() {
     }
     
     function eliminarUsuario(id) {
-        swal({
-            title: "¿Eliminar Usuario?",
-            text: "Esta acción no se puede deshacer",
-            type: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#d33",
-            cancelButtonColor: "#3085d6",
-            confirmButtonText: "Sí, eliminar",
-            cancelButtonText: "Cancelar"
-        }).then((result) => {
-            if (result.value) {
-                $.ajax({
-                    url: "ajax/usuarios-central.ajax.php",
-                    method: "POST",
-                    data: { 
-                        accion: "eliminar_usuario_central",
-                        id: id
-                    },
-                    dataType: "json",
-                    success: function(respuesta) {
-                        if (respuesta.success) {
-                            mostrarExito("Usuario eliminado exitosamente");
-                            cargarUsuariosCentrales();
-                            cargarEstadisticas();
-                        } else {
-                            mostrarError("Error eliminando usuario: " + respuesta.error);
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Error AJAX eliminando usuario:", error);
-                        mostrarError("Error de conexión eliminando usuario");
+        if (confirm("¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.")) {
+            $.ajax({
+                url: "ajax/usuarios-central.ajax.php",
+                method: "POST",
+                data: { 
+                    accion: "eliminar_usuario_central",
+                    id: id
+                },
+                dataType: "json",
+                success: function(respuesta) {
+                    if (respuesta.success) {
+                        alert("Usuario eliminado exitosamente");
+                        cargarUsuariosCentrales();
+                        cargarEstadisticas();
+                    } else {
+                        alert("Error eliminando usuario: " + (respuesta.error || "Error desconocido"));
                     }
-                });
-            }
-        });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error AJAX eliminando usuario:", {xhr, status, error});
+                    alert("Error eliminando usuario: Error de conexión");
+                }
+            });
+        }
     }
     
     function mostrarExito(mensaje) {

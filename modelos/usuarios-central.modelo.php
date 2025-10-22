@@ -314,11 +314,11 @@ class ModeloUsuariosCentral {
             $stmt = $conexion->prepare("
                 INSERT INTO usuarios_central (
                     nombre, usuario, password, perfil, foto, 
-                    sucursal_id, telefono, direccion, activo, 
+                    telefono, direccion, activo, 
                     sincronizado, fecha_creacion, id_local
                 ) VALUES (
                     :nombre, :usuario, :password, :perfil, :foto,
-                    :sucursal_id, :telefono, :direccion, 1,
+                    :telefono, :direccion, 1,
                     0, NOW(), :id_local
                 )
             ");
@@ -328,7 +328,6 @@ class ModeloUsuariosCentral {
             $stmt->bindParam(":password", $usuario['password'], PDO::PARAM_STR);
             $stmt->bindParam(":perfil", $usuario['perfil'], PDO::PARAM_STR);
             $stmt->bindParam(":foto", $usuario['foto'], PDO::PARAM_STR);
-            $stmt->bindParam(":sucursal_id", $usuario['sucursal_id'], PDO::PARAM_INT);
             $stmt->bindParam(":telefono", $usuario['telefono'], PDO::PARAM_STR);
             $stmt->bindParam(":direccion", $usuario['direccion'], PDO::PARAM_STR);
             $stmt->bindParam(":id_local", $usuario['id'], PDO::PARAM_INT);
@@ -383,11 +382,11 @@ class ModeloUsuariosCentral {
                             $stmt = $conexion->prepare("
                                 INSERT INTO usuarios_central (
                                     nombre, usuario, password, perfil, foto, 
-                                    sucursal_id, telefono, direccion, activo, 
+                                    telefono, direccion, activo, 
                                     sincronizado, fecha_creacion
                                 ) VALUES (
                                     :nombre, :usuario, :password, :perfil, :foto,
-                                    :sucursal_id, :telefono, :direccion, 1,
+                                    :telefono, :direccion, 1,
                                     0, NOW()
                                 )
                             ");
@@ -403,7 +402,6 @@ class ModeloUsuariosCentral {
                             $stmt->bindParam(":password", $password, PDO::PARAM_STR);
                             $stmt->bindParam(":perfil", $usuario['perfil'], PDO::PARAM_STR);
                             $stmt->bindParam(":foto", $foto, PDO::PARAM_STR);
-                            $stmt->bindParam(":sucursal_id", $sucursal['sucursal']['id'], PDO::PARAM_INT);
                             $stmt->bindParam(":telefono", $telefono, PDO::PARAM_STR);
                             $stmt->bindParam(":direccion", $direccion, PDO::PARAM_STR);
                             

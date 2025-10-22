@@ -55,12 +55,14 @@ try {
             break;
             
         case "crear_usuario_central":
+            // Decodificar datos JSON enviados desde JavaScript
+            $datosJson = json_decode($_POST['datos'], true);
             $datos = [
-                'nombre' => $_POST['nombre'],
-                'usuario' => $_POST['usuario'],
-                'password' => $_POST['password'],
-                'perfil' => $_POST['perfil'],
-                'telefono' => $_POST['telefono'] ?? ''
+                'nombre' => $datosJson['nombre'] ?? '',
+                'usuario' => $datosJson['usuario'] ?? '',
+                'password' => $datosJson['password'] ?? '',
+                'perfil' => $datosJson['perfil'] ?? '',
+                'telefono' => $datosJson['telefono'] ?? ''
             ];
             
             $resultado = ControladorUsuariosCentral::ctrCrearUsuarioCentral($datos);
@@ -84,14 +86,16 @@ try {
             break;
             
         case "editar_usuario_central":
+            // Decodificar datos JSON enviados desde JavaScript
+            $datosJson = json_decode($_POST['datos'], true);
             $datos = [
-                'id' => $_POST['id'],
-                'nombre' => $_POST['nombre'],
-                'usuario' => $_POST['usuario'],
-                'password' => $_POST['password'],
-                'perfil' => $_POST['perfil'],
-                'telefono' => $_POST['telefono'] ?? '',
-                'activo' => $_POST['activo'] ?? 1
+                'id' => $datosJson['id'] ?? '',
+                'nombre' => $datosJson['nombre'] ?? '',
+                'usuario' => $datosJson['usuario'] ?? '',
+                'password' => $datosJson['password'] ?? '',
+                'perfil' => $datosJson['perfil'] ?? '',
+                'telefono' => $datosJson['telefono'] ?? '',
+                'activo' => $datosJson['activo'] ?? 1
             ];
             
             $resultado = ControladorUsuariosCentral::ctrEditarUsuarioCentral($datos);
