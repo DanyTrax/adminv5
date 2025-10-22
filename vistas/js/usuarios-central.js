@@ -36,7 +36,11 @@ $(document).ready(function() {
     });
     
     $(document).on("click", ".btnCrearUsuario", function() {
-        mostrarModalCrearUsuario();
+        abrirModalUsuario();
+    });
+    
+    $(document).on("click", "#btnNuevoUsuarioCentral", function() {
+        abrirModalUsuario();
     });
     
     $(document).on("click", ".btnEditarUsuario", function() {
@@ -55,6 +59,14 @@ $(document).ready(function() {
     
     $(document).on("click", "#btnSincronizarSeleccionadas", function() {
         sincronizarUsuariosSeleccionadas();
+    });
+    
+    $(document).on("change", ".checkbox-sucursal-asignada", function() {
+        actualizarSucursalesAsignadas();
+    });
+    
+    $(document).on("click", "#btnGuardarUsuario", function() {
+        guardarUsuario();
     });
     
     // Funciones principales
@@ -488,6 +500,116 @@ $(document).ready(function() {
             error: function(xhr, status, error) {
                 console.error("Error AJAX sincronizando usuarios:", error);
                 mostrarError("Error de conexión sincronizando usuarios");
+            }
+        });
+    }
+    
+    function abrirModalUsuario(usuario = null) {
+        if (usuario) {
+            // Modo edición
+            $("#tituloModalUsuario").html('<i class="fa fa-edit"></i> Editar Usuario Central');
+            $("#idUsuarioCentral").val(usuario.id);
+            $("#nombreUsuario").val(usuario.nombre);
+            $("#usuarioLogin").val(usuario.usuario);
+            $("#perfilUsuario").val(usuario.perfil);
+            $("#telefonoUsuario").val(usuario.telefono || '');
+            $("#direccionUsuario").val(usuario.direccion || '');
+            
+            // Cargar sucursales asignadas
+            cargarSucursalesAsignadas(usuario.sucursales_asignadas);
+        } else {
+            // Modo creación
+            $("#tituloModalUsuario").html('<i class="fa fa-user"></i> Crear Usuario Central');
+            $("#formUsuarioCentral")[0].reset();
+            $("#idUsuarioCentral").val('');
+            
+            // Cargar sucursales disponibles
+            cargarSucursalesAsignadas();
+        }
+        
+        $("#modalUsuarioCentral").modal("show");
+    }
+    
+    function cargarSucursalesAsignadas(sucursalesAsignadas = null) {
+        var html = '';
+        
+        sucursalesDisponibles.forEach(function(sucursal) {
+            var checked = '';
+            if (sucursalesAsignadas && sucursalesAsignadas.includes(sucursal.id.toString())) {
+                checked = 'checked';
+            }
+            
+            html += '<div class="col-md-4">';
+            html += '<div class="checkbox">';
+            html += '<label>';
+            html += '<input type="checkbox" class="checkbox-sucursal-asignada" value="' + sucursal.id + '" data-sucursal=\'' + JSON.stringify(sucursal) + '\' ' + checked + '>';
+            html += '<strong>' + sucursal.nombre + '</strong>';
+            if (sucursal.es_actual) {
+                html += ' <span class="label label-info">ACTUAL</span>';
+            }
+            html += '</label>';
+            html += '</div>';
+            html += '</div>';
+        });
+        
+        $("#sucursalesAsignadas").html(html);
+    }
+    
+    function actualizarSucursalesAsignadas() {
+        var sucursalesSeleccionadas = [];
+        
+        $(".checkbox-sucursal-asignada:checked").each(function() {
+            sucursalesSeleccionadas.push($(this).val());
+        });
+        
+        console.log("Sucursales asignadas:", sucursalesSeleccionadas);
+    }
+    
+    function guardarUsuario() {
+        var formData = {
+            id: $("#idUsuarioCentral").val(),
+            nombre: $("#nombreUsuario").val(),
+            usuario: $("#usuarioLogin").val(),
+            password: $("#passwordUsuario").val(),
+            perfil: $("#perfilUsuario").val(),
+            telefono: $("#telefonoUsuario").val(),
+            direccion: $("#direccionUsuario").val(),
+            sucursales_asignadas: []
+        };
+        
+        // Recopilar sucursales seleccionadas
+        $(".checkbox-sucursal-asignada:checked").each(function() {
+            formData.sucursales_asignadas.push($(this).val());
+        });
+        
+        if (formData.sucursales_asignadas.length === 0) {
+            mostrarError("Selecciona al menos una sucursal para el usuario");
+            return;
+        }
+        
+        var accion = formData.id ? "editar_usuario_central" : "crear_usuario_central";
+        
+        $.ajax({
+            url: "ajax/usuarios-central.ajax.php",
+            method: "POST",
+            data: {
+                accion: accion,
+                datos: JSON.stringify(formData)
+            },
+            dataType: "json",
+            success: function(respuesta) {
+                if (respuesta.success) {
+                    mostrarExito(respuesta.message);
+                    $("#modalUsuarioCentral").modal("hide");
+                    cargarUsuariosCentrales();
+                    cargarEstadisticas();
+                } else {
+                    mostrarError(respuesta.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error AJAX guardando usuario:", error);
+                mostrarError("Error de conexión guardando usuario");
             }
         });
     }

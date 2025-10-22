@@ -243,27 +243,26 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="sucursalUsuario">Sucursal:</label>
-                                <select class="form-control" id="sucursalUsuario" name="sucursal_id" required>
-                                    <option value="">Seleccionar sucursal</option>
-                                    <?php foreach($sucursales as $sucursal): ?>
-                                        <option value="<?php echo $sucursal['id']; ?>">
-                                            <?php echo $sucursal['nombre']; ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
                                 <label for="telefonoUsuario">Teléfono:</label>
                                 <input type="text" class="form-control" id="telefonoUsuario" name="telefono">
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="direccionUsuario">Dirección:</label>
+                                <input type="text" class="form-control" id="direccionUsuario" name="direccion">
+                            </div>
+                        </div>
                     </div>
+                    
                     <div class="form-group">
-                        <label for="direccionUsuario">Dirección:</label>
-                        <textarea class="form-control" id="direccionUsuario" name="direccion" rows="3"></textarea>
+                        <label><i class="fa fa-building"></i> Sucursales Asignadas:</label>
+                        <div class="alert alert-info">
+                            <strong>Selecciona las sucursales donde este usuario tendrá acceso:</strong>
+                        </div>
+                        <div id="sucursalesAsignadas" class="row">
+                            <!-- Las sucursales se cargarán aquí dinámicamente -->
+                        </div>
                     </div>
                 </form>
             </div>

@@ -628,5 +628,238 @@ class ModeloUsuariosCentral {
             return [];
         }
     }
+    
+    /*=============================================
+    CREAR USUARIO CENTRAL
+    =============================================*/
+    static public function mdlCrearUsuarioCentral($datos) {
+        try {
+            $conexion = ConexionCentral::conectar();
+            
+            // Verificar si el usuario ya existe
+            $stmt = $conexion->prepare("
+                SELECT id FROM usuarios_central 
+                WHERE usuario = :usuario
+            ");
+            $stmt->bindParam(":usuario", $datos['usuario'], PDO::PARAM_STR);
+            $stmt->execute();
+            
+            if ($stmt->fetch()) {
+                return [
+                    'success' => false,
+                    'error' => 'El usuario ya existe en el sistema central'
+                ];
+            }
+            
+            // Insertar usuario en usuarios_central
+            $stmt = $conexion->prepare("
+                INSERT INTO usuarios_central (
+                    nombre, usuario, password, perfil, foto, 
+                    telefono, direccion, activo, 
+                    sincronizado, fecha_creacion, sucursales_asignadas
+                ) VALUES (
+                    :nombre, :usuario, :password, :perfil, :foto,
+                    :telefono, :direccion, 1,
+                    0, NOW(), :sucursales_asignadas
+                )
+            ");
+            
+            $foto = !empty($datos['foto']) ? $datos['foto'] : 'vistas/img/usuarios/default/anonymous.png';
+            $sucursalesAsignadas = implode(',', $datos['sucursales_asignadas']);
+            
+            $stmt->bindParam(":nombre", $datos['nombre'], PDO::PARAM_STR);
+            $stmt->bindParam(":usuario", $datos['usuario'], PDO::PARAM_STR);
+            $stmt->bindParam(":password", $datos['password'], PDO::PARAM_STR);
+            $stmt->bindParam(":perfil", $datos['perfil'], PDO::PARAM_STR);
+            $stmt->bindParam(":foto", $foto, PDO::PARAM_STR);
+            $stmt->bindParam(":telefono", $datos['telefono'], PDO::PARAM_STR);
+            $stmt->bindParam(":direccion", $datos['direccion'], PDO::PARAM_STR);
+            $stmt->bindParam(":sucursales_asignadas", $sucursalesAsignadas, PDO::PARAM_STR);
+            
+            if ($stmt->execute()) {
+                return [
+                    'success' => true,
+                    'message' => 'Usuario central creado exitosamente'
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'error' => 'Error creando usuario central'
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlCrearUsuarioCentral: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error interno del servidor'
+            ];
+        }
+    }
+    
+    /*=============================================
+    EDITAR USUARIO CENTRAL
+    =============================================*/
+    static public function mdlEditarUsuarioCentral($datos) {
+        try {
+            $conexion = ConexionCentral::conectar();
+            
+            // Verificar si el usuario existe
+            $stmt = $conexion->prepare("
+                SELECT id FROM usuarios_central 
+                WHERE id = :id
+            ");
+            $stmt->bindParam(":id", $datos['id'], PDO::PARAM_INT);
+            $stmt->execute();
+            
+            if (!$stmt->fetch()) {
+                return [
+                    'success' => false,
+                    'error' => 'El usuario no existe'
+                ];
+            }
+            
+            // Actualizar usuario
+            $stmt = $conexion->prepare("
+                UPDATE usuarios_central SET 
+                    nombre = :nombre, 
+                    usuario = :usuario, 
+                    password = :password, 
+                    perfil = :perfil, 
+                    telefono = :telefono, 
+                    direccion = :direccion,
+                    sucursales_asignadas = :sucursales_asignadas
+                WHERE id = :id
+            ");
+            
+            $sucursalesAsignadas = implode(',', $datos['sucursales_asignadas']);
+            
+            $stmt->bindParam(":id", $datos['id'], PDO::PARAM_INT);
+            $stmt->bindParam(":nombre", $datos['nombre'], PDO::PARAM_STR);
+            $stmt->bindParam(":usuario", $datos['usuario'], PDO::PARAM_STR);
+            $stmt->bindParam(":password", $datos['password'], PDO::PARAM_STR);
+            $stmt->bindParam(":perfil", $datos['perfil'], PDO::PARAM_STR);
+            $stmt->bindParam(":telefono", $datos['telefono'], PDO::PARAM_STR);
+            $stmt->bindParam(":direccion", $datos['direccion'], PDO::PARAM_STR);
+            $stmt->bindParam(":sucursales_asignadas", $sucursalesAsignadas, PDO::PARAM_STR);
+            
+            if ($stmt->execute()) {
+                return [
+                    'success' => true,
+                    'message' => 'Usuario central actualizado exitosamente'
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'error' => 'Error actualizando usuario central'
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlEditarUsuarioCentral: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error interno del servidor'
+            ];
+        }
+    }
+    
+    /*=============================================
+    SINCRONIZAR USUARIOS A SUCURSALES
+    =============================================*/
+    static public function mdlSincronizarUsuariosSucursales($sucursales) {
+        try {
+            $conexion = ConexionCentral::conectar();
+            $usuariosCentrales = [];
+            $resultados = [];
+            
+            // Obtener todos los usuarios centrales
+            $stmt = $conexion->prepare("
+                SELECT * FROM usuarios_central 
+                WHERE activo = 1
+            ");
+            $stmt->execute();
+            $usuariosCentrales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            foreach ($sucursales as $sucursal) {
+                $resultados[$sucursal['id']] = [
+                    'sucursal' => $sucursal['nombre'],
+                    'usuarios_creados' => 0,
+                    'errores' => []
+                ];
+                
+                // Conectar a la sucursal
+                try {
+                    $dsn = "mysql:host={$sucursal['host_bd']};port={$sucursal['puerto_bd']};dbname={$sucursal['nombre_bd']};charset=utf8";
+                    $pdoSucursal = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd'], [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                    ]);
+                    
+                    foreach ($usuariosCentrales as $usuario) {
+                        // Verificar si el usuario debe estar en esta sucursal
+                        $sucursalesAsignadas = explode(',', $usuario['sucursales_asignadas']);
+                        if (!in_array($sucursal['id'], $sucursalesAsignadas)) {
+                            continue;
+                        }
+                        
+                        // Verificar si ya existe en la sucursal
+                        $stmt = $pdoSucursal->prepare("
+                            SELECT id FROM usuarios 
+                            WHERE usuario = :usuario
+                        ");
+                        $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+                        $stmt->execute();
+                        
+                        if ($stmt->fetch()) {
+                            continue; // Ya existe, saltar
+                        }
+                        
+                        // Crear usuario en la sucursal
+                        $stmt = $pdoSucursal->prepare("
+                            INSERT INTO usuarios (
+                                nombre, usuario, password, perfil, foto, 
+                                telefono, direccion, empresa, estado, fecha
+                            ) VALUES (
+                                :nombre, :usuario, :password, :perfil, :foto,
+                                :telefono, :direccion, :empresa, 1, NOW()
+                            )
+                        ");
+                        
+                        $stmt->bindParam(":nombre", $usuario['nombre'], PDO::PARAM_STR);
+                        $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+                        $stmt->bindParam(":password", $usuario['password'], PDO::PARAM_STR);
+                        $stmt->bindParam(":perfil", $usuario['perfil'], PDO::PARAM_STR);
+                        $stmt->bindParam(":foto", $usuario['foto'], PDO::PARAM_STR);
+                        $stmt->bindParam(":telefono", $usuario['telefono'], PDO::PARAM_STR);
+                        $stmt->bindParam(":direccion", $usuario['direccion'], PDO::PARAM_STR);
+                        $stmt->bindParam(":empresa", $sucursal['nombre'], PDO::PARAM_STR); // Campo empresa = nombre sucursal
+                        
+                        if ($stmt->execute()) {
+                            $resultados[$sucursal['id']]['usuarios_creados']++;
+                        } else {
+                            $resultados[$sucursal['id']]['errores'][] = "Error creando usuario: " . $usuario['usuario'];
+                        }
+                    }
+                    
+                } catch (Exception $e) {
+                    $resultados[$sucursal['id']]['errores'][] = "Error de conexión: " . $e->getMessage();
+                }
+            }
+            
+            return [
+                'success' => true,
+                'message' => 'Sincronización completada',
+                'resultados' => $resultados
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlSincronizarUsuariosSucursales: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error interno del servidor'
+            ];
+        }
+    }
 }
 ?>

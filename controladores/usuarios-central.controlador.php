@@ -164,5 +164,20 @@ class ControladorUsuariosCentral {
             ];
         }
     }
+    
+    /*=============================================
+    SINCRONIZAR USUARIOS A SUCURSALES
+    =============================================*/
+    static public function ctrSincronizarUsuariosSucursales($sucursales) {
+        try {
+            return ModeloUsuariosCentral::mdlSincronizarUsuariosSucursales($sucursales);
+        } catch (Exception $e) {
+            error_log("Error en ctrSincronizarUsuariosSucursales: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error interno del servidor'
+            ];
+        }
+    }
 }
 ?>
