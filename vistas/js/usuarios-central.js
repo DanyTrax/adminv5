@@ -188,8 +188,8 @@ $(document).ready(function() {
                         html += '<td>' + usuario.empresa + '</td>';
                         html += '<td><span class="label label-' + (usuario.estado == 1 ? 'success' : 'danger') + '">' + (usuario.estado == 1 ? 'Activo' : 'Inactivo') + '</span></td>';
                         html += '<td>';
-                        html += '<button class="btn btn-success btn-xs btnImportarUsuario" data-usuario=\'' + JSON.stringify(usuario) + '\'>';
-                        html += '<i class="fa fa-download"></i> Importar';
+                        html += '<button class="btn btn-success btn-xs btnImportarUsuario" data-usuario=\'' + JSON.stringify(usuario) + '\' title="Importar usuario">';
+                        html += '<i class="fa fa-download"></i>';
                         html += '</button>';
                         html += '</td>';
                         html += '</tr>';
@@ -200,7 +200,7 @@ $(document).ready(function() {
                     html += '</div>';
                     
                     html += '<div class="text-center">';
-                    html += '<button class="btn btn-primary btnImportarTodos" data-sucursal="' + sucursal.sucursal.id + '">';
+                    html += '<button class="btn btn-primary btn-sm btnImportarTodos" data-sucursal="' + sucursal.sucursal.id + '" title="Importar todos los usuarios de esta sucursal">';
                     html += '<i class="fa fa-download"></i> Importar Todos';
                     html += '</button>';
                     html += '</div>';
@@ -241,10 +241,10 @@ $(document).ready(function() {
                 html += '<td>' + usuario.sucursal_nombre + '</td>';
                 html += '<td><span class="label label-' + (usuario.activo == 1 ? 'success' : 'danger') + '">' + (usuario.activo == 1 ? 'Activo' : 'Inactivo') + '</span></td>';
                 html += '<td>';
-                html += '<button class="btn btn-warning btn-xs btnEditarUsuario" data-id="' + usuario.id + '">';
+                html += '<button class="btn btn-warning btn-xs btnEditarUsuario" data-id="' + usuario.id + '" title="Editar usuario">';
                 html += '<i class="fa fa-edit"></i>';
                 html += '</button>';
-                html += '<button class="btn btn-danger btn-xs btnEliminarUsuario" data-id="' + usuario.id + '">';
+                html += '<button class="btn btn-danger btn-xs btnEliminarUsuario" data-id="' + usuario.id + '" title="Eliminar usuario">';
                 html += '<i class="fa fa-trash"></i>';
                 html += '</button>';
                 html += '</td>';

@@ -19,17 +19,6 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
 
     <section class="content">
         
-        <!-- INFORMACIÓN DEL SISTEMA -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="alert alert-info">
-                    <h4><i class="fa fa-info-circle"></i> Sistema Bidireccional de Usuarios</h4>
-                    <p><strong>Central → Local:</strong> Crear usuario en Central se sincroniza automáticamente a la sucursal</p>
-                    <p><strong>Local → Central:</strong> Consultar usuarios existentes en sucursales para traerlos a Central</p>
-                    <p><strong>Eliminación:</strong> Eliminar de Central elimina de Local y viceversa</p>
-                </div>
-            </div>
-        </div>
 
         <!-- ESTADÍSTICAS RÁPIDAS -->
         <div class="row">
@@ -58,29 +47,21 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                     </div>
                     <div class="box-body">
                         
-                        <!-- ACCIONES CENTRAL → LOCAL -->
+                        <!-- ACCIONES DEL SISTEMA - COMPACTAS -->
                         <div class="row">
-                            <div class="col-md-6">
-                                <h4><i class="fa fa-arrow-right text-primary"></i> Central → Local</h4>
-                                <div class="btn-group-vertical" style="width: 100%;">
-                                    <button class="btn btn-primary btn-lg" id="btnNuevoUsuarioCentral">
-                                        <i class="fa fa-plus"></i> Crear Usuario en Central
+                            <div class="col-md-12">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-primary btn-sm" id="btnNuevoUsuarioCentral" title="Crear Usuario en Central">
+                                        <i class="fa fa-plus"></i> Crear Usuario
                                     </button>
-                                    <button class="btn btn-success btn-lg" id="btnSincronizarUsuarios">
-                                        <i class="fa fa-refresh"></i> Sincronizar a Sucursales
+                                    <button class="btn btn-success btn-sm" id="btnSincronizarUsuarios" title="Sincronizar a Sucursales">
+                                        <i class="fa fa-refresh"></i> Sincronizar
                                     </button>
-                                </div>
-                            </div>
-                            
-                            <!-- ACCIONES LOCAL → CENTRAL -->
-                            <div class="col-md-6">
-                                <h4><i class="fa fa-arrow-left text-info"></i> Local → Central</h4>
-                                <div class="btn-group-vertical" style="width: 100%;">
-                                    <button class="btn btn-info btn-lg" id="btnConsultarUsuariosSucursales">
-                                        <i class="fa fa-search"></i> Consultar Usuarios de Sucursales
+                                    <button class="btn btn-info btn-sm" id="btnConsultarUsuariosSucursales" title="Consultar Usuarios de Sucursales">
+                                        <i class="fa fa-search"></i> Consultar
                                     </button>
-                                    <button class="btn btn-warning btn-lg" id="btnImportarUsuariosSucursales">
-                                        <i class="fa fa-download"></i> Importar de Sucursales
+                                    <button class="btn btn-warning btn-sm" id="btnImportarUsuariosSucursales" title="Importar de Sucursales">
+                                        <i class="fa fa-download"></i> Importar
                                     </button>
                                 </div>
                             </div>
