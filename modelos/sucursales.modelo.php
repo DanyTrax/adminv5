@@ -328,14 +328,18 @@ class ModeloSucursales {
                 ];
             }
             
-            // Eliminar sucursal
+            // Primero, desactivar usuarios centrales que referencian esta sucursal
+            $stmt = $pdo->prepare("UPDATE usuarios_central SET activo = 0 WHERE sucursal_id = ?");
+            $stmt->execute([$id]);
+            
+            // Luego, eliminar la sucursal
             $stmt = $pdo->prepare("DELETE FROM sucursales WHERE id = ?");
             $resultado = $stmt->execute([$id]);
             
             if ($resultado) {
                 return [
                     'success' => true,
-                    'message' => 'Sucursal eliminada correctamente'
+                    'message' => 'Sucursal eliminada correctamente. Los usuarios centrales asociados han sido desactivados.'
                 ];
             } else {
                 return [

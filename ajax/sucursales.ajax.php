@@ -1315,6 +1315,37 @@ try {
                 $cambios[] = "Estado: " . ($configLocal['activo'] ? 'Activo' : 'Inactivo') . " → " . ($sucursalCentral['activo'] ? 'Activo' : 'Inactivo');
             }
             
+            // Comparar campos de conexión BD
+            if (isset($configLocal['usuario_bd']) && isset($sucursalCentral['usuario_bd']) && 
+                $configLocal['usuario_bd'] !== $sucursalCentral['usuario_bd']) {
+                $necesitaSincronizacion = true;
+                $cambios[] = "Usuario BD: '{$configLocal['usuario_bd']}' → '{$sucursalCentral['usuario_bd']}'";
+            }
+            
+            if (isset($configLocal['password_bd']) && isset($sucursalCentral['password_bd']) && 
+                $configLocal['password_bd'] !== $sucursalCentral['password_bd']) {
+                $necesitaSincronizacion = true;
+                $cambios[] = "Password BD: [Actualizada]";
+            }
+            
+            if (isset($configLocal['nombre_bd']) && isset($sucursalCentral['nombre_bd']) && 
+                $configLocal['nombre_bd'] !== $sucursalCentral['nombre_bd']) {
+                $necesitaSincronizacion = true;
+                $cambios[] = "Nombre BD: '{$configLocal['nombre_bd']}' → '{$sucursalCentral['nombre_bd']}'";
+            }
+            
+            if (isset($configLocal['host_bd']) && isset($sucursalCentral['host_bd']) && 
+                $configLocal['host_bd'] !== $sucursalCentral['host_bd']) {
+                $necesitaSincronizacion = true;
+                $cambios[] = "Host BD: '{$configLocal['host_bd']}' → '{$sucursalCentral['host_bd']}'";
+            }
+            
+            if (isset($configLocal['puerto_bd']) && isset($sucursalCentral['puerto_bd']) && 
+                $configLocal['puerto_bd'] != $sucursalCentral['puerto_bd']) {
+                $necesitaSincronizacion = true;
+                $cambios[] = "Puerto BD: '{$configLocal['puerto_bd']}' → '{$sucursalCentral['puerto_bd']}'";
+            }
+            
             if ($necesitaSincronizacion) {
                 // Sincronizar datos locales al central
                 $datosSincronizacion = [
@@ -1326,9 +1357,56 @@ try {
                     'activo' => $configLocal['activo']
                 ];
                 
+                // Agregar campos de BD si existen
+                if (isset($configLocal['usuario_bd'])) {
+                    $datosSincronizacion['usuario_bd'] = $configLocal['usuario_bd'];
+                }
+                if (isset($configLocal['password_bd'])) {
+                    $datosSincronizacion['password_bd'] = $configLocal['password_bd'];
+                }
+                if (isset($configLocal['nombre_bd'])) {
+                    $datosSincronizacion['nombre_bd'] = $configLocal['nombre_bd'];
+                }
+                if (isset($configLocal['host_bd'])) {
+                    $datosSincronizacion['host_bd'] = $configLocal['host_bd'];
+                }
+                if (isset($configLocal['puerto_bd'])) {
+                    $datosSincronizacion['puerto_bd'] = $configLocal['puerto_bd'];
+                }
+                
                 $resultado = ModeloSucursales::mdlActualizarSucursalCentral($datosSincronizacion);
                 
                 if ($resultado && $resultado['success']) {
+                    // También sincronizar del central al local (datos actualizados)
+                    $datosLocal = [
+                        'codigo_sucursal' => $sucursalCentral['codigo_sucursal'],
+                        'nombre' => $sucursalCentral['nombre'],
+                        'direccion' => $sucursalCentral['direccion'],
+                        'telefono' => $sucursalCentral['telefono'],
+                        'email' => $sucursalCentral['email'],
+                        'activo' => $sucursalCentral['activo']
+                    ];
+                    
+                    // Agregar campos de BD del central
+                    if (isset($sucursalCentral['usuario_bd'])) {
+                        $datosLocal['usuario_bd'] = $sucursalCentral['usuario_bd'];
+                    }
+                    if (isset($sucursalCentral['password_bd'])) {
+                        $datosLocal['password_bd'] = $sucursalCentral['password_bd'];
+                    }
+                    if (isset($sucursalCentral['nombre_bd'])) {
+                        $datosLocal['nombre_bd'] = $sucursalCentral['nombre_bd'];
+                    }
+                    if (isset($sucursalCentral['host_bd'])) {
+                        $datosLocal['host_bd'] = $sucursalCentral['host_bd'];
+                    }
+                    if (isset($sucursalCentral['puerto_bd'])) {
+                        $datosLocal['puerto_bd'] = $sucursalCentral['puerto_bd'];
+                    }
+                    
+                    // Actualizar configuración local
+                    ModeloSucursales::mdlConfigurarSucursalLocal('sucursal_local', $datosLocal);
+                    
                     echo json_encode([
                         'success' => true,
                         'message' => 'Sincronización bidireccional completada',

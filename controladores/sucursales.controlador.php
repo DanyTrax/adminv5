@@ -207,11 +207,32 @@ class ControladorSucursales {
 
                 if ($respuesta["success"]) {
                     
+                    // Sincronizar con configuración local si es la sucursal actual
+                    $codigoActual = defined('CODIGO_SUCURSAL') ? CODIGO_SUCURSAL : '';
+                    if ($datos["codigo_sucursal"] === $codigoActual) {
+                        // Actualizar configuración local
+                        $datosLocal = [
+                            'codigo_sucursal' => $datos["codigo_sucursal"],
+                            'nombre' => $datos["nombre"],
+                            'direccion' => $datos["direccion"],
+                            'telefono' => $datos["telefono"],
+                            'email' => $datos["email"],
+                            'usuario_bd' => $datos["usuario_bd"],
+                            'password_bd' => $datos["password_bd"],
+                            'nombre_bd' => $datos["nombre_bd"],
+                            'host_bd' => $datos["host_bd"],
+                            'puerto_bd' => $datos["puerto_bd"],
+                            'activo' => $datos["activo"]
+                        ];
+                        
+                        ModeloSucursales::mdlConfigurarSucursalLocal('sucursal_local', $datosLocal);
+                    }
+                    
                     echo '<script>
                         swal({
                             type: "success",
                             title: "¡Sucursal actualizada!",
-                            text: "Los datos han sido actualizados correctamente.",
+                            text: "Los datos han sido actualizados correctamente y sincronizados con la configuración local.",
                             showConfirmButton: true,
                             confirmButtonText: "Cerrar"
                         }).then(function(result) {
