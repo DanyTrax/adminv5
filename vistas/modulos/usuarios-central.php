@@ -247,7 +247,11 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
             <div class="modal-body">
                 <div class="alert alert-info">
                     <strong>Usuario:</strong> <span id="nombreUsuarioAsignar"></span><br>
-                    <strong>Selecciona las sucursales donde este usuario tendrá acceso:</strong>
+                    <strong>Selecciona las sucursales donde este usuario tendrá acceso:</strong><br>
+                    <small class="text-muted">
+                        <i class="fa fa-info-circle"></i> 
+                        Puedes desmarcar todas las sucursales para quitar al usuario de todas ellas.
+                    </small>
                 </div>
                 <div id="sucursalesAsignar" class="row">
                     <!-- Las sucursales se cargarán aquí dinámicamente -->
@@ -258,7 +262,7 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                     <i class="fa fa-times"></i> Cancelar
                 </button>
                 <button type="button" class="btn btn-success" id="btnGuardarAsignacion">
-                    <i class="fa fa-save"></i> Guardar y Sincronizar
+                    <i class="fa fa-save"></i> Guardar Asignación
                 </button>
             </div>
         </div>

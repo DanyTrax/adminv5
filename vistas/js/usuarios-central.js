@@ -1050,10 +1050,8 @@ $(document).ready(function() {
             sucursalesSeleccionadas.push($(this).val());
         });
         
-        if (sucursalesSeleccionadas.length === 0) {
-            mostrarError("Selecciona al menos una sucursal para el usuario");
-            return;
-        }
+        // Permitir desasignar todas las sucursales (array vacío)
+        // No validar que haya al menos una sucursal seleccionada
         
         console.log("Guardando asignación de sucursales:", sucursalesSeleccionadas);
         
@@ -1068,7 +1066,11 @@ $(document).ready(function() {
             dataType: "json",
             success: function(respuesta) {
                 if (respuesta.success) {
-                    mostrarExito("Sucursales asignadas y sincronizadas exitosamente");
+                    if (sucursalesSeleccionadas.length === 0) {
+                        mostrarExito("Usuario desasignado de todas las sucursales exitosamente");
+                    } else {
+                        mostrarExito("Sucursales asignadas y sincronizadas exitosamente");
+                    }
                     $("#modalAsignarSucursales").modal("hide");
                     cargarUsuariosCentrales();
                     cargarEstadisticas();
