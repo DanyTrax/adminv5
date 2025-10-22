@@ -415,13 +415,9 @@ $(document).ready(function() {
             return;
         }
         
-        // Convertir sucursales_asignadas de string a array
-        var sucursalesAsignadas = [];
-        if (usuario.sucursales_asignadas) {
-            sucursalesAsignadas = usuario.sucursales_asignadas.split(',');
-        }
+        console.log("Usuario encontrado:", usuario);
         
-        // Crear objeto usuario con sucursales como array
+        // Crear objeto usuario para edición (sin sucursales, ya que se manejan por separado)
         var usuarioEdit = {
             id: usuario.id,
             nombre: usuario.nombre,
@@ -429,8 +425,7 @@ $(document).ready(function() {
             password: usuario.password,
             perfil: usuario.perfil,
             telefono: usuario.telefono || '',
-            direccion: usuario.direccion || '',
-            sucursales_asignadas: sucursalesAsignadas
+            direccion: usuario.direccion || ''
         };
         
         // Abrir modal en modo edición
@@ -594,24 +589,24 @@ $(document).ready(function() {
         
         if (usuario) {
             // Modo edición
+            console.log("Llenando campos del modal con datos:", usuario);
             $("#tituloModalUsuario").html('<i class="fa fa-edit"></i> Editar Usuario Central');
             $("#idUsuarioCentral").val(usuario.id);
             $("#nombreUsuario").val(usuario.nombre);
             $("#usuarioLogin").val(usuario.usuario);
+            $("#passwordUsuario").val(usuario.password || '');
             $("#perfilUsuario").val(usuario.perfil);
             $("#telefonoUsuario").val(usuario.telefono || '');
             $("#direccionUsuario").val(usuario.direccion || '');
             
-            // Cargar sucursales asignadas
-            cargarSucursalesAsignadas(usuario.sucursales_asignadas);
+            console.log("Campos llenados - ID:", $("#idUsuarioCentral").val());
+            console.log("Campos llenados - Nombre:", $("#nombreUsuario").val());
+            console.log("Campos llenados - Usuario:", $("#usuarioLogin").val());
         } else {
             // Modo creación
             $("#tituloModalUsuario").html('<i class="fa fa-user"></i> Crear Usuario Central');
             $("#formUsuarioCentral")[0].reset();
             $("#idUsuarioCentral").val('');
-            
-            // Cargar sucursales disponibles
-            cargarSucursalesAsignadas();
         }
         
         $("#modalUsuarioCentral").modal("show");

@@ -883,6 +883,8 @@ class ModeloUsuariosCentral {
                     'error' => null
                 ];
                 
+                error_log("Sincronizando usuario '{$usuario['usuario']}' a sucursal '{$sucursal['nombre']}' (ID: {$sucursal['id']})");
+                
                 try {
                     // Conectar a la sucursal
                     $dsn = "mysql:host={$sucursal['host_bd']};port={$sucursal['puerto_bd']};dbname={$sucursal['nombre_bd']};charset=utf8";
@@ -901,6 +903,7 @@ class ModeloUsuariosCentral {
                     
                     if ($stmt->fetch()) {
                         // Actualizar usuario existente
+                        error_log("Usuario '{$usuario['usuario']}' ya existe en sucursal '{$sucursal['nombre']}', actualizando...");
                         $stmt = $pdoSucursal->prepare("
                             UPDATE usuarios SET 
                                 nombre = :nombre, 
@@ -919,8 +922,10 @@ class ModeloUsuariosCentral {
                         $stmt->bindParam(":empresa", $sucursal['nombre'], PDO::PARAM_STR);
                         $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
                         $stmt->execute();
+                        error_log("Usuario '{$usuario['usuario']}' actualizado en sucursal '{$sucursal['nombre']}' con empresa = '{$sucursal['nombre']}'");
                     } else {
                         // Crear nuevo usuario
+                        error_log("Usuario '{$usuario['usuario']}' no existe en sucursal '{$sucursal['nombre']}', creando...");
                         $stmt = $pdoSucursal->prepare("
                             INSERT INTO usuarios (
                                 nombre, usuario, password, perfil, foto, 
@@ -939,6 +944,7 @@ class ModeloUsuariosCentral {
                         $stmt->bindParam(":direccion", $usuario['direccion'], PDO::PARAM_STR);
                         $stmt->bindParam(":empresa", $sucursal['nombre'], PDO::PARAM_STR);
                         $stmt->execute();
+                        error_log("Usuario '{$usuario['usuario']}' creado en sucursal '{$sucursal['nombre']}' con empresa = '{$sucursal['nombre']}'");
                     }
                     
                     $resultados[$sucursal['id']]['usuario_creado'] = true;

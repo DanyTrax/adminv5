@@ -1,0 +1,278 @@
+<?php
+require_once "controladores/usuarios-central.controlador.php";
+
+$sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
+?>
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>
+            Gestión de Usuarios Centrales
+            <small>Administración de usuarios del sistema central</small>
+        </h1>
+    </section>
+
+    <section class="content">
+        <div class="row">
+            <!-- ESTADÍSTICAS DEL SISTEMA -->
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">
+                            <i class="fa fa-bar-chart"></i> Estadísticas del Sistema
+                        </h3>
+                    </div>
+                    <div class="box-body">
+                        <div class="row" id="estadisticasSistema">
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-aqua"><i class="fa fa-users"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Usuarios Centrales</span>
+                                        <span class="info-box-number" id="totalUsuariosCentral">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-green"><i class="fa fa-building"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Sucursales Activas</span>
+                                        <span class="info-box-number" id="sucursalesActivas">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-yellow"><i class="fa fa-refresh"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Sincronizaciones Hoy</span>
+                                        <span class="info-box-number" id="sincronizacionesHoy">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-red"><i class="fa fa-exclamation-triangle"></i></span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">Errores Hoy</span>
+                                        <span class="info-box-number" id="erroresHoy">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- ACCIONES DEL SISTEMA -->
+            <div class="col-md-12">
+                <div class="box box-info">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">
+                            <i class="fa fa-cogs"></i> Acciones del Sistema
+                        </h3>
+                    </div>
+                    <div class="box-body">
+                        
+                        <!-- ACCIONES DEL SISTEMA - COMPACTAS -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-primary btn-sm" id="btnNuevoUsuarioCentral" title="Crear Usuario en Central">
+                                        <i class="fa fa-plus"></i> Crear Usuario
+                                    </button>
+                                    <button class="btn btn-success btn-sm" id="btnSincronizarUsuarios" title="Sincronizar a Sucursales">
+                                        <i class="fa fa-refresh"></i> Sincronizar
+                                    </button>
+                                    <button class="btn btn-info btn-sm" id="btnConsultarUsuariosSucursales" title="Consultar Usuarios de Sucursales">
+                                        <i class="fa fa-search"></i> Consultar
+                                    </button>
+                                    <button class="btn btn-warning btn-sm" id="btnImportarUsuariosSucursales" title="Importar de Sucursales">
+                                        <i class="fa fa-download"></i> Importar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- SELECCIÓN MÚLTIPLE DE SUCURSALES -->
+                        <div class="row" style="margin-top: 15px;">
+                            <div class="col-md-12">
+                                <div class="box box-warning">
+                                    <div class="box-header with-border">
+                                        <h3 class="box-title">
+                                            <i class="fa fa-building"></i> Selección de Sucursales para Sincronización
+                                        </h3>
+                                    </div>
+                                    <div class="box-body">
+                                        <p><strong>Selecciona las sucursales donde quieres sincronizar los usuarios:</strong></p>
+                                        <div id="sucursalesSeleccion" class="row">
+                                            <!-- Las sucursales se cargarán aquí dinámicamente -->
+                                        </div>
+                                        <div class="text-center" style="margin-top: 15px;">
+                                            <button class="btn btn-success btn-sm" id="btnSincronizarSeleccionadas" disabled>
+                                                <i class="fa fa-refresh"></i> Sincronizar a Sucursales Seleccionadas
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- USUARIOS DE SUCURSALES -->
+            <div class="col-md-6">
+                <div class="box box-success">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">
+                            <i class="fa fa-building"></i> Usuarios de Sucursales
+                        </h3>
+                    </div>
+                    <div class="box-body">
+                        <div id="usuariosSucursales">
+                            <div class="text-center">
+                                <i class="fa fa-spinner fa-spin"></i> Cargando usuarios de sucursales...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- USUARIOS CENTRALES -->
+            <div class="col-md-6">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">
+                            <i class="fa fa-users"></i> Usuarios Centrales
+                        </h3>
+                    </div>
+                    <div class="box-body">
+                        <div id="usuariosCentrales">
+                            <div class="text-center">
+                                <i class="fa fa-spinner fa-spin"></i> Cargando usuarios centrales...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- MODAL PARA CREAR/EDITAR USUARIO CENTRAL -->
+<div class="modal fade" id="modalUsuarioCentral" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title" id="tituloModalUsuario">
+                    <i class="fa fa-user"></i> Crear Usuario Central
+                </h4>
+            </div>
+            <div class="modal-body">
+                <form id="formUsuarioCentral">
+                    <input type="hidden" id="idUsuarioCentral" name="id">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nombreUsuario">Nombre Completo:</label>
+                                <input type="text" class="form-control" id="nombreUsuario" name="nombre" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="usuarioLogin">Usuario de Login:</label>
+                                <input type="text" class="form-control" id="usuarioLogin" name="usuario" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="passwordUsuario">Contraseña:</label>
+                                <input type="password" class="form-control" id="passwordUsuario" name="password" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="perfilUsuario">Perfil:</label>
+                                <select class="form-control" id="perfilUsuario" name="perfil" required>
+                                    <option value="">Seleccionar perfil</option>
+                                    <option value="Administrador">Administrador</option>
+                                    <option value="Especial">Especial</option>
+                                    <option value="Vendedor">Vendedor</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="telefonoUsuario">Teléfono:</label>
+                                <input type="text" class="form-control" id="telefonoUsuario" name="telefono">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="direccionUsuario">Dirección:</label>
+                                <input type="text" class="form-control" id="direccionUsuario" name="direccion">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGuardarUsuario">
+                    <i class="fa fa-save"></i> Guardar Usuario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PARA ASIGNAR SUCURSALES -->
+<div class="modal fade" id="modalAsignarSucursales" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">
+                    <i class="fa fa-building"></i> Asignar Sucursales a Usuario
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <strong>Usuario:</strong> <span id="nombreUsuarioAsignar"></span><br>
+                    <strong>Selecciona las sucursales donde este usuario tendrá acceso:</strong>
+                </div>
+                <div id="sucursalesAsignar" class="row">
+                    <!-- Las sucursales se cargarán aquí dinámicamente -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="btnGuardarAsignacion">
+                    <i class="fa fa-save"></i> Guardar y Sincronizar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Incluir JavaScript específico para usuarios centrales -->
+<script src="vistas/js/usuarios-central.js"></script>
