@@ -867,8 +867,18 @@ class ModeloUsuariosCentral {
             } else {
                 error_log("Columna sucursales_asignadas no existe, creándola...");
                 
-                // Crear la columna si no existe
-                $stmt = $conexion->prepare("ALTER TABLE usuarios_central ADD COLUMN sucursales_asignadas TEXT NULL AFTER id_local");
+                // Verificar si id_local existe para posicionar la columna correctamente
+                $stmt = $conexion->prepare("SHOW COLUMNS FROM usuarios_central LIKE 'id_local'");
+                $stmt->execute();
+                $idLocalExiste = $stmt->fetch();
+                
+                if ($idLocalExiste) {
+                    // Crear la columna después de id_local
+                    $stmt = $conexion->prepare("ALTER TABLE usuarios_central ADD COLUMN sucursales_asignadas TEXT NULL AFTER id_local");
+                } else {
+                    // Crear la columna después de id
+                    $stmt = $conexion->prepare("ALTER TABLE usuarios_central ADD COLUMN sucursales_asignadas TEXT NULL AFTER id");
+                }
                 $stmt->execute();
                 
                 // Ahora actualizar
