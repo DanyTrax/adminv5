@@ -461,4 +461,68 @@ static public function mdlObtenerProductosVenta($idVenta) {
         return false;
     }
 }
+
+/*=============================================
+REGISTRAR ABONO EN HISTORIAL
+=============================================*/
+static public function mdlRegistrarAbonoHistorial($datos) {
+    try {
+        $stmt = Conexion::conectar()->prepare("
+            INSERT INTO abonos_historial 
+            (id_venta, codigo_venta, monto_abono, fecha_abono, id_vendedor_abono, 
+             nombre_vendedor_abono, medio_pago, observaciones) 
+            VALUES 
+            (:id_venta, :codigo_venta, :monto_abono, :fecha_abono, :id_vendedor_abono, 
+             :nombre_vendedor_abono, :medio_pago, :observaciones)
+        ");
+        
+        $stmt->bindParam(":id_venta", $datos["id_venta"], PDO::PARAM_INT);
+        $stmt->bindParam(":codigo_venta", $datos["codigo_venta"], PDO::PARAM_INT);
+        $stmt->bindParam(":monto_abono", $datos["monto_abono"], PDO::PARAM_STR);
+        $stmt->bindParam(":fecha_abono", $datos["fecha_abono"], PDO::PARAM_STR);
+        $stmt->bindParam(":id_vendedor_abono", $datos["id_vendedor_abono"], PDO::PARAM_INT);
+        $stmt->bindParam(":nombre_vendedor_abono", $datos["nombre_vendedor_abono"], PDO::PARAM_STR);
+        $stmt->bindParam(":medio_pago", $datos["medio_pago"], PDO::PARAM_STR);
+        $stmt->bindParam(":observaciones", $datos["observaciones"], PDO::PARAM_STR);
+        
+        if ($stmt->execute()) {
+            return "ok";
+        } else {
+            return "error";
+        }
+        
+    } catch (Exception $e) {
+        error_log("Error en mdlRegistrarAbonoHistorial: " . $e->getMessage());
+        return "error";
+    }
+}
+
+/*=============================================
+OBTENER HISTORIAL DE ABONOS DE UNA VENTA
+=============================================*/
+static public function mdlObtenerHistorialAbonos($idVenta) {
+    try {
+        $stmt = Conexion::conectar()->prepare("
+            SELECT 
+                id,
+                monto_abono,
+                fecha_abono,
+                nombre_vendedor_abono,
+                medio_pago,
+                observaciones
+            FROM abonos_historial 
+            WHERE id_venta = :id_venta 
+            ORDER BY fecha_abono ASC
+        ");
+        
+        $stmt->bindParam(":id_venta", $idVenta, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+    } catch (Exception $e) {
+        error_log("Error en mdlObtenerHistorialAbonos: " . $e->getMessage());
+        return false;
+    }
+}
 }

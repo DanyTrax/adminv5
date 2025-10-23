@@ -436,6 +436,20 @@ static public function ctrEliminarVenta() {
                 );
     
                 ModeloContabilidad::save($datosEntrada);
+                
+                // Registrar en historial de abonos
+                $datosHistorial = array(
+                    "id_venta" => $_POST["idVentaAbo"],
+                    "codigo_venta" => $ventaActual["codigo"],
+                    "monto_abono" => $valorAbonoLimpio,
+                    "fecha_abono" => date('Y-m-d H:i:s'),
+                    "id_vendedor_abono" => $_POST["idUsuarioAbo"],
+                    "nombre_vendedor_abono" => $usuarioAbono["nombre"],
+                    "medio_pago" => $medioPagoOriginal,
+                    "observaciones" => $metodoPagoFinal == "Completo" ? "Pago completo" : "Abono parcial"
+                );
+                
+                ModeloVentas::mdlRegistrarAbonoHistorial($datosHistorial);
     
                 echo'<script>
                     swal({
@@ -608,5 +622,12 @@ static public function ctrSumaTotalVentasGeneral($fechaInicial, $fechaFinal){
     =============================================*/
     public static function ctrObtenerProductosVenta($idVenta) {
         return ModeloVentas::mdlObtenerProductosVenta($idVenta);
+    }
+    
+    /*=============================================
+    OBTENER HISTORIAL DE ABONOS DE UNA VENTA
+    =============================================*/
+    public static function ctrObtenerHistorialAbonos($idVenta) {
+        return ModeloVentas::mdlObtenerHistorialAbonos($idVenta);
     }
 }

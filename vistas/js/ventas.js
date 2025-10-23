@@ -769,10 +769,13 @@ $(document).on("click", ".btnVerDetalle", function() {
     
     // Limpiar contenido anterior
     $("#cuerpoProductosDetalle").empty();
+    $("#cuerpoHistorialAbonos").empty();
     $("#sinProductos").hide();
+    $("#sinHistorial").hide();
     
     // Mostrar loading
     $("#cuerpoProductosDetalle").html('<tr><td colspan="4" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando productos...</td></tr>');
+    $("#cuerpoHistorialAbonos").html('<tr><td colspan="6" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando historial...</td></tr>');
     
     // Obtener datos de la venta
     var datos = new FormData();
@@ -824,6 +827,29 @@ $(document).on("click", ".btnVerDetalle", function() {
                 } else {
                     $("#cuerpoProductosDetalle").empty();
                     $("#sinProductos").show();
+                }
+                
+                // Llenar historial de abonos
+                if (respuesta.historial_abonos && respuesta.historial_abonos.length > 0) {
+                    $("#cuerpoHistorialAbonos").empty();
+                    
+                    respuesta.historial_abonos.forEach(function(abono, index) {
+                        var estadoClass = abono.observaciones === "Pago completo" ? "success" : "warning";
+                        var estadoText = abono.observaciones === "Pago completo" ? "Completo" : "Parcial";
+                        
+                        var fila = '<tr class="' + estadoClass + '">' +
+                            '<td>' + (index + 1) + '</td>' +
+                            '<td>' + abono.fecha_abono + '</td>' +
+                            '<td class="text-right">$ ' + number_format(abono.monto_abono, 2, ',', '.') + '</td>' +
+                            '<td>' + abono.nombre_vendedor_abono + '</td>' +
+                            '<td>' + abono.medio_pago + '</td>' +
+                            '<td><span class="label label-' + (estadoClass === 'success' ? 'success' : 'warning') + '">' + estadoText + '</span></td>' +
+                            '</tr>';
+                        $("#cuerpoHistorialAbonos").append(fila);
+                    });
+                } else {
+                    $("#cuerpoHistorialAbonos").empty();
+                    $("#sinHistorial").show();
                 }
                 
             } else {

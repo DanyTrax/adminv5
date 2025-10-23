@@ -362,6 +362,31 @@ $formaPago = isset($_GET['formaPago']) ? $_GET['formaPago'] : null;
                 <div id="sinProductos" class="alert alert-info" style="display: none;">
                     <i class="fa fa-info-circle"></i> No se encontraron productos para esta venta.
                 </div>
+                
+                <hr>
+                
+                <h5><strong>Historial de Transacciones/Abonos</strong></h5>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered" id="tablaHistorialAbonos">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%">#</th>
+                                <th style="width: 20%">Fecha</th>
+                                <th style="width: 15%">Monto</th>
+                                <th style="width: 25%">Vendedor</th>
+                                <th style="width: 20%">Medio de Pago</th>
+                                <th style="width: 15%">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoHistorialAbonos">
+                            <!-- El historial se cargará aquí dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="sinHistorial" class="alert alert-info" style="display: none;">
+                    <i class="fa fa-info-circle"></i> No se encontraron transacciones registradas para esta venta.
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">
@@ -403,6 +428,32 @@ $formaPago = isset($_GET['formaPago']) ? $_GET['formaPago'] : null;
 
 #tablaProductosDetalle tbody tr:hover {
     background-color: #f9f9f9;
+}
+
+#tablaHistorialAbonos {
+    margin-bottom: 0;
+}
+
+#tablaHistorialAbonos th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+    border-bottom: 2px solid #ddd;
+}
+
+#tablaHistorialAbonos td {
+    vertical-align: middle;
+}
+
+#tablaHistorialAbonos tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+#tablaHistorialAbonos tbody tr.success {
+    background-color: #dff0d8;
+}
+
+#tablaHistorialAbonos tbody tr.warning {
+    background-color: #fcf8e3;
 }
 
 .table-condensed td {

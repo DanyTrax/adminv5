@@ -56,13 +56,17 @@ switch ($accion) {
             // Obtener productos de la venta
             $productos = ControladorVentas::ctrObtenerProductosVenta($idVenta);
             
+            // Obtener historial de abonos
+            $historialAbonos = ControladorVentas::ctrObtenerHistorialAbonos($idVenta);
+            
             // Preparar respuesta
             $respuesta = [
                 'success' => true,
                 'venta' => $venta,
                 'cliente' => $cliente,
                 'vendedor' => $vendedor,
-                'productos' => $productos
+                'productos' => $productos,
+                'historial_abonos' => $historialAbonos
             ];
             
             echo json_encode($respuesta);
