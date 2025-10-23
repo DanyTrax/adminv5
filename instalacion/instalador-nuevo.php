@@ -239,9 +239,9 @@ function conectarBD($datos_bd) {
     return $pdo;
 }
 
-// Función para crear tablas básicas
+// Función para crear todas las tablas necesarias
 function crearTablasBD($pdo) {
-    // Solo crear las tablas esenciales
+    // Todas las tablas del sistema
     $sql_tablas = [
         // Tabla de usuarios
         "CREATE TABLE IF NOT EXISTS usuarios (
@@ -251,6 +251,9 @@ function crearTablasBD($pdo) {
             password VARCHAR(255) NOT NULL,
             perfil ENUM('Administrador', 'Especial', 'Vendedor', 'Contador', 'Transportador') NOT NULL,
             foto VARCHAR(255) DEFAULT 'vistas/img/usuarios/default/anonymous.png',
+            telefono VARCHAR(50),
+            direccion TEXT,
+            empresa VARCHAR(255),
             estado TINYINT(1) NOT NULL DEFAULT 1,
             ultimo_login DATETIME NULL,
             fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -276,6 +279,137 @@ function crearTablasBD($pdo) {
             activo TINYINT(1) DEFAULT 1,
             fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
             fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+        
+        // Tabla de productos
+        "CREATE TABLE IF NOT EXISTS productos (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            codigo VARCHAR(50) NOT NULL UNIQUE,
+            descripcion TEXT NOT NULL,
+            categoria VARCHAR(255),
+            stock INT(11) DEFAULT 0,
+            precio_compra DECIMAL(10,2) DEFAULT 0,
+            precio_venta DECIMAL(10,2) DEFAULT 0,
+            imagen VARCHAR(255),
+            activo TINYINT(1) DEFAULT 1,
+            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+        
+        // Tabla de categorías
+        "CREATE TABLE IF NOT EXISTS categorias (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            nombre VARCHAR(255) NOT NULL,
+            descripcion TEXT,
+            activo TINYINT(1) DEFAULT 1,
+            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+        
+        // Tabla de clientes
+        "CREATE TABLE IF NOT EXISTS clientes (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            documento VARCHAR(50) NOT NULL UNIQUE,
+            nombre VARCHAR(255) NOT NULL,
+            email VARCHAR(255),
+            telefono VARCHAR(50),
+            direccion TEXT,
+            fecha_nacimiento DATE,
+            activo TINYINT(1) DEFAULT 1,
+            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+        
+        // Tabla de ventas
+        "CREATE TABLE IF NOT EXISTS ventas (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            codigo INT(11) NOT NULL UNIQUE,
+            id_cliente INT(11),
+            id_vendedor INT(11),
+            productos TEXT,
+            impuesto DECIMAL(10,2) DEFAULT 0,
+            neto DECIMAL(10,2) DEFAULT 0,
+            total DECIMAL(10,2) DEFAULT 0,
+            metodo_pago VARCHAR(50),
+            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            FOREIGN KEY (id_cliente) REFERENCES clientes(id),
+            FOREIGN KEY (id_vendedor) REFERENCES usuarios(id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+        
+        // Tabla de venta_productos
+        "CREATE TABLE IF NOT EXISTS venta_productos (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            id_venta INT(11) NOT NULL,
+            id_producto INT(11) NOT NULL,
+            cantidad INT(11) NOT NULL,
+            precio DECIMAL(10,2) NOT NULL,
+            subtotal DECIMAL(10,2) NOT NULL,
+            PRIMARY KEY (id),
+            FOREIGN KEY (id_venta) REFERENCES ventas(id),
+            FOREIGN KEY (id_producto) REFERENCES productos(id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+        
+        // Tabla de abonos_historial
+        "CREATE TABLE IF NOT EXISTS abonos_historial (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            id_venta INT(11) NOT NULL,
+            codigo_venta INT(11) NOT NULL,
+            monto_abono DECIMAL(10,2) NOT NULL,
+            fecha_abono DATETIME NOT NULL,
+            id_vendedor_abono INT(11) NOT NULL,
+            nombre_vendedor_abono VARCHAR(255) NOT NULL,
+            medio_pago VARCHAR(50) NOT NULL,
+            observaciones TEXT,
+            fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            INDEX idx_id_venta (id_venta),
+            INDEX idx_codigo_venta (codigo_venta)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+        
+        // Tabla de solicitudes_stock
+        "CREATE TABLE IF NOT EXISTS solicitudes_stock (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            numero_solicitud VARCHAR(50) NOT NULL UNIQUE,
+            id_sucursal_origen INT(11),
+            id_usuario_solicitante INT(11),
+            productos_solicitados TEXT,
+            total_cantidad INT(11) DEFAULT 0,
+            estado ENUM('pendiente', 'aprobado', 'en_transito', 'entregado', 'cancelado') DEFAULT 'pendiente',
+            observaciones TEXT,
+            fecha_solicitud DATETIME DEFAULT CURRENT_TIMESTAMP,
+            fecha_aprobacion DATETIME NULL,
+            id_usuario_aprobador INT(11),
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+        
+        // Tabla de despachos
+        "CREATE TABLE IF NOT EXISTS despachos (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            numero_despacho VARCHAR(50) NOT NULL UNIQUE,
+            id_solicitud INT(11),
+            id_transportador INT(11),
+            estado ENUM('pendiente', 'en_transito', 'entregado', 'cancelado') DEFAULT 'pendiente',
+            fecha_despacho DATETIME DEFAULT CURRENT_TIMESTAMP,
+            fecha_entrega DATETIME NULL,
+            observaciones TEXT,
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+        
+        // Tabla de stock_transito
+        "CREATE TABLE IF NOT EXISTS stock_transito (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            codigo_producto VARCHAR(50) NOT NULL,
+            descripcion_producto TEXT,
+            cantidad INT(11) NOT NULL,
+            id_despacho INT(11),
+            transportador VARCHAR(255),
+            origen VARCHAR(255),
+            destino VARCHAR(255),
+            estado ENUM('en_transito', 'entregado', 'cancelado') DEFAULT 'en_transito',
+            fecha_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
+            fecha_entrega DATETIME NULL,
             PRIMARY KEY (id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
     ];
@@ -307,8 +441,8 @@ function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario) {
     // Insertar primer usuario administrador
     $password_encriptado = crypt($datos_usuario['password'], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
     $stmt = $pdo->prepare("
-        INSERT INTO usuarios (nombre, usuario, password, perfil, estado, ultimo_login) 
-        VALUES (?, ?, ?, ?, 1, NOW())
+        INSERT INTO usuarios (nombre, usuario, password, perfil, estado, ultimo_login, fecha) 
+        VALUES (?, ?, ?, ?, 1, NOW(), NOW())
     ");
     $stmt->execute([
         $datos_usuario['nombre'],
@@ -316,6 +450,18 @@ function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario) {
         $password_encriptado,
         $datos_usuario['perfil']
     ]);
+    
+    // Verificar que el usuario se creó correctamente
+    $stmt = $pdo->prepare("SELECT id, usuario, password FROM usuarios WHERE usuario = ?");
+    $stmt->execute([$datos_usuario['usuario']]);
+    $usuario_creado = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$usuario_creado) {
+        throw new Exception('Error: No se pudo crear el usuario administrador');
+    }
+    
+    // Log para debugging
+    error_log("Usuario creado exitosamente: " . $usuario_creado['usuario'] . " (ID: " . $usuario_creado['id'] . ")");
 }
 
 // Función para registrar sucursal en el sistema central
