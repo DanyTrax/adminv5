@@ -497,8 +497,8 @@ function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario) {
     $stmt = $pdo->prepare("
         INSERT INTO usuarios (
             nombre, usuario, password, perfil, foto, estado, 
-            ultimo_login, fecha, empresa, telefono, direccion
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?)
+            ultimo_login, empresa, telefono, direccion
+        ) VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?)
     ");
     $stmt->execute([
         $datos_usuario['nombre'],
