@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Stock por Sucursales</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <h1>🧪 Prueba de Stock por Sucursales</h1>
+    
+    <button id="btnProbarStock" class="btn btn-primary">Probar Consulta de Stock</button>
+    
+    <div id="resultado" style="margin-top: 20px; padding: 20px; border: 1px solid #ccc; display: none;">
+        <h3>Resultado:</h3>
+        <pre id="resultadoJson"></pre>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#btnProbarStock').click(function() {
+                console.log("Iniciando prueba de stock...");
+                
+                // Simular productos de una solicitud
+                var productos = [
+                    {
+                        "codigo": "PROD001",
+                        "descripcion": "Producto de Prueba 1",
+                        "cantidad": 10
+                    },
+                    {
+                        "codigo": "PROD002",
+                        "descripcion": "Producto de Prueba 2", 
+                        "cantidad": 5
+                    }
+                ];
+                
+                console.log("Productos a consultar:", productos);
+                
+                // Mostrar loading
+                Swal.fire({
+                    title: "Consultando stock disponible...",
+                    text: "Buscando en todas las sucursales",
+                    icon: "info",
+                    showConfirmButton: false,
+                    allowOutsideClick: false
+                });
+                
+                // Realizar consulta AJAX
+                $.ajax({
+                    url: 'ajax/stock-disponible-sucursales.ajax.php',
+                    type: 'POST',
+                    data: {
+                        accion: 'consultar_stock_sucursales',
+                        productos: JSON.stringify(productos)
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        console.log("Respuesta recibida:", response);
+                        
+                        Swal.close();
+                        
+                        if(response.success) {
+                            console.log("Mostrando modal de selección de stock");
+                            mostrarResultado(response.data);
+                        } else {
+                            console.log("Error en respuesta:", response.message);
+                            Swal.fire({
+                                title: 'Error',
+                                text: response.message || 'No se pudo consultar el stock disponible',
+                                icon: 'error',
+                                confirmButtonText: 'Cerrar'
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("Error AJAX:", xhr, status, error);
+                        Swal.close();
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Error de conexión al consultar stock disponible: ' + error,
+                            icon: 'error',
+                            confirmButtonText: 'Cerrar'
+                        });
+                    }
+                });
+            });
+        });
+        
+        function mostrarResultado(stockData) {
+            console.log("Datos de stock recibidos:", stockData);
+            
+            var html = '<div class="stock-seleccion-container">';
+            html += '<div class="alert alert-info">';
+            html += '<h5><i class="fa fa-info-circle"></i> Stock Disponible por Sucursal</h5>';
+            html += '<p>Para cada producto, se muestra el stock disponible en cada sucursal.</p>';
+            html += '</div>';
+            
+            html += '<div class="table-responsive" style="max-height: 500px; overflow-y: auto;">';
+            html += '<table class="table table-bordered table-striped">';
+            html += '<thead class="bg-primary">';
+            html += '<tr>';
+            html += '<th>Producto</th>';
+            html += '<th>Solicitado</th>';
+            html += '<th>Stock por Sucursal</th>';
+            html += '</tr>';
+            html += '</thead>';
+            html += '<tbody>';
+            
+            stockData.forEach(function(producto) {
+                html += '<tr>';
+                html += '<td><strong>' + producto.codigo + '</strong><br><small>' + producto.descripcion + '</small></td>';
+                html += '<td><span class="label label-warning">' + producto.cantidad_solicitada + '</span></td>';
+                html += '<td>';
+                
+                producto.sucursales.forEach(function(sucursal) {
+                    var estado = sucursal.puede_satisfacer ? 'success' : 'danger';
+                    var icono = sucursal.puede_satisfacer ? 'check' : 'times';
+                    
+                    html += '<div class="row" style="margin-bottom: 5px;">';
+                    html += '<div class="col-md-6">' + sucursal.nombre + '</div>';
+                    html += '<div class="col-md-3">';
+                    html += '<span class="label label-' + estado + '">';
+                    html += '<i class="fa fa-' + icono + '"></i> ' + sucursal.stock_disponible;
+                    html += '</span>';
+                    html += '</div>';
+                    html += '<div class="col-md-3">';
+                    if (sucursal.puede_satisfacer) {
+                        html += '<span class="text-success">✓ Puede satisfacer</span>';
+                    } else {
+                        html += '<span class="text-danger">✗ No puede satisfacer</span>';
+                    }
+                    html += '</div>';
+                    html += '</div>';
+                });
+                
+                html += '</td>';
+                html += '</tr>';
+            });
+            
+            html += '</tbody>';
+            html += '</table>';
+            html += '</div>';
+            html += '</div>';
+            
+            // Mostrar resultado en la página
+            $('#resultado').html(html).show();
+            $('#resultadoJson').text(JSON.stringify(stockData, null, 2));
+            
+            // También mostrar en SweetAlert
+            Swal.fire({
+                title: 'Stock Disponible',
+                html: html,
+                width: '80%',
+                showConfirmButton: true,
+                confirmButtonText: 'Cerrar'
+            });
+        }
+    </script>
+    
+    <style>
+        .btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .alert-info {
+            color: #31708f;
+            background-color: #d9edf7;
+            border-color: #bce8f1;
+        }
+        .table {
+            width: 100%;
+            max-width: 100%;
+            margin-bottom: 20px;
+            background-color: transparent;
+            border-collapse: collapse;
+        }
+        .table th,
+        .table td {
+            padding: 8px;
+            line-height: 1.42857143;
+            vertical-align: top;
+            border-top: 1px solid #ddd;
+        }
+        .table thead th {
+            vertical-align: bottom;
+            border-bottom: 2px solid #ddd;
+        }
+        .bg-primary {
+            background-color: #337ab7 !important;
+            color: white;
+        }
+        .label {
+            display: inline;
+            padding: .2em .6em .3em;
+            font-size: 75%;
+            font-weight: 700;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: .25em;
+        }
+        .label-success {
+            background-color: #5cb85c;
+        }
+        .label-danger {
+            background-color: #d9534f;
+        }
+        .label-warning {
+            background-color: #f0ad4e;
+        }
+        .text-success {
+            color: #5cb85c;
+        }
+        .text-danger {
+            color: #d9534f;
+        }
+    </style>
+</body>
+</html>
