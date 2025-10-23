@@ -1,12 +1,16 @@
 <?php
 
+session_start();
+
 require_once __DIR__ . "/../controladores/clientes-central.controlador.php";
 
-// Limpiar cualquier salida previa
-ob_clean();
+// Limpiar cualquier salida previa si existe buffer
+if (ob_get_level()) {
+    ob_clean();
+}
 
 // Código para producción: Solo Administradores
-if ($_SESSION["perfil"] != "Administrador") {
+if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] != "Administrador") {
     echo json_encode([
         'success' => false,
         'error' => 'No tienes permisos para acceder a esta sección'
