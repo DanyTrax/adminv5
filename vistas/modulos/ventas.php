@@ -98,16 +98,11 @@ $formaPago = isset($_GET['formaPago']) ? $_GET['formaPago'] : null;
               <th style="width:3px">#</th>
               <th style="width:20px">Cod.factura</th>
               <th>Cliente</th>
-              <th style="width:3px">Emp</th>
               <th>Vendedor</th>
-              <th>V_Abono</th>
               <th style="width:80px">Forma de pago</th>
-              <th>Neto</th>
               <th>Total</th>
               <th>Fecha Venta</th>
               <th>Abono</th>
-              <th>Ult_Abono</th>
-              <th>Pago</th>
               <th>Medio Pago</th>
               <th>Acciones</th>
 
@@ -173,16 +168,11 @@ $formaPago = isset($_GET['formaPago']) ? $_GET['formaPago'] : null;
                       <td>' . ($key + 1) . '</td>
                       <td>' . $value["codigo"] . '</td>
                       <td>' . $respuestaCliente["nombre"] . '</td>
-                      <td>' . ($respuestaUsuario["empresa"] ?? '') . '</td>
                       <td>' . ($respuestaUsuario["nombre"] ?? '') . '</td>
-                      <td>' . ($respuestaUsuario_ab["nombre"] ?? '') . '</td>
                       <td>' . $value["metodo_pago"] . '</td>
-                      <td>$ ' . number_format($value["neto"] ?? 0, 2, ',', '.') . '</td>
                       <td>$ ' . number_format($value["total"] ?? 0, 2, ',', '.') . '</td>
                       <td>' . $value["fecha_abono"] . '</td>
                       <td>$ ' . number_format($value["abono"] ?? 0, 2, ',', '.') . '</td>
-                      <td>$ ' . number_format($value["Ult_abono"] ?? 0, 2, ',', '.') . '</td>
-                      <td>' . $value["pago"] . '</td>
                       <td>' . $value["medio_pago"] . '</td>
                       <td>' . $botones . '</td>
                     </tr>';
