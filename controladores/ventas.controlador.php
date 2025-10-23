@@ -158,6 +158,29 @@ class ControladorVentas {
                     "tipo" => "Entrada"
                 ]);
                 // --- FIN DE LA CORRECCIÓN ---
+                
+                // Registrar pago inicial en historial de abonos (si hay pago)
+                if ($valorAbono > 0) {
+                    $usuarioVendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $_POST["idVendedor"]);
+                    
+                    $datosHistorial = array(
+                        "id_venta" => null, // Se obtendrá después de insertar la venta
+                        "codigo_venta" => $_POST["nuevaVenta"],
+                        "monto_abono" => $valorAbono,
+                        "fecha_abono" => $datosVenta["fecha_venta"],
+                        "id_vendedor_abono" => $_POST["idVendedor"],
+                        "nombre_vendedor_abono" => $usuarioVendedor["nombre"],
+                        "medio_pago" => $_POST["nuevoMedioPago"] ?? "",
+                        "observaciones" => $metodoPagoFinal === "Completo" ? "Pago completo inicial" : "Abono inicial"
+                    );
+                    
+                    // Obtener el ID de la venta recién creada
+                    $ventaCreada = ModeloVentas::mdlMostrarVentas("ventas", "codigo", $_POST["nuevaVenta"]);
+                    if ($ventaCreada) {
+                        $datosHistorial["id_venta"] = $ventaCreada["id"];
+                        ModeloVentas::mdlRegistrarAbonoHistorial($datosHistorial);
+                    }
+                }
 
                 echo '<script>
                     localStorage.removeItem("rango");
