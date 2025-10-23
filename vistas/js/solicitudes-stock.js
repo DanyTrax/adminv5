@@ -854,10 +854,39 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
     console.log("ID Solicitud:", idSolicitud);
     console.log("Número Solicitud:", numeroSolicitud);
     
+    // Verificar que stockData sea válido
+    if (!stockData || !Array.isArray(stockData) || stockData.length === 0) {
+        console.error("Error: stockData no es válido:", stockData);
+        swal({
+            title: 'Error',
+            text: 'No se recibieron datos de stock válidos',
+            type: 'error',
+            confirmButtonText: 'Cerrar'
+        });
+        return;
+    }
+    
+    // Obtener todas las sucursales únicas de todos los productos
+    var sucursalesUnicas = [];
+    var sucursalesMap = {};
+    
+    stockData.forEach(function(producto) {
+        if (producto.sucursales && Array.isArray(producto.sucursales)) {
+            producto.sucursales.forEach(function(sucursal) {
+                if (!sucursalesMap[sucursal.id]) {
+                    sucursalesMap[sucursal.id] = sucursal;
+                    sucursalesUnicas.push(sucursal);
+                }
+            });
+        }
+    });
+    
+    console.log("Sucursales únicas encontradas:", sucursalesUnicas);
+    
     var html = '<div class="stock-seleccion-container">';
     html += '<div class="alert alert-info">';
-    html += '<h5><i class="fa fa-info-circle"></i> Seleccione las cantidades por sucursal</h5>';
-    html += '<p>Para cada producto, seleccione cuántas unidades tomar de cada sucursal disponible.</p>';
+    html += '<h5><i class="fa fa-info-circle"></i> Stock Disponible por Sucursal</h5>';
+    html += '<p>Para cada producto, se muestra el stock disponible en cada sucursal.</p>';
     html += '</div>';
     
     html += '<div class="table-responsive" style="max-height: 500px; overflow-y: auto;">';
@@ -866,52 +895,65 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
     html += '<tr>';
     html += '<th>Producto</th>';
     html += '<th>Solicitado</th>';
-    html += '<th>Stock Local</th>';
     
     // Agregar columnas para cada sucursal
-    Object.keys(stockData.sucursales).forEach(function(codigoSucursal) {
-        var sucursal = stockData.sucursales[codigoSucursal];
+    sucursalesUnicas.forEach(function(sucursal) {
         html += '<th>' + sucursal.nombre + '</th>';
     });
     
-    html += '<th>Total Seleccionado</th>';
     html += '<th>Estado</th>';
     html += '</tr>';
     html += '</thead>';
     html += '<tbody>';
     
     // Procesar cada producto
-    stockData.productos_solicitud.forEach(function(producto) {
-        var stockLocal = stockData.local[producto.codigo] || 0;
-        var totalDisponible = stockLocal;
+    stockData.forEach(function(producto) {
+        var cantidadSolicitada = producto.cantidad_solicitada || 0;
+        var totalDisponible = 0;
         
-        // Calcular total disponible
-        Object.keys(stockData.sucursales).forEach(function(codigoSucursal) {
-            var stockSucursal = stockData.sucursales[codigoSucursal].stock[producto.codigo] || 0;
-            totalDisponible += stockSucursal;
-        });
+        // Calcular total disponible sumando stock de todas las sucursales
+        if (producto.sucursales && Array.isArray(producto.sucursales)) {
+            producto.sucursales.forEach(function(sucursal) {
+                totalDisponible += sucursal.stock_disponible || 0;
+            });
+        }
         
         html += '<tr data-producto="' + producto.codigo + '">';
         html += '<td><strong>' + producto.codigo + '</strong><br><small>' + producto.descripcion + '</small></td>';
-        html += '<td><span class="badge badge-info">' + producto.cantidad + '</span></td>';
-        html += '<td>';
-        html += '<input type="number" class="form-control stock-input" data-sucursal="local" data-producto="' + producto.codigo + '" min="0" max="' + stockLocal + '" value="0" style="width: 80px;">';
-        html += '<small class="text-muted">Disponible: ' + stockLocal + '</small>';
-        html += '</td>';
+        html += '<td><span class="badge badge-info">' + cantidadSolicitada + '</span></td>';
         
-        // Agregar inputs para cada sucursal
-        Object.keys(stockData.sucursales).forEach(function(codigoSucursal) {
-            var sucursal = stockData.sucursales[codigoSucursal];
-            var stockSucursal = sucursal.stock[producto.codigo] || 0;
+        // Agregar columnas para cada sucursal
+        sucursalesUnicas.forEach(function(sucursal) {
+            var stockSucursal = 0;
+            var puedeSatisfacer = false;
+            
+            // Buscar el stock de esta sucursal para este producto
+            if (producto.sucursales && Array.isArray(producto.sucursales)) {
+                var sucursalProducto = producto.sucursales.find(function(s) {
+                    return s.id === sucursal.id;
+                });
+                
+                if (sucursalProducto) {
+                    stockSucursal = sucursalProducto.stock_disponible || 0;
+                    puedeSatisfacer = sucursalProducto.puede_satisfacer || false;
+                }
+            }
             
             html += '<td>';
-            html += '<input type="number" class="form-control stock-input" data-sucursal="' + codigoSucursal + '" data-producto="' + producto.codigo + '" min="0" max="' + stockSucursal + '" value="0" style="width: 80px;">';
-            html += '<small class="text-muted">Disponible: ' + stockSucursal + '</small>';
+            html += '<div class="text-center">';
+            html += '<span class="badge ' + (puedeSatisfacer ? 'badge-success' : 'badge-danger') + '">';
+            html += stockSucursal;
+            html += '</span>';
+            html += '<br><small class="text-muted">' + (puedeSatisfacer ? '✓ Disponible' : '✗ Insuficiente') + '</small>';
+            html += '</div>';
             html += '</td>';
         });
         
-        html += '<td><span class="total-seleccionado badge badge-success" data-producto="' + producto.codigo + '">0</span></td>';
-        html += '<td><span class="estado-producto badge badge-warning" data-producto="' + producto.codigo + '">Pendiente</span></td>';
+        // Estado del producto
+        var estado = totalDisponible >= cantidadSolicitada ? 'Completo' : 'Parcial';
+        var claseEstado = totalDisponible >= cantidadSolicitada ? 'badge-success' : 'badge-warning';
+        
+        html += '<td><span class="badge ' + claseEstado + '">' + estado + '</span></td>';
         html += '</tr>';
     });
     
@@ -920,9 +962,37 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
     html += '</div>';
     
     // Resumen
-    html += '<div class="alert alert-warning mt-3">';
-    html += '<h5><i class="fa fa-exclamation-triangle"></i> Resumen de Selección:</h5>';
-    html += '<div id="resumen-seleccion">Calculando...</div>';
+    html += '<div class="alert alert-info mt-3">';
+    html += '<h5><i class="fa fa-info-circle"></i> Resumen de Disponibilidad:</h5>';
+    html += '<div id="resumen-stock">';
+    
+    var productosCompletos = 0;
+    var productosParciales = 0;
+    var productosSinStock = 0;
+    
+    stockData.forEach(function(producto) {
+        var cantidadSolicitada = producto.cantidad_solicitada || 0;
+        var totalDisponible = 0;
+        
+        if (producto.sucursales && Array.isArray(producto.sucursales)) {
+            producto.sucursales.forEach(function(sucursal) {
+                totalDisponible += sucursal.stock_disponible || 0;
+            });
+        }
+        
+        if (totalDisponible >= cantidadSolicitada) {
+            productosCompletos++;
+        } else if (totalDisponible > 0) {
+            productosParciales++;
+        } else {
+            productosSinStock++;
+        }
+    });
+    
+    html += '<p><strong>Productos con stock completo:</strong> ' + productosCompletos + '</p>';
+    html += '<p><strong>Productos con stock parcial:</strong> ' + productosParciales + '</p>';
+    html += '<p><strong>Productos sin stock:</strong> ' + productosSinStock + '</p>';
+    html += '</div>';
     html += '</div>';
     
     html += '</div>';
