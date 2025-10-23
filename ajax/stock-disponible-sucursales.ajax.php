@@ -36,15 +36,21 @@ switch ($accion) {
             }
             
             // Obtener sucursales activas
+            error_log("Consultando sucursales disponibles...");
             $sucursales = ControladorSucursales::ctrObtenerSucursalesDisponibles();
             
+            error_log("Respuesta sucursales: " . json_encode($sucursales));
+            
             if (!$sucursales || !$sucursales['success']) {
+                error_log("Error obteniendo sucursales: " . ($sucursales['message'] ?? 'Error desconocido'));
                 echo json_encode([
                     'success' => false,
-                    'message' => 'No se encontraron sucursales activas'
+                    'message' => 'No se encontraron sucursales activas: ' . ($sucursales['message'] ?? 'Error desconocido')
                 ]);
                 exit;
             }
+            
+            error_log("Sucursales encontradas: " . count($sucursales['data']));
             
             $stockData = [];
             

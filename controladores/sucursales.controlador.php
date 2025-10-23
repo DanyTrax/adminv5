@@ -616,12 +616,14 @@ class ControladorSucursales {
     =============================================*/
     static public function ctrObtenerSucursalesDisponibles() {
         try {
-            $sucursales = ModeloSucursales::mdlObtenerSucursales();
+            // Obtener sucursales activas desde BD central
+            $sucursales = ModeloSucursales::mdlObtenerSucursales(true); // true = solo activas
             
             if (!$sucursales || !$sucursales['success']) {
+                error_log("Error obteniendo sucursales: " . ($sucursales['message'] ?? 'Error desconocido'));
                 return [
                     'success' => false,
-                    'message' => 'No se pudieron obtener las sucursales'
+                    'message' => 'No se pudieron obtener las sucursales: ' . ($sucursales['message'] ?? 'Error desconocido')
                 ];
             }
             
