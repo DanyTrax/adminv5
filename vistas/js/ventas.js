@@ -879,7 +879,7 @@ IMPRIMIR DETALLE DE VENTA
 $(document).on("click", "#btnImprimirDetalle", function() {
     var codigoVenta = $("#codigoFacturaDetalle").text();
     if (codigoVenta) {
-        window.open("ventas?xml=" + codigoVenta, "_blank");
+        window.open("extensiones/tcpdf/pdf/factura.php?codigo=" + codigoVenta, "_blank");
     }
 });
 
