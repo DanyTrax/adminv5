@@ -1331,35 +1331,40 @@ try {
                 $cambios[] = "URL API: '{$urlApiLocal}' → '{$urlApiCentral}'";
             }
             
-            // Comparar campos de conexión BD
-            if (isset($configLocal['usuario_bd']) && isset($sucursalCentral['usuario_bd']) && 
-                $configLocal['usuario_bd'] !== $sucursalCentral['usuario_bd']) {
+            // Comparar campos de conexión BD (solo si ambos tienen valores)
+            $usuarioBdLocal = $configLocal['usuario_bd'] ?? '';
+            $usuarioBdCentral = $sucursalCentral['usuario_bd'] ?? '';
+            if (!empty($usuarioBdLocal) && !empty($usuarioBdCentral) && $usuarioBdLocal !== $usuarioBdCentral) {
                 $necesitaSincronizacion = true;
-                $cambios[] = "Usuario BD: '{$configLocal['usuario_bd']}' → '{$sucursalCentral['usuario_bd']}'";
+                $cambios[] = "Usuario BD: '{$usuarioBdLocal}' → '{$usuarioBdCentral}'";
             }
             
-            if (isset($configLocal['password_bd']) && isset($sucursalCentral['password_bd']) && 
-                $configLocal['password_bd'] !== $sucursalCentral['password_bd']) {
+            $passwordBdLocal = $configLocal['password_bd'] ?? '';
+            $passwordBdCentral = $sucursalCentral['password_bd'] ?? '';
+            if (!empty($passwordBdLocal) && !empty($passwordBdCentral) && $passwordBdLocal !== $passwordBdCentral) {
                 $necesitaSincronizacion = true;
                 $cambios[] = "Password BD: [Actualizada]";
             }
             
-            if (isset($configLocal['nombre_bd']) && isset($sucursalCentral['nombre_bd']) && 
-                $configLocal['nombre_bd'] !== $sucursalCentral['nombre_bd']) {
+            $nombreBdLocal = $configLocal['nombre_bd'] ?? '';
+            $nombreBdCentral = $sucursalCentral['nombre_bd'] ?? '';
+            if (!empty($nombreBdLocal) && !empty($nombreBdCentral) && $nombreBdLocal !== $nombreBdCentral) {
                 $necesitaSincronizacion = true;
-                $cambios[] = "Nombre BD: '{$configLocal['nombre_bd']}' → '{$sucursalCentral['nombre_bd']}'";
+                $cambios[] = "Nombre BD: '{$nombreBdLocal}' → '{$nombreBdCentral}'";
             }
             
-            if (isset($configLocal['host_bd']) && isset($sucursalCentral['host_bd']) && 
-                $configLocal['host_bd'] !== $sucursalCentral['host_bd']) {
+            $hostBdLocal = $configLocal['host_bd'] ?? '';
+            $hostBdCentral = $sucursalCentral['host_bd'] ?? '';
+            if (!empty($hostBdLocal) && !empty($hostBdCentral) && $hostBdLocal !== $hostBdCentral) {
                 $necesitaSincronizacion = true;
-                $cambios[] = "Host BD: '{$configLocal['host_bd']}' → '{$sucursalCentral['host_bd']}'";
+                $cambios[] = "Host BD: '{$hostBdLocal}' → '{$hostBdCentral}'";
             }
             
-            if (isset($configLocal['puerto_bd']) && isset($sucursalCentral['puerto_bd']) && 
-                $configLocal['puerto_bd'] != $sucursalCentral['puerto_bd']) {
+            $puertoBdLocal = $configLocal['puerto_bd'] ?? '';
+            $puertoBdCentral = $sucursalCentral['puerto_bd'] ?? '';
+            if (!empty($puertoBdLocal) && !empty($puertoBdCentral) && $puertoBdLocal != $puertoBdCentral) {
                 $necesitaSincronizacion = true;
-                $cambios[] = "Puerto BD: '{$configLocal['puerto_bd']}' → '{$sucursalCentral['puerto_bd']}'";
+                $cambios[] = "Puerto BD: '{$puertoBdLocal}' → '{$puertoBdCentral}'";
             }
             
             // Solo sincronizar si hay diferencias reales
