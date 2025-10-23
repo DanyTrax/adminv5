@@ -399,6 +399,7 @@ $(document).ready(function() {
     
     // Función para sincronizar todos los clientes
     function sincronizarTodosClientes() {
+        console.log("sincronizarTodosClientes llamada");
         swal({
             title: "¿Importar clientes desde sucursales?",
             text: "Esta acción traerá los clientes de todas las sucursales activas al sistema central, evitando duplicados por documento.",
@@ -410,7 +411,9 @@ $(document).ready(function() {
             closeOnConfirm: false,
             showLoaderOnConfirm: true
         }, function(isConfirm) {
+            console.log("SweetAlert confirmado:", isConfirm);
             if (isConfirm) {
+                console.log("Iniciando importación...");
                 iniciarImportacion();
             }
         });
@@ -418,6 +421,8 @@ $(document).ready(function() {
     
     // Función para iniciar la importación
     function iniciarImportacion() {
+        console.log("iniciarImportacion llamada");
+        
         // Mostrar modal de progreso
         $("#estadoImportacion").text("Conectando a sucursales...");
         $("#clientesImportados").text("0");
@@ -426,12 +431,14 @@ $(document).ready(function() {
         $("#modalFooterImportacion").hide();
         $("#modalProgresoImportacion").modal("show");
         
+        console.log("Enviando AJAX...");
         $.ajax({
             url: "ajax/clientes-central.ajax.php",
             method: "POST",
             data: { accion: "sincronizar_todos_clientes" },
             dataType: "json",
             success: function(respuesta) {
+                console.log("Respuesta AJAX:", respuesta);
                 if (respuesta.success) {
                     // Actualizar estadísticas
                     $("#estadoImportacion").text("✅ Importación completada");
@@ -468,7 +475,8 @@ $(document).ready(function() {
                     $("#modalFooterImportacion").show();
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.error("Error AJAX:", xhr, status, error);
                 $("#estadoImportacion").text("❌ Error de conexión");
                 $("#progresoSucursales").html('<div class="alert alert-danger">Error de conexión durante la importación</div>');
                 $("#modalFooterImportacion").show();
