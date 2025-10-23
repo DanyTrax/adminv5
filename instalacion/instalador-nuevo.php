@@ -182,14 +182,20 @@ function ejecutarInstalacionCompleta() {
             throw new Exception('No se pudo crear el archivo config.php');
         }
         
-        // 2. Crear tablas de la base de datos
+        // 2. Actualizar modelos/conexion.php
+        $conexion_content = generarConexionPHP($datos_bd);
+        if (!file_put_contents('../modelos/conexion.php', $conexion_content)) {
+            throw new Exception('No se pudo actualizar el archivo modelos/conexion.php');
+        }
+        
+        // 3. Crear tablas de la base de datos
         $pdo = conectarBD($datos_bd);
         crearTablasBD($pdo);
         
-        // 3. Insertar datos iniciales
+        // 4. Insertar datos iniciales
         insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario);
         
-        // 4. Registrar sucursal en el sistema central
+        // 5. Registrar sucursal en el sistema central
         registrarSucursalEnCentral($datos_sucursal, $datos_central);
         
         return [
@@ -229,6 +235,27 @@ define('API_KEY_CENTRAL', '{$datos_central['api_key']}');
 define('RUTA_PROYECTO', '/');
 define('RUTA_SERVIDOR', '{$datos_sucursal['url_base']}');
 ?>";
+}
+
+// Función para generar modelos/conexion.php
+function generarConexionPHP($datos_bd) {
+    return "<?php
+
+class Conexion{
+
+	static public function conectar(){
+
+		\$link = new PDO(\"mysql:host={$datos_bd['host']};port={$datos_bd['puerto']};dbname={$datos_bd['nombre_bd']}\",
+			            \"{$datos_bd['usuario']}\",
+			            \"{$datos_bd['password']}\");
+
+		\$link->exec(\"set names utf8\");
+
+		return \$link;
+
+	}
+
+}";
 }
 
 // Función para conectar a la BD
