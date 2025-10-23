@@ -400,19 +400,17 @@ $(document).ready(function() {
     // Función para sincronizar todos los clientes
     function sincronizarTodosClientes() {
         console.log("sincronizarTodosClientes llamada");
-        swal({
+        Swal.fire({
             title: "¿Importar clientes desde sucursales?",
             text: "Esta acción traerá los clientes de todas las sucursales activas al sistema central, evitando duplicados por documento.",
-            type: "warning",
+            icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#5cb85c",
             confirmButtonText: "Sí, importar",
-            cancelButtonText: "Cancelar",
-            closeOnConfirm: false,
-            showLoaderOnConfirm: true
-        }, function(isConfirm) {
-            console.log("SweetAlert confirmado:", isConfirm);
-            if (isConfirm) {
+            cancelButtonText: "Cancelar"
+        }).then((result) => {
+            console.log("SweetAlert confirmado:", result.isConfirmed);
+            if (result.isConfirmed) {
                 console.log("Iniciando importación...");
                 iniciarImportacion();
             }
