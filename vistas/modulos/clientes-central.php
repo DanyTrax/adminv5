@@ -323,5 +323,3 @@ MODAL PROGRESO DE IMPORTACIÓN
         </div>
     </div>
 </div>
-
-<script src="vistas/js/clientes-central.js"></script>
