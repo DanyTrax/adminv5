@@ -1,6 +1,6 @@
 <?php
 
-require_once "modelos/clientes-central.modelo.php";
+require_once __DIR__ . "/../modelos/clientes-central.modelo.php";
 
 class ControladorClientesCentral
 {

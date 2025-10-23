@@ -330,7 +330,7 @@ class ModeloClientesCentral
 			}
 			
 			// Obtener sucursales desde central
-			require_once "sucursales.modelo.php";
+			require_once __DIR__ . "/sucursales.modelo.php";
 			$todasSucursales = ModeloSucursales::mdlObtenerSucursales();
 			
 			if (!$todasSucursales || !isset($todasSucursales['data'])) {
@@ -449,7 +449,7 @@ class ModeloClientesCentral
 	static public function mdlObtenerSucursalesDisponibles()
 	{
 		try {
-			require_once "sucursales.modelo.php";
+			require_once __DIR__ . "/sucursales.modelo.php";
 			$sucursales = ModeloSucursales::mdlObtenerSucursales();
 			
 			if ($sucursales && isset($sucursales['data'])) {

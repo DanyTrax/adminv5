@@ -1,6 +1,6 @@
 <?php
 
-require_once "../controladores/clientes-central.controlador.php";
+require_once __DIR__ . "/../controladores/clientes-central.controlador.php";
 
 // Limpiar cualquier salida previa
 ob_clean();
