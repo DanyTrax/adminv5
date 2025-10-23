@@ -51,6 +51,15 @@ class ControladorClientesCentral
 	}
 
 	/*=============================================
+	IMPORTAR CLIENTES DESDE SUCURSALES
+	=============================================*/
+
+	static public function ctrImportarClientesDesdeSucursales()
+	{
+		return ModeloClientesCentral::mdlImportarClientesDesdeSucursales();
+	}
+
+	/*=============================================
 	OBTENER SUCURSALES DISPONIBLES
 	=============================================*/
 

@@ -156,12 +156,20 @@ switch ($accion) {
     
     case "sincronizar_todos_clientes":
         try {
-            // Por ahora solo retornamos éxito
-            // La sincronización real se implementará después
+            $resultado = ControladorClientesCentral::ctrImportarClientesDesdeSucursales();
+            echo json_encode($resultado);
+        } catch (Exception $e) {
             echo json_encode([
-                'success' => true,
-                'message' => 'Sincronización completada (pendiente de implementar)'
+                'success' => false,
+                'error' => 'Error: ' . $e->getMessage()
             ]);
+        }
+        break;
+    
+    case "importar_clientes_desde_sucursales":
+        try {
+            $resultado = ControladorClientesCentral::ctrImportarClientesDesdeSucursales();
+            echo json_encode($resultado);
         } catch (Exception $e) {
             echo json_encode([
                 'success' => false,

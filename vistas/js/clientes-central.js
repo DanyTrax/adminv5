@@ -399,9 +399,13 @@ $(document).ready(function() {
     
     // Función para sincronizar todos los clientes
     function sincronizarTodosClientes() {
-        if (!confirm("¿Estás seguro de sincronizar todos los clientes a todas las sucursales asignadas?")) {
+        if (!confirm("¿Estás seguro de importar todos los clientes desde las sucursales activas?\n\nEsta acción traerá los clientes de todas las sucursales al sistema central, evitando duplicados.")) {
             return;
         }
+        
+        // Mostrar mensaje de carga
+        var mensajeCarga = "Importando clientes desde sucursales...\nEsto puede tomar unos minutos.";
+        alert(mensajeCarga);
         
         $.ajax({
             url: "ajax/clientes-central.ajax.php",
@@ -410,14 +414,32 @@ $(document).ready(function() {
             dataType: "json",
             success: function(respuesta) {
                 if (respuesta.success) {
-                    alert("Sincronización completada exitosamente");
+                    var mensaje = "✅ Importación completada exitosamente\n\n";
+                    mensaje += "📊 Resumen:\n";
+                    mensaje += "• Clientes importados: " + respuesta.clientes_importados + "\n";
+                    mensaje += "• Clientes duplicados: " + respuesta.clientes_duplicados + "\n";
+                    
+                    if (respuesta.errores && respuesta.errores.length > 0) {
+                        mensaje += "\n⚠️ Errores encontrados: " + respuesta.errores.length;
+                    }
+                    
+                    if (respuesta.resultados) {
+                        mensaje += "\n\nPor sucursal:\n";
+                        for (var sucursalId in respuesta.resultados) {
+                            var resultado = respuesta.resultados[sucursalId];
+                            mensaje += "• " + resultado.sucursal + ": " + resultado.clientes_importados + " importados, " + resultado.clientes_duplicados + " duplicados\n";
+                        }
+                    }
+                    
+                    alert(mensaje);
                     cargarClientesCentrales();
+                    cargarEstadisticas();
                 } else {
-                    alert("Error: " + respuesta.error);
+                    alert("❌ Error: " + respuesta.error);
                 }
             },
             error: function() {
-                alert("Error de conexión durante la sincronización");
+                alert("❌ Error de conexión durante la importación");
             }
         });
     }

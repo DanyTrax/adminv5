@@ -443,6 +443,120 @@ class ModeloClientesCentral
 	}
 
 	/*=============================================
+	IMPORTAR CLIENTES DESDE SUCURSALES LOCALES
+	=============================================*/
+
+	static public function mdlImportarClientesDesdeSucursales()
+	{
+		try {
+			$conexion = ConexionCentral::conectar();
+			
+			// Obtener sucursales activas
+			require_once __DIR__ . "/sucursales.modelo.php";
+			$todasSucursales = ModeloSucursales::mdlObtenerSucursales();
+			
+			if (!$todasSucursales || !isset($todasSucursales['data'])) {
+				return [
+					'success' => false,
+					'error' => 'No se pudieron obtener las sucursales'
+				];
+			}
+			
+			$clientesImportados = 0;
+			$clientesDuplicados = 0;
+			$errores = [];
+			$resultados = [];
+			
+			// Importar clientes de cada sucursal
+			foreach ($todasSucursales['data'] as $sucursal) {
+				if ($sucursal['activo'] != 1) {
+					continue;
+				}
+				
+				$resultados[$sucursal['id']] = [
+					'sucursal' => $sucursal['nombre'],
+					'clientes_importados' => 0,
+					'clientes_duplicados' => 0,
+					'errores' => []
+				];
+				
+				try {
+					// Conectar a la sucursal
+					$dsn = "mysql:host={$sucursal['host_bd']};port={$sucursal['puerto_bd']};dbname={$sucursal['nombre_bd']};charset=utf8";
+					$pdoSucursal = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd'], [
+						PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+						PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+					]);
+					
+					// Obtener clientes de la sucursal
+					$stmt = $pdoSucursal->prepare("SELECT * FROM clientes WHERE activo = 1 OR activo IS NULL");
+					$stmt->execute();
+					$clientesLocales = $stmt->fetchAll();
+					
+					foreach ($clientesLocales as $clienteLocal) {
+						// Verificar si ya existe en central por documento
+						$stmtCheck = $conexion->prepare("SELECT id_central FROM clientes_central WHERE documento = :documento");
+						$stmtCheck->bindParam(":documento", $clienteLocal['documento'], PDO::PARAM_STR);
+						$stmtCheck->execute();
+						$clienteExistente = $stmtCheck->fetch();
+						
+						if ($clienteExistente) {
+							// Cliente duplicado
+							$clientesDuplicados++;
+							$resultados[$sucursal['id']]['clientes_duplicados']++;
+							continue;
+						}
+						
+						// Crear cliente en central
+						$datosCliente = [
+							'documento' => $clienteLocal['documento'],
+							'email' => $clienteLocal['email'] ?? '',
+							'nombre' => $clienteLocal['nombre'],
+							'telefono' => $clienteLocal['telefono'] ?? '',
+							'direccion' => $clienteLocal['direccion'] ?? '',
+							'fecha_nacimiento' => $clienteLocal['fecha_nacimiento'] ?? null,
+							'sucursales_asignadas' => $sucursal['id'],
+							'id_local_principal' => $clienteLocal['id'],
+							'sucursal_origen' => $sucursal['nombre']
+						];
+						
+						$resultadoCrear = self::mdlCrearClienteCentral($datosCliente);
+						
+						if ($resultadoCrear['success']) {
+							$clientesImportados++;
+							$resultados[$sucursal['id']]['clientes_importados']++;
+						} else {
+							$errores[] = "Error importando cliente {$clienteLocal['documento']}: " . $resultadoCrear['error'];
+							$resultados[$sucursal['id']]['errores'][] = "Cliente {$clienteLocal['documento']}: " . $resultadoCrear['error'];
+						}
+					}
+					
+				} catch (Exception $e) {
+					error_log("Error importando clientes de sucursal {$sucursal['id']}: " . $e->getMessage());
+					$errores[] = "Error en sucursal {$sucursal['nombre']}: " . $e->getMessage();
+					$resultados[$sucursal['id']]['errores'][] = $e->getMessage();
+				}
+			}
+			
+			return [
+				'success' => true,
+				'message' => "Importación completada. Clientes importados: {$clientesImportados}, Duplicados: {$clientesDuplicados}",
+				'clientes_importados' => $clientesImportados,
+				'clientes_duplicados' => $clientesDuplicados,
+				'errores' => $errores,
+				'resultados' => $resultados
+			];
+			
+		} catch (Exception $e) {
+			error_log("Error en mdlImportarClientesDesdeSucursales: " . $e->getMessage());
+			return [
+				'success' => false,
+				'error' => 'Error interno del servidor: ' . $e->getMessage()
+			];
+		}
+	}
+
+	/*=============================================
 	OBTENER SUCURSALES DISPONIBLES
 	=============================================*/
 
