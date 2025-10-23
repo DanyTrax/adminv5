@@ -818,9 +818,13 @@ function mostrarStockPorSucursales(idSolicitud, numeroSolicitud, productos) {
         },
         dataType: 'json',
         success: function(response) {
+            console.log("Respuesta recibida:", response);
+            
             if(response.success) {
+                console.log("Mostrando modal de selección de stock");
                 mostrarModalSeleccionStock(response.data, idSolicitud, numeroSolicitud);
             } else {
+                console.log("Error en respuesta:", response.message);
                 swal({
                     title: 'Error',
                     text: response.message || 'No se pudo consultar el stock disponible',
@@ -829,10 +833,11 @@ function mostrarStockPorSucursales(idSolicitud, numeroSolicitud, productos) {
                 });
             }
         },
-        error: function() {
+        error: function(xhr, status, error) {
+            console.log("Error AJAX:", xhr, status, error);
             swal({
                 title: 'Error',
-                text: 'Error de conexión al consultar stock disponible',
+                text: 'Error de conexión al consultar stock disponible: ' + error,
                 type: 'error',
                 confirmButtonText: 'Cerrar'
             });
@@ -844,6 +849,10 @@ function mostrarStockPorSucursales(idSolicitud, numeroSolicitud, productos) {
 MOSTRAR MODAL DE SELECCIÓN DE STOCK
 =============================================*/
 function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
+    
+    console.log("Datos de stock recibidos:", stockData);
+    console.log("ID Solicitud:", idSolicitud);
+    console.log("Número Solicitud:", numeroSolicitud);
     
     var html = '<div class="stock-seleccion-container">';
     html += '<div class="alert alert-info">';
