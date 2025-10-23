@@ -484,7 +484,10 @@ class ControladorSucursales {
     =============================================*/
     static public function actualizarEmpresaUsuarios($nombreSucursal) {
         try {
+            error_log("INICIO actualizarEmpresaUsuarios - Nombre sucursal: {$nombreSucursal}");
+            
             $conexion = Conexion::conectar();
+            error_log("Conexión a BD local establecida");
             
             // Verificar si existe la columna empresa
             $stmt = $conexion->prepare("SHOW COLUMNS FROM usuarios LIKE 'empresa'");
@@ -492,6 +495,14 @@ class ControladorSucursales {
             $columnaEmpresa = $stmt->fetch();
             
             if ($columnaEmpresa) {
+                error_log("Columna 'empresa' encontrada en tabla usuarios");
+                
+                // Contar usuarios activos antes de actualizar
+                $stmt = $conexion->prepare("SELECT COUNT(*) as total FROM usuarios WHERE activo = 1");
+                $stmt->execute();
+                $totalUsuarios = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+                error_log("Total usuarios activos: {$totalUsuarios}");
+                
                 // Actualizar campo empresa en todos los usuarios activos
                 $stmt = $conexion->prepare("
                     UPDATE usuarios 
@@ -502,19 +513,29 @@ class ControladorSucursales {
                 
                 if ($stmt->execute()) {
                     $filasAfectadas = $stmt->rowCount();
-                    error_log("Campo empresa actualizado en {$filasAfectadas} usuarios locales con: {$nombreSucursal}");
+                    error_log("SUCCESS: Campo empresa actualizado en {$filasAfectadas} usuarios locales con: {$nombreSucursal}");
+                    
+                    // Verificar actualización
+                    $stmt = $conexion->prepare("SELECT COUNT(*) as total FROM usuarios WHERE activo = 1 AND empresa = :nombre_sucursal");
+                    $stmt->bindParam(":nombre_sucursal", $nombreSucursal, PDO::PARAM_STR);
+                    $stmt->execute();
+                    $usuariosActualizados = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+                    error_log("Verificación: {$usuariosActualizados} usuarios tienen empresa = {$nombreSucursal}");
+                    
                     return true;
                 } else {
-                    error_log("Error actualizando campo empresa en usuarios locales");
+                    $errorInfo = $stmt->errorInfo();
+                    error_log("ERROR actualizando campo empresa: " . implode(' - ', $errorInfo));
                     return false;
                 }
             } else {
-                error_log("Columna 'empresa' no existe en tabla usuarios local");
+                error_log("ERROR: Columna 'empresa' no existe en tabla usuarios local");
                 return false;
             }
             
         } catch (Exception $e) {
-            error_log("Error en actualizarEmpresaUsuarios: " . $e->getMessage());
+            error_log("EXCEPTION en actualizarEmpresaUsuarios: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             return false;
         }
     }
