@@ -259,24 +259,24 @@ function configurarBusquedaSolicitudes() {
         // Event listener para input y keyup
         $("#numeroSolicitudBuscar").on("input keyup", function(e) {
             console.log("⌨️ EVENTO DETECTADO:", e.type, "Tecla:", e.keyCode);
-            var termino = $(this).val();
+        var termino = $(this).val();
             console.log("⌨️ Término actual:", termino, "Longitud:", termino.length);
             
             // Limpiar timeout anterior
             clearTimeout(timeoutBusqueda);
             
-            if(termino.length >= 3) {
+        if(termino.length >= 3) {
                 // Esperar 300ms antes de buscar
                 timeoutBusqueda = setTimeout(function() {
                     console.log("🔍 Iniciando búsqueda con término:", termino);
-                    buscarSolicitudesStock(termino);
+            buscarSolicitudesStock(termino);
                 }, 300);
-            } else {
+        } else {
                 console.log("❌ Término muy corto, ocultando resultados");
-                ocultarResultadosSolicitudes();
-            }
-        });
-        
+            ocultarResultadosSolicitudes();
+        }
+    });
+    
         // Event listener específico para Enter
         $("#numeroSolicitudBuscar").on("keydown", function(e) {
             console.log("⌨️ Keydown detectado, tecla:", e.keyCode);
@@ -446,7 +446,7 @@ function mostrarResultadosSolicitudes(solicitudes) {
                         <span style="background: ${estadoColor}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-left: 5px;">
                             ${solicitud.estado.toUpperCase()}
                         </span>
-                    </div>
+                </div>
                     <small style="color: #666;">${fecha}</small>
                 </div>
                 
