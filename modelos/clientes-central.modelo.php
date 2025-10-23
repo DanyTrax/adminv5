@@ -1,6 +1,6 @@
 <?php
 
-require_once "conexion-central.php";
+require_once __DIR__ . "/../api-transferencias/conexion-central.php";
 
 class ModeloClientesCentral
 {
