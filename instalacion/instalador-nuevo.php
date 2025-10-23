@@ -266,119 +266,11 @@ function conectarBD($datos_bd) {
     return $pdo;
 }
 
-// Función para crear solo las tablas necesarias
+// Función para crear todas las tablas del sistema con estructura exacta
 function crearTablasBD($pdo) {
-    // Solo las tablas esenciales que realmente existen en el sistema
+    // Estructura completa basada en la BD local real
     $sql_tablas = [
-        // Tabla de usuarios
-        "CREATE TABLE IF NOT EXISTS usuarios (
-            id INT(11) NOT NULL AUTO_INCREMENT,
-            nombre VARCHAR(255) NOT NULL,
-            usuario VARCHAR(255) NOT NULL UNIQUE,
-            password VARCHAR(255) NOT NULL,
-            perfil ENUM('Administrador', 'Especial', 'Vendedor', 'Contador', 'Transportador') NOT NULL,
-            foto VARCHAR(255) DEFAULT 'vistas/img/usuarios/default/anonymous.png',
-            telefono VARCHAR(50),
-            direccion TEXT,
-            empresa VARCHAR(255),
-            estado TINYINT(1) NOT NULL DEFAULT 1,
-            ultimo_login DATETIME NULL,
-            fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
-        
-        // Tabla de configuración local
-        "CREATE TABLE IF NOT EXISTS sucursal_local (
-            id INT(11) NOT NULL AUTO_INCREMENT,
-            codigo_sucursal VARCHAR(50) NOT NULL UNIQUE,
-            nombre VARCHAR(255) NOT NULL,
-            direccion TEXT,
-            telefono VARCHAR(50),
-            email VARCHAR(255),
-            url_base VARCHAR(500),
-            url_api VARCHAR(500),
-            usuario_bd VARCHAR(255),
-            password_bd VARCHAR(255),
-            nombre_bd VARCHAR(255),
-            host_bd VARCHAR(255),
-            puerto_bd INT(11) DEFAULT 3306,
-            es_principal TINYINT(1) DEFAULT 0,
-            activo TINYINT(1) DEFAULT 1,
-            fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-            fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
-        
-        // Tabla de productos
-        "CREATE TABLE IF NOT EXISTS productos (
-            id INT(11) NOT NULL AUTO_INCREMENT,
-            codigo VARCHAR(50) NOT NULL UNIQUE,
-            descripcion TEXT NOT NULL,
-            categoria VARCHAR(255),
-            stock INT(11) DEFAULT 0,
-            precio_compra DECIMAL(10,2) DEFAULT 0,
-            precio_venta DECIMAL(10,2) DEFAULT 0,
-            imagen VARCHAR(255),
-            activo TINYINT(1) DEFAULT 1,
-            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
-        
-        // Tabla de categorías
-        "CREATE TABLE IF NOT EXISTS categorias (
-            id INT(11) NOT NULL AUTO_INCREMENT,
-            nombre VARCHAR(255) NOT NULL,
-            descripcion TEXT,
-            activo TINYINT(1) DEFAULT 1,
-            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
-        
-        // Tabla de clientes
-        "CREATE TABLE IF NOT EXISTS clientes (
-            id INT(11) NOT NULL AUTO_INCREMENT,
-            documento VARCHAR(50) NOT NULL UNIQUE,
-            nombre VARCHAR(255) NOT NULL,
-            email VARCHAR(255),
-            telefono VARCHAR(50),
-            direccion TEXT,
-            fecha_nacimiento DATE,
-            activo TINYINT(1) DEFAULT 1,
-            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
-        
-        // Tabla de ventas
-        "CREATE TABLE IF NOT EXISTS ventas (
-            id INT(11) NOT NULL AUTO_INCREMENT,
-            codigo INT(11) NOT NULL UNIQUE,
-            id_cliente INT(11),
-            id_vendedor INT(11),
-            productos TEXT,
-            impuesto DECIMAL(10,2) DEFAULT 0,
-            neto DECIMAL(10,2) DEFAULT 0,
-            total DECIMAL(10,2) DEFAULT 0,
-            metodo_pago VARCHAR(50),
-            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            FOREIGN KEY (id_cliente) REFERENCES clientes(id),
-            FOREIGN KEY (id_vendedor) REFERENCES usuarios(id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
-        
-        // Tabla de venta_productos
-        "CREATE TABLE IF NOT EXISTS venta_productos (
-            id INT(11) NOT NULL AUTO_INCREMENT,
-            id_venta INT(11) NOT NULL,
-            id_producto INT(11) NOT NULL,
-            cantidad INT(11) NOT NULL,
-            precio DECIMAL(10,2) NOT NULL,
-            subtotal DECIMAL(10,2) NOT NULL,
-            PRIMARY KEY (id),
-            FOREIGN KEY (id_venta) REFERENCES ventas(id),
-            FOREIGN KEY (id_producto) REFERENCES productos(id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
-        
-        // Tabla de abonos_historial
+        // 1. Tabla abonos_historial
         "CREATE TABLE IF NOT EXISTS abonos_historial (
             id INT(11) NOT NULL AUTO_INCREMENT,
             id_venta INT(11) NOT NULL,
@@ -387,64 +279,193 @@ function crearTablasBD($pdo) {
             fecha_abono DATETIME NOT NULL,
             id_vendedor_abono INT(11) NOT NULL,
             nombre_vendedor_abono VARCHAR(255) NOT NULL,
-            medio_pago VARCHAR(50) NOT NULL,
-            observaciones TEXT,
-            fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            medio_pago VARCHAR(50) DEFAULT NULL,
+            observaciones TEXT DEFAULT NULL,
+            fecha_registro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            INDEX idx_id_venta (id_venta),
-            INDEX idx_codigo_venta (codigo_venta)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+            KEY idx_id_venta (id_venta),
+            KEY idx_codigo_venta (codigo_venta),
+            KEY idx_fecha_abono (fecha_abono)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci",
         
-        // Tabla de contabilidad
+        // 2. Tabla categorias
+        "CREATE TABLE IF NOT EXISTS categorias (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            categoria TEXT NOT NULL,
+            fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci",
+        
+        // 3. Tabla clientes
+        "CREATE TABLE IF NOT EXISTS clientes (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            nombre TEXT NOT NULL,
+            documento INT(11) NOT NULL,
+            email TEXT NOT NULL,
+            telefono TEXT NOT NULL,
+            direccion TEXT NOT NULL,
+            fecha_nacimiento DATE NOT NULL,
+            compras INT(11) NOT NULL,
+            ultima_compra DATETIME NOT NULL,
+            fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci",
+        
+        // 4. Tabla contabilidad
         "CREATE TABLE IF NOT EXISTS contabilidad (
             id INT(11) NOT NULL AUTO_INCREMENT,
-            concepto VARCHAR(255) NOT NULL,
-            monto DECIMAL(10,2) NOT NULL,
-            tipo ENUM('ingreso', 'egreso') NOT NULL,
-            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-            observaciones TEXT,
+            id_vendedor INT(11) NOT NULL,
+            fecha DATETIME NOT NULL,
+            detalle TEXT NOT NULL,
+            valor VARCHAR(100) NOT NULL,
+            medio_pago VARCHAR(50) NOT NULL,
+            forma_pago VARCHAR(50) DEFAULT NULL,
+            factura VARCHAR(20) DEFAULT NULL,
+            tipo VARCHAR(50) NOT NULL,
             PRIMARY KEY (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+        ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci",
         
-        // Tabla de cotizaciones
+        // 5. Tabla cotizaciones
         "CREATE TABLE IF NOT EXISTS cotizaciones (
             id INT(11) NOT NULL AUTO_INCREMENT,
-            numero_cotizacion VARCHAR(50) NOT NULL UNIQUE,
-            id_cliente INT(11),
-            id_vendedor INT(11),
-            productos TEXT,
-            subtotal DECIMAL(10,2) DEFAULT 0,
-            impuesto DECIMAL(10,2) DEFAULT 0,
-            total DECIMAL(10,2) DEFAULT 0,
-            estado ENUM('pendiente', 'aprobada', 'rechazada', 'vencida') DEFAULT 'pendiente',
-            fecha_cotizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-            fecha_vencimiento DATE,
-            PRIMARY KEY (id),
-            FOREIGN KEY (id_cliente) REFERENCES clientes(id),
-            FOREIGN KEY (id_vendedor) REFERENCES usuarios(id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+            codigo INT(11) NOT NULL,
+            id_cliente INT(11) NOT NULL,
+            id_vendedor INT(11) NOT NULL,
+            productos TEXT NOT NULL,
+            impuesto FLOAT NOT NULL,
+            descuento INT(11) NOT NULL DEFAULT 0,
+            neto FLOAT NOT NULL,
+            total FLOAT NOT NULL,
+            detalle TEXT NOT NULL,
+            metodo_pago TEXT NOT NULL,
+            fecha_venta DATETIME NOT NULL,
+            id_vend_abono INT(11) NOT NULL,
+            abono FLOAT NOT NULL,
+            fecha_abono DATETIME NOT NULL,
+            pago TEXT NOT NULL,
+            Ult_abono FLOAT NOT NULL,
+            medio_pago VARCHAR(50) DEFAULT NULL,
+            images TEXT DEFAULT NULL,
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci",
         
-        // Tabla de medios_pago
+        // 6. Tabla medios_pago
         "CREATE TABLE IF NOT EXISTS medios_pago (
             id INT(11) NOT NULL AUTO_INCREMENT,
-            nombre VARCHAR(255) NOT NULL,
-            descripcion TEXT,
-            activo TINYINT(1) DEFAULT 1,
-            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+            nombre VARCHAR(100) NOT NULL,
             PRIMARY KEY (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_general_ci",
         
-        // Tabla de sincronizacion_maestro
+        // 7. Tabla productos
+        "CREATE TABLE IF NOT EXISTS productos (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            id_categoria INT(11) NOT NULL,
+            parent_id INT(11) DEFAULT NULL,
+            codigo TEXT NOT NULL,
+            codigo_maestro VARCHAR(50) DEFAULT NULL,
+            descripcion TEXT NOT NULL,
+            imagen TEXT NOT NULL,
+            stock INT(11) NOT NULL,
+            precio_venta FLOAT NOT NULL,
+            ventas INT(11) NOT NULL,
+            fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            es_divisible TINYINT(1) DEFAULT 0,
+            nombre_mitad VARCHAR(255) DEFAULT NULL,
+            precio_mitad DECIMAL(10,2) DEFAULT NULL,
+            nombre_tercio VARCHAR(255) DEFAULT NULL,
+            precio_tercio DECIMAL(10,2) DEFAULT NULL,
+            nombre_cuarto VARCHAR(255) DEFAULT NULL,
+            precio_cuarto DECIMAL(10,2) DEFAULT NULL,
+            PRIMARY KEY (id),
+            KEY idx_codigo_maestro (codigo_maestro)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci",
+        
+        // 8. Tabla sincronizacion_maestro
         "CREATE TABLE IF NOT EXISTS sincronizacion_maestro (
             id INT(11) NOT NULL AUTO_INCREMENT,
-            codigo_producto VARCHAR(50) NOT NULL,
-            descripcion TEXT,
-            stock INT(11) DEFAULT 0,
-            precio DECIMAL(10,2) DEFAULT 0,
-            fecha_sincronizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+            codigo_maestro VARCHAR(50) NOT NULL,
+            id_producto_local INT(11) NOT NULL,
+            ultima_sincronizacion TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            UNIQUE KEY codigo_producto (codigo_producto)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
+            UNIQUE KEY unique_sync (codigo_maestro, id_producto_local),
+            KEY idx_codigo_maestro (codigo_maestro),
+            KEY id_producto_local (id_producto_local),
+            CONSTRAINT sincronizacion_maestro_ibfk_1 FOREIGN KEY (id_producto_local) REFERENCES productos (id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci",
+        
+        // 9. Tabla sucursal_local
+        "CREATE TABLE IF NOT EXISTS sucursal_local (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            codigo_sucursal VARCHAR(20) NOT NULL,
+            nombre VARCHAR(255) NOT NULL,
+            direccion TEXT DEFAULT NULL,
+            telefono VARCHAR(50) DEFAULT NULL,
+            email VARCHAR(255) DEFAULT NULL,
+            usuario_bd VARCHAR(50) DEFAULT NULL,
+            password_bd VARCHAR(255) DEFAULT NULL,
+            nombre_bd VARCHAR(100) DEFAULT NULL,
+            host_bd VARCHAR(255) DEFAULT NULL,
+            puerto_bd INT(11) DEFAULT 3306,
+            url_base VARCHAR(255) NOT NULL,
+            url_api VARCHAR(255) NOT NULL,
+            es_principal TINYINT(1) DEFAULT 0,
+            activo TINYINT(1) DEFAULT 1,
+            registrada_en_central TINYINT(1) DEFAULT 0,
+            fecha_registro TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            fecha_actualizacion TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci",
+        
+        // 10. Tabla usuarios
+        "CREATE TABLE IF NOT EXISTS usuarios (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            nombre TEXT NOT NULL,
+            usuario TEXT NOT NULL,
+            password TEXT NOT NULL,
+            perfil TEXT NOT NULL,
+            foto TEXT NOT NULL,
+            estado INT(11) NOT NULL,
+            ultimo_login DATETIME NOT NULL,
+            fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            empresa TEXT NOT NULL,
+            telefono TEXT DEFAULT NULL,
+            direccion TEXT DEFAULT NULL,
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci",
+        
+        // 11. Tabla venta_productos
+        "CREATE TABLE IF NOT EXISTS venta_productos (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            id_venta INT(11) NOT NULL,
+            descripcion VARCHAR(255) NOT NULL,
+            cantidad INT(11) NOT NULL,
+            total DECIMAL(10,2) NOT NULL,
+            PRIMARY KEY (id),
+            KEY id_venta (id_venta)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci",
+        
+        // 12. Tabla ventas
+        "CREATE TABLE IF NOT EXISTS ventas (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            codigo INT(11) NOT NULL,
+            id_cliente INT(11) NOT NULL,
+            id_vendedor INT(11) NOT NULL,
+            productos TEXT NOT NULL,
+            impuesto FLOAT NOT NULL,
+            descuento INT(11) NOT NULL DEFAULT 0,
+            neto FLOAT NOT NULL,
+            total FLOAT NOT NULL,
+            detalle TEXT NOT NULL,
+            metodo_pago TEXT NOT NULL,
+            fecha_venta DATETIME NOT NULL,
+            id_vend_abono INT(11) NOT NULL,
+            abono FLOAT NOT NULL,
+            fecha_abono DATETIME NOT NULL,
+            pago TEXT NOT NULL,
+            Ult_abono FLOAT NOT NULL,
+            medio_pago VARCHAR(50) DEFAULT NULL,
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci"
     ];
     
     foreach ($sql_tablas as $sql) {
@@ -458,8 +479,8 @@ function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario) {
     $stmt = $pdo->prepare("
         INSERT INTO sucursal_local (
             codigo_sucursal, nombre, direccion, telefono, email, 
-            url_base, url_api, es_principal, activo
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1)
+            url_base, url_api, es_principal, activo, registrada_en_central
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1, 0)
     ");
     $stmt->execute([
         $datos_sucursal['codigo_sucursal'],
@@ -471,17 +492,24 @@ function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario) {
         $datos_sucursal['url_api']
     ]);
     
-    // Insertar primer usuario administrador
+    // Insertar primer usuario administrador con estructura exacta
     $password_encriptado = crypt($datos_usuario['password'], '$2a$07$asxx54ahjppf45sd87a5a4dDDGsystemdev$');
     $stmt = $pdo->prepare("
-        INSERT INTO usuarios (nombre, usuario, password, perfil, estado, ultimo_login, fecha) 
-        VALUES (?, ?, ?, ?, 1, NOW(), NOW())
+        INSERT INTO usuarios (
+            nombre, usuario, password, perfil, foto, estado, 
+            ultimo_login, fecha, empresa, telefono, direccion
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?)
     ");
     $stmt->execute([
         $datos_usuario['nombre'],
         $datos_usuario['usuario'],
         $password_encriptado,
-        $datos_usuario['perfil']
+        $datos_usuario['perfil'],
+        'vistas/img/usuarios/default/anonymous.png', // foto por defecto
+        1, // estado activo
+        $datos_sucursal['nombre'], // empresa = nombre de la sucursal
+        '', // telefono vacío
+        ''  // direccion vacía
     ]);
     
     // Verificar que el usuario se creó correctamente
