@@ -50,11 +50,14 @@ class ControladorSucursales {
                     // Actualizar config.php
                     self::actualizarConfigPHP($_POST["codigoLocal"]);
                     
+                    // Sincronizar con el sistema central
+                    self::sincronizarConCentral($datos);
+                    
                     echo '<script>
                         swal({
                             type: "success",
                             title: "¡Configuración guardada!",
-                            text: "Los datos de esta sucursal han sido configurados correctamente.",
+                            text: "Los datos de esta sucursal han sido configurados y sincronizados correctamente.",
                             showConfirmButton: true,
                             confirmButtonText: "Cerrar"
                         }).then(function(result) {
@@ -471,6 +474,75 @@ class ControladorSucursales {
     =============================================*/
     static public function ctrMostrarSucursal($item, $valor) {
         return ModeloSucursales::mdlMostrarSucursal($item, $valor);
+    }
+
+    /*=============================================
+    SINCRONIZAR CON SISTEMA CENTRAL
+    =============================================*/
+    static public function sincronizarConCentral($datos) {
+        try {
+            // Obtener sucursal central por código
+            $sucursalesCentral = ModeloSucursales::mdlObtenerSucursales();
+            $sucursalCentral = null;
+            
+            if ($sucursalesCentral && $sucursalesCentral['success']) {
+                foreach ($sucursalesCentral['data'] as $sucursal) {
+                    if ($sucursal['codigo_sucursal'] === $datos['codigo_sucursal']) {
+                        $sucursalCentral = $sucursal;
+                        break;
+                    }
+                }
+            }
+            
+            if ($sucursalCentral) {
+                // Preparar datos para sincronización
+                $datosSincronizacion = [
+                    'id' => $sucursalCentral['id'],
+                    'nombre' => $datos['nombre'],
+                    'direccion' => $datos['direccion'],
+                    'telefono' => $datos['telefono'],
+                    'email' => $datos['email'],
+                    'url_base' => $datos['url_base'] ?? '',
+                    'url_api' => $datos['url_api'] ?? '',
+                    'activo' => $datos['activo']
+                ];
+                
+                // Agregar campos de BD
+                if (isset($datos['usuario_bd'])) {
+                    $datosSincronizacion['usuario_bd'] = $datos['usuario_bd'];
+                }
+                if (isset($datos['password_bd'])) {
+                    $datosSincronizacion['password_bd'] = $datos['password_bd'];
+                }
+                if (isset($datos['nombre_bd'])) {
+                    $datosSincronizacion['nombre_bd'] = $datos['nombre_bd'];
+                }
+                if (isset($datos['host_bd'])) {
+                    $datosSincronizacion['host_bd'] = $datos['host_bd'];
+                }
+                if (isset($datos['puerto_bd'])) {
+                    $datosSincronizacion['puerto_bd'] = $datos['puerto_bd'];
+                }
+                
+                // Ejecutar sincronización
+                $resultado = ModeloSucursales::mdlActualizarSucursalCentral($datosSincronizacion);
+                
+                if ($resultado && $resultado['success']) {
+                    error_log("Sincronización Local → Central exitosa para sucursal: " . $datos['codigo_sucursal']);
+                    return true;
+                } else {
+                    error_log("Error en sincronización Local → Central: " . ($resultado['error'] ?? 'Error desconocido'));
+                    return false;
+                }
+            } else {
+                error_log("No se encontró sucursal central para sincronizar: " . $datos['codigo_sucursal']);
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en sincronizarConCentral: " . $e->getMessage());
+            return false;
+        }
     }
 }
 
