@@ -100,8 +100,10 @@ class ModeloSucursales {
             $stmt->bindParam(":direccion", $datos["direccion"], PDO::PARAM_STR);
             $stmt->bindParam(":telefono", $datos["telefono"], PDO::PARAM_STR);
             $stmt->bindParam(":email", $datos["email"], PDO::PARAM_STR);
-            $stmt->bindParam(":url_base", $datos["url_base"], PDO::PARAM_STR);
-            $stmt->bindParam(":url_api", $datos["url_api"], PDO::PARAM_STR);
+            $urlBase = $datos["url_base"] ?? '';
+            $urlApi = $datos["url_api"] ?? '';
+            $stmt->bindParam(":url_base", $urlBase, PDO::PARAM_STR);
+            $stmt->bindParam(":url_api", $urlApi, PDO::PARAM_STR);
             $stmt->bindParam(":usuario_bd", $datos["usuario_bd"], PDO::PARAM_STR);
             $stmt->bindParam(":password_bd", $datos["password_bd"], PDO::PARAM_STR);
             $stmt->bindParam(":nombre_bd", $datos["nombre_bd"], PDO::PARAM_STR);

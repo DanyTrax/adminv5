@@ -1403,50 +1403,13 @@ try {
                 $resultado = ModeloSucursales::mdlActualizarSucursalCentral($datosSincronizacion);
                 
                 if ($resultado && $resultado['success']) {
-                    // También sincronizar del central al local (datos actualizados)
-                    $datosLocal = [
-                        'codigo_sucursal' => $sucursalCentral['codigo_sucursal'],
-                        'nombre' => $sucursalCentral['nombre'],
-                        'direccion' => $sucursalCentral['direccion'],
-                        'telefono' => $sucursalCentral['telefono'],
-                        'email' => $sucursalCentral['email'],
-                        'url_base' => $sucursalCentral['url_base'] ?? '',
-                        'url_api' => $sucursalCentral['url_api'] ?? '',
-                        'activo' => $sucursalCentral['activo']
-                    ];
-                    
-                    // Agregar campos de BD del central
-                    if (isset($sucursalCentral['usuario_bd'])) {
-                        $datosLocal['usuario_bd'] = $sucursalCentral['usuario_bd'];
-                    }
-                    if (isset($sucursalCentral['password_bd'])) {
-                        $datosLocal['password_bd'] = $sucursalCentral['password_bd'];
-                    }
-                    if (isset($sucursalCentral['nombre_bd'])) {
-                        $datosLocal['nombre_bd'] = $sucursalCentral['nombre_bd'];
-                    }
-                    if (isset($sucursalCentral['host_bd'])) {
-                        $datosLocal['host_bd'] = $sucursalCentral['host_bd'];
-                    }
-                    if (isset($sucursalCentral['puerto_bd'])) {
-                        $datosLocal['puerto_bd'] = $sucursalCentral['puerto_bd'];
-                    }
-                    
-                    // Actualizar configuración local
-                    $resultadoLocal = ModeloSucursales::mdlConfigurarSucursalLocal('sucursal_local', $datosLocal);
-                    
-                    if ($resultadoLocal && $resultadoLocal['success']) {
-                        echo json_encode([
-                            'success' => true,
-                            'message' => 'Sincronización bidireccional completada exitosamente',
-                            'cambios' => $cambios
-                        ]);
-                    } else {
-                        echo json_encode([
-                            'success' => false,
-                            'error' => 'Error sincronizando configuración local: ' . ($resultadoLocal['error'] ?? 'Error desconocido')
-                        ]);
-                    }
+                    // Sincronización exitosa - no sincronizar de vuelta al local para evitar bucle
+                    error_log("Sincronización Local → Central exitosa para sucursal ID: " . $sucursalCentral['id']);
+                    echo json_encode([
+                        'success' => true,
+                        'message' => 'Sincronización completada exitosamente',
+                        'cambios' => $cambios
+                    ]);
                 } else {
                     echo json_encode([
                         'success' => false,

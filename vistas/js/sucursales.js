@@ -10,8 +10,8 @@ CARGAR DATATABLE DE SUCURSALES
 =============================================*/
 $(document).ready(function() {
     
-    // Sincronizar sucursales al cargar la página
-    sincronizarSucursalesBidireccional();
+    // Sincronizar sucursales al cargar la página (deshabilitado para evitar notificaciones molestas)
+    // sincronizarSucursalesBidireccional();
     
     // Cargar estado inicial de la sucursal
     cargarEstadoSucursalActual();
