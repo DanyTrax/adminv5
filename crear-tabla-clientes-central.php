@@ -2,13 +2,20 @@
 /**
  * SCRIPT PARA CREAR TABLA clientes_central EN SISTEMA CENTRAL
  * Para ejecutar en cPanel
+ * 
+ * IMPORTANTE: Este script debe ejecutarse desde el sistema CENTRAL
+ * No desde una sucursal local
  */
 
 echo "<h2>🚀 CREAR TABLA clientes_central EN SISTEMA CENTRAL</h2>";
 
 try {
-    require_once "config.php";
-    require_once "modelos/conexion-central.php";
+    // Verificar que estamos en el sistema central
+    if (!file_exists("api-transferencias/conexion-central.php")) {
+        throw new Exception("Este script debe ejecutarse desde el sistema CENTRAL, no desde una sucursal local");
+    }
+    
+    require_once "api-transferencias/conexion-central.php";
     
     // Conectar a BD central
     $conexion = ConexionCentral::conectar();
@@ -20,6 +27,22 @@ try {
     echo "<div style='background: #d4edda; padding: 10px; border-radius: 5px;'>";
     echo "<strong>✅ Conexión a BD central exitosa</strong>";
     echo "</div>";
+    
+    // Verificar si la tabla ya existe
+    $stmt = $conexion->prepare("SHOW TABLES LIKE 'clientes_central'");
+    $stmt->execute();
+    $tablaExiste = $stmt->fetch();
+    
+    if ($tablaExiste) {
+        echo "<div style='background: #fff3cd; padding: 10px; border-radius: 5px;'>";
+        echo "<strong>⚠️ La tabla clientes_central ya existe</strong><br>";
+        echo "Se verificará su estructura...";
+        echo "</div>";
+    } else {
+        echo "<div style='background: #e7f3ff; padding: 10px; border-radius: 5px;'>";
+        echo "<strong>📋 La tabla clientes_central no existe, se creará ahora...</strong>";
+        echo "</div>";
+    }
     
     // SQL para crear tabla clientes_central
     $sql = "
@@ -99,9 +122,21 @@ try {
     echo "</table>";
     echo "</div>";
     
+    // Verificar datos existentes
+    echo "<h3>📋 Verificando datos existentes:</h3>";
+    
+    $stmt = $conexion->prepare("SELECT COUNT(*) as total FROM clientes_central");
+    $stmt->execute();
+    $total = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    
+    echo "<div style='background: #e7f3ff; padding: 10px; border-radius: 5px;'>";
+    echo "<strong>Total de clientes centrales: {$total}</strong>";
+    echo "</div>";
+    
     echo "<div style='background: #d4edda; padding: 10px; border-radius: 5px; margin-top: 20px;'>";
     echo "<strong>✅ PROCESO COMPLETADO EXITOSAMENTE</strong><br>";
-    echo "La tabla clientes_central está lista para usar.";
+    echo "La tabla clientes_central está lista para usar.<br>";
+    echo "Ahora puedes acceder a la gestión de clientes centrales desde el menú.";
     echo "</div>";
     
 } catch (Exception $e) {
