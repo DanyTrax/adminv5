@@ -432,6 +432,113 @@ class ModeloUsuariosCentral {
     }
 
     /*=============================================
+    IMPORTAR USUARIOS DE SUCURSAL ESPECÍFICA
+    =============================================*/
+    static public function mdlImportarUsuariosSucursalEspecifica($sucursalId) {
+        
+        try {
+            $conexion = ConexionCentral::conectar();
+            $usuariosImportados = 0;
+            $errores = [];
+            
+            // Obtener información de la sucursal específica
+            $sucursales = self::mdlConsultarUsuariosSucursales($sucursalId);
+            
+            if (empty($sucursales)) {
+                return [
+                    'success' => false,
+                    'error' => 'Sucursal no encontrada o sin usuarios'
+                ];
+            }
+            
+            $sucursal = $sucursales[0]; // Solo una sucursal específica
+            
+            if ($sucursal['estado_conexion'] === 'conectado' && !empty($sucursal['usuarios'])) {
+                foreach ($sucursal['usuarios'] as $usuario) {
+                    // Verificar si el usuario ya existe
+                    $stmt = $conexion->prepare("
+                        SELECT id FROM usuarios_central 
+                        WHERE usuario = :usuario
+                    ");
+                    $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+                    $stmt->execute();
+                    
+                    if (!$stmt->fetch()) {
+                        // Insertar usuario con asignación a la sucursal
+                        $stmt = $conexion->prepare("
+                            INSERT INTO usuarios_central (
+                                nombre, usuario, password, perfil, foto, 
+                                telefono, direccion, activo, 
+                                sucursales_asignadas, sincronizado, fecha_creacion
+                            ) VALUES (
+                                :nombre, :usuario, :password, :perfil, :foto,
+                                :telefono, :direccion, 1,
+                                :sucursales_asignadas, 0, NOW()
+                            )
+                        ");
+                        
+                        // Asegurar que todos los campos tengan valores por defecto
+                        $password = !empty($usuario['password']) ? $usuario['password'] : 'password123';
+                        $telefono = !empty($usuario['telefono']) ? $usuario['telefono'] : '';
+                        $direccion = !empty($usuario['direccion']) ? $usuario['direccion'] : '';
+                        $foto = !empty($usuario['foto']) ? $usuario['foto'] : 'vistas/img/usuarios/default/anonymous.png';
+                        $sucursalesAsignadas = $sucursalId; // Asignar a la sucursal de origen
+                        
+                        $stmt->bindParam(":nombre", $usuario['nombre'], PDO::PARAM_STR);
+                        $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+                        $stmt->bindParam(":password", $password, PDO::PARAM_STR);
+                        $stmt->bindParam(":perfil", $usuario['perfil'], PDO::PARAM_STR);
+                        $stmt->bindParam(":foto", $foto, PDO::PARAM_STR);
+                        $stmt->bindParam(":telefono", $telefono, PDO::PARAM_STR);
+                        $stmt->bindParam(":direccion", $direccion, PDO::PARAM_STR);
+                        $stmt->bindParam(":sucursales_asignadas", $sucursalesAsignadas, PDO::PARAM_STR);
+                        
+                        if ($stmt->execute()) {
+                            $usuariosImportados++;
+                        } else {
+                            $errores[] = "Error importando usuario: " . $usuario['usuario'];
+                        }
+                    } else {
+                        // Usuario ya existe, actualizar sucursales asignadas
+                        $stmt = $conexion->prepare("
+                            UPDATE usuarios_central 
+                            SET sucursales_asignadas = CONCAT(
+                                IF(sucursales_asignadas IS NULL OR sucursales_asignadas = '', '', CONCAT(sucursales_asignadas, ',')),
+                                :sucursal_id
+                            )
+                            WHERE usuario = :usuario 
+                            AND (sucursales_asignadas IS NULL OR sucursales_asignadas = '' OR sucursales_asignadas NOT LIKE CONCAT('%', :sucursal_id, '%'))
+                        ");
+                        $stmt->bindParam(":sucursal_id", $sucursalId, PDO::PARAM_STR);
+                        $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+                        $stmt->execute();
+                    }
+                }
+            } else {
+                return [
+                    'success' => false,
+                    'error' => 'No se pudo conectar a la sucursal o no hay usuarios disponibles'
+                ];
+            }
+            
+            return [
+                'success' => true,
+                'message' => "Se importaron {$usuariosImportados} usuarios de la sucursal exitosamente",
+                'usuarios_importados' => $usuariosImportados,
+                'errores' => $errores,
+                'sucursal' => $sucursal['sucursal']['nombre']
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlImportarUsuariosSucursalEspecifica: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error al importar usuarios: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /*=============================================
     ELIMINAR USUARIO CENTRAL
     =============================================*/
     static public function mdlEliminarUsuarioCentral($usuarioId) {

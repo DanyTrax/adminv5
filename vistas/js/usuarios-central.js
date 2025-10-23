@@ -28,7 +28,8 @@ $(document).ready(function() {
     });
     
     $(document).on("click", ".btnImportarTodos", function() {
-        importarTodosUsuarios();
+        var sucursalId = $(this).data("sucursal");
+        importarTodosUsuarios(sucursalId);
     });
     
     $(document).on("click", ".btnSincronizar", function() {
@@ -389,17 +390,25 @@ $(document).ready(function() {
         });
     }
     
-    function importarTodosUsuarios() {
-        console.log("Importando todos los usuarios...");
+    function importarTodosUsuarios(sucursalId) {
+        console.log("Importando todos los usuarios de la sucursal:", sucursalId);
+        
+        if (!sucursalId) {
+            mostrarError("ID de sucursal no válido");
+            return;
+        }
         
         $.ajax({
             url: "ajax/usuarios-central.ajax.php",
             method: "POST",
-            data: { accion: "importar_usuarios_sucursales" },
+            data: { 
+                accion: "importar_usuarios_sucursal_especifica",
+                sucursal_id: sucursalId
+            },
             dataType: "json",
             success: function(respuesta) {
                 if (respuesta.success) {
-                    mostrarExito("Usuarios importados exitosamente");
+                    mostrarExito("Usuarios importados exitosamente de la sucursal");
                     cargarUsuariosCentrales();
                     cargarEstadisticas();
                 } else {

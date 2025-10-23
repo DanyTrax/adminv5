@@ -79,6 +79,12 @@ try {
             echo json_encode($resultado);
             break;
             
+        case "importar_usuarios_sucursal_especifica":
+            $sucursalId = $_POST['sucursal_id'];
+            $resultado = ControladorUsuariosCentral::ctrImportarUsuariosSucursalEspecifica($sucursalId);
+            echo json_encode($resultado);
+            break;
+            
         case "importar_usuario_individual":
             $usuario = json_decode($_POST['usuario'], true);
             $resultado = ControladorUsuariosCentral::ctrImportarUsuarioIndividual($usuario);

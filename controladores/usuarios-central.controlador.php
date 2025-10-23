@@ -121,6 +121,21 @@ class ControladorUsuariosCentral {
     }
 
     /*=============================================
+    IMPORTAR USUARIOS DE SUCURSAL ESPECÍFICA
+    =============================================*/
+    static public function ctrImportarUsuariosSucursalEspecifica($sucursalId) {
+        try {
+            return ModeloUsuariosCentral::mdlImportarUsuariosSucursalEspecifica($sucursalId);
+        } catch (Exception $e) {
+            error_log("Error en ctrImportarUsuariosSucursalEspecifica: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error al importar usuarios de sucursal: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /*=============================================
     IMPORTAR USUARIO INDIVIDUAL
     =============================================*/
     static public function ctrImportarUsuarioIndividual($usuario) {
