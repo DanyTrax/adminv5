@@ -1,12 +1,14 @@
 <?php
 
+require_once __DIR__ . "/../modelos/sucursales.modelo.php";
+
 class ControladorSucursales {
 
     /*=============================================
     MOSTRAR VISTA PRINCIPAL DE SUCURSALES
     =============================================*/
     static public function ctrMostrarSucursales() {
-        if ($_SESSION["perfil"] == "Administrador") {
+        if (isset($_SESSION["perfil"]) && $_SESSION["perfil"] == "Administrador") {
             include "vistas/modulos/sucursales.php";
         } else {
             include "vistas/modulos/404.php";
@@ -606,6 +608,60 @@ class ControladorSucursales {
         } catch (Exception $e) {
             error_log("Error en sincronizarConCentral: " . $e->getMessage());
             return false;
+        }
+    }
+    
+    /*=============================================
+    OBTENER SUCURSALES DISPONIBLES PARA CONSULTA DE STOCK
+    =============================================*/
+    static public function ctrObtenerSucursalesDisponibles() {
+        try {
+            $sucursales = ModeloSucursales::mdlObtenerSucursales();
+            
+            if (!$sucursales || !$sucursales['success']) {
+                return [
+                    'success' => false,
+                    'message' => 'No se pudieron obtener las sucursales'
+                ];
+            }
+            
+            $sucursalesDisponibles = [];
+            
+            foreach ($sucursales['data'] as $sucursal) {
+                if ($sucursal['activo'] == 1) {
+                    // Verificar conexión a la sucursal
+                    $estadoConexion = 'desconectado';
+                    
+                    if (!empty($sucursal['host_bd']) && !empty($sucursal['nombre_bd']) && 
+                        !empty($sucursal['usuario_bd']) && !empty($sucursal['password_bd'])) {
+                        
+                        try {
+                            $dsn = "mysql:host={$sucursal['host_bd']};dbname={$sucursal['nombre_bd']};port={$sucursal['puerto_bd']}";
+                            $pdo = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd']);
+                            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                            $estadoConexion = 'conectado';
+                        } catch (Exception $e) {
+                            error_log("Error conectando a sucursal {$sucursal['nombre']}: " . $e->getMessage());
+                        }
+                    }
+                    
+                    $sucursalesDisponibles[] = array_merge($sucursal, [
+                        'estado_conexion' => $estadoConexion
+                    ]);
+                }
+            }
+            
+            return [
+                'success' => true,
+                'data' => $sucursalesDisponibles
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error en ctrObtenerSucursalesDisponibles: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error al obtener sucursales: ' . $e->getMessage()
+            ];
         }
     }
 }
