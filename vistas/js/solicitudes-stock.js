@@ -893,15 +893,16 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
     html += '<table class="table table-bordered table-striped">';
     html += '<thead class="bg-primary">';
     html += '<tr>';
-    html += '<th>Producto</th>';
-    html += '<th>Solicitado</th>';
+    html += '<th style="width: 80px;">Código</th>';
+    html += '<th style="width: 200px;">Producto</th>';
+    html += '<th style="width: 80px;">Solicitado</th>';
     
-    // Agregar columnas para cada sucursal
+    // Agregar columnas para cada sucursal (más compactas)
     sucursalesUnicas.forEach(function(sucursal) {
-        html += '<th>' + sucursal.nombre + '</th>';
+        html += '<th style="width: 120px;">' + sucursal.nombre + '</th>';
     });
     
-    html += '<th>Estado</th>';
+    html += '<th style="width: 80px;">Estado</th>';
     html += '</tr>';
     html += '</thead>';
     html += '<tbody>';
@@ -919,7 +920,8 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
         }
         
         html += '<tr data-producto="' + producto.codigo + '">';
-        html += '<td><strong>' + producto.codigo + '</strong><br><small>' + producto.descripcion + '</small></td>';
+        html += '<td><strong>' + producto.codigo + '</strong></td>';
+        html += '<td><small>' + producto.descripcion + '</small></td>';
         html += '<td><span class="badge badge-info">' + cantidadSolicitada + '</span></td>';
         
         // Agregar columnas para cada sucursal
@@ -939,13 +941,11 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
                 }
             }
             
-            html += '<td>';
-            html += '<div class="text-center">';
-            html += '<span class="badge ' + (puedeSatisfacer ? 'badge-success' : 'badge-danger') + '">';
+            html += '<td class="text-center">';
+            html += '<span class="badge ' + (puedeSatisfacer ? 'badge-success' : 'badge-danger') + '" style="font-size: 11px;">';
             html += stockSucursal;
             html += '</span>';
-            html += '<br><small class="text-muted">' + (puedeSatisfacer ? '✓ Disponible' : '✗ Insuficiente') + '</small>';
-            html += '</div>';
+            html += '<br><small class="text-muted" style="font-size: 10px;">' + (puedeSatisfacer ? '✓' : '✗') + '</small>';
             html += '</td>';
         });
         
@@ -953,7 +953,7 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
         var estado = totalDisponible >= cantidadSolicitada ? 'Completo' : 'Parcial';
         var claseEstado = totalDisponible >= cantidadSolicitada ? 'badge-success' : 'badge-warning';
         
-        html += '<td><span class="badge ' + claseEstado + '">' + estado + '</span></td>';
+        html += '<td class="text-center"><span class="badge ' + claseEstado + '" style="font-size: 11px;">' + estado + '</span></td>';
         html += '</tr>';
     });
     
@@ -961,10 +961,9 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
     html += '</table>';
     html += '</div>';
     
-    // Resumen
-    html += '<div class="alert alert-info mt-3">';
-    html += '<h5><i class="fa fa-info-circle"></i> Resumen de Disponibilidad:</h5>';
-    html += '<div id="resumen-stock">';
+    // Resumen compacto
+    html += '<div class="alert alert-info mt-2" style="padding: 10px;">';
+    html += '<div class="row">';
     
     var productosCompletos = 0;
     var productosParciales = 0;
@@ -989,18 +988,24 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
         }
     });
     
-    html += '<p><strong>Productos con stock completo:</strong> ' + productosCompletos + '</p>';
-    html += '<p><strong>Productos con stock parcial:</strong> ' + productosParciales + '</p>';
-    html += '<p><strong>Productos sin stock:</strong> ' + productosSinStock + '</p>';
+    html += '<div class="col-md-4 text-center">';
+    html += '<span class="badge badge-success" style="font-size: 12px;">Completos: ' + productosCompletos + '</span>';
+    html += '</div>';
+    html += '<div class="col-md-4 text-center">';
+    html += '<span class="badge badge-warning" style="font-size: 12px;">Parciales: ' + productosParciales + '</span>';
+    html += '</div>';
+    html += '<div class="col-md-4 text-center">';
+    html += '<span class="badge badge-danger" style="font-size: 12px;">Sin stock: ' + productosSinStock + '</span>';
+    html += '</div>';
     html += '</div>';
     html += '</div>';
     
     html += '</div>';
     
     swal({
-        title: 'Seleccionar Stock por Sucursal',
+        title: 'Stock Disponible por Sucursal',
         html: html,
-        width: '90%',
+        width: '70%',
         showCancelButton: true,
         confirmButtonText: 'Crear Despachos',
         cancelButtonText: 'Cancelar',
