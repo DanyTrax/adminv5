@@ -20,7 +20,7 @@ class ControladorClientesCentral
 
 	static public function ctrEditarClienteCentral($datos)
 	{
-		return ModeloClientesCentral::mdlEditarClienteCentral($datos);
+		return ModeloClientesCentral::mdlEditarClienteCentralConSincronizacion($datos);
 	}
 
 	/*=============================================
