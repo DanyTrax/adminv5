@@ -193,7 +193,7 @@ function ejecutarInstalacionCompleta() {
         crearTablasBD($pdo);
         
         // 4. Insertar datos iniciales
-        insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario);
+        insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario, $datos_bd);
         
         // 5. Registrar sucursal en el sistema central
         registrarSucursalEnCentral($datos_sucursal, $datos_central);
@@ -474,13 +474,14 @@ function crearTablasBD($pdo) {
 }
 
 // Función para insertar datos iniciales
-function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario) {
-    // Insertar configuración de la sucursal
+function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario, $datos_bd) {
+    // Insertar configuración de la sucursal con datos de BD
     $stmt = $pdo->prepare("
         INSERT INTO sucursal_local (
             codigo_sucursal, nombre, direccion, telefono, email, 
+            usuario_bd, password_bd, nombre_bd, host_bd, puerto_bd,
             url_base, url_api, es_principal, activo, registrada_en_central
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1, 0)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, 0)
     ");
     $stmt->execute([
         $datos_sucursal['codigo_sucursal'],
@@ -488,6 +489,11 @@ function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario) {
         $datos_sucursal['direccion'],
         $datos_sucursal['telefono'],
         $datos_sucursal['email'],
+        $datos_bd['usuario'], // usuario_bd
+        $datos_bd['password'], // password_bd
+        $datos_bd['nombre_bd'], // nombre_bd
+        $datos_bd['host'], // host_bd
+        $datos_bd['puerto'], // puerto_bd
         $datos_sucursal['url_base'],
         $datos_sucursal['url_api']
     ]);
@@ -523,6 +529,28 @@ function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario) {
     
     // Log para debugging
     error_log("Usuario creado exitosamente: " . $usuario_creado['usuario'] . " (ID: " . $usuario_creado['id'] . ")");
+}
+
+// Función para detectar URL actual
+function detectarUrlActual() {
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'];
+    $script = dirname($_SERVER['SCRIPT_NAME']);
+    $base_url = $protocol . '://' . $host . $script;
+    
+    // Limpiar la URL para que termine con /
+    if (substr($base_url, -1) !== '/') {
+        $base_url .= '/';
+    }
+    
+    return $base_url;
+}
+
+// Función para sugerir URL de API
+function sugerirUrlApi($url_base) {
+    // Remover la última barra si existe
+    $url_limpia = rtrim($url_base, '/');
+    return $url_limpia . '/api-transferencias/';
 }
 
 // Función para registrar sucursal en el sistema central
@@ -631,14 +659,18 @@ function registrarSucursalEnCentral($datos_sucursal, $datos_central) {
                                 <div class="mb-3">
                                     <label class="form-label">URL Base</label>
                                     <input type="url" class="form-control" name="url_base" 
-                                           placeholder="https://sucursal.empresa.com/" value="<?= $_SESSION['datos_sucursal']['url_base'] ?? '' ?>">
+                                           placeholder="https://sucursal.empresa.com/" 
+                                           value="<?= $_SESSION['datos_sucursal']['url_base'] ?? detectarUrlActual() ?>">
+                                    <div class="form-text">Se detectó automáticamente la URL actual</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">URL API</label>
                                     <input type="url" class="form-control" name="url_api" 
-                                           placeholder="https://sucursal.empresa.com/api/" value="<?= $_SESSION['datos_sucursal']['url_api'] ?? '' ?>">
+                                           placeholder="https://sucursal.empresa.com/api-transferencias/" 
+                                           value="<?= $_SESSION['datos_sucursal']['url_api'] ?? sugerirUrlApi(detectarUrlActual()) ?>">
+                                    <div class="form-text">Sugerida automáticamente</div>
                                 </div>
                             </div>
                         </div>
