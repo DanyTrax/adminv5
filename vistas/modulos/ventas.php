@@ -377,6 +377,28 @@ $formaPago = isset($_GET['formaPago']) ? $_GET['formaPago'] : null;
                 <div id="sinHistorial" class="alert alert-info" style="display: none;">
                     <i class="fa fa-info-circle"></i> No se encontraron transacciones registradas para esta venta.
                 </div>
+                
+                <hr>
+                
+                <h5><strong>Detalles Adicionales</strong></h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><strong>Detalle o Nota:</strong></label>
+                            <div class="well well-sm" id="detalleNota" style="min-height: 60px; background-color: #f9f9f9; border: 1px solid #ddd; padding: 10px; margin-bottom: 0;">
+                                <em class="text-muted" id="detalleNotaTexto">Sin detalles adicionales</em>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label><strong>Pago:</strong></label>
+                            <div class="well well-sm" id="pagoDetalle" style="min-height: 60px; background-color: #f9f9f9; border: 1px solid #ddd; padding: 10px; margin-bottom: 0;">
+                                <em class="text-muted" id="pagoDetalleTexto">Sin información de pago</em>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">
@@ -500,6 +522,28 @@ $formaPago = isset($_GET['formaPago']) ? $_GET['formaPago'] : null;
 .label-danger {
     background-color: #d9534f;
     color: white;
+}
+
+/* Estilos para detalles adicionales */
+.well {
+    border-radius: 4px;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+}
+
+.well-sm {
+    padding: 9px;
+    border-radius: 3px;
+}
+
+#detalleNota, #pagoDetalle {
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    font-family: inherit;
+}
+
+#detalleNotaTexto, #pagoDetalleTexto {
+    font-style: italic;
+    margin: 0;
 }
 
 /* Responsive para el modal */

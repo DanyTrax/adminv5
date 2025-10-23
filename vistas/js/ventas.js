@@ -811,6 +811,22 @@ $(document).on("click", ".btnVerDetalle", function() {
                 var saldoPendiente = parseFloat(respuesta.venta.total) - parseFloat(respuesta.venta.abono || 0);
                 $("#saldoDetalle").text("$ " + number_format(saldoPendiente, 2, ',', '.'));
                 
+                // Llenar detalles adicionales
+                var detalleNota = respuesta.venta.detalle || '';
+                var pagoDetalle = respuesta.venta.pago || '';
+                
+                if (detalleNota.trim() !== '') {
+                    $("#detalleNotaTexto").removeClass('text-muted').text(detalleNota);
+                } else {
+                    $("#detalleNotaTexto").addClass('text-muted').text('Sin detalles adicionales');
+                }
+                
+                if (pagoDetalle.trim() !== '') {
+                    $("#pagoDetalleTexto").removeClass('text-muted').text(pagoDetalle);
+                } else {
+                    $("#pagoDetalleTexto").addClass('text-muted').text('Sin información de pago');
+                }
+                
                 // Llenar productos
                 if (respuesta.productos && respuesta.productos.length > 0) {
                     $("#cuerpoProductosDetalle").empty();
