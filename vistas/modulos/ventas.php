@@ -169,7 +169,7 @@ $formaPago = isset($_GET['formaPago']) ? $_GET['formaPago'] : null;
                       <td>' . $value["codigo"] . '</td>
                       <td>' . $respuestaCliente["nombre"] . '</td>
                       <td>' . ($respuestaUsuario["nombre"] ?? '') . '</td>
-                      <td>' . $value["metodo_pago"] . '</td>
+                      <td><span class="label label-' . ($value["metodo_pago"] == "Completo" ? "success" : ($value["metodo_pago"] == "Abono" ? "primary" : "danger")) . '">' . $value["metodo_pago"] . '</span></td>
                       <td>$ ' . number_format($value["total"] ?? 0, 2, ',', '.') . '</td>
                       <td>' . $value["fecha_abono"] . '</td>
                       <td>$ ' . number_format($value["abono"] ?? 0, 2, ',', '.') . '</td>
@@ -476,6 +476,30 @@ $formaPago = isset($_GET['formaPago']) ? $_GET['formaPago'] : null;
 
 .tablas .btn-group {
     white-space: nowrap;
+}
+
+/* Estilos para etiquetas de forma de pago */
+.label {
+    font-size: 11px;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.label-success {
+    background-color: #5cb85c;
+    color: white;
+}
+
+.label-primary {
+    background-color: #337ab7;
+    color: white;
+}
+
+.label-danger {
+    background-color: #d9534f;
+    color: white;
 }
 
 /* Responsive para el modal */
