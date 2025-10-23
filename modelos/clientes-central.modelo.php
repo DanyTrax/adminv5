@@ -489,7 +489,7 @@ class ModeloClientesCentral
 					]);
 					
 					// Obtener clientes de la sucursal
-					$stmt = $pdoSucursal->prepare("SELECT * FROM clientes WHERE activo = 1 OR activo IS NULL");
+					$stmt = $pdoSucursal->prepare("SELECT * FROM clientes ORDER BY nombre");
 					$stmt->execute();
 					$clientesLocales = $stmt->fetchAll();
 					

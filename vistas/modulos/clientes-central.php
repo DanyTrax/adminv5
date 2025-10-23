@@ -254,4 +254,74 @@ MODAL CONFIRMAR ELIMINACIÓN
     </div>
 </div>
 
+<!--=====================================
+MODAL PROGRESO DE IMPORTACIÓN
+======================================-->
+
+<div id="modalProgresoImportacion" class="modal fade" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #3c8dbc; color: white;">
+                <h4 class="modal-title">
+                    <i class="fa fa-refresh fa-spin"></i> Importando Clientes...
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-aqua"><i class="fa fa-spinner fa-spin"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Estado</span>
+                                <span class="info-box-number" id="estadoImportacion">Conectando a sucursales...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-green"><i class="fa fa-check"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Clientes Importados</span>
+                                <span class="info-box-number" id="clientesImportados">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <span class="info-box-icon bg-yellow"><i class="fa fa-exclamation-triangle"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Clientes Duplicados</span>
+                                <span class="info-box-number" id="clientesDuplicados">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="box box-info">
+                            <div class="box-header with-border">
+                                <h3 class="box-title">
+                                    <i class="fa fa-building"></i> Progreso por Sucursal
+                                </h3>
+                            </div>
+                            <div class="box-body">
+                                <div id="progresoSucursales" style="max-height: 300px; overflow-y: auto;">
+                                    <!-- Se carga dinámicamente -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" id="modalFooterImportacion" style="display: none;">
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="window.location.reload();">
+                    <i class="fa fa-check"></i> Cerrar y Actualizar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="vistas/js/clientes-central.js"></script>

@@ -403,9 +403,13 @@ $(document).ready(function() {
             return;
         }
         
-        // Mostrar mensaje de carga
-        var mensajeCarga = "Importando clientes desde sucursales...\nEsto puede tomar unos minutos.";
-        alert(mensajeCarga);
+        // Mostrar modal de progreso
+        $("#estadoImportacion").text("Conectando a sucursales...");
+        $("#clientesImportados").text("0");
+        $("#clientesDuplicados").text("0");
+        $("#progresoSucursales").html('<p class="text-center"><i class="fa fa-spinner fa-spin"></i> Iniciando importación...</p>');
+        $("#modalFooterImportacion").hide();
+        $("#modalProgresoImportacion").modal("show");
         
         $.ajax({
             url: "ajax/clientes-central.ajax.php",
@@ -414,32 +418,45 @@ $(document).ready(function() {
             dataType: "json",
             success: function(respuesta) {
                 if (respuesta.success) {
-                    var mensaje = "✅ Importación completada exitosamente\n\n";
-                    mensaje += "📊 Resumen:\n";
-                    mensaje += "• Clientes importados: " + respuesta.clientes_importados + "\n";
-                    mensaje += "• Clientes duplicados: " + respuesta.clientes_duplicados + "\n";
+                    // Actualizar estadísticas
+                    $("#estadoImportacion").text("✅ Importación completada");
+                    $("#clientesImportados").text(respuesta.clientes_importados || 0);
+                    $("#clientesDuplicados").text(respuesta.clientes_duplicados || 0);
                     
-                    if (respuesta.errores && respuesta.errores.length > 0) {
-                        mensaje += "\n⚠️ Errores encontrados: " + respuesta.errores.length;
-                    }
-                    
+                    // Mostrar resultados por sucursal
+                    var html = "";
                     if (respuesta.resultados) {
-                        mensaje += "\n\nPor sucursal:\n";
                         for (var sucursalId in respuesta.resultados) {
                             var resultado = respuesta.resultados[sucursalId];
-                            mensaje += "• " + resultado.sucursal + ": " + resultado.clientes_importados + " importados, " + resultado.clientes_duplicados + " duplicados\n";
+                            html += `
+                                <div class="alert alert-info">
+                                    <strong>${resultado.sucursal}</strong><br>
+                                    ✅ Importados: ${resultado.clientes_importados} | 
+                                    ⚠️ Duplicados: ${resultado.clientes_duplicados}
+                                </div>
+                            `;
                         }
                     }
+                    $("#progresoSucursales").html(html);
                     
-                    alert(mensaje);
-                    cargarClientesCentrales();
-                    cargarEstadisticas();
+                    // Mostrar botón de cerrar
+                    $("#modalFooterImportacion").show();
+                    
+                    // Actualizar tabla después de cerrar modal
+                    setTimeout(function() {
+                        cargarClientesCentrales();
+                        cargarEstadisticas();
+                    }, 500);
                 } else {
-                    alert("❌ Error: " + respuesta.error);
+                    $("#estadoImportacion").text("❌ Error en la importación");
+                    $("#progresoSucursales").html('<div class="alert alert-danger">' + respuesta.error + '</div>');
+                    $("#modalFooterImportacion").show();
                 }
             },
             error: function() {
-                alert("❌ Error de conexión durante la importación");
+                $("#estadoImportacion").text("❌ Error de conexión");
+                $("#progresoSucursales").html('<div class="alert alert-danger">Error de conexión durante la importación</div>');
+                $("#modalFooterImportacion").show();
             }
         });
     }
