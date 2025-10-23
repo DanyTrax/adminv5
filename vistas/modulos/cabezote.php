@@ -60,6 +60,12 @@
 							</a>
 						</li>
 						<li>
+							<a href="clientes-central" style="padding: 10px 15px;">
+								<i class="fa fa-user-circle" style="margin-right: 8px; color: #f39c12;"></i>
+								Clientes Centrales
+							</a>
+						</li>
+						<li>
 							<a href="sucursales" style="padding: 10px 15px;">
 								<i class="fa fa-building" style="margin-right: 8px; color: #5cb85c;"></i>
 								Sucursales
