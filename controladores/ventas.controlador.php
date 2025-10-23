@@ -602,4 +602,11 @@ static public function ctrSumaTotalVentasGeneral($fechaInicial, $fechaFinal){
     
     	echo "</table>";
     }
+    
+    /*=============================================
+    OBTENER PRODUCTOS DE UNA VENTA
+    =============================================*/
+    public static function ctrObtenerProductosVenta($idVenta) {
+        return ModeloVentas::mdlObtenerProductosVenta($idVenta);
+    }
 }

@@ -434,4 +434,31 @@ static public function mdlSumaTotalVentasGeneral($tabla, $fechaInicial, $fechaFi
 	$stmt -> close();
 	$stmt = null;
 }
+
+/*=============================================
+OBTENER PRODUCTOS DE UNA VENTA
+=============================================*/
+static public function mdlObtenerProductosVenta($idVenta) {
+    try {
+        $stmt = Conexion::conectar()->prepare("
+            SELECT 
+                id,
+                descripcion,
+                cantidad,
+                total
+            FROM venta_productos 
+            WHERE id_venta = :id_venta 
+            ORDER BY id ASC
+        ");
+        
+        $stmt->bindParam(":id_venta", $idVenta, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+    } catch (Exception $e) {
+        error_log("Error en mdlObtenerProductosVenta: " . $e->getMessage());
+        return false;
+    }
+}
 }

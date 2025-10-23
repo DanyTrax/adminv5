@@ -148,6 +148,9 @@ $formaPago = isset($_GET['formaPago']) ? $_GET['formaPago'] : null;
               // 2. CONSTRUIR LOS BOTONES DE ACCIONES
               $botones = '<div class="btn-group">';
               
+              // Botón Ver Detalle (siempre)
+              $botones .= '<button class="btn btn-success btn-xs btnVerDetalle" idVenta="' . $value["id"] . '" codigoVenta="' . $value["codigo"] . '" title="Ver productos"><i class="fa fa-eye"></i></button>';
+              
               // Botón Imprimir (siempre)
               $botones .= '<button class="btn btn-info btn-xs btnImprimirFactura" codigoVenta="' . $value["codigo"] . '"><i class="fa fa-print"></i></button>';
               
@@ -268,3 +271,185 @@ $formaPago = isset($_GET['formaPago']) ? $_GET['formaPago'] : null;
         </div>
     </div>
 </div>
+
+<!-- Modal para ver detalles de productos de la venta -->
+<div id="modalDetalleVenta" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#28a745; color:white">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">
+                    <i class="fa fa-eye"></i> Detalle de Factura: <span id="codigoFacturaDetalle"></span>
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><strong>Información de la Venta</strong></h5>
+                        <table class="table table-condensed">
+                            <tr>
+                                <td><strong>Cliente:</strong></td>
+                                <td id="clienteDetalle"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Vendedor:</strong></td>
+                                <td id="vendedorDetalle"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Fecha:</strong></td>
+                                <td id="fechaDetalle"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Forma de Pago:</strong></td>
+                                <td id="formaPagoDetalle"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Medio de Pago:</strong></td>
+                                <td id="medioPagoDetalle"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><strong>Resumen Financiero</strong></h5>
+                        <table class="table table-condensed">
+                            <tr>
+                                <td><strong>Subtotal:</strong></td>
+                                <td id="subtotalDetalle"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Impuestos:</strong></td>
+                                <td id="impuestosDetalle"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Descuento:</strong></td>
+                                <td id="descuentoDetalle"></td>
+                            </tr>
+                            <tr class="success">
+                                <td><strong>Total:</strong></td>
+                                <td id="totalDetalle"></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Abono:</strong></td>
+                                <td id="abonoDetalle"></td>
+                            </tr>
+                            <tr class="warning">
+                                <td><strong>Saldo Pendiente:</strong></td>
+                                <td id="saldoDetalle"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h5><strong>Productos de la Venta</strong></h5>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered" id="tablaProductosDetalle">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%">#</th>
+                                <th style="width: 60%">Descripción del Producto</th>
+                                <th style="width: 15%">Cantidad</th>
+                                <th style="width: 20%">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoProductosDetalle">
+                            <!-- Los productos se cargarán aquí dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="sinProductos" class="alert alert-info" style="display: none;">
+                    <i class="fa fa-info-circle"></i> No se encontraron productos para esta venta.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cerrar
+                </button>
+                <button type="button" class="btn btn-info" id="btnImprimirDetalle">
+                    <i class="fa fa-print"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos para el modal de detalle de venta */
+#modalDetalleVenta .modal-dialog {
+    width: 90%;
+    max-width: 1000px;
+}
+
+#modalDetalleVenta .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+#tablaProductosDetalle {
+    margin-bottom: 0;
+}
+
+#tablaProductosDetalle th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+    border-bottom: 2px solid #ddd;
+}
+
+#tablaProductosDetalle td {
+    vertical-align: middle;
+}
+
+#tablaProductosDetalle tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+.table-condensed td {
+    padding: 5px 8px;
+}
+
+.table-condensed .success td {
+    background-color: #dff0d8;
+    font-weight: bold;
+}
+
+.table-condensed .warning td {
+    background-color: #fcf8e3;
+    font-weight: bold;
+}
+
+/* Estilos para los botones de acción */
+.btn-group .btn {
+    margin-right: 2px;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+/* Mejorar la tabla principal de ventas */
+.tablas tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+.tablas .btn-group {
+    white-space: nowrap;
+}
+
+/* Responsive para el modal */
+@media (max-width: 768px) {
+    #modalDetalleVenta .modal-dialog {
+        width: 95%;
+        margin: 10px auto;
+    }
+    
+    #modalDetalleVenta .modal-body {
+        max-height: 60vh;
+    }
+    
+    .table-responsive {
+        font-size: 12px;
+    }
+}
+</style>

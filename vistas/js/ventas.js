@@ -756,3 +756,128 @@ $('#formEditarVenta').on('submit', function(event) {
         }
     });
 });
+
+/*=============================================
+VER DETALLE DE VENTA
+=============================================*/
+$(document).on("click", ".btnVerDetalle", function() {
+    var idVenta = $(this).attr("idVenta");
+    var codigoVenta = $(this).attr("codigoVenta");
+    
+    // Mostrar modal
+    $("#modalDetalleVenta").modal("show");
+    
+    // Limpiar contenido anterior
+    $("#cuerpoProductosDetalle").empty();
+    $("#sinProductos").hide();
+    
+    // Mostrar loading
+    $("#cuerpoProductosDetalle").html('<tr><td colspan="4" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando productos...</td></tr>');
+    
+    // Obtener datos de la venta
+    var datos = new FormData();
+    datos.append("accion", "obtener_detalle_venta");
+    datos.append("idVenta", idVenta);
+    
+    $.ajax({
+        url: "ajax/ventas-detalle.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function(respuesta) {
+            if (respuesta.success) {
+                // Llenar información de la venta
+                $("#codigoFacturaDetalle").text(respuesta.venta.codigo);
+                $("#clienteDetalle").text(respuesta.cliente.nombre);
+                $("#vendedorDetalle").text(respuesta.vendedor.nombre);
+                $("#fechaDetalle").text(respuesta.venta.fecha_venta);
+                $("#formaPagoDetalle").text(respuesta.venta.metodo_pago);
+                $("#medioPagoDetalle").text(respuesta.venta.medio_pago);
+                
+                // Llenar información financiera
+                $("#subtotalDetalle").text("$ " + number_format(respuesta.venta.neto, 2, ',', '.'));
+                $("#impuestosDetalle").text("$ " + number_format(respuesta.venta.impuesto, 2, ',', '.'));
+                $("#descuentoDetalle").text("$ " + number_format(respuesta.venta.descuento || 0, 2, ',', '.'));
+                $("#totalDetalle").text("$ " + number_format(respuesta.venta.total, 2, ',', '.'));
+                $("#abonoDetalle").text("$ " + number_format(respuesta.venta.abono || 0, 2, ',', '.'));
+                
+                // Calcular saldo pendiente
+                var saldoPendiente = parseFloat(respuesta.venta.total) - parseFloat(respuesta.venta.abono || 0);
+                $("#saldoDetalle").text("$ " + number_format(saldoPendiente, 2, ',', '.'));
+                
+                // Llenar productos
+                if (respuesta.productos && respuesta.productos.length > 0) {
+                    $("#cuerpoProductosDetalle").empty();
+                    
+                    respuesta.productos.forEach(function(producto, index) {
+                        var fila = '<tr>' +
+                            '<td>' + (index + 1) + '</td>' +
+                            '<td>' + producto.descripcion + '</td>' +
+                            '<td class="text-center">' + producto.cantidad + '</td>' +
+                            '<td class="text-right">$ ' + number_format(producto.total, 2, ',', '.') + '</td>' +
+                            '</tr>';
+                        $("#cuerpoProductosDetalle").append(fila);
+                    });
+                } else {
+                    $("#cuerpoProductosDetalle").empty();
+                    $("#sinProductos").show();
+                }
+                
+            } else {
+                swal({
+                    type: 'error',
+                    title: 'Error',
+                    text: respuesta.error || 'Error al cargar el detalle de la venta'
+                });
+                $("#modalDetalleVenta").modal("hide");
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error AJAX:", error);
+            swal({
+                type: 'error',
+                title: 'Error de conexión',
+                text: 'No se pudo cargar el detalle de la venta'
+            });
+            $("#modalDetalleVenta").modal("hide");
+        }
+    });
+});
+
+/*=============================================
+IMPRIMIR DETALLE DE VENTA
+=============================================*/
+$(document).on("click", "#btnImprimirDetalle", function() {
+    var codigoVenta = $("#codigoFacturaDetalle").text();
+    if (codigoVenta) {
+        window.open("ventas?xml=" + codigoVenta, "_blank");
+    }
+});
+
+/*=============================================
+FUNCIÓN AUXILIAR PARA FORMATEAR NÚMEROS
+=============================================*/
+function number_format(number, decimals, dec_point, thousands_sep) {
+    number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
+    var n = !isFinite(+number) ? 0 : +number,
+        prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+        sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
+        dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
+        s = '',
+        toFixedFix = function (n, prec) {
+            var k = Math.pow(10, prec);
+            return '' + Math.round(n * k) / k;
+        };
+    s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
+    if (s[0].length > 3) {
+        s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+    }
+    if ((s[1] || '').length < prec) {
+        s[1] = s[1] || '';
+        s[1] += new Array(prec - s[1].length + 1).join('0');
+    }
+    return s.join(dec);
+}
