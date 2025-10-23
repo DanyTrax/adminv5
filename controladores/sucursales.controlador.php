@@ -127,13 +127,18 @@ class ControladorSucursales {
                 // Generar consecutivo automático
                 $siguienteCodigo = ModeloSucursales::mdlGenerarConsecutivoSucursal();
                 
-                // Preparar datos para BD central
+                // Preparar datos para BD central (incluyendo datos de BD)
                 $datos = array(
                     "codigo_sucursal" => $datosLocales["codigo_sucursal"],
                     "nombre" => $datosLocales["nombre"],
                     "direccion" => $datosLocales["direccion"],
                     "telefono" => $datosLocales["telefono"],
                     "email" => $datosLocales["email"],
+                    "usuario_bd" => $datosLocales["usuario_bd"],
+                    "password_bd" => $datosLocales["password_bd"],
+                    "nombre_bd" => $datosLocales["nombre_bd"],
+                    "host_bd" => $datosLocales["host_bd"],
+                    "puerto_bd" => $datosLocales["puerto_bd"],
                     "url_base" => $datosLocales["url_base"],
                     "url_api" => $datosLocales["url_api"],
                     "es_principal" => $datosLocales["es_principal"],

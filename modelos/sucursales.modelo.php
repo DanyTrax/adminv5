@@ -233,12 +233,13 @@ class ModeloSucursales {
                 ];
             }
             
-            // Insertar nueva sucursal
+            // Insertar nueva sucursal (incluyendo datos de BD)
             $stmt = $pdo->prepare("INSERT INTO sucursales (
                 codigo_sucursal, nombre, direccion, telefono, email,
+                usuario_bd, password_bd, nombre_bd, host_bd, puerto_bd,
                 url_base, url_api, es_principal, activo,
                 fecha_registro, fecha_actualizacion
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())");
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())");
             
             $resultado = $stmt->execute([
                 $datos["codigo_sucursal"],
@@ -246,6 +247,11 @@ class ModeloSucursales {
                 $datos["direccion"],
                 $datos["telefono"],
                 $datos["email"],
+                $datos["usuario_bd"],
+                $datos["password_bd"],
+                $datos["nombre_bd"],
+                $datos["host_bd"],
+                $datos["puerto_bd"],
                 $datos["url_base"],
                 $datos["url_api"],
                 $datos["es_principal"] ? 1 : 0
