@@ -1,13 +1,13 @@
 <?php
 
-session_start();
-
-require_once __DIR__ . "/../controladores/clientes-central.controlador.php";
-
 // Limpiar cualquier salida previa si existe buffer
 if (ob_get_level()) {
     ob_clean();
 }
+
+session_start();
+
+require_once __DIR__ . "/../controladores/clientes-central.controlador.php";
 
 // Código para producción: Solo Administradores
 if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] != "Administrador") {

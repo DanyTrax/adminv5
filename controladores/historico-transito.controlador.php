@@ -24,7 +24,7 @@ class ControladorHistoricoTransito {
             $filtroTransportador = "";
             $parametros = [];
             
-            if($_SESSION["perfil"] == "Transportador") {
+            if(isset($_SESSION["perfil"]) && $_SESSION["perfil"] == "Transportador") {
                 $filtroTransportador = "AND transportador_id = :transportador_sesion";
                 $parametros[':transportador_sesion'] = $_SESSION["id"];
             }
@@ -152,7 +152,7 @@ class ControladorHistoricoTransito {
             $filtroTransportador = "";
             $parametros = [];
             
-            if($_SESSION["perfil"] == "Transportador") {
+            if(isset($_SESSION["perfil"]) && $_SESSION["perfil"] == "Transportador") {
                 $filtroTransportador = "AND transportador_id = :transportador_sesion";
                 $parametros[':transportador_sesion'] = $_SESSION["id"];
             }
@@ -467,7 +467,7 @@ class ControladorHistoricoTransito {
             $parametros = [];
             
             // Si es transportador, solo su histórico
-            if($_SESSION["perfil"] == "Transportador") {
+            if(isset($_SESSION["perfil"]) && $_SESSION["perfil"] == "Transportador") {
                 $sql .= " AND transportador_id = :transportador_sesion";
                 $parametros[':transportador_sesion'] = $_SESSION["id"];
             }
