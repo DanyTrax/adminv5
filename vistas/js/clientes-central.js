@@ -399,10 +399,25 @@ $(document).ready(function() {
     
     // Función para sincronizar todos los clientes
     function sincronizarTodosClientes() {
-        if (!confirm("¿Estás seguro de importar todos los clientes desde las sucursales activas?\n\nEsta acción traerá los clientes de todas las sucursales al sistema central, evitando duplicados.")) {
-            return;
-        }
-        
+        swal({
+            title: "¿Importar clientes desde sucursales?",
+            text: "Esta acción traerá los clientes de todas las sucursales activas al sistema central, evitando duplicados por documento.",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#5cb85c",
+            confirmButtonText: "Sí, importar",
+            cancelButtonText: "Cancelar",
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true
+        }, function(isConfirm) {
+            if (isConfirm) {
+                iniciarImportacion();
+            }
+        });
+    }
+    
+    // Función para iniciar la importación
+    function iniciarImportacion() {
         // Mostrar modal de progreso
         $("#estadoImportacion").text("Conectando a sucursales...");
         $("#clientesImportados").text("0");

@@ -27,21 +27,6 @@ class ModeloClientesCentral
 				];
 			}
 
-			// Verificar si existe por email (si el email no está vacío)
-			if (!empty($datos["email"])) {
-				$stmt = $conexion->prepare("SELECT id_central FROM clientes_central WHERE email = :email");
-				$stmt->bindParam(":email", $datos["email"], PDO::PARAM_STR);
-				$stmt->execute();
-				$resultado = $stmt->fetch();
-
-				if ($resultado) {
-					return [
-						'success' => false,
-						'error' => 'El email ya existe en el sistema central'
-					];
-				}
-			}
-
 			// Crear cliente en central
 			$stmt = $conexion->prepare("INSERT INTO clientes_central(
 				documento, email, nombre, telefono, direccion, fecha_nacimiento,
@@ -102,22 +87,6 @@ class ModeloClientesCentral
 					'success' => false,
 					'error' => 'El documento ya existe en otro cliente del sistema central'
 				];
-			}
-
-			// Verificar si existe otro cliente con el mismo email (si el email no está vacío)
-			if (!empty($datos["email"])) {
-				$stmt = $conexion->prepare("SELECT id_central FROM clientes_central WHERE email = :email AND id_central <> :id_central");
-				$stmt->bindParam(":email", $datos["email"], PDO::PARAM_STR);
-				$stmt->bindParam(":id_central", $datos["id_central"], PDO::PARAM_INT);
-				$stmt->execute();
-				$resultado = $stmt->fetch();
-
-				if ($resultado) {
-					return [
-						'success' => false,
-						'error' => 'El email ya existe en otro cliente del sistema central'
-					];
-				}
 			}
 
 			// Actualizar cliente en central
@@ -277,22 +246,6 @@ class ModeloClientesCentral
 					'campo' => 'documento',
 					'cliente' => $clientePorDocumento
 				];
-			}
-
-			// Verificar por email (si no está vacío)
-			if (!empty($email)) {
-				$stmt = $conexion->prepare("SELECT id_central, nombre, sucursal_origen FROM clientes_central WHERE email = :email AND activo = 1");
-				$stmt->bindParam(":email", $email, PDO::PARAM_STR);
-				$stmt->execute();
-				$clientePorEmail = $stmt->fetch(PDO::FETCH_ASSOC);
-
-				if ($clientePorEmail) {
-					return [
-						'existe' => true,
-						'campo' => 'email',
-						'cliente' => $clientePorEmail
-					];
-				}
 			}
 
 			return [
