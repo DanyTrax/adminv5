@@ -266,9 +266,9 @@ function conectarBD($datos_bd) {
     return $pdo;
 }
 
-// Función para crear todas las tablas necesarias
+// Función para crear solo las tablas necesarias
 function crearTablasBD($pdo) {
-    // Todas las tablas del sistema
+    // Solo las tablas esenciales que realmente existen en el sistema
     $sql_tablas = [
         // Tabla de usuarios
         "CREATE TABLE IF NOT EXISTS usuarios (
@@ -395,49 +395,55 @@ function crearTablasBD($pdo) {
             INDEX idx_codigo_venta (codigo_venta)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
         
-        // Tabla de solicitudes_stock
-        "CREATE TABLE IF NOT EXISTS solicitudes_stock (
+        // Tabla de contabilidad
+        "CREATE TABLE IF NOT EXISTS contabilidad (
             id INT(11) NOT NULL AUTO_INCREMENT,
-            numero_solicitud VARCHAR(50) NOT NULL UNIQUE,
-            id_sucursal_origen INT(11),
-            id_usuario_solicitante INT(11),
-            productos_solicitados TEXT,
-            total_cantidad INT(11) DEFAULT 0,
-            estado ENUM('pendiente', 'aprobado', 'en_transito', 'entregado', 'cancelado') DEFAULT 'pendiente',
-            observaciones TEXT,
-            fecha_solicitud DATETIME DEFAULT CURRENT_TIMESTAMP,
-            fecha_aprobacion DATETIME NULL,
-            id_usuario_aprobador INT(11),
-            PRIMARY KEY (id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
-        
-        // Tabla de despachos
-        "CREATE TABLE IF NOT EXISTS despachos (
-            id INT(11) NOT NULL AUTO_INCREMENT,
-            numero_despacho VARCHAR(50) NOT NULL UNIQUE,
-            id_solicitud INT(11),
-            id_transportador INT(11),
-            estado ENUM('pendiente', 'en_transito', 'entregado', 'cancelado') DEFAULT 'pendiente',
-            fecha_despacho DATETIME DEFAULT CURRENT_TIMESTAMP,
-            fecha_entrega DATETIME NULL,
+            concepto VARCHAR(255) NOT NULL,
+            monto DECIMAL(10,2) NOT NULL,
+            tipo ENUM('ingreso', 'egreso') NOT NULL,
+            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
             observaciones TEXT,
             PRIMARY KEY (id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
         
-        // Tabla de stock_transito
-        "CREATE TABLE IF NOT EXISTS stock_transito (
+        // Tabla de cotizaciones
+        "CREATE TABLE IF NOT EXISTS cotizaciones (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            numero_cotizacion VARCHAR(50) NOT NULL UNIQUE,
+            id_cliente INT(11),
+            id_vendedor INT(11),
+            productos TEXT,
+            subtotal DECIMAL(10,2) DEFAULT 0,
+            impuesto DECIMAL(10,2) DEFAULT 0,
+            total DECIMAL(10,2) DEFAULT 0,
+            estado ENUM('pendiente', 'aprobada', 'rechazada', 'vencida') DEFAULT 'pendiente',
+            fecha_cotizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+            fecha_vencimiento DATE,
+            PRIMARY KEY (id),
+            FOREIGN KEY (id_cliente) REFERENCES clientes(id),
+            FOREIGN KEY (id_vendedor) REFERENCES usuarios(id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+        
+        // Tabla de medios_pago
+        "CREATE TABLE IF NOT EXISTS medios_pago (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            nombre VARCHAR(255) NOT NULL,
+            descripcion TEXT,
+            activo TINYINT(1) DEFAULT 1,
+            fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
+        
+        // Tabla de sincronizacion_maestro
+        "CREATE TABLE IF NOT EXISTS sincronizacion_maestro (
             id INT(11) NOT NULL AUTO_INCREMENT,
             codigo_producto VARCHAR(50) NOT NULL,
-            descripcion_producto TEXT,
-            cantidad INT(11) NOT NULL,
-            id_despacho INT(11),
-            transportador VARCHAR(255),
-            origen VARCHAR(255),
-            destino VARCHAR(255),
-            estado ENUM('en_transito', 'entregado', 'cancelado') DEFAULT 'en_transito',
-            fecha_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
-            fecha_entrega DATETIME NULL,
-            PRIMARY KEY (id)
+            descripcion TEXT,
+            stock INT(11) DEFAULT 0,
+            precio DECIMAL(10,2) DEFAULT 0,
+            fecha_sincronizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY codigo_producto (codigo_producto)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci"
     ];
     
