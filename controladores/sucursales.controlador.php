@@ -53,6 +53,9 @@ class ControladorSucursales {
                     // Sincronizar con el sistema central
                     self::sincronizarConCentral($datos);
                     
+                    // Actualizar campo empresa en usuarios locales
+                    self::actualizarEmpresaUsuarios($datos['nombre']);
+                    
                     echo '<script>
                         swal({
                             type: "success",
@@ -474,6 +477,46 @@ class ControladorSucursales {
     =============================================*/
     static public function ctrMostrarSucursal($item, $valor) {
         return ModeloSucursales::mdlMostrarSucursal($item, $valor);
+    }
+
+    /*=============================================
+    ACTUALIZAR CAMPO EMPRESA EN USUARIOS LOCALES
+    =============================================*/
+    static public function actualizarEmpresaUsuarios($nombreSucursal) {
+        try {
+            $conexion = Conexion::conectar();
+            
+            // Verificar si existe la columna empresa
+            $stmt = $conexion->prepare("SHOW COLUMNS FROM usuarios LIKE 'empresa'");
+            $stmt->execute();
+            $columnaEmpresa = $stmt->fetch();
+            
+            if ($columnaEmpresa) {
+                // Actualizar campo empresa en todos los usuarios activos
+                $stmt = $conexion->prepare("
+                    UPDATE usuarios 
+                    SET empresa = :nombre_sucursal 
+                    WHERE activo = 1
+                ");
+                $stmt->bindParam(":nombre_sucursal", $nombreSucursal, PDO::PARAM_STR);
+                
+                if ($stmt->execute()) {
+                    $filasAfectadas = $stmt->rowCount();
+                    error_log("Campo empresa actualizado en {$filasAfectadas} usuarios locales con: {$nombreSucursal}");
+                    return true;
+                } else {
+                    error_log("Error actualizando campo empresa en usuarios locales");
+                    return false;
+                }
+            } else {
+                error_log("Columna 'empresa' no existe en tabla usuarios local");
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en actualizarEmpresaUsuarios: " . $e->getMessage());
+            return false;
+        }
     }
 
     /*=============================================
