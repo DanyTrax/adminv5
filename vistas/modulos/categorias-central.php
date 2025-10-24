@@ -204,8 +204,8 @@ MODAL CONFIRMAR ELIMINACIÓN
             </div>
             <div class="modal-body">
                 <div class="box-body">
-                    <p><strong>¿Estás seguro de que deseas desactivar esta categoría?</strong></p>
-                    <p>La categoría <strong id="nombreCategoriaEliminar"></strong> será desactivada y se eliminará de todas las sucursales en la próxima sincronización.</p>
+                    <p><strong>¿Estás seguro de que deseas eliminar esta categoría?</strong></p>
+                    <p>La categoría <strong id="nombreCategoriaEliminar"></strong> será eliminada permanentemente de la base de datos central y de todas las sucursales en la próxima sincronización.</p>
                     <div class="alert alert-warning">
                         <i class="fa fa-warning"></i>
                         <strong>Nota:</strong> Esta acción no se puede deshacer. Los productos asociados a esta categoría podrían verse afectados.

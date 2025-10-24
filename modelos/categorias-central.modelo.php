@@ -149,7 +149,7 @@ class ModeloCategoriasCentral {
             } else {
                 return [
                     'success' => false,
-                    'message' => 'Error al desactivar la categoría'
+                    'message' => 'Error al eliminar la categoría'
                 ];
             }
             
