@@ -8,11 +8,11 @@ $(document).ready(function() {
     // Cargar estadísticas
     cargarEstadisticas();
     
-    // Inicializar DataTable
-    inicializarDataTable();
-    
-    // Configurar filtros
-    configurarFiltros();
+    // Inicializar DataTable con delay para asegurar DOM listo
+    setTimeout(function() {
+        inicializarDataTable();
+        configurarFiltros();
+    }, 100);
 });
 
 function cargarEstadisticas() {
@@ -35,11 +35,22 @@ function cargarEstadisticas() {
 function inicializarDataTable() {
     console.log("🔄 Inicializando DataTable...");
     
-    // Verificar si ya existe y destruirlo
+    // Verificar si ya existe y destruirlo de forma segura
     if ($.fn.DataTable.isDataTable("#tabla-registro-descargas")) {
         console.log("🔄 DataTable ya existe, destruyendo...");
-        $("#tabla-registro-descargas").DataTable().destroy();
+        try {
+            $("#tabla-registro-descargas").DataTable().destroy();
+            console.log("✅ DataTable destruido correctamente");
+        } catch (e) {
+            console.log("⚠️ Error al destruir DataTable:", e.message);
+            // Limpiar el DOM manualmente
+            $("#tabla-registro-descargas").removeClass("dataTable");
+            $("#tabla-registro-descargas").find(".dataTables_wrapper").remove();
+        }
     }
+    
+    // Limpiar el contenido de la tabla
+    $("#tabla-registro-descargas tbody").empty();
     
     $("#tabla-registro-descargas").DataTable({
         "processing": true,
