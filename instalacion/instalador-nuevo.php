@@ -518,6 +518,41 @@ function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario, $datos_bd
         ''  // direccion vacía
     ]);
     
+    // Insertar categorías básicas iniciales
+    $categorias_basicas = [
+        'General',
+        'Electrónicos',
+        'Ropa',
+        'Hogar',
+        'Deportes',
+        'Libros',
+        'Juguetes',
+        'Alimentación',
+        'Belleza',
+        'Automotriz'
+    ];
+    
+    foreach ($categorias_basicas as $categoria) {
+        $stmt = $pdo->prepare("INSERT INTO categorias (categoria) VALUES (?)");
+        $stmt->execute([$categoria]);
+    }
+    
+    // Insertar medios de pago básicos
+    $medios_pago_basicos = [
+        'Efectivo',
+        'Tarjeta de Crédito',
+        'Tarjeta Débito',
+        'Transferencia Bancaria',
+        'Cheque',
+        'Pago Móvil',
+        'Criptomonedas'
+    ];
+    
+    foreach ($medios_pago_basicos as $medio) {
+        $stmt = $pdo->prepare("INSERT INTO medios_pago (nombre) VALUES (?)");
+        $stmt->execute([$medio]);
+    }
+    
     // Verificar que el usuario se creó correctamente
     $stmt = $pdo->prepare("SELECT id, usuario, password FROM usuarios WHERE usuario = ?");
     $stmt->execute([$datos_usuario['usuario']]);
