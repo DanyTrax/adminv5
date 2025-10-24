@@ -5,7 +5,7 @@ CONTROLADOR REGISTRO DE DESCARGAS SIMPLE - FUNCIONAL
 
 // Incluir modelo si no existe
 if (!class_exists('ModeloRegistroDescargasSimple')) {
-    require_once "modelos/registro-descargas-simple.modelo.php";
+    require_once __DIR__ . "/../modelos/registro-descargas-simple.modelo.php";
 }
 
 class ControladorRegistroDescargasSimple {
