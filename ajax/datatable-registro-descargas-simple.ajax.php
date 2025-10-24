@@ -4,7 +4,7 @@ DATATABLE REGISTRO DE DESCARGAS SIMPLE
 =============================================*/
 
 // Cargar controlador solo si no está cargado
-if (!class_exists('ControladorRegistroDescargasSimple')) {
+if (!class_exists("ControladorRegistroDescargasSimple")) {
     require_once "../controladores/registro-descargas-simple.controlador.php";
 }
 
