@@ -41,3 +41,6 @@ uploads/temp/
 
 # Archivos de configuración específicos del servidor
 sftp.json
+
+# Carpeta de comparación (no subir)
+adminv5/
