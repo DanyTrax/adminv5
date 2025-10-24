@@ -138,26 +138,8 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
                  data-placement="top" 
                  data-html="true"
                  data-despacho="${numeroDespacho}"
-                 title="<div class='tooltip-despacho-info'>
-                            <h6 style='margin: 0 0 8px 0; color: #333; font-weight: bold;'>Información del Despacho</h6>
-                            <table style='margin: 0 0 12px 0; font-size: 11px; border-collapse: collapse; width: 100%;'>
-                                <tr>
-                                    <td style='padding: 4px 8px; border: 1px solid #ddd; background-color: #f5f5f5; color: #333; font-weight: bold; width: 30%;'>Despacho:</td>
-                                    <td style='padding: 4px 8px; border: 1px solid #ddd; color: #333;'>${numeroDespacho}</td>
-                                </tr>
-                                <tr>
-                                    <td style='padding: 4px 8px; border: 1px solid #ddd; background-color: #f5f5f5; color: #333; font-weight: bold;'>Sucursal:</td>
-                                    <td style='padding: 4px 8px; border: 1px solid #ddd; color: #333;'>${sucursal}</td>
-                                </tr>
-                                <tr>
-                                    <td style='padding: 4px 8px; border: 1px solid #ddd; background-color: #f5f5f5; color: #333; font-weight: bold;'>Cantidad:</td>
-                                    <td style='padding: 4px 8px; border: 1px solid #ddd; color: #333;'>${cantidad}</td>
-                                </tr>
-                                <tr>
-                                    <td style='padding: 4px 8px; border: 1px solid #ddd; background-color: #f5f5f5; color: #333; font-weight: bold;'>Fecha:</td>
-                                    <td style='padding: 4px 8px; border: 1px solid #ddd; color: #333;'>${fecha}</td>
-                                </tr>
-                            </table>
+                 title="<div class='tooltip-productos-despacho'>
+                            <h6 style='margin: 0 0 8px 0; color: #333; font-weight: bold;'>Productos del Despacho ${numeroDespacho}</h6>
                             <div id='productos-${numeroDespacho.replace(/[^a-zA-Z0-9]/g, '')}' style='max-height: 200px; overflow-y: auto;'>
                                 <p style='margin: 0; color: #666; font-size: 10px; text-align: center;'>Cargando productos del despacho...</p>
                             </div>
@@ -165,11 +147,30 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
                  style="cursor: pointer;">
                 <div class="timeline-marker bg-blue"></div>
                 <div class="timeline-content">
-                    <h6 class="timeline-title">Carga #${entrada.orden_carga || (index + 1)}</h6>
-                    <p><strong>Despacho:</strong> ${entrada.despacho}</p>
-                    <p><strong>Sucursal:</strong> ${entrada.sucursal_origen}</p>
-                    <p><strong>Cantidad:</strong> ${entrada.cantidad_agregada || entrada.total_cantidad}</p>
-                    <p><strong>Fecha:</strong> ${new Date(entrada.fecha).toLocaleString()}</p>
+                    <div class="timeline-info-table">
+                        <table class="table table-condensed table-bordered" style="margin: 0; font-size: 11px;">
+                            <tr>
+                                <td style="background-color: #f5f5f5; font-weight: bold; width: 25%;">Carga:</td>
+                                <td>#${entrada.orden_carga || (index + 1)}</td>
+                            </tr>
+                            <tr>
+                                <td style="background-color: #f5f5f5; font-weight: bold;">Despacho:</td>
+                                <td>${entrada.despacho}</td>
+                            </tr>
+                            <tr>
+                                <td style="background-color: #f5f5f5; font-weight: bold;">Sucursal:</td>
+                                <td>${entrada.sucursal_origen}</td>
+                            </tr>
+                            <tr>
+                                <td style="background-color: #f5f5f5; font-weight: bold;">Cantidad:</td>
+                                <td>${entrada.cantidad_agregada || entrada.total_cantidad}</td>
+                            </tr>
+                            <tr>
+                                <td style="background-color: #f5f5f5; font-weight: bold;">Fecha:</td>
+                                <td>${new Date(entrada.fecha).toLocaleString()}</td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
             </div>
         `;
@@ -188,7 +189,7 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
         $('[data-toggle="tooltip"]').on('show.bs.tooltip', function() {
             var numeroDespacho = $(this).data('despacho');
             if (numeroDespacho && numeroDespacho !== 'N/A') {
-                cargarProductosDespacho(numeroDespacho);
+                cargarProductosDespachoTooltip(numeroDespacho);
             }
         });
     }, 100);
@@ -200,7 +201,7 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
 /*=============================================
 CARGAR PRODUCTOS DEL DESPACHO PARA TOOLTIP
 =============================================*/
-function cargarProductosDespacho(numeroDespacho) {
+function cargarProductosDespachoTooltip(numeroDespacho) {
     
     var containerId = 'productos-' + numeroDespacho.replace(/[^a-zA-Z0-9]/g, '');
     
