@@ -170,6 +170,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "stock-transito" => ["Administrador", "Vendedor", "Contador", "Transportador"],
         "historico-transito" => ["Administrador", "Vendedor", "Contador", "Transportador"],
         "registro-descargas-simple" => ["Administrador", "Vendedor", "Contador", "Transportador"],
+        "registro-descargas-funcional" => ["Administrador", "Vendedor", "Contador", "Transportador"],
         "salir" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"]
       ];
 
