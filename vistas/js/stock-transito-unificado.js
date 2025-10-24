@@ -424,9 +424,9 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
                 // 🔗 REGISTRO DIRECTO - Registrar descarga en la tabla
                 console.log("🔗 Registrando descarga directamente:", codigoProducto, cantidadDescargar);
                 
-                // Obtener datos del usuario actual
-                var usuarioId = sessionStorage.getItem("id") || "0";
-                var usuarioNombre = sessionStorage.getItem("nombre") || "Usuario";
+                // Obtener datos del usuario actual desde la sesión PHP
+                var usuarioId = "<?php echo $_SESSION['id'] ?? '0'; ?>";
+                var usuarioNombre = "<?php echo $_SESSION['nombre'] ?? 'Usuario'; ?>";
                 
                 // Obtener datos de la sucursal
                 var sucursalId = "1";
