@@ -1,4 +1,5 @@
 $(document).ready(function() {
+    console.log("📋 Script categorias-central.js cargado correctamente");
     
     // Variables globales
     var tablaCategorias;
@@ -16,6 +17,15 @@ $(document).ready(function() {
         console.log("🔄 Botón de sincronización clickeado");
         sincronizarCategorias();
     });
+    
+    // Verificar que el botón existe en el DOM
+    console.log("🔍 Verificando botón de sincronización...");
+    console.log("🔍 Botones encontrados:", $('.btnSincronizarCategorias').length);
+    if ($('.btnSincronizarCategorias').length === 0) {
+        console.error("❌ No se encontró el botón .btnSincronizarCategorias");
+    } else {
+        console.log("✅ Botón .btnSincronizarCategorias encontrado");
+    }
     
     $('.btnFiltrarActivas').click(function() {
         soloActivas = true;
