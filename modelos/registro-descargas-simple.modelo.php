@@ -24,7 +24,6 @@ class ModeloRegistroDescargasSimple {
             numero_despacho, 
             observaciones, 
             fecha_descarga, 
-            hora_descarga, 
             ip_usuario, 
             user_agent, 
             created_at
@@ -41,7 +40,6 @@ class ModeloRegistroDescargasSimple {
             :numero_despacho, 
             :observaciones, 
             :fecha_descarga, 
-            :hora_descarga, 
             :ip_usuario, 
             :user_agent, 
             :created_at
@@ -58,8 +56,7 @@ class ModeloRegistroDescargasSimple {
         $stmt->bindParam(":transportador_nombre", $datos["transportador_nombre"], PDO::PARAM_STR);
         $stmt->bindParam(":numero_despacho", $datos["numero_despacho"], PDO::PARAM_STR);
         $stmt->bindParam(":observaciones", $datos["observaciones"], PDO::PARAM_STR);
-        $stmt->bindParam(":fecha_descarga", date('Y-m-d'), PDO::PARAM_STR);
-        $stmt->bindParam(":hora_descarga", date('H:i:s'), PDO::PARAM_STR);
+        $stmt->bindParam(":fecha_descarga", date('Y-m-d H:i:s'), PDO::PARAM_STR);
         $stmt->bindParam(":ip_usuario", $_SERVER['REMOTE_ADDR'], PDO::PARAM_STR);
         $stmt->bindParam(":user_agent", $_SERVER['HTTP_USER_AGENT'], PDO::PARAM_STR);
         $stmt->bindParam(":created_at", date('Y-m-d H:i:s'), PDO::PARAM_STR);
