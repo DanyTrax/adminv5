@@ -289,10 +289,21 @@ $(document).ready(function() {
             showCancelButton: true,
             confirmButtonColor: "#5cb85c",
             confirmButtonText: "Sí, Sincronizar",
-            cancelButtonText: "Cancelar",
-            closeOnConfirm: false
-        }, function(isConfirm) {
-            if (isConfirm) {
+            cancelButtonText: "Cancelar"
+        }).then(function(result) {
+            if (result.value) {
+                // Mostrar loading
+                swal({
+                    title: "Sincronizando...",
+                    text: "Por favor espera mientras se sincronizan las categorías",
+                    type: "info",
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    onOpen: function() {
+                        swal.showLoading();
+                    }
+                });
+                
                 $.ajax({
                     url: "ajax/categorias-central.ajax.php",
                     method: "POST",
