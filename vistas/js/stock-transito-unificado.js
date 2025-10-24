@@ -422,7 +422,67 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
         success: function(respuesta) {
             if(respuesta.success) {
                 // 🔗 REGISTRO DIRECTO - Registrar descarga en la tabla
-                registrarDescargaDirecta(codigoProducto, cantidadDescargar, observaciones);
+                console.log("🔗 Registrando descarga directamente:", codigoProducto, cantidadDescargar);
+                
+                // Obtener datos del usuario actual
+                var usuarioId = sessionStorage.getItem("id") || "0";
+                var usuarioNombre = sessionStorage.getItem("nombre") || "Usuario";
+                
+                // Obtener datos de la sucursal
+                var sucursalId = "1";
+                var sucursalNombre = "Local Pruebas";
+                
+                // Obtener datos del producto y transportador desde stockSeleccionado
+                var descripcionProducto = "";
+                var transportadorNombre = "";
+                var transportadorId = "0";
+                var numeroDespacho = "";
+                
+                if (typeof stockSeleccionado === "object" && stockSeleccionado !== null) {
+                    descripcionProducto = stockSeleccionado.descripcion || "";
+                    transportadorNombre = stockSeleccionado.transportador || "";
+                    
+                    if (stockSeleccionado.detalles) {
+                        var detalles = stockSeleccionado.detalles;
+                        if (detalles.transportador_id) {
+                            transportadorId = detalles.transportador_id;
+                        }
+                        if (detalles.numero_despacho) {
+                            numeroDespacho = detalles.numero_despacho;
+                        }
+                    }
+                }
+                
+                // Hacer petición AJAX para registrar la descarga
+                $.ajax({
+                    url: "ajax/registro-descargas-simple.ajax.php",
+                    method: "POST",
+                    data: {
+                        accion: "registrar_descarga",
+                        codigo_producto: codigoProducto,
+                        descripcion_producto: descripcionProducto,
+                        cantidad_descargada: cantidadDescargar,
+                        usuario_id: usuarioId,
+                        usuario_nombre: usuarioNombre,
+                        sucursal_id: sucursalId,
+                        sucursal_nombre: sucursalNombre,
+                        transportador_id: transportadorId,
+                        transportador_nombre: transportadorNombre,
+                        numero_despacho: numeroDespacho,
+                        observaciones: observaciones
+                    },
+                    dataType: "json",
+                    success: function(respuestaRegistro) {
+                        if(respuestaRegistro.success) {
+                            console.log("✅ Descarga registrada en la tabla:", codigoProducto);
+                        } else {
+                            console.error("❌ Error al registrar descarga:", respuestaRegistro.error);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("❌ Error AJAX al registrar descarga:", error);
+                    }
+                });
                 
                 swal({
                     type: "success",
