@@ -1,3 +1,4 @@
+console.log("📋 Script categorias-central.js INICIANDO CARGA");
 $(document).ready(function() {
     console.log("📋 Script categorias-central.js cargado correctamente");
     
@@ -385,4 +386,6 @@ $(document).ready(function() {
             confirmButtonText: "Aceptar"
         });
     }
+    
+    console.log("📋 Script categorias-central.js COMPLETAMENTE CARGADO");
 });
