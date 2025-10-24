@@ -52,7 +52,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
 
         <div class="input-group">
 
-          <!-- Se usa un ID ¨²nico para este bot¨®n para evitar conflictos -->
+          <!-- Se usa un ID ï¿½ï¿½nico para este botï¿½ï¿½n para evitar conflictos -->
           <button type="button" class="btn btn-default" id="daterange-btn-reportes">
            
             <span>
@@ -81,7 +81,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
 
         <div class="box-tools pull-right">
             <?php
-                $urlDescarga = "vistas/modulos/descargar-reporte.php?reporte=reporte";
+                $urlDescarga = "index.php?ruta=descargar-reporte&reporte=reporte";
                 if (isset($_GET["fechaInicial"])) {
                     $urlDescarga .= "&fechaInicial=" . $_GET["fechaInicial"] . "&fechaFinal=" . $_GET["fechaFinal"];
                 }
@@ -104,7 +104,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
             $fechaInicialSql = $fechaInicial ? $fechaInicial . " 00:00:00" : null;
             $fechaFinalSql = $fechaFinal ? $fechaFinal . " 23:59:59" : null;
     
-            // --- C0†9LCULOS PARA TODAS LAS TARJETAS Y TABLAS ---
+            // --- Cï¿½0ï¿½9LCULOS PARA TODAS LAS TARJETAS Y TABLAS ---
             $entradasResult = ControladorContabilidad::ctrSumaTotalEntradas($fechaInicial, $fechaFinal);
             $deudaResult = ControladorVentas::ctrSumaTotalDeuda($fechaInicial, $fechaFinal);
             $vendidoResult = ControladorVentas::ctrSumaTotalVentasGeneral($fechaInicial, $fechaFinal);
@@ -116,7 +116,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
             $gastosPorMedioPago = ControladorContabilidad::ctrSumaGastosPorMedioPago($fechaInicial, $fechaFinal);
             $ventasPorVendedor = ControladorVentas::ctrSumaVentasPorVendedor($fechaInicial, $fechaFinal);
     
-            // --- Asignaci¨®n a variables ---
+            // --- Asignaciï¿½ï¿½n a variables ---
             $totalEntradas = $entradasResult["total"] ?? 0;
             $totalDeuda = $deudaResult["total_deuda"] ?? 0;
             $totalVendido = $vendidoResult["total_ventas"] ?? 0;
@@ -125,7 +125,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
         ?>
 
         <!--=====================================
-        SECCI0ˆ7N 1: RESUMEN GENERAL
+        SECCIï¿½0ï¿½7N 1: RESUMEN GENERAL
         ======================================-->
         <section class="content">
             <div class="row">
@@ -171,7 +171,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
         </section>
 
         <!--===============================================
-        SECCI0ˆ7N 2: TOTAL DE ENTRADAS POR MEDIO DE PAGO
+        SECCIï¿½0ï¿½7N 2: TOTAL DE ENTRADAS POR MEDIO DE PAGO
         ================================================-->
         <section class="content">
             <div class="row">
@@ -196,14 +196,14 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
                             }
                         }
                     } else {
-                        echo '<div class="col-xs-12"><p class="text-center">No hay datos de entradas para el per¨ªodo seleccionado.</p></div>';
+                        echo '<div class="col-xs-12"><p class="text-center">No hay datos de entradas para el perï¿½ï¿½odo seleccionado.</p></div>';
                     }
                 ?>
             </div>
         </section>
 
         <!--===============================================
-        SECCI0ˆ7N 3: ARQUEO Y RESUMEN DE GASTOS
+        SECCIï¿½0ï¿½7N 3: ARQUEO Y RESUMEN DE GASTOS
         ================================================-->
         <section class="content">
             <hr>
@@ -232,7 +232,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
         </section>
 
         <!--===============================================
-        SECCI0ˆ7N 4: DESGLOSE DE GASTOS POR MEDIO DE PAGO
+        SECCIï¿½0ï¿½7N 4: DESGLOSE DE GASTOS POR MEDIO DE PAGO
         ================================================-->
         <section class="content">
             <div class="row">
@@ -257,14 +257,14 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
                             }
                         }
                     } else {
-                        echo '<div class="col-xs-12"><p class="text-center">No hay datos de gastos para el per¨ªodo seleccionado.</p></div>';
+                        echo '<div class="col-xs-12"><p class="text-center">No hay datos de gastos para el perï¿½ï¿½odo seleccionado.</p></div>';
                     }
                 ?>
             </div>
         </section>
 
         <!--===============================================
-        SECCI0ˆ7N 5: TOTAL DE VENTAS POR VENDEDOR
+        SECCIï¿½0ï¿½7N 5: TOTAL DE VENTAS POR VENDEDOR
         ================================================-->
         <section class="content">
             <br>
@@ -292,7 +292,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
                                               </tr>';
                                     }
                                 } else {
-                                    echo '<tr><td colspan="3" class="text-center">No hay datos de ventas para el per¨ªodo seleccionado.</td></tr>';
+                                    echo '<tr><td colspan="3" class="text-center">No hay datos de ventas para el perï¿½ï¿½odo seleccionado.</td></tr>';
                                 }
                             ?>
                         </tbody>

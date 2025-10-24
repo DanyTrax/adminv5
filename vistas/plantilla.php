@@ -147,6 +147,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "reportes" => ["Administrador", "Vendedor", "Contador"],
         "reporte-detallado" => ["Administrador", "Vendedor", "Contador"],
         "descargar-reporte-detallado" => ["Administrador", "Vendedor", "Contador"],
+        "descargar-reporte" => ["Administrador", "Vendedor", "Contador"],
         "contabilidad" => ["Administrador", "Contador", "Vendedor"],
         "gastos" => ["Administrador", "Contador", "Vendedor"],
         "crear-gastos" => ["Administrador", "Contador", "Vendedor"],
