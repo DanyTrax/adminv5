@@ -28,9 +28,28 @@ try {
         exit;
     }
 
-    // Obtener parámetros de fecha (desde GET o POST)
-    $fechaInicial = isset($_GET["fechaInicial"]) ? $_GET["fechaInicial"] : (isset($_POST["fechaInicial"]) ? $_POST["fechaInicial"] : null);
-    $fechaFinal = isset($_GET["fechaFinal"]) ? $_GET["fechaFinal"] : (isset($_POST["fechaFinal"]) ? $_POST["fechaFinal"] : null);
+    // Obtener parámetros de fecha desde la URL actual
+    $fechaInicial = null;
+    $fechaFinal = null;
+    
+    // Verificar si hay parámetros de fecha en la URL de referencia
+    if (isset($_SERVER['HTTP_REFERER'])) {
+        $referer = $_SERVER['HTTP_REFERER'];
+        if (preg_match('/fechaInicial=([^&]+)/', $referer, $matches)) {
+            $fechaInicial = $matches[1];
+        }
+        if (preg_match('/fechaFinal=([^&]+)/', $referer, $matches)) {
+            $fechaFinal = $matches[1];
+        }
+    }
+    
+    // También verificar parámetros directos
+    if (!$fechaInicial && isset($_GET["fechaInicial"])) {
+        $fechaInicial = $_GET["fechaInicial"];
+    }
+    if (!$fechaFinal && isset($_GET["fechaFinal"])) {
+        $fechaFinal = $_GET["fechaFinal"];
+    }
     
     // Construir consulta con filtros de fecha
     $whereClause = "";
@@ -40,6 +59,12 @@ try {
         $whereClause = "WHERE DATE(fecha_descarga) BETWEEN :fechaInicial AND :fechaFinal";
         $params[":fechaInicial"] = $fechaInicial;
         $params[":fechaFinal"] = $fechaFinal;
+        
+        // Debug: Log de parámetros
+        error_log("Filtro de fechas aplicado: $fechaInicial a $fechaFinal");
+    } else {
+        // Debug: Log cuando no hay filtro
+        error_log("Sin filtro de fechas - mostrando todos los registros");
     }
     
     // Obtener datos con formato correcto
