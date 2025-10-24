@@ -204,8 +204,7 @@ class ControladorClientes
 					  type: "success",
 					  title: "El cliente ha sido borrado correctamente",
 					  showConfirmButton: true,
-					  confirmButtonText: "Cerrar",
-					  closeOnConfirm: false
+					  confirmButtonText: "Cerrar"
 					  }).then(function(result){
 								if (result.value) {
 

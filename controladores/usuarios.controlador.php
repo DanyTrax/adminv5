@@ -429,8 +429,7 @@ static public function ctrIngresoUsuario()
 					  type: "success",
 					  title: "El usuario ha sido borrado correctamente",
 					  showConfirmButton: true,
-					  confirmButtonText: "Cerrar",
-					  closeOnConfirm: false
+					  confirmButtonText: "Cerrar"
 					  }).then(function(result) {
 								if (result.value) {
 
