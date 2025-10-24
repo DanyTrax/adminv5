@@ -127,6 +127,9 @@ class ControladorSucursales {
                 // Generar consecutivo automático
                 $siguienteCodigo = ModeloSucursales::mdlGenerarConsecutivoSucursal();
                 
+                // Debug: Verificar datos locales
+                error_log("DEBUG - Datos locales recibidos: " . json_encode($datosLocales));
+                
                 // Preparar datos para BD central (incluyendo datos de BD con valores por defecto)
                 $datos = array(
                     "codigo_sucursal" => $datosLocales["codigo_sucursal"],
@@ -144,6 +147,9 @@ class ControladorSucursales {
                     "es_principal" => $datosLocales["es_principal"] ?? 0,
                     "activo" => 1
                 );
+                
+                // Debug: Verificar datos preparados
+                error_log("DEBUG - Datos preparados para BD central: " . json_encode($datos));
 
                 $respuesta = ModeloSucursales::mdlCrearSucursalCentral($datos);
 
