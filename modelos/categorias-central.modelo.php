@@ -23,10 +23,12 @@ class ModeloCategoriasCentral {
             $stmt->execute($params);
             $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // Formatear datos
+            // Formatear datos para tabla categorias original
             foreach ($categorias as &$categoria) {
-                $categoria['activo'] = (bool)$categoria['activo'];
-                $categoria['sincronizado'] = (bool)$categoria['sincronizado'];
+                // La tabla categorias original solo tiene: id, categoria, fecha
+                $categoria['activo'] = true; // Todas las categorías están activas
+                $categoria['sincronizado'] = true; // Asumir que están sincronizadas
+                $categoria['descripcion'] = ''; // Campo no existe en tabla original
             }
             
             return [
@@ -243,8 +245,10 @@ class ModeloCategoriasCentral {
             $categoria = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($categoria) {
-                $categoria['activo'] = (bool)$categoria['activo'];
-                $categoria['sincronizado'] = (bool)$categoria['sincronizado'];
+                // La tabla categorias original solo tiene: id, categoria, fecha
+                $categoria['activo'] = true; // Todas las categorías están activas
+                $categoria['sincronizado'] = true; // Asumir que están sincronizadas
+                $categoria['descripcion'] = ''; // Campo no existe en tabla original
             }
             
             return $categoria;
