@@ -49,7 +49,7 @@ $totalVendido = $vendidoResult["total_ventas"] ?? 0;
                 <h3>Ventas por Producto</h3>
                 <div class="box-tools pull-right">
                     <?php
-                        $urlDescarga = "index.php?ruta=descargar-reporte-detallado";
+                        $urlDescarga = "vistas/modulos/descargar-reporte-detallado.php";
                         if (isset($_GET["fechaInicial"])) {
                             $urlDescarga .= "&fechaInicial=" . $_GET["fechaInicial"] . "&fechaFinal=" . $_GET["fechaFinal"];
                         }

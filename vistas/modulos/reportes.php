@@ -81,7 +81,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
 
         <div class="box-tools pull-right">
             <?php
-                $urlDescarga = "index.php?ruta=descargar-reporte&reporte=reporte";
+                $urlDescarga = "vistas/modulos/descargar-reporte.php?reporte=reporte";
                 if (isset($_GET["fechaInicial"])) {
                     $urlDescarga .= "&fechaInicial=" . $_GET["fechaInicial"] . "&fechaFinal=" . $_GET["fechaFinal"];
                 }
