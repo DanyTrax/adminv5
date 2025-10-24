@@ -218,6 +218,80 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
   <script src="<?php echo $url; ?>vistas/js/crear-despacho.js"></script>
   <!-- <script src="<?php echo $url; ?>vistas/js/stock-transito.js"></script> --> <!-- Comentado: se usa stock-transito-unificado.js -->
   <script src="<?php echo $url; ?>vistas/js/historico-transito.js"></script>
+
+  <?php
+
+  if (isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok") {
+
+    include "modulos/header.php";
+    include "modulos/menu.php";
+
+    if (isset($_GET["ruta"])) {
+
+      $routes = [
+        "inicio" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"],
+        "usuarios" => ["Administrador"],
+        "categorias" => ["Administrador", "Vendedor"],
+        "productos" => ["Administrador", "Vendedor"],
+        "clientes" => ["Administrador", "Vendedor"],
+        "ventas" => ["Administrador", "Vendedor"],
+        "crear-venta" => ["Administrador", "Vendedor"],
+        "editar-venta" => ["Administrador", "Vendedor"],
+        "reportes" => ["Administrador", "Vendedor", "Contador"],
+        "reporte-detallado" => ["Administrador", "Vendedor", "Contador"],
+        "descargar-reporte-detallado" => ["Administrador", "Vendedor", "Contador"],
+        "gastos" => ["Administrador", "Contador", "Vendedor"],
+        "crear-gastos" => ["Administrador", "Contador", "Vendedor"],
+        "editar-gasto" => ["Administrador", "Contador"],
+        "entradas" => ["Administrador", "Contador"],
+        "crear-entradas" => ["Administrador", "Contador"],
+        "editar-entrada" => ["Administrador", "Contador"],
+        "cotizacion" => ["Administrador", "Vendedor", "Contador"],
+        "crear-cotizacion" => ["Administrador", "Vendedor", "Contador"],
+        "solicitudes-stock" => ["Administrador", "Vendedor", "Contador", "Transportador"],
+        "crear-solicitud-stock" => ["Administrador", "Vendedor", "Contador"],
+        "editar-cotizacion" => ["Administrador", "Vendedor", "Contador"],
+        "medios-pago" => ["Administrador"],
+        "sucursales" => ["Administrador"], 
+        "usuarios-central" => ["Administrador"],
+        "clientes-central" => ["Administrador"],
+        "categorias-central" => ["Administrador"],
+        "consultar-usuarios-sucursales" => ["Administrador"],
+        "despachos" => ["Administrador", "Vendedor", "Contador", "Transportador"],
+        "crear-despacho" => ["Administrador", "Vendedor", "Contador"],
+        "editar-despacho" => ["Administrador", "Vendedor", "Contador"],
+        "stock-transito" => ["Administrador", "Vendedor", "Contador", "Transportador"],
+        "historico-transito" => ["Administrador", "Vendedor", "Contador", "Transportador"],
+        "registro-descargas-simple" => ["Administrador", "Vendedor", "Contador", "Transportador"],
+        "registro-descargas-funcional" => ["Administrador", "Vendedor", "Contador", "Transportador"],
+        "salir" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"]
+      ];
+
+      $route = $_GET["ruta"];
+      $profile = $_SESSION['perfil'];
+
+      if (array_key_exists($route, $routes)) {
+        if (in_array($profile, $routes[$route])) {
+          include "modulos/" . $route . ".php";
+        } else {
+          include "modulos/inicio.php";
+        }
+      } else {
+        include "modulos/404.php";
+      }
+    } else { 
+      include "modulos/inicio.php";
+    }
+
+    include "modulos/footer.php";
+    echo '</div>';
+
+  } else {
+    include "modulos/login.php";
+  }
+
+  ?>
+
 </html>
 </body>
 

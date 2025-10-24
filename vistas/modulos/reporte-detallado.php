@@ -1,12 +1,12 @@
 <?php
-// --- INICIO DE LA CORRECCI0ˆ7N: Se a0Š9aden los 'require_once' ---
+// --- INICIO DE LA CORRECCIï¿½0ï¿½7N: Se aï¿½0ï¿½9aden los 'require_once' ---
 require_once "controladores/reportes.controlador.php";
 require_once "modelos/reportes.modelo.php";
 require_once "controladores/contabilidad.controlador.php";
 require_once "modelos/contabilidad.modelo.php";
 require_once "controladores/ventas.controlador.php";
 require_once "modelos/ventas.modelo.php";
-// --- FIN DE LA CORRECCI0ˆ7N ---
+// --- FIN DE LA CORRECCIï¿½0ï¿½7N ---
 
 // --- Control de Acceso ---
 if ($_SESSION["perfil"] != "Administrador") {
@@ -18,7 +18,7 @@ if ($_SESSION["perfil"] != "Administrador") {
 $fechaInicial = isset($_GET["fechaInicial"]) ? $_GET["fechaInicial"] : null;
 $fechaFinal = isset($_GET["fechaFinal"]) ? $_GET["fechaFinal"] : null;
 
-// --- OBTENER DATOS PARA LOS RES0‰3MENES ---
+// --- OBTENER DATOS PARA LOS RESï¿½0ï¿½3MENES ---
 $entradasResult = ControladorContabilidad::ctrSumaTotalEntradas($fechaInicial, $fechaFinal);
 $deudaResult = ControladorVentas::ctrSumaTotalDeuda($fechaInicial, $fechaFinal);
 $vendidoResult = ControladorVentas::ctrSumaTotalVentasGeneral($fechaInicial, $fechaFinal);
@@ -49,9 +49,9 @@ $totalVendido = $vendidoResult["total_ventas"] ?? 0;
                 <h3>Ventas por Producto</h3>
                 <div class="box-tools pull-right">
                     <?php
-                        $urlDescarga = "vistas/modulos/descargar-reporte-detallado.php";
+                        $urlDescarga = "index.php?ruta=descargar-reporte-detallado";
                         if (isset($_GET["fechaInicial"])) {
-                            $urlDescarga .= "?fechaInicial=" . $_GET["fechaInicial"] . "&fechaFinal=" . $_GET["fechaFinal"];
+                            $urlDescarga .= "&fechaInicial=" . $_GET["fechaInicial"] . "&fechaFinal=" . $_GET["fechaFinal"];
                         }
                     ?> 	
                     <a href="<?= $urlDescarga ?>" style="margin-left:10px;">
@@ -81,7 +81,7 @@ $totalVendido = $vendidoResult["total_ventas"] ?? 0;
                             <th>Factura</th>
                             <th>Vendedor</th>
                             <th>Cliente</th>
-                            <th>Descripci¨®n del Producto</th>
+                            <th>Descripciï¿½ï¿½n del Producto</th>
                             <th>Cantidad</th>
                             <th>Total Producto</th>
                             <th>Medio de Pago</th>
@@ -200,7 +200,7 @@ $(document).ready(function() {
                             return `${day}/${month}/${year} ${hours}:${minutes}`;
                         }
                     }
-                    return 'Fecha inv¨¢lida';
+                    return 'Fecha invï¿½ï¿½lida';
                 }
             },
             { "targets": 6, "className": "dt-center" },
