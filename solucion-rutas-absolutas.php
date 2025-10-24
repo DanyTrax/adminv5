@@ -35,7 +35,7 @@ foreach($archivos as $archivo) {
         // Reemplazar require_once con rutas absolutas
         $contenido = str_replace(
             'require_once "modelos/registro-descargas-simple.modelo.php";',
-            'require_once ' . $directorio_base . . 'modelos/registro-descargas-simple.modelo.php";',
+            'require_once ' . $directorio_base . 'modelos/registro-descargas-simple.modelo.php";',
             $contenido
         );
         
