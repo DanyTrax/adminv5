@@ -304,8 +304,9 @@ $(document).ready(function() {
             confirmButtonColor: "#5cb85c",
             confirmButtonText: "Sí, Sincronizar",
             cancelButtonText: "Cancelar"
-        }).then(function(result) {
-            if (result.value) {
+        }).then((result) => {
+            console.log("🔍 Resultado del SweetAlert:", result);
+            if (result.isConfirmed) {
                 console.log("✅ Usuario confirmó sincronización");
                 
                 // Mostrar loading
@@ -368,7 +369,7 @@ $(document).ready(function() {
             } else {
                 console.log("❌ Usuario canceló sincronización");
             }
-        }).catch(function(error) {
+        }).catch((error) => {
             console.error("❌ Error en SweetAlert:", error);
         });
     }
