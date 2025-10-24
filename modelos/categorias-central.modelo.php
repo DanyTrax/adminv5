@@ -163,6 +163,67 @@ class ModeloCategoriasCentral {
     }
 
     /*=============================================
+    CARGAR CATEGORÍAS DESDE SUCURSALES
+    =============================================*/
+    static public function mdlCargarCategoriasDesdeSucursales() {
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            $pdo = ConexionCentral::conectar();
+            
+            // Obtener sucursales activas
+            $stmt = $pdo->prepare("SELECT * FROM sucursales WHERE activo = 1");
+            $stmt->execute();
+            $sucursales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $categoriasUnicas = [];
+            
+            foreach ($sucursales as $sucursal) {
+                try {
+                    // Conectar a la sucursal
+                    $dsn = "mysql:host={$sucursal['host_bd']};port={$sucursal['puerto_bd']};dbname={$sucursal['nombre_bd']}";
+                    $pdoSucursal = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd']);
+                    $pdoSucursal->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    
+                    // Obtener categorías de la sucursal
+                    $stmt = $pdoSucursal->prepare("SELECT DISTINCT categoria FROM categorias ORDER BY categoria");
+                    $stmt->execute();
+                    $categoriasSucursal = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    // Agregar categorías únicas
+                    foreach ($categoriasSucursal as $categoria) {
+                        $nombreCategoria = trim($categoria['categoria']);
+                        if (!empty($nombreCategoria) && !in_array($nombreCategoria, $categoriasUnicas)) {
+                            $categoriasUnicas[] = $nombreCategoria;
+                        }
+                    }
+                    
+                } catch (Exception $e) {
+                    error_log("Error cargando categorías desde sucursal {$sucursal['nombre']}: " . $e->getMessage());
+                }
+            }
+            
+            // Insertar categorías únicas en la BD central
+            $stmt = $pdo->prepare("INSERT INTO categorias (categoria, fecha) VALUES (?, NOW())");
+            foreach ($categoriasUnicas as $categoria) {
+                $stmt->execute([$categoria]);
+            }
+            
+            return [
+                'success' => true,
+                'message' => "Cargadas " . count($categoriasUnicas) . " categorías desde sucursales",
+                'categorias_cargadas' => count($categoriasUnicas)
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlCargarCategoriasDesdeSucursales: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error cargando categorías: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /*=============================================
     SINCRONIZAR CATEGORÍAS CON SUCURSALES
     =============================================*/
     static public function mdlSincronizarCategoriasSucursales() {
@@ -174,6 +235,16 @@ class ModeloCategoriasCentral {
             
             require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             $pdo = ConexionCentral::conectar();
+            
+            // Primero, cargar categorías desde sucursales hacia central si está vacía
+            $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM categorias");
+            $stmt->execute();
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($resultado['total'] == 0) {
+                // La tabla central está vacía, cargar desde sucursales
+                self::mdlCargarCategoriasDesdeSucursales();
+            }
             
             // Obtener todas las categorías
             $stmt = $pdo->prepare("SELECT * FROM categorias ORDER BY categoria");
