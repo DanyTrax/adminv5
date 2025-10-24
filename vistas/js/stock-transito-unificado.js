@@ -123,50 +123,44 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
     });
     $("#detalleTablaDespachos").html(tablaHtml);
     
-    // Llenar cronología con tooltips de productos solicitados
+    // Llenar cronología con tooltips de productos del despacho
     var cronologiaHtml = "";
     cronologia.forEach(function(entrada, index) {
-        // Crear tabla de productos solicitados para el tooltip
-        var productosHtml = "";
-        if (entrada.productos_solicitados && Array.isArray(entrada.productos_solicitados)) {
-            entrada.productos_solicitados.forEach(function(producto) {
-                productosHtml += `
-                    <tr>
-                        <td style="padding: 4px 8px; border: 1px solid #ddd; color: #333;">${producto.codigo || 'N/A'}</td>
-                        <td style="padding: 4px 8px; border: 1px solid #ddd; color: #333;">${producto.descripcion || 'N/A'}</td>
-                        <td style="padding: 4px 8px; border: 1px solid #ddd; color: #333; text-align: center;">${producto.cantidad || 'N/A'}</td>
-                        <td style="padding: 4px 8px; border: 1px solid #ddd; color: #333;">${producto.observaciones || '-'}</td>
-                    </tr>
-                `;
-            });
-        } else {
-            productosHtml = `
-                <tr>
-                    <td colspan="4" style="padding: 8px; text-align: center; color: #666;">No hay productos solicitados</td>
-                </tr>
-            `;
-        }
+        // Crear tooltip con información del despacho y productos
+        var numeroDespacho = entrada.despacho || 'N/A';
+        var sucursal = entrada.sucursal_origen || 'N/A';
+        var cantidad = entrada.cantidad_agregada || entrada.total_cantidad || 'N/A';
+        var fecha = new Date(entrada.fecha).toLocaleString() || 'N/A';
         
         cronologiaHtml += `
             <div class="timeline-item" 
                  data-toggle="tooltip" 
                  data-placement="top" 
                  data-html="true"
-                 title="<div class='tooltip-productos'>
-                            <h6 style='margin: 0 0 8px 0; color: #333; font-weight: bold;'>Productos Solicitados - ${entrada.despacho || 'N/A'}</h6>
-                            <table style='margin: 0; font-size: 11px; border-collapse: collapse; width: 100%;'>
-                                <thead>
-                                    <tr style='background-color: #f5f5f5;'>
-                                        <th style='padding: 6px 8px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Código</th>
-                                        <th style='padding: 6px 8px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Descripción</th>
-                                        <th style='padding: 6px 8px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Cantidad</th>
-                                        <th style='padding: 6px 8px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Observaciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${productosHtml}
-                                </tbody>
+                 data-despacho="${numeroDespacho}"
+                 title="<div class='tooltip-despacho-info'>
+                            <h6 style='margin: 0 0 8px 0; color: #333; font-weight: bold;'>Información del Despacho</h6>
+                            <table style='margin: 0 0 12px 0; font-size: 11px; border-collapse: collapse; width: 100%;'>
+                                <tr>
+                                    <td style='padding: 4px 8px; border: 1px solid #ddd; background-color: #f5f5f5; color: #333; font-weight: bold; width: 30%;'>Despacho:</td>
+                                    <td style='padding: 4px 8px; border: 1px solid #ddd; color: #333;'>${numeroDespacho}</td>
+                                </tr>
+                                <tr>
+                                    <td style='padding: 4px 8px; border: 1px solid #ddd; background-color: #f5f5f5; color: #333; font-weight: bold;'>Sucursal:</td>
+                                    <td style='padding: 4px 8px; border: 1px solid #ddd; color: #333;'>${sucursal}</td>
+                                </tr>
+                                <tr>
+                                    <td style='padding: 4px 8px; border: 1px solid #ddd; background-color: #f5f5f5; color: #333; font-weight: bold;'>Cantidad:</td>
+                                    <td style='padding: 4px 8px; border: 1px solid #ddd; color: #333;'>${cantidad}</td>
+                                </tr>
+                                <tr>
+                                    <td style='padding: 4px 8px; border: 1px solid #ddd; background-color: #f5f5f5; color: #333; font-weight: bold;'>Fecha:</td>
+                                    <td style='padding: 4px 8px; border: 1px solid #ddd; color: #333;'>${fecha}</td>
+                                </tr>
                             </table>
+                            <div id='productos-${numeroDespacho.replace(/[^a-zA-Z0-9]/g, '')}' style='max-height: 200px; overflow-y: auto;'>
+                                <p style='margin: 0; color: #666; font-size: 10px; text-align: center;'>Cargando productos del despacho...</p>
+                            </div>
                         </div>"
                  style="cursor: pointer;">
                 <div class="timeline-marker bg-blue"></div>
@@ -189,11 +183,86 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
             container: 'body',
             delay: { "show": 300, "hide": 100 }
         });
+        
+        // Cargar productos del despacho cuando se muestre el tooltip
+        $('[data-toggle="tooltip"]').on('show.bs.tooltip', function() {
+            var numeroDespacho = $(this).data('despacho');
+            if (numeroDespacho && numeroDespacho !== 'N/A') {
+                cargarProductosDespacho(numeroDespacho);
+            }
+        });
     }, 100);
     
     // Mostrar modal
     $("#modalDetalleProducto").modal("show");
 });
+
+/*=============================================
+CARGAR PRODUCTOS DEL DESPACHO PARA TOOLTIP
+=============================================*/
+function cargarProductosDespacho(numeroDespacho) {
+    
+    var containerId = 'productos-' + numeroDespacho.replace(/[^a-zA-Z0-9]/g, '');
+    
+    // Verificar si ya se cargaron los productos
+    if ($('#' + containerId).data('loaded')) {
+        return;
+    }
+    
+    $.ajax({
+        url: "ajax/despachos.ajax.php",
+        method: "POST",
+        data: {
+            accion: "obtener_productos_despacho",
+            numero_despacho: numeroDespacho
+        },
+        dataType: "json",
+        success: function(respuesta) {
+            
+            if (respuesta.success && respuesta.productos) {
+                
+                var productosHtml = `
+                    <h6 style='margin: 0 0 8px 0; color: #333; font-weight: bold;'>Productos del Despacho</h6>
+                    <table style='margin: 0; font-size: 10px; border-collapse: collapse; width: 100%;'>
+                        <thead>
+                            <tr style='background-color: #f5f5f5;'>
+                                <th style='padding: 4px 6px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Código</th>
+                                <th style='padding: 4px 6px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Descripción</th>
+                                <th style='padding: 4px 6px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Cantidad</th>
+                                <th style='padding: 4px 6px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                respuesta.productos.forEach(function(producto, index) {
+                    productosHtml += `
+                        <tr style='background-color: ${index % 2 === 0 ? '#f9f9f9' : 'white'};'>
+                            <td style='padding: 3px 6px; border: 1px solid #ddd; color: #333; font-weight: bold;'>${producto.codigo || 'N/A'}</td>
+                            <td style='padding: 3px 6px; border: 1px solid #ddd; color: #333;'>${producto.descripcion || 'N/A'}</td>
+                            <td style='padding: 3px 6px; border: 1px solid #ddd; color: #333; text-align: center;'>${producto.cantidad || 'N/A'}</td>
+                            <td style='padding: 3px 6px; border: 1px solid #ddd; color: #333;'>${producto.observaciones || '-'}</td>
+                        </tr>
+                    `;
+                });
+                
+                productosHtml += `
+                        </tbody>
+                    </table>
+                `;
+                
+                $('#' + containerId).html(productosHtml).data('loaded', true);
+                
+            } else {
+                $('#' + containerId).html('<p style="margin: 0; color: #666; font-size: 10px; text-align: center;">No se encontraron productos</p>').data('loaded', true);
+            }
+            
+        },
+        error: function() {
+            $('#' + containerId).html('<p style="margin: 0; color: #d32f2f; font-size: 10px; text-align: center;">Error al cargar productos</p>').data('loaded', true);
+        }
+    });
+}
 
 // Event listener para botón de descarga desde detalle
 $(document).on("click", "#btnDescargarDesdeDetalle", function(e) {

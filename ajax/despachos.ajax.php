@@ -413,3 +413,45 @@ if(isset($_POST["mostrarDespachos"])){
     
     sendJsonResponse($respuesta);
 }
+
+/*=============================================
+OBTENER PRODUCTOS DEL DESPACHO
+=============================================*/
+if(isset($_POST["accion"]) && $_POST["accion"] == "obtener_productos_despacho"){
+    
+    try {
+        $numeroDespacho = $_POST["numero_despacho"] ?? "";
+        
+        if(empty($numeroDespacho)) {
+            sendJsonResponse(["success" => false, "error" => "Número de despacho requerido"]);
+        }
+        
+        // Obtener despacho por número
+        $despacho = ControladorDespachos::ctrMostrarDespachos("numero_despacho", $numeroDespacho);
+        
+        if(!$despacho) {
+            sendJsonResponse(["success" => false, "error" => "Despacho no encontrado"]);
+        }
+        
+        // Decodificar productos del despacho
+        $productos = json_decode($despacho["productos_despacho"], true);
+        
+        if(!$productos || !is_array($productos)) {
+            sendJsonResponse(["success" => false, "error" => "No se pudieron obtener los productos del despacho"]);
+        }
+        
+        sendJsonResponse([
+            "success" => true,
+            "productos" => $productos,
+            "despacho" => [
+                "numero_despacho" => $despacho["numero_despacho"],
+                "sucursal_origen" => $despacho["sucursal_origen"],
+                "fecha_creacion" => $despacho["fecha_creacion"],
+                "estado" => $despacho["estado"]
+            ]
+        ]);
+        
+    } catch(Exception $e) {
+        sendJsonResponse(["success" => false, "error" => $e->getMessage()]);
+    }
+}

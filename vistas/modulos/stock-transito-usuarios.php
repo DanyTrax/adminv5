@@ -619,32 +619,32 @@ foreach($transportadores as $productos) {
              }
        }
        
-       /* Estilos para tooltips de productos solicitados */
-       .tooltip-productos {
+       /* Estilos para tooltips de información del despacho */
+       .tooltip-despacho-info {
            background: white;
            border: 1px solid #ddd;
            border-radius: 4px;
            padding: 8px;
            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-           min-width: 300px;
-           max-width: 500px;
+           min-width: 350px;
+           max-width: 600px;
        }
        
-       .tooltip-productos h6 {
+       .tooltip-despacho-info h6 {
            margin: 0 0 8px 0;
            color: #333 !important;
            font-weight: bold;
            font-size: 12px;
        }
        
-       .tooltip-productos table {
+       .tooltip-despacho-info table {
            margin: 0;
            font-size: 11px;
            border-collapse: collapse;
            width: 100%;
        }
        
-       .tooltip-productos th {
+       .tooltip-despacho-info th {
            background-color: #f5f5f5 !important;
            color: #333 !important;
            font-weight: bold;
@@ -653,19 +653,37 @@ foreach($transportadores as $productos) {
            font-size: 10px;
        }
        
-       .tooltip-productos td {
+       .tooltip-despacho-info td {
            padding: 4px 8px;
            border: 1px solid #ddd;
            color: #333 !important;
            font-size: 10px;
        }
        
-       .tooltip-productos tbody tr:nth-child(even) {
+       .tooltip-despacho-info tbody tr:nth-child(even) {
            background-color: #f9f9f9;
        }
        
-       .tooltip-productos tbody tr:hover {
+       .tooltip-despacho-info tbody tr:hover {
            background-color: #e3f2fd;
+       }
+       
+       /* Estilos para tabla de productos dentro del tooltip */
+       .tooltip-despacho-info table table {
+           margin-top: 8px;
+           font-size: 10px;
+       }
+       
+       .tooltip-despacho-info table table th {
+           background-color: #e3f2fd !important;
+           color: #1976d2 !important;
+           font-size: 9px;
+           padding: 3px 6px;
+       }
+       
+       .tooltip-despacho-info table table td {
+           font-size: 9px;
+           padding: 3px 6px;
        }
        
        /* Timeline items con hover */
