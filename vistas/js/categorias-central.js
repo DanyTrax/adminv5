@@ -297,10 +297,10 @@ $(document).ready(function() {
         console.log("🔄 FUNCIÓN sincronizarCategorias() EJECUTÁNDOSE");
         console.log("🔄 Iniciando sincronización de categorías...");
         
-        swal({
+        Swal.fire({
             title: "¿Sincronizar Categorías?",
             text: "Esto actualizará las categorías en todas las sucursales activas. ¿Continuar?",
-            type: "warning",
+            icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#5cb85c",
             confirmButtonText: "Sí, Sincronizar",
@@ -311,14 +311,14 @@ $(document).ready(function() {
                 console.log("✅ Usuario confirmó sincronización");
                 
                 // Mostrar loading
-                swal({
+                Swal.fire({
                     title: "Sincronizando...",
                     text: "Por favor espera mientras se sincronizan las categorías",
-                    type: "info",
+                    icon: "info",
                     allowOutsideClick: false,
                     showConfirmButton: false,
-                    onOpen: function() {
-                        swal.showLoading();
+                    didOpen: () => {
+                        Swal.showLoading();
                     }
                 });
                 
@@ -335,16 +335,16 @@ $(document).ready(function() {
                         console.log("📥 Respuesta recibida:", respuesta);
                         
                         if (respuesta && respuesta.success) {
-                            swal({
+                            Swal.fire({
                                 title: "Sincronización Completada",
                                 text: respuesta.message + "\nSucursales sincronizadas: " + respuesta.sucursales_sincronizadas + "/" + respuesta.total_sucursales,
-                                type: "success",
+                                icon: "success",
                                 confirmButtonText: "Aceptar"
                             });
                             cargarCategorias();
                         } else {
                             console.error("❌ Error en respuesta:", respuesta);
-                            swal("Error", respuesta ? respuesta.message : "Respuesta inválida", "error");
+                            Swal.fire("Error", respuesta ? respuesta.message : "Respuesta inválida", "error");
                         }
                     },
                     error: function(xhr, status, error) {
@@ -364,7 +364,7 @@ $(document).ready(function() {
                             mensajeError = "Error del servidor. Revisa los logs.";
                         }
                         
-                        swal("Error", mensajeError, "error");
+                        Swal.fire("Error", mensajeError, "error");
                     }
                 });
             } else {
@@ -379,10 +379,10 @@ $(document).ready(function() {
     MOSTRAR SWEET ALERT
     =============================================*/
     function mostrarSweetAlert(tipo, titulo, mensaje) {
-        swal({
+        Swal.fire({
             title: titulo,
             text: mensaje,
-            type: tipo,
+            icon: tipo,
             confirmButtonText: "Aceptar"
         });
     }

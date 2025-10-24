@@ -49,22 +49,22 @@ ini_set('display_errors', 1);
         console.log("📋 Document ready ejecutado");
         agregarLog("📋 Document ready ejecutado");
         
-        // Probar SweetAlert
+        // Probar SweetAlert2
         try {
-            console.log("📋 Probando SweetAlert...");
-            agregarLog("📋 Probando SweetAlert...");
+            console.log("📋 Probando SweetAlert2...");
+            agregarLog("📋 Probando SweetAlert2...");
             
-            swal({
+            Swal.fire({
                 title: "Test",
-                text: "Probando SweetAlert",
-                type: "info"
+                text: "Probando SweetAlert2",
+                icon: "info"
             }).then(() => {
-                agregarLog("✅ SweetAlert funciona correctamente");
+                agregarLog("✅ SweetAlert2 funciona correctamente");
             });
             
         } catch (error) {
-            console.error("❌ Error en SweetAlert:", error);
-            agregarLog("❌ Error en SweetAlert: " + error.message);
+            console.error("❌ Error en SweetAlert2:", error);
+            agregarLog("❌ Error en SweetAlert2: " + error.message);
         }
         
         // Probar AJAX
