@@ -82,9 +82,6 @@ if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] != "Administrador") {
                                 <tr>
                                     <th style="width:10px">#</th>
                                     <th>Categoría</th>
-                                    <th>Descripción</th>
-                                    <th>Estado</th>
-                                    <th>Sincronizado</th>
                                     <th>Fecha Creación</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -165,21 +162,6 @@ MODAL EDITAR CATEGORÍA CENTRAL
                             <input type="text" class="form-control input-lg" name="categoria" id="categoriaEditar" 
                                    placeholder="Ingrese el nombre de la categoría" required>
                             <div class="help-block text-red" id="error-categoria-editar"></div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="descripcionEditar">Descripción</label>
-                            <textarea class="form-control" name="descripcion" id="descripcionEditar" rows="3" 
-                                      placeholder="Descripción opcional de la categoría"></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <div class="checkbox">
-                                <label>
-                                    <input type="checkbox" name="activo" id="activoEditar">
-                                    Categoría activa
-                                </label>
-                            </div>
                         </div>
                     </div>
                 </div>

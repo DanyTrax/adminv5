@@ -67,7 +67,8 @@ $(document).ready(function() {
     // Delegación de eventos para botones dinámicos
     $(document).on('click', '.btnEditarCategoriaCentral', function() {
         var idCategoria = $(this).attr('idCategoria');
-        mostrarModalEditar(idCategoria);
+        var categoria = $(this).attr('categoria');
+        mostrarModalEditar(idCategoria, categoria);
     });
     
     $(document).on('click', '.btnEliminarCategoriaCentral', function() {
@@ -117,40 +118,31 @@ $(document).ready(function() {
         tbody.empty();
         
         if (categorias.length === 0) {
-            tbody.append('<tr><td colspan="7" class="text-center">No hay categorías disponibles</td></tr>');
+            tbody.append('<tr><td colspan="4" class="text-center">No hay categorías disponibles</td></tr>');
             return;
         }
         
         categorias.forEach(function(categoria, index) {
-            var estado = categoria.activo ? 
-                '<span class="label label-success">Activa</span>' : 
-                '<span class="label label-danger">Inactiva</span>';
-                
-            var sincronizado = categoria.sincronizado ? 
-                '<span class="label label-success">Sí</span>' : 
-                '<span class="label label-warning">No</span>';
-            
-            var fechaCreacion = new Date(categoria.fecha_creacion).toLocaleDateString('es-ES');
+            var fechaCreacion = new Date(categoria.fecha).toLocaleDateString('es-ES');
             
             var acciones = '<div class="btn-group">' +
                 '<button class="btn btn-warning btn-xs btnEditarCategoriaCentral" ' +
-                'idCategoria="' + categoria.id + '" title="Editar categoría">' +
+                'idCategoria="' + categoria.id + '" ' +
+                'categoria="' + categoria.categoria + '" ' +
+                'title="Editar categoría">' +
                 '<i class="fa fa-pencil"></i>' +
                 '</button>' +
                 '<button class="btn btn-danger btn-xs btnEliminarCategoriaCentral" ' +
                 'idCategoria="' + categoria.id + '" ' +
                 'nombreCategoria="' + categoria.categoria + '" ' +
-                'title="Desactivar categoría">' +
-                '<i class="fa fa-times"></i>' +
+                'title="Eliminar categoría">' +
+                '<i class="fa fa-trash"></i>' +
                 '</button>' +
                 '</div>';
             
             var fila = '<tr>' +
                 '<td>' + (index + 1) + '</td>' +
                 '<td><strong>' + categoria.categoria + '</strong></td>' +
-                '<td>' + (categoria.descripcion || 'Sin descripción') + '</td>' +
-                '<td>' + estado + '</td>' +
-                '<td>' + sincronizado + '</td>' +
                 '<td>' + fechaCreacion + '</td>' +
                 '<td>' + acciones + '</td>' +
                 '</tr>';
@@ -171,31 +163,11 @@ $(document).ready(function() {
     /*=============================================
     MOSTRAR MODAL EDITAR
     =============================================*/
-    function mostrarModalEditar(idCategoria) {
-        $.ajax({
-            url: "ajax/categorias-original.ajax.php",
-            method: "POST",
-            data: {
-                idCategoria: idCategoria
-            },
-            dataType: "json",
-            success: function(respuesta) {
-                if (respuesta.success) {
-                    var categoria = respuesta.data;
-                    $('#idCategoriaEditar').val(categoria.id);
-                    $('#categoriaEditar').val(categoria.categoria);
-                    $('#descripcionEditar').val(categoria.descripcion || '');
-                    $('#activoEditar').prop('checked', categoria.activo);
-                    $('#error-categoria-editar').text('');
-                    $('#modalEditarCategoriaCentral').modal('show');
-                } else {
-                    mostrarSweetAlert('error', 'Error', respuesta.message);
-                }
-            },
-            error: function(xhr, status, error) {
-                mostrarSweetAlert('error', 'Error', 'Error al cargar la categoría');
-            }
-        });
+    function mostrarModalEditar(idCategoria, categoria) {
+        $('#idCategoriaEditar').val(idCategoria);
+        $('#categoriaEditar').val(categoria);
+        $('#error-categoria-editar').text('');
+        $('#modalEditarCategoriaCentral').modal('show');
     }
     
     /*=============================================
