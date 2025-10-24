@@ -16,7 +16,7 @@ $(document).ready(function() {
     
     $('.btnSincronizarCategorias').click(function() {
         console.log("🔄 Botón de sincronización clickeado");
-        sincronizarCategorias();
+        mostrarModalSincronizacion();
     });
     
     // Verificar que el botón existe en el DOM
@@ -57,6 +57,11 @@ $(document).ready(function() {
     // Confirmar eliminación
     $('#btnConfirmarEliminacionCategoria').click(function() {
         eliminarCategoria();
+    });
+    
+    // Confirmar sincronización
+    $('#btnConfirmarSincronizacion').click(function() {
+        ejecutarSincronizacion();
     });
     
     // Delegación de eventos para botones dinámicos
@@ -291,88 +296,102 @@ $(document).ready(function() {
     }
     
     /*=============================================
-    SINCRONIZAR CATEGORÍAS
+    MOSTRAR MODAL SINCRONIZACIÓN
     =============================================*/
-    function sincronizarCategorias() {
-        console.log("🔄 FUNCIÓN sincronizarCategorias() EJECUTÁNDOSE");
-        console.log("🔄 Iniciando sincronización de categorías...");
+    function mostrarModalSincronizacion() {
+        console.log("🔄 Mostrando modal de sincronización");
         
-        swal({
-            title: "¿Sincronizar Categorías?",
-            text: "Esto actualizará las categorías en todas las sucursales activas. ¿Continuar?",
-            type: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#5cb85c",
-            confirmButtonText: "Sí, Sincronizar",
-            cancelButtonText: "Cancelar"
-        }).then((result) => {
-            console.log("🔍 Resultado del SweetAlert:", result);
-            if (result.value) {
-                console.log("✅ Usuario confirmó sincronización");
+        // Resetear modal
+        $('#info-sincronizacion').hide();
+        $('#resultado-sincronizacion').hide();
+        $('#btnConfirmarSincronizacion').show().html('<i class="fa fa-refresh"></i> Sí, Sincronizar');
+        
+        // Mostrar modal
+        $('#modalSincronizarCategorias').modal('show');
+    }
+    
+    /*=============================================
+    EJECUTAR SINCRONIZACIÓN
+    =============================================*/
+    function ejecutarSincronizacion() {
+        console.log("🔄 Ejecutando sincronización...");
+        
+        // Mostrar loading en modal
+        $('#info-sincronizacion').show();
+        $('#btnConfirmarSincronizacion').hide();
+        
+        console.log("📡 Enviando petición AJAX...");
+        $.ajax({
+            url: "ajax/categorias-central.ajax.php",
+            method: "POST",
+            data: {
+                accion: "sincronizar"
+            },
+            dataType: "json",
+            timeout: 30000, // 30 segundos timeout
+            success: function(respuesta) {
+                console.log("📥 Respuesta recibida:", respuesta);
                 
-                // Mostrar loading
-                swal({
-                    title: "Sincronizando...",
-                    text: "Por favor espera mientras se sincronizan las categorías",
-                    type: "info",
-                    allowOutsideClick: false,
-                    showConfirmButton: false,
-                    onOpen: function() {
-                        swal.showLoading();
-                    }
+                if (respuesta && respuesta.success) {
+                    // Mostrar resultado exitoso
+                    $('#info-sincronizacion').hide();
+                    $('#resultado-sincronizacion').show();
+                    $('#detalles-sincronizacion').html(
+                        '<p>' + respuesta.message + '</p>' +
+                        '<p><strong>Sucursales sincronizadas:</strong> ' + respuesta.sucursales_sincronizadas + '/' + respuesta.total_sucursales + '</p>'
+                    );
+                    
+                    // Cambiar botón a "Cerrar"
+                    $('#btnConfirmarSincronizacion').show().html('<i class="fa fa-check"></i> Cerrar').removeClass('btn-success').addClass('btn-primary');
+                    
+                    // Recargar categorías
+                    cargarCategorias();
+                    
+                    // Auto-cerrar después de 3 segundos
+                    setTimeout(function() {
+                        $('#modalSincronizarCategorias').modal('hide');
+                    }, 3000);
+                    
+                } else {
+                    console.error("❌ Error en respuesta:", respuesta);
+                    mostrarErrorSincronizacion(respuesta ? respuesta.message : "Respuesta inválida");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("❌ Error AJAX:", {
+                    status: status,
+                    error: error,
+                    responseText: xhr.responseText,
+                    statusCode: xhr.status
                 });
                 
-                console.log("📡 Enviando petición AJAX...");
-                $.ajax({
-                    url: "ajax/categorias-central.ajax.php",
-                    method: "POST",
-                    data: {
-                        accion: "sincronizar"
-                    },
-                    dataType: "json",
-                    timeout: 30000, // 30 segundos timeout
-                    success: function(respuesta) {
-                        console.log("📥 Respuesta recibida:", respuesta);
-                        
-                        if (respuesta && respuesta.success) {
-                            swal({
-                                title: "Sincronización Completada",
-                                text: respuesta.message + "\nSucursales sincronizadas: " + respuesta.sucursales_sincronizadas + "/" + respuesta.total_sucursales,
-                                type: "success",
-                                confirmButtonText: "Aceptar"
-                            });
-                            cargarCategorias();
-                        } else {
-                            console.error("❌ Error en respuesta:", respuesta);
-                            swal("Error", respuesta ? respuesta.message : "Respuesta inválida", "error");
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("❌ Error AJAX:", {
-                            status: status,
-                            error: error,
-                            responseText: xhr.responseText,
-                            statusCode: xhr.status
-                        });
-                        
-                        let mensajeError = "Error al sincronizar categorías";
-                        if (xhr.status === 0) {
-                            mensajeError = "Error de conexión. Verifica tu conexión a internet.";
-                        } else if (xhr.status === 404) {
-                            mensajeError = "Archivo no encontrado. Verifica la ruta del AJAX.";
-                        } else if (xhr.status === 500) {
-                            mensajeError = "Error del servidor. Revisa los logs.";
-                        }
-                        
-                        swal("Error", mensajeError, "error");
-                    }
-                });
-            } else {
-                console.log("❌ Usuario canceló sincronización");
+                let mensajeError = "Error al sincronizar categorías";
+                if (xhr.status === 0) {
+                    mensajeError = "Error de conexión. Verifica tu conexión a internet.";
+                } else if (xhr.status === 404) {
+                    mensajeError = "Archivo no encontrado. Verifica la ruta del AJAX.";
+                } else if (xhr.status === 500) {
+                    mensajeError = "Error del servidor. Revisa los logs.";
+                }
+                
+                mostrarErrorSincronizacion(mensajeError);
             }
-        }).catch((error) => {
-            console.error("❌ Error en SweetAlert:", error);
         });
+    }
+    
+    /*=============================================
+    MOSTRAR ERROR EN SINCRONIZACIÓN
+    =============================================*/
+    function mostrarErrorSincronizacion(mensaje) {
+        $('#info-sincronizacion').hide();
+        $('#resultado-sincronizacion').show();
+        $('#resultado-sincronizacion .alert').removeClass('alert-success').addClass('alert-danger');
+        $('#resultado-sincronizacion .fa').removeClass('fa-check-circle').addClass('fa-exclamation-circle');
+        $('#resultado-sincronizacion strong').text('Error en Sincronización');
+        $('#detalles-sincronizacion').html('<p>' + mensaje + '</p>');
+        
+        // Cambiar botón a "Cerrar"
+        $('#btnConfirmarSincronizacion').show().html('<i class="fa fa-times"></i> Cerrar').removeClass('btn-success').addClass('btn-danger');
     }
     
     /*=============================================

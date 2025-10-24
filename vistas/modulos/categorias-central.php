@@ -220,4 +220,53 @@ MODAL CONFIRMAR ELIMINACIÓN
     </div>
 </div>
 
+<!--=====================================
+MODAL SINCRONIZAR CATEGORÍAS
+======================================-->
+<div id="modalSincronizarCategorias" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#5cb85c; color:white">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Sincronizar Categorías</h4>
+            </div>
+            <div class="modal-body">
+                <div class="box-body">
+                    <div class="text-center">
+                        <i class="fa fa-refresh fa-3x text-success" style="margin-bottom: 20px;"></i>
+                        <h4>¿Sincronizar Categorías con Sucursales?</h4>
+                        <p>Esta acción actualizará las categorías en todas las sucursales activas del sistema.</p>
+                        
+                        <div class="alert alert-info">
+                            <i class="fa fa-info-circle"></i>
+                            <strong>Información:</strong> Se sincronizarán todas las categorías activas con las sucursales configuradas.
+                        </div>
+                        
+                        <div id="info-sincronizacion" style="display: none;">
+                            <div class="alert alert-warning">
+                                <i class="fa fa-clock-o"></i>
+                                <strong>Sincronizando...</strong> Por favor espera mientras se procesan las categorías.
+                            </div>
+                        </div>
+                        
+                        <div id="resultado-sincronizacion" style="display: none;">
+                            <div class="alert alert-success">
+                                <i class="fa fa-check-circle"></i>
+                                <strong>Sincronización Completada</strong>
+                                <div id="detalles-sincronizacion"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnConfirmarSincronizacion">
+                    <i class="fa fa-refresh"></i> Sí, Sincronizar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="vistas/js/categorias-central.js"></script>
