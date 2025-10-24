@@ -282,6 +282,8 @@ $(document).ready(function() {
     SINCRONIZAR CATEGORÍAS
     =============================================*/
     function sincronizarCategorias() {
+        console.log("🔄 Iniciando sincronización de categorías...");
+        
         swal({
             title: "¿Sincronizar Categorías?",
             text: "Esto actualizará las categorías en todas las sucursales activas. ¿Continuar?",
@@ -292,6 +294,8 @@ $(document).ready(function() {
             cancelButtonText: "Cancelar"
         }).then(function(result) {
             if (result.value) {
+                console.log("✅ Usuario confirmó sincronización");
+                
                 // Mostrar loading
                 swal({
                     title: "Sincronizando...",
@@ -304,6 +308,7 @@ $(document).ready(function() {
                     }
                 });
                 
+                console.log("📡 Enviando petición AJAX...");
                 $.ajax({
                     url: "ajax/categorias-central.ajax.php",
                     method: "POST",
@@ -311,8 +316,11 @@ $(document).ready(function() {
                         accion: "sincronizar"
                     },
                     dataType: "json",
+                    timeout: 30000, // 30 segundos timeout
                     success: function(respuesta) {
-                        if (respuesta.success) {
+                        console.log("📥 Respuesta recibida:", respuesta);
+                        
+                        if (respuesta && respuesta.success) {
                             swal({
                                 title: "Sincronización Completada",
                                 text: respuesta.message + "\nSucursales sincronizadas: " + respuesta.sucursales_sincronizadas + "/" + respuesta.total_sucursales,
@@ -321,14 +329,35 @@ $(document).ready(function() {
                             });
                             cargarCategorias();
                         } else {
-                            swal("Error", respuesta.message, "error");
+                            console.error("❌ Error en respuesta:", respuesta);
+                            swal("Error", respuesta ? respuesta.message : "Respuesta inválida", "error");
                         }
                     },
                     error: function(xhr, status, error) {
-                        swal("Error", "Error al sincronizar categorías", "error");
+                        console.error("❌ Error AJAX:", {
+                            status: status,
+                            error: error,
+                            responseText: xhr.responseText,
+                            statusCode: xhr.status
+                        });
+                        
+                        let mensajeError = "Error al sincronizar categorías";
+                        if (xhr.status === 0) {
+                            mensajeError = "Error de conexión. Verifica tu conexión a internet.";
+                        } else if (xhr.status === 404) {
+                            mensajeError = "Archivo no encontrado. Verifica la ruta del AJAX.";
+                        } else if (xhr.status === 500) {
+                            mensajeError = "Error del servidor. Revisa los logs.";
+                        }
+                        
+                        swal("Error", mensajeError, "error");
                     }
                 });
+            } else {
+                console.log("❌ Usuario canceló sincronización");
             }
+        }).catch(function(error) {
+            console.error("❌ Error en SweetAlert:", error);
         });
     }
     
