@@ -11,11 +11,13 @@ $(document).ready(function() {
     // Cargar estadísticas
     cargarEstadisticas();
     
-    // Inicializar DataTable con delay para asegurar DOM listo
-    setTimeout(function() {
-        inicializarDataTable();
-        configurarFiltros();
-    }, 100);
+    // Inicializar DataTable solo una vez
+    if (!dataTableInicializado) {
+        setTimeout(function() {
+            inicializarDataTable();
+            configurarFiltros();
+        }, 500); // Aumentar delay
+    }
 });
 
 function cargarEstadisticas() {
@@ -44,45 +46,19 @@ function inicializarDataTable() {
         return;
     }
     
-    // Verificar si ya existe y destruirlo completamente
-    if ($.fn.DataTable.isDataTable("#tabla-registro-descargas")) {
-        console.log("🔄 DataTable ya existe, destruyendo completamente...");
-        try {
-            var table = $("#tabla-registro-descargas").DataTable();
-            table.destroy(true); // true = remover del DOM
-            console.log("✅ DataTable destruido completamente");
-        } catch (e) {
-            console.log("⚠️ Error al destruir DataTable:", e.message);
-            // Limpiar completamente el DOM
-            $("#tabla-registro-descargas").removeClass("dataTable");
-            $("#tabla-registro-descargas").find(".dataTables_wrapper").remove();
-            $("#tabla-registro-descargas").unwrap();
-        }
+    // Verificar si el elemento existe
+    if ($("#tabla-registro-descargas").length === 0) {
+        console.log("❌ Elemento #tabla-registro-descargas no encontrado");
+        return;
     }
     
-    // Limpiar completamente el contenido
-    $("#tabla-registro-descargas").empty();
+    // Verificar si ya existe DataTable
+    if ($.fn.DataTable.isDataTable("#tabla-registro-descargas")) {
+        console.log("🔄 DataTable ya existe, saltando inicialización...");
+        return;
+    }
     
-    // Recrear la estructura básica de la tabla
-    $("#tabla-registro-descargas").html(`
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Fecha y Hora</th>
-                <th>Código Producto</th>
-                <th>Descripción</th>
-                <th>Cantidad</th>
-                <th>Usuario</th>
-                <th>Transportador</th>
-                <th>Sucursal</th>
-                <th>Despacho</th>
-                <th>Observaciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Los datos se cargarán via AJAX -->
-        </tbody>
-    `);
+    console.log("🔄 Creando DataTable nuevo...");
     
     $("#tabla-registro-descargas").DataTable({
         "processing": true,
