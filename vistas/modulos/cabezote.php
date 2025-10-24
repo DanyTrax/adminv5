@@ -66,6 +66,12 @@
 							</a>
 						</li>
 						<li>
+							<a href="categorias-central" style="padding: 10px 15px;">
+								<i class="fa fa-tags" style="margin-right: 8px; color: #9c27b0;"></i>
+								Categorías Centrales
+							</a>
+						</li>
+						<li>
 							<a href="sucursales" style="padding: 10px 15px;">
 								<i class="fa fa-building" style="margin-right: 8px; color: #5cb85c;"></i>
 								Sucursales
