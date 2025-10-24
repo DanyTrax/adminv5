@@ -67,7 +67,7 @@ try {
         $stmt->bindValue($key, $value);
     }
     $stmt->execute();
-    $totalRecords = $stmt->fetch()['total'];
+    $totalRecords = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     
     // Obtener datos paginados
     $stmt = Conexion::conectar()->prepare("
@@ -93,7 +93,7 @@ try {
     }
     
     $stmt->execute();
-    $data = $stmt->fetchAll();
+    $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Respuesta para DataTable
     echo json_encode([
