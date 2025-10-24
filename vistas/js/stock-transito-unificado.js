@@ -123,11 +123,31 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
     });
     $("#detalleTablaDespachos").html(tablaHtml);
     
-    // Llenar cronología
+    // Llenar cronología con tooltips
     var cronologiaHtml = "";
     cronologia.forEach(function(entrada, index) {
+        // Crear datos para el tooltip
+        var tooltipData = {
+            despacho: entrada.despacho || 'N/A',
+            sucursal: entrada.sucursal_origen || 'N/A',
+            cantidad: entrada.cantidad_agregada || entrada.total_cantidad || 'N/A',
+            fecha: new Date(entrada.fecha).toLocaleString() || 'N/A'
+        };
+        
         cronologiaHtml += `
-            <div class="timeline-item">
+            <div class="timeline-item" 
+                 data-toggle="tooltip" 
+                 data-placement="top" 
+                 data-html="true"
+                 title="<div class='tooltip-despacho'>
+                            <table class='table table-condensed table-bordered' style='margin:0; font-size:12px;'>
+                                <tr><td><strong>Despacho:</strong></td><td>${tooltipData.despacho}</td></tr>
+                                <tr><td><strong>Sucursal:</strong></td><td>${tooltipData.sucursal}</td></tr>
+                                <tr><td><strong>Cantidad:</strong></td><td>${tooltipData.cantidad}</td></tr>
+                                <tr><td><strong>Fecha:</strong></td><td>${tooltipData.fecha}</td></tr>
+                            </table>
+                        </div>"
+                 style="cursor: pointer;">
                 <div class="timeline-marker bg-blue"></div>
                 <div class="timeline-content">
                     <h6 class="timeline-title">Carga #${entrada.orden_carga || (index + 1)}</h6>
@@ -140,6 +160,15 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
         `;
     });
     $("#detalleCronologia").html(cronologiaHtml);
+    
+    // Inicializar tooltips después de agregar el HTML
+    setTimeout(function() {
+        $('[data-toggle="tooltip"]').tooltip({
+            html: true,
+            container: 'body',
+            delay: { "show": 300, "hide": 100 }
+        });
+    }, 100);
     
     // Mostrar modal
     $("#modalDetalleProducto").modal("show");

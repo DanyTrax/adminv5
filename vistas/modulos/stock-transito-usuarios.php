@@ -618,6 +618,57 @@ foreach($transportadores as $productos) {
                  padding: 3px 6px;
              }
        }
+       
+       /* Estilos para tooltips de cronología */
+       .tooltip-despacho {
+           background: white;
+           border: 1px solid #ddd;
+           border-radius: 4px;
+           padding: 8px;
+           box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+           min-width: 200px;
+       }
+       
+       .tooltip-despacho table {
+           margin: 0;
+           font-size: 12px;
+       }
+       
+       .tooltip-despacho td {
+           padding: 4px 8px;
+           border: none;
+       }
+       
+       .tooltip-despacho td:first-child {
+           background-color: #f5f5f5;
+           font-weight: bold;
+           width: 30%;
+       }
+       
+       .tooltip-despacho td:last-child {
+           background-color: white;
+           color: #333;
+       }
+       
+       /* Timeline items con hover */
+       .timeline-item:hover {
+           background-color: #f8f9fa;
+           border-radius: 4px;
+           transition: background-color 0.2s ease;
+       }
+       
+       .timeline-item {
+           position: relative;
+       }
+       
+       /* Mejorar cursor pointer */
+       .timeline-item[data-toggle="tooltip"] {
+           cursor: help;
+       }
+       
+       .timeline-item[data-toggle="tooltip"]:hover {
+           background-color: #e3f2fd;
+       }
 </style>
 
 <script>
