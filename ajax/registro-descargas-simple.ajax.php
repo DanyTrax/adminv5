@@ -3,7 +3,10 @@
 AJAX REGISTRO DE DESCARGAS SIMPLE
 =============================================*/
 
-require_once "../controladores/registro-descargas-simple.controlador.php";
+// Cargar controlador solo si no está cargado
+if (!class_exists('ControladorRegistroDescargasSimple')) {
+    require_once "../controladores/registro-descargas-simple.controlador.php";
+}
 
 $registroDescargas = new ControladorRegistroDescargasSimple();
 

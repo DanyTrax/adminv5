@@ -3,7 +3,10 @@
 CONTROLADOR REGISTRO DE DESCARGAS SIMPLE
 =============================================*/
 
-require_once "modelos/registro-descargas-simple.modelo.php";
+// Cargar modelo solo si no está cargado
+if (!class_exists('ModeloRegistroDescargasSimple')) {
+    require_once "modelos/registro-descargas-simple.modelo.php";
+}
 
 class ControladorRegistroDescargasSimple {
 
