@@ -35,6 +35,12 @@ function cargarEstadisticas() {
 function inicializarDataTable() {
     console.log("🔄 Inicializando DataTable...");
     
+    // Verificar si ya existe y destruirlo
+    if ($.fn.DataTable.isDataTable("#tabla-registro-descargas")) {
+        console.log("🔄 DataTable ya existe, destruyendo...");
+        $("#tabla-registro-descargas").DataTable().destroy();
+    }
+    
     $("#tabla-registro-descargas").DataTable({
         "processing": true,
         "serverSide": true,
@@ -66,7 +72,11 @@ function inicializarDataTable() {
         "pageLength": 25,
         "order": [[0, "desc"]],
         "responsive": true,
-        "autoWidth": false
+        "autoWidth": false,
+        "error": function(xhr, error, thrown) {
+            console.error("❌ Error en DataTable:", error, thrown);
+            console.error("❌ Respuesta del servidor:", xhr.responseText);
+        }
     });
     
     console.log("✅ DataTable inicializado");
