@@ -5,16 +5,16 @@ DATATABLE REGISTRO DE DESCARGAS SIMPLE - FUNCIONAL
 
 // Incluir controlador si no existe
 if (!class_exists('ControladorRegistroDescargasSimple')) {
-    require_once "../controladores/registro-descargas-simple.controlador.php";
+    require_once __DIR__ . "/../controladores/registro-descargas-simple.controlador.php";
 }
 
 // Incluir modelo si no existe
 if (!class_exists('ModeloRegistroDescargasSimple')) {
-    require_once "../modelos/registro-descargas-simple.modelo.php";
+    require_once __DIR__ . "/../modelos/registro-descargas-simple.modelo.php";
 }
 
 // Incluir conexión
-require_once "../modelos/conexion.php";
+require_once __DIR__ . "/../modelos/conexion.php";
 
 try {
     // Parámetros de DataTable
