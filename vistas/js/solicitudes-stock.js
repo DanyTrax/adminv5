@@ -15,7 +15,12 @@ $(document).ready(function() {
             "deferRender": true,
             "retrieve": true,
             "processing": true,
-            "language": configuracionIdioma
+            "language": configuracionIdioma,
+            "order": [[ 7, "desc" ]], // Ordenar por fecha (columna 7) descendente
+            "columnDefs": [
+                { "orderable": false, "targets": [0, 8] }, // Deshabilitar ordenamiento en columna # y Acciones
+                { "type": "date", "targets": 7 } // Especificar que la columna 7 es fecha
+            ]
         });
     }
 

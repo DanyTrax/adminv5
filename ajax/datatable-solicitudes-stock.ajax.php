@@ -62,7 +62,7 @@ try {
 
     // TEST 7: Si hay solicitudes, obtenerlas de base CENTRAL
     if($total_solicitudes > 0) {
-        $stmt = $conexionCentral->prepare("SELECT * FROM solicitudes_stock ORDER BY fecha_solicitud DESC");
+        $stmt = $conexionCentral->prepare("SELECT * FROM solicitudes_stock ORDER BY fecha_solicitud DESC, id DESC");
         $stmt->execute();
         $solicitudes = $stmt->fetchAll();
         
