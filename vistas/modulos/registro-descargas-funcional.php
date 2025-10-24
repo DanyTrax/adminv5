@@ -66,16 +66,7 @@ $(document).ready(function() {
     // Inicializar DataTable
     if($('.tablaRegistroDescargas').length > 0) {
         $('.tablaRegistroDescargas').DataTable({
-            "ajax": {
-                "url": "ajax/datatable-registro-descargas-funcional.ajax.php",
-                "data": function(d) {
-                    // Pasar parámetros de fecha si existen
-                    <?php if(isset($_GET["fechaInicial"])): ?>
-                    d.fechaInicial = "<?php echo $_GET['fechaInicial']; ?>";
-                    d.fechaFinal = "<?php echo $_GET['fechaFinal']; ?>";
-                    <?php endif; ?>
-                }
-            },
+            "ajax": "ajax/datatable-registro-descargas-funcional.ajax.php",
             "deferRender": true,
             "retrieve": true,
             "processing": true,

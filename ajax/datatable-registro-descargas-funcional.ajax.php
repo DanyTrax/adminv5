@@ -28,9 +28,9 @@ try {
         exit;
     }
 
-    // Obtener parámetros de fecha
-    $fechaInicial = isset($_GET["fechaInicial"]) ? $_GET["fechaInicial"] : null;
-    $fechaFinal = isset($_GET["fechaFinal"]) ? $_GET["fechaFinal"] : null;
+    // Obtener parámetros de fecha (desde GET o POST)
+    $fechaInicial = isset($_GET["fechaInicial"]) ? $_GET["fechaInicial"] : (isset($_POST["fechaInicial"]) ? $_POST["fechaInicial"] : null);
+    $fechaFinal = isset($_GET["fechaFinal"]) ? $_GET["fechaFinal"] : (isset($_POST["fechaFinal"]) ? $_POST["fechaFinal"] : null);
     
     // Construir consulta con filtros de fecha
     $whereClause = "";
