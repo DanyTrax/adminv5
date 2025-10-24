@@ -19,6 +19,19 @@
                     <button type="button" class="btn btn-primary btn-sm" onclick="location.reload()">
                         <i class="fa fa-refresh"></i> Actualizar
                     </button>
+                    <button type="button" class="btn btn-default pull-right" id="daterange-btn-registro-descargas">
+                        <span>
+                            <i class="fa fa-calendar"></i> 
+                            <?php
+                                if (isset($_GET["fechaInicial"])) {
+                                    echo $_GET["fechaInicial"] . " - " . $_GET["fechaFinal"];
+                                } else {
+                                    echo 'Rango de fecha';
+                                }
+                            ?>
+                        </span>
+                        <i class="fa fa-caret-down"></i>
+                    </button>
                 </div>
             </div>
             <div class="box-body">
@@ -53,7 +66,16 @@ $(document).ready(function() {
     // Inicializar DataTable
     if($('.tablaRegistroDescargas').length > 0) {
         $('.tablaRegistroDescargas').DataTable({
-            "ajax": "ajax/datatable-registro-descargas-funcional.ajax.php",
+            "ajax": {
+                "url": "ajax/datatable-registro-descargas-funcional.ajax.php",
+                "data": function(d) {
+                    // Pasar parámetros de fecha si existen
+                    <?php if(isset($_GET["fechaInicial"])): ?>
+                    d.fechaInicial = "<?php echo $_GET['fechaInicial']; ?>";
+                    d.fechaFinal = "<?php echo $_GET['fechaFinal']; ?>";
+                    <?php endif; ?>
+                }
+            },
             "deferRender": true,
             "retrieve": true,
             "processing": true,
@@ -73,5 +95,51 @@ $(document).ready(function() {
             }
         });
     }
+    
+    // Activar filtro de fechas
+    activarFiltroFechas();
 });
+
+function activarFiltroFechas() {
+    // Si el botón existe en la página actual
+    if ($('#daterange-btn-registro-descargas').length) {
+        
+        // Se lee el rango guardado para mantener el estado del botón
+        if (localStorage.getItem('capturarRangoRegistroDescargas') != null) {
+            $('#daterange-btn-registro-descargas span').html(localStorage.getItem('capturarRangoRegistroDescargas'));
+        } else {
+            $('#daterange-btn-registro-descargas span').html('<i class="fa fa-calendar"></i> Rango de fecha');
+        }
+
+        // Se inicializa el calendario en el botón
+        $('#daterange-btn-registro-descargas').daterangepicker({
+            ranges: {
+                'Hoy'           : [moment(), moment()],
+                'Ayer'          : [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                'Últimos 7 días'  : [moment().subtract(6, 'days'), moment()],
+                'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
+                'Este mes'      : [moment().startOf('month'), moment().endOf('month')],
+                'Mes anterior'    : [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            },
+            startDate: moment(),
+            endDate: moment()
+        },
+        function(start, end) {
+            var capturarRango = start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY');
+            $('#daterange-btn-registro-descargas span').html(capturarRango);
+            
+            var fechaInicial = start.format('YYYY-MM-DD');
+            var fechaFinal = end.format('YYYY-MM-DD');
+
+            localStorage.setItem('capturarRangoRegistroDescargas', capturarRango);
+            window.location = "index.php?ruta=registro-descargas-funcional&fechaInicial=" + fechaInicial + "&fechaFinal=" + fechaFinal;
+        });
+
+        // Se maneja el botón de cancelar
+        $('#daterange-btn-registro-descargas').on('cancel.daterangepicker', function() {
+            localStorage.removeItem('capturarRangoRegistroDescargas');
+            window.location = "registro-descargas-funcional";
+        });
+    }
+}
 </script>

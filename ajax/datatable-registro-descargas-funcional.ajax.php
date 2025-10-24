@@ -28,8 +28,22 @@ try {
         exit;
     }
 
+    // Obtener parámetros de fecha
+    $fechaInicial = isset($_GET["fechaInicial"]) ? $_GET["fechaInicial"] : null;
+    $fechaFinal = isset($_GET["fechaFinal"]) ? $_GET["fechaFinal"] : null;
+    
+    // Construir consulta con filtros de fecha
+    $whereClause = "";
+    $params = [];
+    
+    if ($fechaInicial && $fechaFinal) {
+        $whereClause = "WHERE DATE(fecha_descarga) BETWEEN :fechaInicial AND :fechaFinal";
+        $params[":fechaInicial"] = $fechaInicial;
+        $params[":fechaFinal"] = $fechaFinal;
+    }
+    
     // Obtener datos con formato correcto
-    $stmt = $conexion->prepare("
+    $sql = "
         SELECT 
             id,
             DATE_FORMAT(fecha_descarga, '%d/%m/%Y %H:%i:%s') as fecha_hora,
@@ -42,8 +56,17 @@ try {
             numero_despacho,
             observaciones
         FROM registro_descargas_stock_transito 
+        $whereClause
         ORDER BY created_at DESC
-    ");
+    ";
+    
+    $stmt = $conexion->prepare($sql);
+    
+    // Bindear parámetros si existen
+    foreach($params as $key => $value) {
+        $stmt->bindValue($key, $value);
+    }
+    
     $stmt->execute();
     $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
