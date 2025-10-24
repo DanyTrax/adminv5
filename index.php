@@ -21,6 +21,7 @@ require_once "controladores/solicitudes-stock.controlador.php";
 require_once "controladores/despachos.controlador.php";
 require_once "controladores/stock-transito.controlador.php";
 require_once "controladores/historico-transito.controlador.php";
+require_once "controladores/registro-descargas-simple.controlador.php";
 
 require_once "modelos/usuarios.modelo.php";
 require_once "modelos/categorias.modelo.php";
