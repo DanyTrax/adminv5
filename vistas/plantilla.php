@@ -218,6 +218,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
   <script src="<?php echo $url; ?>vistas/js/crear-despacho.js"></script>
   <!-- <script src="<?php echo $url; ?>vistas/js/stock-transito.js"></script> --> <!-- Comentado: se usa stock-transito-unificado.js -->
   <script src="<?php echo $url; ?>vistas/js/historico-transito.js"></script>
+<<<<<<< HEAD
 
   <?php
 
@@ -292,6 +293,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
 
   ?>
 
+  <script src="<?php echo $url; ?>vistas/js/registro-descargas-simple.js"></script>
 </html>
 </body>
 
