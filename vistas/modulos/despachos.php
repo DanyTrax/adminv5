@@ -760,3 +760,8 @@ if($_SESSION["perfil"] == "Administrador") {
     $borrarDespacho->ctrBorrarDespacho();
 }
 ?>
+
+<!-- Script para cargar estadísticas de transportador -->
+<?php if($_SESSION["perfil"] == "Transportador"): ?>
+<script src="vistas/js/estadisticas-despachos.js"></script>
+<?php endif; ?>

@@ -455,3 +455,65 @@ if(isset($_POST["accion"]) && $_POST["accion"] == "obtener_productos_despacho"){
         sendJsonResponse(["success" => false, "error" => $e->getMessage()]);
     }
 }
+
+/*=============================================
+OBTENER ESTADÍSTICAS PARA TRANSPORTADOR
+=============================================*/
+if(isset($_POST["accion"]) && $_POST["accion"] == "obtener_estadisticas_transportador"){
+    
+    try {
+        $transportadorId = $_SESSION["id"] ?? 0;
+        
+        if($transportadorId <= 0) {
+            sendJsonResponse(["success" => false, "error" => "ID de transportador no válido"]);
+        }
+        
+        // Obtener estadísticas de despachos para el transportador
+        $stmt = ConexionCentral::conectar()->prepare("
+            SELECT 
+                estado,
+                COUNT(*) as cantidad
+            FROM despachos 
+            WHERE transportador_id = ?
+            GROUP BY estado
+        ");
+        $stmt->execute([$transportadorId]);
+        $estadisticasRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Inicializar contadores
+        $estadisticas = [
+            'pendientes' => 0,
+            'en_transito' => 0,
+            'entregados' => 0,
+            'cancelados' => 0
+        ];
+        
+        // Procesar resultados
+        foreach($estadisticasRaw as $estadistica) {
+            switch($estadistica['estado']) {
+                case 'pendiente':
+                    $estadisticas['pendientes'] = (int)$estadistica['cantidad'];
+                    break;
+                case 'aceptado':
+                case 'en_transito':
+                    $estadisticas['en_transito'] += (int)$estadistica['cantidad'];
+                    break;
+                case 'finalizado':
+                case 'entregado':
+                    $estadisticas['entregados'] += (int)$estadistica['cantidad'];
+                    break;
+                case 'cancelado':
+                    $estadisticas['cancelados'] = (int)$estadistica['cantidad'];
+                    break;
+            }
+        }
+        
+        sendJsonResponse([
+            "success" => true,
+            "estadisticas" => $estadisticas
+        ]);
+        
+    } catch(Exception $e) {
+        sendJsonResponse(["success" => false, "error" => $e->getMessage()]);
+    }
+}
