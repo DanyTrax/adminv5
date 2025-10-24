@@ -72,5 +72,6 @@ $(document).ready(function() {
     activarDateRangePicker('daterange-btn-entrada', 'entradas', 'capturarRangoEntradas');
     activarDateRangePicker('daterange-btn-detallado', 'reporte-detallado', 'capturarRangoDetallado');
     activarDateRangePicker('daterange-btn-contabilidad', 'contabilidad', 'capturarRangoContabilidad');
+    activarDateRangePicker('daterange-btn-registro-descargas', 'registro-descargas-funcional', 'capturarRangoRegistroDescargas');
 
 });
