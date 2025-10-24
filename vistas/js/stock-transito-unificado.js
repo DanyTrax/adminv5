@@ -284,9 +284,46 @@ $(document).on("click", "#btnDescargarDesdeDetalle", function(e) {
     e.preventDefault();
     $("#modalDetalleProducto").modal("hide");
     
-    // Buscar el botón de descarga correspondiente y hacer clic
+    // Obtener datos del producto desde el modal de detalle
     var codigo = $("#detalleCodigoProducto").text();
-    $(".btnDescargaDirecta[data-codigo='" + codigo + "']").click();
+    var descripcion = $("#detalleDescripcionProducto").text();
+    var cantidad = $("#detalleCantidadTotal").text();
+    var transportador = $("#detalleTransportador").text();
+    
+    console.log("🔍 DEBUG: Descarga desde detalle:", {
+        codigo, descripcion, cantidad, transportador
+    });
+    
+    // Verificar que el código no esté vacío
+    if(!codigo || codigo === '-' || codigo.trim() === '') {
+        swal({
+            type: "error",
+            title: "Error",
+            text: "No se pudo obtener el código del producto",
+            showConfirmButton: true,
+            confirmButtonText: "Cerrar"
+        });
+        return;
+    }
+    
+    // Establecer datos globalmente y mostrar modal de descarga
+    stockSeleccionado = codigo;
+    
+    // Llenar modal de descarga
+    $("#descargaCodigo").text(codigo);
+    $("#descargaDescripcion").text(descripcion);
+    $("#descargaTransportador").text(transportador);
+    $("#descargaOrigen").text("Múltiples sucursales");
+    $("#descargaDespacho").text("Varios despachos");
+    $("#descargaCantidadDisponible").val(cantidad);
+    
+    // Configurar máximo en el input
+    $("#cantidadDescargar").attr("max", cantidad);
+    $("#cantidadDescargar").val("");
+    $("#observacionesDescarga").val("");
+    
+    // Mostrar modal
+    $("#modalDescargaDirecta").modal("show");
 });
 
 // Event listener para botones de descarga
