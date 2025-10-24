@@ -619,78 +619,72 @@ foreach($transportadores as $productos) {
              }
        }
        
-       /* Estilos para tooltips de productos del despacho */
-       .tooltip-productos-despacho {
-           background: white;
-           border: 1px solid #ddd;
-           border-radius: 4px;
-           padding: 8px;
-           box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-           min-width: 300px;
-           max-width: 500px;
-       }
-       
-       .tooltip-productos-despacho h6 {
-           margin: 0 0 8px 0;
-           color: #333 !important;
-           font-weight: bold;
-           font-size: 12px;
-       }
-       
-       .tooltip-productos-despacho table {
-           margin: 0;
-           font-size: 10px;
-           border-collapse: collapse;
-           width: 100%;
-       }
-       
-       .tooltip-productos-despacho th {
-           background-color: #e3f2fd !important;
-           color: #1976d2 !important;
-           font-weight: bold;
-           padding: 4px 6px;
-           border: 1px solid #ddd;
-           font-size: 9px;
-       }
-       
-       .tooltip-productos-despacho td {
-           padding: 3px 6px;
-           border: 1px solid #ddd;
-           color: #333 !important;
-           font-size: 9px;
-       }
-       
-       .tooltip-productos-despacho tbody tr:nth-child(even) {
-           background-color: #f9f9f9;
-       }
-       
-       .tooltip-productos-despacho tbody tr:hover {
-           background-color: #e3f2fd;
-       }
-       
-       /* Estilos para tabla organizada de cronología */
-       .timeline-info-table {
+       /* Estilos para tabla horizontal de cronología */
+       .cronologia-tabla {
            margin: 0;
        }
        
-       .timeline-info-table table {
+       .cronologia-tabla table {
            margin: 0 !important;
-           font-size: 11px !important;
+           font-size: 12px !important;
            border-collapse: collapse;
            width: 100%;
        }
        
-       .timeline-info-table td {
-           padding: 4px 8px !important;
+       .cronologia-tabla th {
+           background-color: #f5f5f5 !important;
+           color: #333 !important;
+           font-weight: bold !important;
+           padding: 8px 6px !important;
+           border: 1px solid #ddd !important;
+           text-align: center !important;
+       }
+       
+       .cronologia-tabla td {
+           padding: 6px !important;
            border: 1px solid #ddd !important;
            color: #333 !important;
-           font-size: 11px !important;
+           font-size: 12px !important;
+           vertical-align: middle !important;
        }
        
-       .timeline-info-table td:first-child {
+       .cronologia-fila:hover {
+           background-color: #e3f2fd !important;
+       }
+       
+       .cronologia-fila:hover td {
+           background-color: transparent !important;
+       }
+       
+       /* Estilos para botón de ver productos */
+       .btnVerProductos {
+           transition: all 0.2s ease;
+       }
+       
+       .btnVerProductos:hover {
+           transform: scale(1.05);
+           box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+       }
+       
+       /* Estilos para modal de productos */
+       #modalProductosDespacho .modal-dialog {
+           width: 80% !important;
+           max-width: 1200px !important;
+       }
+       
+       #modalProductosDespacho .modal-body {
+           max-height: 70vh;
+           overflow-y: auto;
+       }
+       
+       #modalProductosDespacho .table th {
            background-color: #f5f5f5 !important;
+           color: #333 !important;
            font-weight: bold !important;
-           width: 25% !important;
+       }
+       
+       #modalProductosDespacho .table td {
+           vertical-align: middle !important;
        }
        
        /* Timeline items con hover */
@@ -722,4 +716,30 @@ var timeoutBusqueda;
 // Incluir script unificado
 </script>
 <script src="vistas/js/stock-transito-unificado.js"></script>
+
+<!-- Modal para mostrar productos del despacho -->
+<div class="modal fade" id="modalProductosDespacho" tabindex="-1" role="dialog" aria-labelledby="modalProductosDespachoLabel">
+    <div class="modal-dialog modal-lg" role="document" style="width: 80%; max-width: 1200px;">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #3c8dbc; color: white;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalProductosDespachoLabel">
+                    <i class="fa fa-list"></i> Productos del Despacho
+                </h4>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <div id="tablaProductosDespacho">
+                    <!-- Contenido se carga dinámicamente -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 

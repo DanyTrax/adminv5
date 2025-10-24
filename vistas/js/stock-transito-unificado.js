@@ -123,93 +123,94 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
     });
     $("#detalleTablaDespachos").html(tablaHtml);
     
-    // Llenar cronología con tooltips de productos del despacho
-    var cronologiaHtml = "";
+    // Llenar cronología como tabla horizontal
+    var cronologiaHtml = `
+        <div class="cronologia-tabla">
+            <table class="table table-striped table-bordered" style="margin: 0; font-size: 12px;">
+                <thead>
+                    <tr style="background-color: #f5f5f5;">
+                        <th style="text-align: center; font-weight: bold;">Carga</th>
+                        <th style="text-align: center; font-weight: bold;">Despacho</th>
+                        <th style="text-align: center; font-weight: bold;">Sucursal</th>
+                        <th style="text-align: center; font-weight: bold;">Cantidad</th>
+                        <th style="text-align: center; font-weight: bold;">Fecha</th>
+                        <th style="text-align: center; font-weight: bold;">Productos</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
     cronologia.forEach(function(entrada, index) {
-        // Crear tooltip con información del despacho y productos
         var numeroDespacho = entrada.despacho || 'N/A';
-        var sucursal = entrada.sucursal_origen || 'N/A';
-        var cantidad = entrada.cantidad_agregada || entrada.total_cantidad || 'N/A';
-        var fecha = new Date(entrada.fecha).toLocaleString() || 'N/A';
-        
         cronologiaHtml += `
-            <div class="timeline-item" 
-                 data-toggle="tooltip" 
-                 data-placement="top" 
-                 data-html="true"
-                 data-despacho="${numeroDespacho}"
-                 title="<div class='tooltip-productos-despacho'>
-                            <h6 style='margin: 0 0 8px 0; color: #333; font-weight: bold;'>Productos del Despacho ${numeroDespacho}</h6>
-                            <div id='productos-${numeroDespacho.replace(/[^a-zA-Z0-9]/g, '')}' style='max-height: 200px; overflow-y: auto;'>
-                                <p style='margin: 0; color: #666; font-size: 10px; text-align: center;'>Cargando productos del despacho...</p>
-                            </div>
-                        </div>"
-                 style="cursor: pointer;">
-                <div class="timeline-marker bg-blue"></div>
-                <div class="timeline-content">
-                    <div class="timeline-info-table">
-                        <table class="table table-condensed table-bordered" style="margin: 0; font-size: 11px;">
-                            <tr>
-                                <td style="background-color: #f5f5f5; font-weight: bold; width: 25%;">Carga:</td>
-                                <td>#${entrada.orden_carga || (index + 1)}</td>
-                            </tr>
-                            <tr>
-                                <td style="background-color: #f5f5f5; font-weight: bold;">Despacho:</td>
-                                <td>${entrada.despacho}</td>
-                            </tr>
-                            <tr>
-                                <td style="background-color: #f5f5f5; font-weight: bold;">Sucursal:</td>
-                                <td>${entrada.sucursal_origen}</td>
-                            </tr>
-                            <tr>
-                                <td style="background-color: #f5f5f5; font-weight: bold;">Cantidad:</td>
-                                <td>${entrada.cantidad_agregada || entrada.total_cantidad}</td>
-                            </tr>
-                            <tr>
-                                <td style="background-color: #f5f5f5; font-weight: bold;">Fecha:</td>
-                                <td>${new Date(entrada.fecha).toLocaleString()}</td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <tr class="cronologia-fila" 
+                data-despacho="${numeroDespacho}"
+                style="cursor: pointer;">
+                <td style="text-align: center; font-weight: bold;">#${entrada.orden_carga || (index + 1)}</td>
+                <td style="text-align: center;">${entrada.despacho}</td>
+                <td style="text-align: center;">${entrada.sucursal_origen}</td>
+                <td style="text-align: center; font-weight: bold;">${entrada.cantidad_agregada || entrada.total_cantidad}</td>
+                <td style="text-align: center;">${new Date(entrada.fecha).toLocaleString()}</td>
+                <td style="text-align: center;">
+                    <button class="btn btn-info btn-xs btnVerProductos" 
+                            data-despacho="${numeroDespacho}"
+                            style="padding: 2px 8px; font-size: 10px;">
+                        <i class="fa fa-list"></i> Ver
+                    </button>
+                </td>
+            </tr>
         `;
     });
+    
+    cronologiaHtml += `
+                </tbody>
+            </table>
+        </div>
+    `;
     $("#detalleCronologia").html(cronologiaHtml);
     
-    // Inicializar tooltips después de agregar el HTML
-    setTimeout(function() {
-        $('[data-toggle="tooltip"]').tooltip({
-            html: true,
-            container: 'body',
-            delay: { "show": 300, "hide": 100 }
-        });
+    // Event listener para botón de ver productos
+    $(document).on("click", ".btnVerProductos", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         
-        // Cargar productos del despacho cuando se muestre el tooltip
-        $('[data-toggle="tooltip"]').on('show.bs.tooltip', function() {
-            var numeroDespacho = $(this).data('despacho');
-            if (numeroDespacho && numeroDespacho !== 'N/A') {
-                cargarProductosDespachoTooltip(numeroDespacho);
-            }
-        });
-    }, 100);
+        var numeroDespacho = $(this).data('despacho');
+        if (numeroDespacho && numeroDespacho !== 'N/A') {
+            mostrarProductosDespacho(numeroDespacho);
+        }
+    });
+    
+    // Event listener para cerrar modal al hacer click fuera
+    $(document).on("click", function(e) {
+        if (!$(e.target).closest('#modalProductosDespacho, .btnVerProductos').length) {
+            $('#modalProductosDespacho').modal('hide');
+        }
+    });
     
     // Mostrar modal
     $("#modalDetalleProducto").modal("show");
 });
 
 /*=============================================
-CARGAR PRODUCTOS DEL DESPACHO PARA TOOLTIP
+MOSTRAR PRODUCTOS DEL DESPACHO EN MODAL GRANDE
 =============================================*/
-function cargarProductosDespachoTooltip(numeroDespacho) {
+function mostrarProductosDespacho(numeroDespacho) {
     
-    var containerId = 'productos-' + numeroDespacho.replace(/[^a-zA-Z0-9]/g, '');
+    // Actualizar título del modal
+    $('#modalProductosDespacho .modal-title').html(`<i class="fa fa-list"></i> Productos del Despacho ${numeroDespacho}`);
     
-    // Verificar si ya se cargaron los productos
-    if ($('#' + containerId).data('loaded')) {
-        return;
-    }
+    // Mostrar loading
+    $('#tablaProductosDespacho').html(`
+        <div class="text-center" style="padding: 20px;">
+            <i class="fa fa-spinner fa-spin fa-2x"></i>
+            <p style="margin-top: 10px;">Cargando productos del despacho...</p>
+        </div>
+    `);
     
+    // Mostrar modal
+    $('#modalProductosDespacho').modal('show');
+    
+    // Cargar productos
     $.ajax({
         url: "ajax/despachos.ajax.php",
         method: "POST",
@@ -223,14 +224,14 @@ function cargarProductosDespachoTooltip(numeroDespacho) {
             if (respuesta.success && respuesta.productos) {
                 
                 var productosHtml = `
-                    <h6 style='margin: 0 0 8px 0; color: #333; font-weight: bold;'>Productos del Despacho</h6>
-                    <table style='margin: 0; font-size: 10px; border-collapse: collapse; width: 100%;'>
-                        <thead>
-                            <tr style='background-color: #f5f5f5;'>
-                                <th style='padding: 4px 6px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Código</th>
-                                <th style='padding: 4px 6px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Descripción</th>
-                                <th style='padding: 4px 6px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Cantidad</th>
-                                <th style='padding: 4px 6px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Observaciones</th>
+                    <table class="table table-striped table-bordered" style="margin: 0; font-size: 13px;">
+                        <thead style="background-color: #f5f5f5;">
+                            <tr>
+                                <th style="text-align: center; font-weight: bold; width: 15%;">#</th>
+                                <th style="text-align: center; font-weight: bold; width: 15%;">Código</th>
+                                <th style="text-align: center; font-weight: bold; width: 40%;">Descripción del Producto</th>
+                                <th style="text-align: center; font-weight: bold; width: 15%;">Cantidad</th>
+                                <th style="text-align: center; font-weight: bold; width: 15%;">Observaciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -238,11 +239,12 @@ function cargarProductosDespachoTooltip(numeroDespacho) {
                 
                 respuesta.productos.forEach(function(producto, index) {
                     productosHtml += `
-                        <tr style='background-color: ${index % 2 === 0 ? '#f9f9f9' : 'white'};'>
-                            <td style='padding: 3px 6px; border: 1px solid #ddd; color: #333; font-weight: bold;'>${producto.codigo || 'N/A'}</td>
-                            <td style='padding: 3px 6px; border: 1px solid #ddd; color: #333;'>${producto.descripcion || 'N/A'}</td>
-                            <td style='padding: 3px 6px; border: 1px solid #ddd; color: #333; text-align: center;'>${producto.cantidad || 'N/A'}</td>
-                            <td style='padding: 3px 6px; border: 1px solid #ddd; color: #333;'>${producto.observaciones || '-'}</td>
+                        <tr>
+                            <td style="text-align: center; font-weight: bold;">${index + 1}</td>
+                            <td style="text-align: center; font-weight: bold;">${producto.codigo || 'N/A'}</td>
+                            <td>${producto.descripcion || 'N/A'}</td>
+                            <td style="text-align: center; font-weight: bold;">${producto.cantidad || 'N/A'}</td>
+                            <td style="text-align: center;">${producto.observaciones || '-'}</td>
                         </tr>
                     `;
                 });
@@ -252,15 +254,27 @@ function cargarProductosDespachoTooltip(numeroDespacho) {
                     </table>
                 `;
                 
-                $('#' + containerId).html(productosHtml).data('loaded', true);
+                $('#tablaProductosDespacho').html(productosHtml);
                 
             } else {
-                $('#' + containerId).html('<p style="margin: 0; color: #666; font-size: 10px; text-align: center;">No se encontraron productos</p>').data('loaded', true);
+                $('#tablaProductosDespacho').html(`
+                    <div class="alert alert-warning text-center" style="margin: 20px;">
+                        <i class="fa fa-exclamation-triangle"></i>
+                        <strong>No se encontraron productos</strong>
+                        <p>No hay productos registrados para este despacho.</p>
+                    </div>
+                `);
             }
             
         },
         error: function() {
-            $('#' + containerId).html('<p style="margin: 0; color: #d32f2f; font-size: 10px; text-align: center;">Error al cargar productos</p>').data('loaded', true);
+            $('#tablaProductosDespacho').html(`
+                <div class="alert alert-danger text-center" style="margin: 20px;">
+                    <i class="fa fa-exclamation-circle"></i>
+                    <strong>Error al cargar productos</strong>
+                    <p>No se pudieron cargar los productos del despacho. Intente nuevamente.</p>
+                </div>
+            `);
         }
     });
 }
