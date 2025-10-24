@@ -37,6 +37,7 @@ require_once "modelos/solicitudes-stock.modelo.php";
 require_once "modelos/despachos.modelo.php";
 require_once "modelos/stock-transito.modelo.php";
 require_once "modelos/historico-transito.modelo.php";
+require_once "modelos/registro-descargas-simple.modelo.php";
 
 require_once "src/MedioPago.php";
 require_once "src/FormaPago.php"; 

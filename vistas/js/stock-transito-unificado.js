@@ -411,6 +411,9 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
         dataType: "json",
         success: function(respuesta) {
             if(respuesta.success) {
+                // 🔗 HOOK - Registrar descarga en el sistema
+                registrarDescargaSimple(codigoProducto, cantidadDescargar, observaciones);
+                
                 swal({
                     type: "success",
                     title: "¡Descarga Exitosa!",
@@ -545,3 +548,58 @@ $(document).on("click", "#btnConfirmarEliminarStock", function(e) {
         }
     });
 });
+
+/*=============================================
+REGISTRAR DESCARGA SIMPLE
+=============================================*/
+function registrarDescargaSimple(codigoProducto, cantidad, observaciones) {
+    // Obtener datos del usuario actual
+    var usuarioId = $("#usuarioId").val() || 1;
+    var usuarioNombre = $("#usuarioNombre").val() || "Usuario";
+    var sucursalId = $("#sucursalId").val() || 1;
+    var sucursalNombre = $("#sucursalNombre").val() || "Sucursal";
+    
+    // Obtener información del producto desde stockSeleccionado
+    var descripcionProducto = "";
+    var transportadorId = null;
+    var transportadorNombre = null;
+    var numeroDespacho = null;
+    
+    if (typeof stockSeleccionado === 'object' && stockSeleccionado !== null) {
+        descripcionProducto = stockSeleccionado.descripcion || "";
+        transportadorId = stockSeleccionado.transportador_id || null;
+        transportadorNombre = stockSeleccionado.transportador_nombre || null;
+        numeroDespacho = stockSeleccionado.numero_despacho_origen || null;
+    }
+    
+    // Enviar registro por AJAX
+    $.ajax({
+        url: "ajax/registro-descargas-simple.ajax.php",
+        method: "POST",
+        data: {
+            accion: "registrar_descarga",
+            codigo_producto: codigoProducto,
+            descripcion_producto: descripcionProducto,
+            cantidad_descargada: cantidad,
+            usuario_id: usuarioId,
+            usuario_nombre: usuarioNombre,
+            sucursal_id: sucursalId,
+            sucursal_nombre: sucursalNombre,
+            transportador_id: transportadorId,
+            transportador_nombre: transportadorNombre,
+            numero_despacho: numeroDespacho,
+            observaciones: observaciones
+        },
+        dataType: "json",
+        success: function(respuesta) {
+            if(respuesta.success) {
+                console.log("✅ Descarga registrada en el sistema");
+            } else {
+                console.error("❌ Error al registrar descarga:", respuesta.error);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("❌ Error AJAX al registrar descarga:", error);
+        }
+    });
+}

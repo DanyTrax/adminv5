@@ -186,6 +186,14 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" 
             </a>
           </li>';
     
+    // OPCIÓN "REGISTRO DE DESCARGAS" - Para todos los perfiles
+    echo '<li>
+            <a href="registro-descargas-simple">
+              <i class="fa fa-download"></i>
+              <span>Registro de Descargas</span>
+            </a>
+          </li>';
+    
     echo '</ul>
         </li>';
 }            
