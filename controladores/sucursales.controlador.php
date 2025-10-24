@@ -130,18 +130,18 @@ class ControladorSucursales {
                 // Debug: Verificar datos locales
                 error_log("DEBUG - Datos locales recibidos: " . json_encode($datosLocales));
                 
-                // Preparar datos para BD central (incluyendo datos de BD con valores por defecto)
+                // Preparar datos para BD central (usando datos reales de la BD local)
                 $datos = array(
                     "codigo_sucursal" => $datosLocales["codigo_sucursal"],
                     "nombre" => $datosLocales["nombre"],
                     "direccion" => $datosLocales["direccion"] ?? '',
                     "telefono" => $datosLocales["telefono"] ?? '',
                     "email" => $datosLocales["email"] ?? '',
-                    "usuario_bd" => !empty($datosLocales["usuario_bd"]) ? $datosLocales["usuario_bd"] : 'usuario_bd',
-                    "password_bd" => !empty($datosLocales["password_bd"]) ? $datosLocales["password_bd"] : 'password_bd',
-                    "nombre_bd" => !empty($datosLocales["nombre_bd"]) ? $datosLocales["nombre_bd"] : 'nombre_bd',
-                    "host_bd" => !empty($datosLocales["host_bd"]) ? $datosLocales["host_bd"] : 'localhost',
-                    "puerto_bd" => !empty($datosLocales["puerto_bd"]) ? $datosLocales["puerto_bd"] : 3306,
+                    "usuario_bd" => $datosLocales["usuario_bd"] ?? 'usuario_bd',
+                    "password_bd" => $datosLocales["password_bd"] ?? 'password_bd',
+                    "nombre_bd" => $datosLocales["nombre_bd"] ?? 'nombre_bd',
+                    "host_bd" => $datosLocales["host_bd"] ?? 'localhost',
+                    "puerto_bd" => $datosLocales["puerto_bd"] ?? 3306,
                     "url_base" => $datosLocales["url_base"],
                     "url_api" => $datosLocales["url_api"],
                     "es_principal" => $datosLocales["es_principal"] ?? 0,
