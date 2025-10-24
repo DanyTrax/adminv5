@@ -235,7 +235,7 @@ foreach($transportadores as $productos) {
                                                    </span>
                                                </td>
                                                <td style="text-align: center; vertical-align: middle;">
-                                                   <button class="btn btn-info btn-xs btnVerDetalle" 
+                                                   <button class="btn btn-info btn-xs btnVerDetalleStockTransito" 
                                                            data-codigo="<?php echo $producto['codigo_producto']; ?>"
                                                            data-descripcion="<?php echo $producto['descripcion_producto']; ?>"
                                                            data-detalles='<?php echo json_encode($producto['detalles']); ?>'

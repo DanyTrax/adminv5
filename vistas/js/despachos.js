@@ -873,3 +873,49 @@ $(document).ready(function() {
     
     console.log("✅ Sistema de despachos inicializado correctamente");
 });
+
+/*=============================================
+VER DETALLES DE DESPACHO DE TRANSPORTADOR
+=============================================*/
+$(document).on("click", ".btnVerDetalleDespacho", function(){
+    
+    var idDespacho = $(this).attr("data-id");
+    console.log("👁️ Ver detalles del despacho de transportador ID:", idDespacho);
+    
+    var datos = new FormData();
+    datos.append("idDespacho", idDespacho);
+    
+    $.ajax({
+        url: "ajax/despachos.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function(respuesta) {
+            
+            console.log("📦 Respuesta del servidor:", respuesta);
+            
+            if(respuesta.success && respuesta.data) {
+                mostrarDetallesDespacho(respuesta.data);
+            } else {
+                swal({
+                    title: "Error",
+                    text: respuesta.error || "No se pudieron cargar los detalles del despacho",
+                    type: "error",
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error AJAX:", error);
+            swal({
+                title: "Error de conexión",
+                text: "No se pudo conectar con el servidor",
+                type: "error",
+                confirmButtonText: "Cerrar"
+            });
+        }
+    });
+});

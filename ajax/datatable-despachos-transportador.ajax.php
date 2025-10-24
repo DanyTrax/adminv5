@@ -31,7 +31,7 @@ function generarBotonesAccionTransportador($despacho) {
     $botones = "";
     
     // Botón de detalles (siempre visible)
-    $botones .= '<button class="btn btn-info btn-xs btnVerDetalle" 
+    $botones .= '<button class="btn btn-info btn-xs btnVerDetalleDespacho" 
                         data-id="' . $despacho["id"] . '"
                         data-toggle="tooltip" 
                         title="Ver detalles">

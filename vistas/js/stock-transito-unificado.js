@@ -87,8 +87,8 @@ $(document).ready(function() {
     buscarProductos();
 });
 
-// Event listener para botón de detalle
-$(document).on("click", ".btnVerDetalle", function(e) {
+// Event listener para botón de detalle de stock-transito
+$(document).on("click", ".btnVerDetalleStockTransito", function(e) {
     e.preventDefault();
     
     var codigo = $(this).data("codigo");
