@@ -188,7 +188,7 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" 
     
     // OPCIÓN "REGISTRO DE DESCARGAS" - Para todos los perfiles
     echo '<li>
-            <a href="registro-descargas-simple">
+            <a href="registro-descargas-funcional">
               <i class="fa fa-download"></i>
               <span>Registro de Descargas</span>
             </a>
