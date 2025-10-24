@@ -12,12 +12,10 @@ class ModeloCategoriasCentral {
             require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             $pdo = ConexionCentral::conectar();
             
-            $sql = "SELECT * FROM categorias_central";
+            $sql = "SELECT * FROM categorias";
             $params = [];
             
-            if ($soloActivas) {
-                $sql .= " WHERE activo = 1";
-            }
+            // La tabla categorias original no tiene campo activo, mostrar todas
             
             $sql .= " ORDER BY categoria ASC";
             
@@ -56,16 +54,12 @@ class ModeloCategoriasCentral {
             $pdo = ConexionCentral::conectar();
             
             $stmt = $pdo->prepare("
-                INSERT INTO categorias_central (
-                    categoria, descripcion, activo, sincronizado
-                ) VALUES (?, ?, ?, ?)
+                INSERT INTO categorias (categoria, fecha) 
+                VALUES (?, NOW())
             ");
             
             $resultado = $stmt->execute([
-                $datos['categoria'],
-                $datos['descripcion'] ?? '',
-                $datos['activo'] ? 1 : 0,
-                0 // No sincronizado inicialmente
+                $datos['categoria']
             ]);
             
             if ($resultado) {
@@ -99,16 +93,13 @@ class ModeloCategoriasCentral {
             $pdo = ConexionCentral::conectar();
             
             $stmt = $pdo->prepare("
-                UPDATE categorias_central SET 
-                    categoria = ?, descripcion = ?, activo = ?, 
-                    fecha_actualizacion = NOW(), sincronizado = 0
+                UPDATE categorias SET 
+                    categoria = ?
                 WHERE id = ?
             ");
             
             $resultado = $stmt->execute([
                 $datos['categoria'],
-                $datos['descripcion'] ?? '',
-                $datos['activo'] ? 1 : 0,
                 $id
             ]);
             
@@ -141,11 +132,9 @@ class ModeloCategoriasCentral {
             require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             $pdo = ConexionCentral::conectar();
             
-            // Primero, marcar como inactiva en lugar de eliminar
+            // Eliminar directamente de la tabla categorias original
             $stmt = $pdo->prepare("
-                UPDATE categorias_central SET 
-                    activo = 0, sincronizado = 0, fecha_actualizacion = NOW()
-                WHERE id = ?
+                DELETE FROM categorias WHERE id = ?
             ");
             
             $resultado = $stmt->execute([$id]);
@@ -153,7 +142,7 @@ class ModeloCategoriasCentral {
             if ($resultado) {
                 return [
                     'success' => true,
-                    'message' => 'Categoría desactivada correctamente'
+                    'message' => 'Categoría eliminada correctamente'
                 ];
             } else {
                 return [
@@ -184,8 +173,8 @@ class ModeloCategoriasCentral {
             require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             $pdo = ConexionCentral::conectar();
             
-            // Obtener todas las categorías activas
-            $stmt = $pdo->prepare("SELECT * FROM categorias_central WHERE activo = 1");
+            // Obtener todas las categorías
+            $stmt = $pdo->prepare("SELECT * FROM categorias ORDER BY categoria");
             $stmt->execute();
             $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
@@ -208,11 +197,11 @@ class ModeloCategoriasCentral {
                     $stmt = $pdoSucursal->prepare("DELETE FROM categorias");
                     $stmt->execute();
                     
-                    // Insertar categorías centrales en la sucursal
-                    $stmt = $pdoSucursal->prepare("INSERT INTO categorias (categoria) VALUES (?)");
+                    // Insertar categorías centrales en la sucursal manteniendo los IDs
+                    $stmt = $pdoSucursal->prepare("INSERT INTO categorias (id, categoria, fecha) VALUES (?, ?, NOW())");
                     
                     foreach ($categorias as $categoria) {
-                        $stmt->execute([$categoria['categoria']]);
+                        $stmt->execute([$categoria['id'], $categoria['categoria']]);
                     }
                     
                     $sucursalesSincronizadas++;
@@ -222,9 +211,7 @@ class ModeloCategoriasCentral {
                 }
             }
             
-            // Marcar categorías como sincronizadas
-            $stmt = $pdo->prepare("UPDATE categorias_central SET sincronizado = 1 WHERE activo = 1");
-            $stmt->execute();
+            // La tabla categorias original no tiene campo sincronizado
             
             return [
                 'success' => true,
@@ -251,7 +238,7 @@ class ModeloCategoriasCentral {
             require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             $pdo = ConexionCentral::conectar();
             
-            $stmt = $pdo->prepare("SELECT * FROM categorias_central WHERE id = ?");
+            $stmt = $pdo->prepare("SELECT * FROM categorias WHERE id = ?");
             $stmt->execute([$id]);
             $categoria = $stmt->fetch(PDO::FETCH_ASSOC);
             
@@ -276,7 +263,7 @@ class ModeloCategoriasCentral {
             require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             $pdo = ConexionCentral::conectar();
             
-            $sql = "SELECT id FROM categorias_central WHERE categoria = ?";
+            $sql = "SELECT id FROM categorias WHERE categoria = ?";
             $params = [$categoria];
             
             if ($excluirId) {

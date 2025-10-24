@@ -89,7 +89,7 @@ $(document).ready(function() {
     =============================================*/
     function cargarCategorias() {
         $.ajax({
-            url: "ajax/categorias-central.ajax.php",
+            url: "ajax/categorias-original.ajax.php",
             method: "POST",
             data: {
                 accion: "obtener",
@@ -173,7 +173,7 @@ $(document).ready(function() {
     =============================================*/
     function mostrarModalEditar(idCategoria) {
         $.ajax({
-            url: "ajax/categorias-central.ajax.php",
+            url: "ajax/categorias-original.ajax.php",
             method: "POST",
             data: {
                 idCategoria: idCategoria
@@ -215,7 +215,7 @@ $(document).ready(function() {
         formData.append('accion', 'crear');
         
         $.ajax({
-            url: "ajax/categorias-central.ajax.php",
+            url: "ajax/categorias-original.ajax.php",
             method: "POST",
             data: formData,
             processData: false,
@@ -244,7 +244,7 @@ $(document).ready(function() {
         formData.append('accion', 'editar');
         
         $.ajax({
-            url: "ajax/categorias-central.ajax.php",
+            url: "ajax/categorias-original.ajax.php",
             method: "POST",
             data: formData,
             processData: false,
@@ -272,7 +272,7 @@ $(document).ready(function() {
         var idCategoria = $('#btnConfirmarEliminacionCategoria').attr('idCategoria');
         
         $.ajax({
-            url: "ajax/categorias-central.ajax.php",
+            url: "ajax/categorias-original.ajax.php",
             method: "POST",
             data: {
                 accion: "eliminar",
@@ -321,12 +321,12 @@ $(document).ready(function() {
         $('#btnConfirmarSincronizacion').hide();
         
         console.log("📡 Enviando petición AJAX...");
-        $.ajax({
-            url: "ajax/categorias-central.ajax.php",
-            method: "POST",
-            data: {
-                accion: "sincronizar"
-            },
+                $.ajax({
+                    url: "ajax/categorias-original.ajax.php",
+                    method: "POST",
+                    data: {
+                        accion: "sincronizar"
+                    },
             dataType: "json",
             timeout: 30000, // 30 segundos timeout
             success: function(respuesta) {
