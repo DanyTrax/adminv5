@@ -120,6 +120,11 @@
               <i class="fa fa-history"></i> Historial
             </a>
           </li>
+          <li role="presentation">
+            <a href="#tabStockSucursales" role="tab" data-toggle="tab">
+              <i class="fa fa-warehouse"></i> Stock Sucursales
+            </a>
+          </li>
         </ul>
 
         <!-- ✅ CONTENIDO DE LOS TABS - ORDEN CAMBIADO -->
@@ -329,6 +334,52 @@
                 <i class="fa fa-clock-o bg-gray"></i>
               </div>
 
+            </div>
+
+          </div>
+
+          <!-- ✅ TAB 4: STOCK SUCURSALES - NUEVA PESTAÑA -->
+          <div role="tabpanel" class="tab-pane fade" id="tabStockSucursales">
+            
+            <div class="box box-info">
+              <div class="box-header with-border">
+                <h4 class="box-title">
+                  <i class="fa fa-warehouse"></i> Stock Disponible por Sucursal
+                </h4>
+                <div class="box-tools pull-right">
+                  <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                    <i class="fa fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="box-body">
+                <div class="alert alert-info">
+                  <i class="fa fa-info-circle"></i>
+                  <strong>Información:</strong> Esta tabla muestra el stock disponible de los productos solicitados en cada sucursal. Es solo para consulta.
+                </div>
+                
+                <!-- Tabla de stock por sucursales -->
+                <div class="table-responsive">
+                  <table class="table table-bordered table-striped" id="tablaStockSucursales">
+                    <thead>
+                      <tr>
+                        <th style="width: 10px;">#</th>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th>Cantidad Solicitada</th>
+                        <th id="sucursalesHeader">Sucursales</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbodyStockSucursales">
+                      <tr>
+                        <td colspan="5" class="text-center">
+                          <i class="fa fa-spinner fa-spin"></i> Cargando stock disponible...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
 
           </div>

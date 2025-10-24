@@ -1591,6 +1591,9 @@ function mostrarModalDetalleSolicitud(solicitud) {
         // ✅ CARGAR HISTORIAL
         cargarHistorialEnModal(solicitud);
         
+        // ✅ CARGAR STOCK SUCURSALES
+        cargarStockSucursalesEnModal(solicitud.productos_solicitados);
+        
         // ✅ CONFIGURAR BOTONES DE EXPORTACIÓN
         configurarBotonesExportacion(solicitud);
         
@@ -2003,4 +2006,168 @@ function exportarSolicitudExcel(solicitud) {
             confirmButtonText: 'Cerrar'
         });
     }
+}
+
+/*=============================================
+CARGAR STOCK SUCURSALES EN EL MODAL
+=============================================*/
+function cargarStockSucursalesEnModal(productosJson) {
+    
+    console.log("=== CARGANDO STOCK SUCURSALES ===");
+    console.log("Productos recibidos:", productosJson);
+    
+    try {
+        var productos = [];
+        
+        // Parsear JSON si es string
+        if(typeof productosJson === 'string') {
+            productos = JSON.parse(productosJson);
+        } else if(Array.isArray(productosJson)) {
+            productos = productosJson;
+        } else {
+            console.error("Formato de productos no reconocido:", typeof productosJson);
+            productos = [];
+        }
+        
+        console.log("Productos parseados:", productos);
+        
+        if(!productos || productos.length === 0) {
+            $('#tbodyStockSucursales').html('<tr><td colspan="5" class="text-center text-muted">No hay productos para consultar</td></tr>');
+            return;
+        }
+        
+        // Mostrar loading
+        $('#tbodyStockSucursales').html('<tr><td colspan="5" class="text-center"><i class="fa fa-spinner fa-spin"></i> Consultando stock disponible...</td></tr>');
+        
+        // Consultar stock en todas las sucursales
+        $.ajax({
+            url: 'ajax/stock-disponible-sucursales.ajax.php',
+            type: 'POST',
+            data: {
+                accion: 'consultar_stock_sucursales',
+                productos: JSON.stringify(productos)
+            },
+            dataType: 'json',
+            success: function(response) {
+                console.log("Respuesta stock sucursales:", response);
+                
+                if(response.success) {
+                    mostrarStockSucursalesEnTabla(response.data);
+                } else {
+                    $('#tbodyStockSucursales').html('<tr><td colspan="5" class="text-center text-danger">Error: ' + (response.message || 'No se pudo consultar el stock') + '</td></tr>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error AJAX consultando stock:", xhr, status, error);
+                $('#tbodyStockSucursales').html('<tr><td colspan="5" class="text-center text-danger">Error de conexión al consultar stock</td></tr>');
+            }
+        });
+        
+    } catch(error) {
+        console.error("Error cargando stock sucursales:", error);
+        $('#tbodyStockSucursales').html('<tr><td colspan="5" class="text-center text-danger">Error al cargar stock de sucursales</td></tr>');
+    }
+}
+
+/*=============================================
+MOSTRAR STOCK SUCURSALES EN TABLA
+=============================================*/
+function mostrarStockSucursalesEnTabla(stockData) {
+    
+    console.log("Mostrando stock en tabla:", stockData);
+    
+    if(!stockData || !Array.isArray(stockData) || stockData.length === 0) {
+        $('#tbodyStockSucursales').html('<tr><td colspan="5" class="text-center text-muted">No hay datos de stock disponibles</td></tr>');
+        return;
+    }
+    
+    // Obtener todas las sucursales únicas
+    var sucursalesUnicas = [];
+    var sucursalesMap = {};
+    
+    stockData.forEach(function(producto) {
+        if (producto.sucursales && Array.isArray(producto.sucursales)) {
+            producto.sucursales.forEach(function(sucursal) {
+                if (!sucursalesMap[sucursal.id]) {
+                    sucursalesMap[sucursal.id] = sucursal;
+                    sucursalesUnicas.push(sucursal);
+                }
+            });
+        }
+    });
+    
+    // Ordenar sucursales por nombre
+    sucursalesUnicas.sort(function(a, b) {
+        return a.nombre.localeCompare(b.nombre);
+    });
+    
+    console.log("Sucursales encontradas:", sucursalesUnicas);
+    
+    // Actualizar header de la tabla con columnas de sucursales
+    var headerHtml = '<th style="width: 10px;">#</th>' +
+                     '<th>Código</th>' +
+                     '<th>Descripción</th>' +
+                     '<th>Cantidad Solicitada</th>';
+    
+    sucursalesUnicas.forEach(function(sucursal) {
+        headerHtml += '<th class="text-center" style="min-width: 80px;">' + sucursal.nombre + '</th>';
+    });
+    
+    $('#sucursalesHeader').parent().html(headerHtml);
+    
+    // Generar filas de productos
+    var tbodyHtml = '';
+    
+    stockData.forEach(function(producto, index) {
+        var filaHtml = '<tr>';
+        filaHtml += '<td class="text-center"><strong>' + (index + 1) + '</strong></td>';
+        filaHtml += '<td><code>' + (producto.codigo || 'N/A') + '</code></td>';
+        filaHtml += '<td>' + (producto.descripcion || 'N/A') + '</td>';
+        filaHtml += '<td class="text-center"><span class="label label-primary">' + (producto.cantidad_solicitada || 0) + '</span></td>';
+        
+        // Agregar stock de cada sucursal
+        sucursalesUnicas.forEach(function(sucursal) {
+            var stockSucursal = 0;
+            var puedeSatisfacer = false;
+            
+            // Buscar stock de esta sucursal para este producto
+            if (producto.sucursales && Array.isArray(producto.sucursales)) {
+                var sucursalData = producto.sucursales.find(function(s) {
+                    return s.id === sucursal.id;
+                });
+                
+                if (sucursalData) {
+                    stockSucursal = sucursalData.stock_disponible || 0;
+                    puedeSatisfacer = sucursalData.puede_satisfacer || false;
+                }
+            }
+            
+            // Determinar clase CSS según disponibilidad
+            var stockClass = 'text-muted';
+            var stockIcon = '';
+            
+            if (stockSucursal > 0) {
+                if (puedeSatisfacer) {
+                    stockClass = 'text-success';
+                    stockIcon = '<i class="fa fa-check-circle"></i> ';
+                } else {
+                    stockClass = 'text-warning';
+                    stockIcon = '<i class="fa fa-exclamation-triangle"></i> ';
+                }
+            } else {
+                stockClass = 'text-danger';
+                stockIcon = '<i class="fa fa-times-circle"></i> ';
+            }
+            
+            filaHtml += '<td class="text-center ' + stockClass + '">' + 
+                       stockIcon + '<strong>' + stockSucursal + '</strong></td>';
+        });
+        
+        filaHtml += '</tr>';
+        tbodyHtml += filaHtml;
+    });
+    
+    $('#tbodyStockSucursales').html(tbodyHtml);
+    
+    console.log("✅ Tabla de stock sucursales cargada correctamente");
 }
