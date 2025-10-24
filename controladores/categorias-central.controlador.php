@@ -63,9 +63,7 @@ class ControladorCategoriasCentral {
             }
             
             $datos = [
-                'categoria' => $_POST["categoria"],
-                'descripcion' => $_POST["descripcion"] ?? '',
-                'activo' => isset($_POST["activo"]) ? (bool)$_POST["activo"] : true
+                'categoria' => $_POST["categoria"]
             ];
             
             $respuesta = ModeloCategoriasCentral::mdlEditarCategoriaCentral($_POST["id"], $datos);
