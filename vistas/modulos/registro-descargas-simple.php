@@ -117,6 +117,11 @@ REGISTRO DE DESCARGAS SIMPLE - INTERFAZ COMPLETA
                 <div class="box">
                     <div class="box-header">
                         <h3 class="box-title">Registro de Descargas</h3>
+                        <div class="box-tools pull-right">
+                            <button type="button" class="btn btn-primary btn-sm" id="btn-inicializar-tabla">
+                                <i class="fa fa-refresh"></i> Inicializar Tabla
+                            </button>
+                        </div>
                     </div>
                     <div class="box-body">
                         <div class="table-responsive">

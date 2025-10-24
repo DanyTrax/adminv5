@@ -5,19 +5,24 @@ REGISTRO DE DESCARGAS SIMPLE - JAVASCRIPT ULTRA SIMPLE
 // Variable global para controlar inicialización
 var dataTableInicializado = false;
 
+// Función global para inicializar DataTable manualmente
+window.inicializarTablaRegistro = function() {
+    console.log("🔄 Inicializando DataTable manualmente...");
+    inicializarDataTable();
+};
+
 $(document).ready(function() {
     console.log("✅ Módulo Registro de Descargas Simple cargado");
     
     // Cargar estadísticas
     cargarEstadisticas();
     
-    // Inicializar DataTable solo una vez
-    if (!dataTableInicializado) {
-        setTimeout(function() {
-            inicializarDataTable();
-            configurarFiltros();
-        }, 500); // Aumentar delay
-    }
+    // NO inicializar DataTable automáticamente
+    // Se inicializará manualmente cuando sea necesario
+    console.log("⚠️ DataTable NO se inicializa automáticamente");
+    
+    // Configurar filtros
+    configurarFiltros();
 });
 
 function cargarEstadisticas() {
@@ -139,9 +144,17 @@ function inicializarDataTable() {
 }
 
 function configurarFiltros() {
+    // Botón inicializar tabla
+    $("#btn-inicializar-tabla").click(function() {
+        console.log("🔄 Botón inicializar tabla clickeado");
+        inicializarDataTable();
+    });
+    
     // Botón filtrar
     $("#btn-filtrar").click(function() {
-        $("#tabla-registro-descargas").DataTable().ajax.reload();
+        if ($.fn.DataTable.isDataTable("#tabla-registro-descargas")) {
+            $("#tabla-registro-descargas").DataTable().ajax.reload();
+        }
     });
     
     // Botón limpiar
@@ -150,7 +163,9 @@ function configurarFiltros() {
         $("#filtro-usuario").val("");
         $("#filtro-fecha-desde").val("");
         $("#filtro-fecha-hasta").val("");
-        $("#tabla-registro-descargas").DataTable().ajax.reload();
+        if ($.fn.DataTable.isDataTable("#tabla-registro-descargas")) {
+            $("#tabla-registro-descargas").DataTable().ajax.reload();
+        }
     });
     
     // Botón exportar
