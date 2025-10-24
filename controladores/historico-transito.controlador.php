@@ -93,7 +93,7 @@ class ControladorHistoricoTransito {
             
             // Consulta por transportadores (solo para administradores)
             $transportadores = [];
-            if($_SESSION["perfil"] == "Administrador") {
+            if(isset($_SESSION["perfil"]) && $_SESSION["perfil"] == "Administrador") {
                 $stmt = ConexionCentral::conectar()->prepare("
                     SELECT 
                         nombre_transportador,
@@ -244,7 +244,7 @@ class ControladorHistoricoTransito {
             $parametros = [":codigo_producto" => $codigoProducto];
             
             // Si es transportador o se especifica, filtrar por transportador
-            if($_SESSION["perfil"] == "Transportador" || $transportadorId) {
+            if((isset($_SESSION["perfil"]) && $_SESSION["perfil"] == "Transportador") || $transportadorId) {
                 $sql .= " AND transportador_id = :transportador_id";
                 $parametros[":transportador_id"] = $transportadorId ?? $_SESSION["id"];
             }
@@ -272,7 +272,7 @@ class ControladorHistoricoTransito {
     =============================================*/
     static public function ctrExportarHistoricoPDF($filtros = []) {
         
-        if($_SESSION["perfil"] != "Administrador" && $_SESSION["perfil"] != "Transportador") {
+        if(!isset($_SESSION["perfil"]) || ($_SESSION["perfil"] != "Administrador" && $_SESSION["perfil"] != "Transportador")) {
             return false;
         }
         
@@ -309,7 +309,7 @@ class ControladorHistoricoTransito {
         
         $pdf->Cell(60, 8, 'Generado por: ' . $_SESSION["nombre"], 0, 0, 'L');
         $pdf->Cell(60, 8, 'Fecha: ' . date('d/m/Y H:i:s'), 0, 0, 'L');
-        $pdf->Cell(60, 8, 'Perfil: ' . $_SESSION["perfil"], 0, 1, 'L');
+        $pdf->Cell(60, 8, 'Perfil: ' . (isset($_SESSION["perfil"]) ? $_SESSION["perfil"] : 'No definido'), 0, 1, 'L');
         
         // Mostrar filtros aplicados
         if(!empty($filtros)) {
