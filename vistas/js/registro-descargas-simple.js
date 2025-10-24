@@ -2,6 +2,9 @@
 REGISTRO DE DESCARGAS SIMPLE - JAVASCRIPT ULTRA SIMPLE
 =============================================*/
 
+// Variable global para controlar inicialización
+var dataTableInicializado = false;
+
 $(document).ready(function() {
     console.log("✅ Módulo Registro de Descargas Simple cargado");
     
@@ -35,22 +38,51 @@ function cargarEstadisticas() {
 function inicializarDataTable() {
     console.log("🔄 Inicializando DataTable...");
     
-    // Verificar si ya existe y destruirlo de forma segura
+    // Verificar si ya se inicializó
+    if (dataTableInicializado) {
+        console.log("⚠️ DataTable ya fue inicializado, saltando...");
+        return;
+    }
+    
+    // Verificar si ya existe y destruirlo completamente
     if ($.fn.DataTable.isDataTable("#tabla-registro-descargas")) {
-        console.log("🔄 DataTable ya existe, destruyendo...");
+        console.log("🔄 DataTable ya existe, destruyendo completamente...");
         try {
-            $("#tabla-registro-descargas").DataTable().destroy();
-            console.log("✅ DataTable destruido correctamente");
+            var table = $("#tabla-registro-descargas").DataTable();
+            table.destroy(true); // true = remover del DOM
+            console.log("✅ DataTable destruido completamente");
         } catch (e) {
             console.log("⚠️ Error al destruir DataTable:", e.message);
-            // Limpiar el DOM manualmente
+            // Limpiar completamente el DOM
             $("#tabla-registro-descargas").removeClass("dataTable");
             $("#tabla-registro-descargas").find(".dataTables_wrapper").remove();
+            $("#tabla-registro-descargas").unwrap();
         }
     }
     
-    // Limpiar el contenido de la tabla
-    $("#tabla-registro-descargas tbody").empty();
+    // Limpiar completamente el contenido
+    $("#tabla-registro-descargas").empty();
+    
+    // Recrear la estructura básica de la tabla
+    $("#tabla-registro-descargas").html(`
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fecha y Hora</th>
+                <th>Código Producto</th>
+                <th>Descripción</th>
+                <th>Cantidad</th>
+                <th>Usuario</th>
+                <th>Transportador</th>
+                <th>Sucursal</th>
+                <th>Despacho</th>
+                <th>Observaciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Los datos se cargarán via AJAX -->
+        </tbody>
+    `);
     
     $("#tabla-registro-descargas").DataTable({
         "processing": true,
@@ -90,6 +122,8 @@ function inicializarDataTable() {
         }
     });
     
+    // Marcar como inicializado
+    dataTableInicializado = true;
     console.log("✅ DataTable inicializado");
 }
 
