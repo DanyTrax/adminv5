@@ -123,28 +123,49 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
     });
     $("#detalleTablaDespachos").html(tablaHtml);
     
-    // Llenar cronología con tooltips
+    // Llenar cronología con tooltips de productos solicitados
     var cronologiaHtml = "";
     cronologia.forEach(function(entrada, index) {
-        // Crear datos para el tooltip
-        var tooltipData = {
-            despacho: entrada.despacho || 'N/A',
-            sucursal: entrada.sucursal_origen || 'N/A',
-            cantidad: entrada.cantidad_agregada || entrada.total_cantidad || 'N/A',
-            fecha: new Date(entrada.fecha).toLocaleString() || 'N/A'
-        };
+        // Crear tabla de productos solicitados para el tooltip
+        var productosHtml = "";
+        if (entrada.productos_solicitados && Array.isArray(entrada.productos_solicitados)) {
+            entrada.productos_solicitados.forEach(function(producto) {
+                productosHtml += `
+                    <tr>
+                        <td style="padding: 4px 8px; border: 1px solid #ddd; color: #333;">${producto.codigo || 'N/A'}</td>
+                        <td style="padding: 4px 8px; border: 1px solid #ddd; color: #333;">${producto.descripcion || 'N/A'}</td>
+                        <td style="padding: 4px 8px; border: 1px solid #ddd; color: #333; text-align: center;">${producto.cantidad || 'N/A'}</td>
+                        <td style="padding: 4px 8px; border: 1px solid #ddd; color: #333;">${producto.observaciones || '-'}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            productosHtml = `
+                <tr>
+                    <td colspan="4" style="padding: 8px; text-align: center; color: #666;">No hay productos solicitados</td>
+                </tr>
+            `;
+        }
         
         cronologiaHtml += `
             <div class="timeline-item" 
                  data-toggle="tooltip" 
                  data-placement="top" 
                  data-html="true"
-                 title="<div class='tooltip-despacho'>
-                            <table class='table table-condensed table-bordered' style='margin:0; font-size:12px;'>
-                                <tr><td><strong>Despacho:</strong></td><td>${tooltipData.despacho}</td></tr>
-                                <tr><td><strong>Sucursal:</strong></td><td>${tooltipData.sucursal}</td></tr>
-                                <tr><td><strong>Cantidad:</strong></td><td>${tooltipData.cantidad}</td></tr>
-                                <tr><td><strong>Fecha:</strong></td><td>${tooltipData.fecha}</td></tr>
+                 title="<div class='tooltip-productos'>
+                            <h6 style='margin: 0 0 8px 0; color: #333; font-weight: bold;'>Productos Solicitados - ${entrada.despacho || 'N/A'}</h6>
+                            <table style='margin: 0; font-size: 11px; border-collapse: collapse; width: 100%;'>
+                                <thead>
+                                    <tr style='background-color: #f5f5f5;'>
+                                        <th style='padding: 6px 8px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Código</th>
+                                        <th style='padding: 6px 8px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Descripción</th>
+                                        <th style='padding: 6px 8px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Cantidad</th>
+                                        <th style='padding: 6px 8px; border: 1px solid #ddd; color: #333; font-weight: bold;'>Observaciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${productosHtml}
+                                </tbody>
                             </table>
                         </div>"
                  style="cursor: pointer;">

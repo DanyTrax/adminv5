@@ -619,35 +619,53 @@ foreach($transportadores as $productos) {
              }
        }
        
-       /* Estilos para tooltips de cronología */
-       .tooltip-despacho {
+       /* Estilos para tooltips de productos solicitados */
+       .tooltip-productos {
            background: white;
            border: 1px solid #ddd;
            border-radius: 4px;
            padding: 8px;
            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-           min-width: 200px;
+           min-width: 300px;
+           max-width: 500px;
        }
        
-       .tooltip-despacho table {
-           margin: 0;
+       .tooltip-productos h6 {
+           margin: 0 0 8px 0;
+           color: #333 !important;
+           font-weight: bold;
            font-size: 12px;
        }
        
-       .tooltip-despacho td {
-           padding: 4px 8px;
-           border: none;
+       .tooltip-productos table {
+           margin: 0;
+           font-size: 11px;
+           border-collapse: collapse;
+           width: 100%;
        }
        
-       .tooltip-despacho td:first-child {
-           background-color: #f5f5f5;
+       .tooltip-productos th {
+           background-color: #f5f5f5 !important;
+           color: #333 !important;
            font-weight: bold;
-           width: 30%;
+           padding: 6px 8px;
+           border: 1px solid #ddd;
+           font-size: 10px;
        }
        
-       .tooltip-despacho td:last-child {
-           background-color: white;
-           color: #333;
+       .tooltip-productos td {
+           padding: 4px 8px;
+           border: 1px solid #ddd;
+           color: #333 !important;
+           font-size: 10px;
+       }
+       
+       .tooltip-productos tbody tr:nth-child(even) {
+           background-color: #f9f9f9;
+       }
+       
+       .tooltip-productos tbody tr:hover {
+           background-color: #e3f2fd;
        }
        
        /* Timeline items con hover */
