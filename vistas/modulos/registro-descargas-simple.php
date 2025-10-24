@@ -124,8 +124,7 @@ REGISTRO DE DESCARGAS SIMPLE - INTERFAZ COMPLETA
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Fecha</th>
-                                        <th>Hora</th>
+                                        <th>Fecha y Hora</th>
                                         <th>Código Producto</th>
                                         <th>Descripción</th>
                                         <th>Cantidad</th>

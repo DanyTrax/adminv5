@@ -73,8 +73,7 @@ try {
     $stmt = Conexion::conectar()->prepare("
         SELECT 
             id,
-            DATE_FORMAT(fecha_descarga, '%d/%m/%Y') as fecha,
-            TIME_FORMAT(hora_descarga, '%H:%i:%s') as hora,
+            DATE_FORMAT(fecha_descarga, '%d/%m/%Y %H:%i:%s') as fecha_hora,
             codigo_producto,
             descripcion_producto,
             cantidad_descargada,

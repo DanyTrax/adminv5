@@ -424,9 +424,23 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
                 // 🔗 REGISTRO DIRECTO - Registrar descarga en la tabla
                 console.log("🔗 Registrando descarga directamente:", codigoProducto, cantidadDescargar);
                 
-                // Obtener datos del usuario actual desde la sesión PHP
-                var usuarioId = "<?php echo $_SESSION['id'] ?? '0'; ?>";
-                var usuarioNombre = "<?php echo $_SESSION['nombre'] ?? 'Usuario'; ?>";
+                // Obtener datos del usuario actual via AJAX
+                var usuarioId = "0";
+                var usuarioNombre = "Usuario";
+                
+                // Obtener usuario actual
+                $.ajax({
+                    url: "ajax/obtener-usuario-actual.ajax.php",
+                    method: "GET",
+                    dataType: "json",
+                    async: false, // Síncrono para obtener datos antes de continuar
+                    success: function(respuesta) {
+                        if(respuesta.success) {
+                            usuarioId = respuesta.usuario.id;
+                            usuarioNombre = respuesta.usuario.nombre;
+                        }
+                    }
+                });
                 
                 // Obtener datos de la sucursal
                 var sucursalId = "1";
