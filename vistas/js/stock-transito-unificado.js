@@ -307,7 +307,12 @@ $(document).on("click", "#btnDescargarDesdeDetalle", function(e) {
     }
     
     // Establecer datos globalmente y mostrar modal de descarga
-    stockSeleccionado = codigo;
+    stockSeleccionado = {
+        codigo: codigo,
+        descripcion: descripcion,
+        transportador: transportador,
+        detalles: detalles
+    };
     
     // Llenar modal de descarga
     $("#descargaCodigo").text(codigo);
@@ -340,8 +345,13 @@ $(document).on("click", ".btnDescargaDirecta", function(e) {
         codigo, descripcion, cantidad, transportador, detalles
     });
     
-    // Guardar código globalmente
-    stockSeleccionado = codigo;
+    // Guardar datos globalmente
+    stockSeleccionado = {
+        codigo: codigo,
+        descripcion: descripcion,
+        transportador: transportador,
+        detalles: detalles
+    };
     
     // Llenar modal
     $("#descargaCodigo").text(codigo);
@@ -386,7 +396,7 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
     }
     
     // Usar el código de producto guardado globalmente
-    var codigoProducto = stockSeleccionado;
+    var codigoProducto = stockSeleccionado.codigo;
     
     console.log("📤 Enviando descarga AJAX:", {
         codigoProducto,
@@ -629,9 +639,28 @@ function registrarDescargaDirecta(codigoProducto, cantidad, observaciones) {
     
     if (typeof stockSeleccionado === "object" && stockSeleccionado !== null) {
         descripcionProducto = stockSeleccionado.descripcion || "";
-        transportadorId = stockSeleccionado.transportador_id || null;
-        transportadorNombre = stockSeleccionado.transportador_nombre || null;
-        numeroDespacho = stockSeleccionado.numero_despacho_origen || null;
+        transportadorNombre = stockSeleccionado.transportador || "";
+        
+        // Extraer transportador_id y numero_despacho de los detalles si están disponibles
+        if (stockSeleccionado.detalles && Array.isArray(stockSeleccionado.detalles)) {
+            // Buscar el primer detalle que tenga transportador_id
+            for (var i = 0; i < stockSeleccionado.detalles.length; i++) {
+                var detalle = stockSeleccionado.detalles[i];
+                if (detalle.transportador_id) {
+                    transportadorId = detalle.transportador_id;
+                    break;
+                }
+            }
+            
+            // Buscar numero_despacho en los detalles
+            for (var i = 0; i < stockSeleccionado.detalles.length; i++) {
+                var detalle = stockSeleccionado.detalles[i];
+                if (detalle.numero_despacho) {
+                    numeroDespacho = detalle.numero_despacho;
+                    break;
+                }
+            }
+        }
     }
     
     // Enviar registro directo por AJAX
