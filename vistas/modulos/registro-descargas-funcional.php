@@ -88,4 +88,5 @@ $(document).ready(function() {
     }
     
     // El filtro de fechas se activa automáticamente desde filtros-fechas.js
+});
 </script>
