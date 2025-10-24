@@ -297,28 +297,28 @@ $(document).ready(function() {
         console.log("🔄 FUNCIÓN sincronizarCategorias() EJECUTÁNDOSE");
         console.log("🔄 Iniciando sincronización de categorías...");
         
-        Swal.fire({
+        swal({
             title: "¿Sincronizar Categorías?",
             text: "Esto actualizará las categorías en todas las sucursales activas. ¿Continuar?",
-            icon: "warning",
+            type: "warning",
             showCancelButton: true,
             confirmButtonColor: "#5cb85c",
             confirmButtonText: "Sí, Sincronizar",
             cancelButtonText: "Cancelar"
         }).then((result) => {
             console.log("🔍 Resultado del SweetAlert:", result);
-            if (result.isConfirmed) {
+            if (result.value) {
                 console.log("✅ Usuario confirmó sincronización");
                 
                 // Mostrar loading
-                Swal.fire({
+                swal({
                     title: "Sincronizando...",
                     text: "Por favor espera mientras se sincronizan las categorías",
-                    icon: "info",
+                    type: "info",
                     allowOutsideClick: false,
                     showConfirmButton: false,
-                    didOpen: () => {
-                        Swal.showLoading();
+                    onOpen: function() {
+                        swal.showLoading();
                     }
                 });
                 
@@ -335,16 +335,16 @@ $(document).ready(function() {
                         console.log("📥 Respuesta recibida:", respuesta);
                         
                         if (respuesta && respuesta.success) {
-                            Swal.fire({
+                            swal({
                                 title: "Sincronización Completada",
                                 text: respuesta.message + "\nSucursales sincronizadas: " + respuesta.sucursales_sincronizadas + "/" + respuesta.total_sucursales,
-                                icon: "success",
+                                type: "success",
                                 confirmButtonText: "Aceptar"
                             });
                             cargarCategorias();
                         } else {
                             console.error("❌ Error en respuesta:", respuesta);
-                            Swal.fire("Error", respuesta ? respuesta.message : "Respuesta inválida", "error");
+                            swal("Error", respuesta ? respuesta.message : "Respuesta inválida", "error");
                         }
                     },
                     error: function(xhr, status, error) {
@@ -364,7 +364,7 @@ $(document).ready(function() {
                             mensajeError = "Error del servidor. Revisa los logs.";
                         }
                         
-                        Swal.fire("Error", mensajeError, "error");
+                        swal("Error", mensajeError, "error");
                     }
                 });
             } else {
@@ -379,10 +379,10 @@ $(document).ready(function() {
     MOSTRAR SWEET ALERT
     =============================================*/
     function mostrarSweetAlert(tipo, titulo, mensaje) {
-        Swal.fire({
+        swal({
             title: titulo,
             text: mensaje,
-            icon: tipo,
+            type: tipo,
             confirmButtonText: "Aceptar"
         });
     }
