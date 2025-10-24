@@ -1,6 +1,6 @@
 <?php
 
-require_once "../controladores/categorias-central.controlador.php";
+require_once __DIR__ . "/../controladores/categorias-central.controlador.php";
 
 class AjaxCategoriasCentral {
 

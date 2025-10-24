@@ -1,6 +1,6 @@
 <?php
 
-require_once "modelos/categorias-central.modelo.php";
+require_once __DIR__ . "/../modelos/categorias-central.modelo.php";
 
 class ControladorCategoriasCentral {
 
