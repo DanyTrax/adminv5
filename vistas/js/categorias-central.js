@@ -13,6 +13,7 @@ $(document).ready(function() {
     });
     
     $('.btnSincronizarCategorias').click(function() {
+        console.log("🔄 Botón de sincronización clickeado");
         sincronizarCategorias();
     });
     
@@ -282,6 +283,7 @@ $(document).ready(function() {
     SINCRONIZAR CATEGORÍAS
     =============================================*/
     function sincronizarCategorias() {
+        console.log("🔄 FUNCIÓN sincronizarCategorias() EJECUTÁNDOSE");
         console.log("🔄 Iniciando sincronización de categorías...");
         
         swal({
