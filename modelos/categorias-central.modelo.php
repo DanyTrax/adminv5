@@ -176,7 +176,10 @@ class ModeloCategoriasCentral {
     =============================================*/
     static public function mdlSincronizarCategoriasSucursales() {
         try {
-            ob_end_clean(); // Limpiar buffer de salida
+            // Limpiar buffer de salida solo si existe
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
             
             require_once __DIR__ . "/../api-transferencias/conexion-central.php";
             $pdo = ConexionCentral::conectar();
