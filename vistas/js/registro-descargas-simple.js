@@ -52,11 +52,46 @@ function inicializarDataTable() {
         return;
     }
     
-    // Verificar si ya existe DataTable
+    // FORZAR LIMPIEZA COMPLETA
+    console.log("🧹 Forzando limpieza completa...");
+    
+    // Verificar si ya existe DataTable y destruirlo
     if ($.fn.DataTable.isDataTable("#tabla-registro-descargas")) {
-        console.log("🔄 DataTable ya existe, saltando inicialización...");
-        return;
+        console.log("🔄 DataTable existe, destruyendo...");
+        try {
+            $("#tabla-registro-descargas").DataTable().destroy();
+            console.log("✅ DataTable destruido");
+        } catch (e) {
+            console.log("⚠️ Error al destruir:", e.message);
+        }
     }
+    
+    // Limpiar completamente el DOM
+    $("#tabla-registro-descargas").removeClass("dataTable");
+    $("#tabla-registro-descargas").find(".dataTables_wrapper").remove();
+    $("#tabla-registro-descargas").unwrap();
+    $("#tabla-registro-descargas").empty();
+    
+    // Recrear estructura básica
+    $("#tabla-registro-descargas").html(`
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fecha y Hora</th>
+                <th>Código Producto</th>
+                <th>Descripción</th>
+                <th>Cantidad</th>
+                <th>Usuario</th>
+                <th>Transportador</th>
+                <th>Sucursal</th>
+                <th>Despacho</th>
+                <th>Observaciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Los datos se cargarán via AJAX -->
+        </tbody>
+    `);
     
     console.log("🔄 Creando DataTable nuevo...");
     
