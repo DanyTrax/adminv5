@@ -214,7 +214,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
   <script src="<?php echo $url; ?>vistas/js/clientes-central.js"></script>
   <script src="<?php echo $url; ?>vistas/js/despachos.js"></script>
   <script src="<?php echo $url; ?>vistas/js/crear-despacho.js"></script>
-  <script src="<?php echo $url; ?>vistas/js/stock-transito.js"></script>
+  <!-- <script src="<?php echo $url; ?>vistas/js/stock-transito.js"></script> --> <!-- Comentado: se usa stock-transito-unificado.js -->
   <script src="<?php echo $url; ?>vistas/js/historico-transito.js"></script>
 </html>
 </body>
