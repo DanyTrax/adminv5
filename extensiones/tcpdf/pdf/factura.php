@@ -39,9 +39,18 @@ class MedidorLineas {
 	}
 	
 	public function agregarLinea($contenido = '') {
-		// Contar líneas de forma más conservadora
-		// Solo contar <br> explícitos, no asumir líneas adicionales
-		$lineasEnContenido = substr_count($contenido, '<br') + 1; // +1 para la línea base
+		// Contar líneas de forma más precisa
+		$brCount = substr_count($contenido, '<br');
+		$brStyleCount = substr_count($contenido, '<br style');
+		$trCount = substr_count($contenido, '<tr>');
+		$tdCount = substr_count($contenido, '<td');
+		
+		// Calcular líneas basado en estructura HTML
+		$lineasEnContenido = max(1, $brCount + $trCount + ($tdCount > 0 ? 1 : 0));
+		
+		// Log para debugging
+		error_log("Contenido: BR={$brCount}, TR={$trCount}, TD={$tdCount} → Líneas={$lineasEnContenido}");
+		
 		$this->lineas += $lineasEnContenido;
 	}
 	
@@ -308,21 +317,24 @@ EOF;
 		$lineasFooter = $medidor->marcarFin('footer');
 		$totalLineas = $medidor->marcarFin('total');
 		
-		// Calcular altura basada en líneas reales medidas (más conservador)
-		$interlineaBase = 3.5; // mm por interlínea (reducido de 4)
-		$factorReduccion = 0.85; // Factor de reducción para evitar exceso
+		// Calcular altura basada en líneas reales medidas (ajustado)
+		$interlineaBase = 4; // mm por interlínea (restaurado)
+		$factorReduccion = 0.95; // Factor de reducción más conservador (solo 5% menos)
 		$alturaCalculada = ($totalLineas * $interlineaBase) * $factorReduccion;
-		$alturaFinal = max(120, min($alturaCalculada, 500)); // Máximo reducido a 500mm
+		$alturaFinal = max(120, min($alturaCalculada, 600)); // Máximo restaurado a 600mm
 		
 		// Log detallado de la medición
-		error_log("Factura {$this->codigo} - Medición real:");
-		error_log("  Encabezado: {$lineasEncabezado} líneas");
-		error_log("  Productos: {$lineasProductos} líneas");
-		error_log("  Resumen: {$lineasResumen} líneas");
-		error_log("  Footer: {$lineasFooter} líneas");
-		error_log("  Total: {$totalLineas} líneas");
-		error_log("  Cálculo: {$totalLineas} líneas × {$interlineaBase}mm × {$factorReduccion} = {$alturaCalculada}mm");
+		error_log("=== ESTUDIO COMPLETO FACTURA {$this->codigo} ===");
+		error_log("📊 SECCIONES:");
+		error_log("  🔹 Encabezado: {$lineasEncabezado} líneas");
+		error_log("  🔹 Productos: {$lineasProductos} líneas ({$cantidadProductos} productos)");
+		error_log("  🔹 Resumen: {$lineasResumen} líneas");
+		error_log("  🔹 Footer: {$lineasFooter} líneas");
+		error_log("📏 CÁLCULO:");
+		error_log("  Total líneas: {$totalLineas}");
+		error_log("  Fórmula: {$totalLineas} × {$interlineaBase}mm × {$factorReduccion} = {$alturaCalculada}mm");
 		error_log("  Altura final: {$alturaFinal}mm");
+		error_log("=== FIN ESTUDIO ===");
 
 		// AHORA CREAMOS EL PDF CON LA ALTURA CORRECTA
 		$pdf->AddPage('P', array(75, $alturaFinal));
