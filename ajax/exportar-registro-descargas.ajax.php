@@ -63,6 +63,8 @@ try {
     // ENCABEZADOS
     $datosExcel[] = ['REPORTE DE REGISTRO DE DESCARGAS'];
     $datosExcel[] = ['Generado por: ' . $_SESSION["nombre"]];
+    // Establecer zona horaria de Bogotá
+    date_default_timezone_set('America/Bogota');
     $datosExcel[] = ['Fecha: ' . date('d/m/Y H:i:s')];
     $datosExcel[] = ['Perfil: ' . $_SESSION["perfil"]];
     

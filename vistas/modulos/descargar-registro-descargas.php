@@ -69,7 +69,7 @@ try {
     <table border='1'>
         <tr><td colspan='10' style='font-weight:bold; background-color:#3c8dbc; color:white; text-align:center;'>REPORTE DE REGISTRO DE DESCARGAS</td></tr>
         <tr><td colspan='10' style='font-weight:bold; background-color:#f0f0f0;'>Generado por: " . $_SESSION["nombre"] . "</td></tr>
-        <tr><td colspan='10' style='font-weight:bold; background-color:#f0f0f0;'>Fecha de generación: " . date('d/m/Y H:i:s') . "</td></tr>
+        <tr><td colspan='10' style='font-weight:bold; background-color:#f0f0f0;'>Fecha de generación: " . date('d/m/Y H:i:s', strtotime('now America/Bogota')) . "</td></tr>
         <tr><td colspan='10' style='font-weight:bold; background-color:#f0f0f0;'>Perfil: " . $_SESSION["perfil"] . "</td></tr>
     ";
     
