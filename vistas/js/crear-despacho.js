@@ -670,13 +670,18 @@ function cargarProductosDeSolicitud() {
         var productos = JSON.parse(solicitudSeleccionada.productos_solicitados);
         
         // Si hay productos seleccionados, usar solo esos
+        console.log("🔍 Verificando productos seleccionados:", window.productosSeleccionados);
+        
         if(window.productosSeleccionados && window.productosSeleccionados.length > 0) {
             console.log("🔍 Usando productos seleccionados:", window.productosSeleccionados.length, "productos");
+            console.log("🔍 Detalles de selección:", window.productosSeleccionados);
+            
             var productosFiltrados = [];
             
             window.productosSeleccionados.forEach(function(seleccion) {
                 var producto = productos[seleccion.index];
                 if(producto) {
+                    console.log("🔍 Procesando producto seleccionado:", producto.codigo, "cantidad:", seleccion.cantidad);
                     // Usar la cantidad seleccionada en lugar de la cantidad original
                     productosFiltrados.push({
                         codigo: producto.codigo,
@@ -687,6 +692,9 @@ function cargarProductosDeSolicitud() {
             });
             
             productos = productosFiltrados;
+            console.log("🔍 Productos filtrados finales:", productos);
+        } else {
+            console.log("⚠️ No hay productos seleccionados, usando todos los productos de la solicitud");
         }
         
         var productosAgregados = 0;

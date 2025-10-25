@@ -2115,6 +2115,9 @@ function configurarEventosModalSeleccion(url) {
     $('#btnCrearDespachoSeleccion').on('click', function() {
         var productosSeleccionados = obtenerProductosSeleccionados();
         
+        console.log("🔍 Botón crear despacho clickeado");
+        console.log("🔍 Productos seleccionados:", productosSeleccionados);
+        
         if (productosSeleccionados.length === 0) {
             mostrarAlerta('warning', 'Debe seleccionar al menos un producto');
             return;
@@ -2122,6 +2125,8 @@ function configurarEventosModalSeleccion(url) {
         
         // Crear URL con productos seleccionados
         var urlConProductos = url + '&productos_seleccionados=' + encodeURIComponent(JSON.stringify(productosSeleccionados));
+        
+        console.log("🔍 URL final:", urlConProductos);
         
         // Cerrar modal y redirigir
         $('#modalSeleccionProductos').modal('hide');
@@ -2156,9 +2161,13 @@ OBTENER PRODUCTOS SELECCIONADOS
 function obtenerProductosSeleccionados() {
     var productosSeleccionados = [];
     
+    console.log("🔍 Obteniendo productos seleccionados...");
+    
     $('.producto-checkbox:checked').each(function() {
         var index = $(this).data('index');
         var cantidad = parseInt($('.cantidad-despacho[data-index="' + index + '"]').val());
+        
+        console.log("🔍 Producto seleccionado - Index:", index, "Cantidad:", cantidad);
         
         if (cantidad > 0) {
             productosSeleccionados.push({
@@ -2168,5 +2177,6 @@ function obtenerProductosSeleccionados() {
         }
     });
     
+    console.log("🔍 Productos seleccionados finales:", productosSeleccionados);
     return productosSeleccionados;
 }
