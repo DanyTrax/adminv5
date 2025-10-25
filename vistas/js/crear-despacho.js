@@ -2041,12 +2041,8 @@ function cargarProductosDesdeSolicitud() {
     if(inventarioLocal.length > 0) {
         console.log("✅ Inventario ya cargado, procediendo con solicitud");
         console.log("🔍 Bandera actual:", window.cargandoProductosSolicitud);
-        // Usar timeout para evitar ejecución inmediata duplicada
-        setTimeout(function() {
-            console.log("🔍 Ejecutando cargarProductosDeSolicitud después de timeout - Timestamp:", new Date().toISOString());
-            console.log("🔍 Stack trace del timeout:", new Error().stack);
-            cargarProductosDeSolicitud();
-        }, 100);
+        // Ejecutar inmediatamente si el inventario ya está cargado
+        cargarProductosDeSolicitud();
     } else {
         console.log("⏳ Inventario no cargado, cargando primero...");
         cargarProductosInventario();
