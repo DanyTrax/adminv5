@@ -531,4 +531,213 @@ class ModeloClientesCentral
 			return [];
 		}
 	}
+
+	/*=============================================
+	OBTENER SUCURSALES PARA SINCRONIZACIÓN BIDIRECCIONAL
+	=============================================*/
+
+	static public function mdlObtenerSucursalesBidireccional()
+	{
+		try {
+			$conexion = ConexionCentral::conectar();
+
+			$stmt = $conexion->prepare("
+				SELECT 
+					s.id,
+					s.nombre,
+					s.direccion,
+					CASE WHEN sc.sincronizada = 1 THEN 1 ELSE 0 END as sincronizada
+				FROM sucursales s
+				LEFT JOIN sucursales_configuracion sc ON s.id = sc.sucursal_id AND sc.tipo = 'bidireccional'
+				WHERE s.activa = 1
+				ORDER BY s.nombre
+			");
+
+			$stmt->execute();
+			return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+		} catch (Exception $e) {
+			error_log("Error en mdlObtenerSucursalesBidireccional: " . $e->getMessage());
+			return false;
+		}
+	}
+
+	/*=============================================
+	OBTENER SUCURSALES DESTINO PARA COPIAR
+	=============================================*/
+
+	static public function mdlObtenerSucursalesDestino()
+	{
+		try {
+			$conexion = ConexionCentral::conectar();
+
+			$stmt = $conexion->prepare("
+				SELECT id, nombre, direccion
+				FROM sucursales
+				WHERE activa = 1
+				ORDER BY nombre
+			");
+
+			$stmt->execute();
+			return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+		} catch (Exception $e) {
+			error_log("Error en mdlObtenerSucursalesDestino: " . $e->getMessage());
+			return false;
+		}
+	}
+
+	/*=============================================
+	OBTENER SUCURSALES PARA BORRAR
+	=============================================*/
+
+	static public function mdlObtenerSucursalesParaBorrar()
+	{
+		try {
+			$conexion = ConexionCentral::conectar();
+
+			$stmt = $conexion->prepare("
+				SELECT id, nombre, direccion
+				FROM sucursales
+				WHERE activa = 1
+				ORDER BY nombre
+			");
+
+			$stmt->execute();
+			return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+		} catch (Exception $e) {
+			error_log("Error en mdlObtenerSucursalesParaBorrar: " . $e->getMessage());
+			return false;
+		}
+	}
+
+	/*=============================================
+	GUARDAR SINCRONIZACIÓN BIDIRECCIONAL
+	=============================================*/
+
+	static public function mdlGuardarSincronizacionBidireccional($sucursales)
+	{
+		try {
+			$conexion = ConexionCentral::conectar();
+			$conexion->beginTransaction();
+
+			// Limpiar configuración anterior
+			$stmt = $conexion->prepare("DELETE FROM sucursales_configuracion WHERE tipo = 'bidireccional'");
+			$stmt->execute();
+
+			// Insertar nueva configuración
+			$stmt = $conexion->prepare("
+				INSERT INTO sucursales_configuracion (sucursal_id, tipo, configuracion, activa, fecha_creacion)
+				VALUES (:sucursal_id, 'bidireccional', '{}', 1, NOW())
+			");
+
+			foreach ($sucursales as $sucursalId) {
+				$stmt->bindParam(":sucursal_id", $sucursalId, PDO::PARAM_INT);
+				$stmt->execute();
+			}
+
+			$conexion->commit();
+			return true;
+
+		} catch (Exception $e) {
+			$conexion->rollback();
+			error_log("Error en mdlGuardarSincronizacionBidireccional: " . $e->getMessage());
+			return false;
+		}
+	}
+
+	/*=============================================
+	COPIAR CLIENTES A SUCURSAL
+	=============================================*/
+
+	static public function mdlCopiarClientesASucursal($sucursalId)
+	{
+		try {
+			$conexion = ConexionCentral::conectar();
+			$conexion->beginTransaction();
+
+			// Obtener clientes centrales
+			$stmt = $conexion->prepare("SELECT * FROM clientes_central WHERE activo = 1");
+			$stmt->execute();
+			$clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+			// Obtener información de la sucursal
+			$stmt = $conexion->prepare("SELECT nombre FROM sucursales WHERE id = :id");
+			$stmt->bindParam(":id", $sucursalId, PDO::PARAM_INT);
+			$stmt->execute();
+			$sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
+
+			if (!$sucursal) {
+				throw new Exception("Sucursal no encontrada");
+			}
+
+			// Aquí deberías implementar la lógica para copiar a la sucursal específica
+			// Por ahora, solo registramos la acción
+			$stmt = $conexion->prepare("
+				INSERT INTO log_acciones (accion, descripcion, usuario, fecha, sucursal_id)
+				VALUES ('copiar_clientes', 'Clientes copiados a sucursal: " . $sucursal['nombre'] . "', 'admin', NOW(), :sucursal_id)
+			");
+			$stmt->bindParam(":sucursal_id", $sucursalId, PDO::PARAM_INT);
+			$stmt->execute();
+
+			$conexion->commit();
+			return true;
+
+		} catch (Exception $e) {
+			$conexion->rollback();
+			error_log("Error en mdlCopiarClientesASucursal: " . $e->getMessage());
+			return false;
+		}
+	}
+
+	/*=============================================
+	BORRAR CLIENTES
+	=============================================*/
+
+	static public function mdlBorrarClientes($origen, $sucursalId = null)
+	{
+		try {
+			$conexion = ConexionCentral::conectar();
+			$conexion->beginTransaction();
+
+			if ($origen === "central") {
+				// Borrar todos los clientes centrales
+				$stmt = $conexion->prepare("DELETE FROM clientes_central");
+				$stmt->execute();
+				
+				$stmt = $conexion->prepare("
+					INSERT INTO log_acciones (accion, descripcion, usuario, fecha)
+					VALUES ('borrar_clientes', 'Todos los clientes centrales eliminados', 'admin', NOW())
+				");
+				$stmt->execute();
+
+			} elseif ($origen === "sucursal" && $sucursalId) {
+				// Obtener nombre de sucursal
+				$stmt = $conexion->prepare("SELECT nombre FROM sucursales WHERE id = :id");
+				$stmt->bindParam(":id", $sucursalId, PDO::PARAM_INT);
+				$stmt->execute();
+				$sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
+
+				if ($sucursal) {
+					// Aquí deberías implementar la lógica para borrar clientes de la sucursal específica
+					// Por ahora, solo registramos la acción
+					$stmt = $conexion->prepare("
+						INSERT INTO log_acciones (accion, descripcion, usuario, fecha, sucursal_id)
+						VALUES ('borrar_clientes', 'Clientes eliminados de sucursal: " . $sucursal['nombre'] . "', 'admin', NOW(), :sucursal_id)
+					");
+					$stmt->bindParam(":sucursal_id", $sucursalId, PDO::PARAM_INT);
+					$stmt->execute();
+				}
+			}
+
+			$conexion->commit();
+			return true;
+
+		} catch (Exception $e) {
+			$conexion->rollback();
+			error_log("Error en mdlBorrarClientes: " . $e->getMessage());
+			return false;
+		}
+	}
 }

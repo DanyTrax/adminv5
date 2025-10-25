@@ -79,11 +79,20 @@ $sucursales = ControladorClientesCentral::ctrObtenerSucursalesDisponibles();
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="text-center">
-                                    <button class="btn btn-primary btn-lg" id="btnNuevoClienteCentral" title="Crear Cliente en Central" style="margin-right: 10px;">
+                                    <button class="btn btn-primary" id="btnNuevoClienteCentral" title="Crear Cliente en Central" style="margin-right: 10px;">
                                         <i class="fa fa-plus"></i> Crear Cliente Central
                                     </button>
-                                    <button class="btn btn-success btn-lg" id="btnSincronizarTodosClientes" title="Sincronizar Todos los Clientes" style="margin-left: 10px;">
+                                    <button class="btn btn-success" id="btnSincronizarTodosClientes" title="Sincronizar Todos los Clientes" style="margin-right: 10px;">
                                         <i class="fa fa-refresh"></i> Sincronizar Todos
+                                    </button>
+                                    <button class="btn btn-info" id="btnSincronizacionBidireccional" title="Configurar Sincronización Bidireccional" style="margin-right: 10px;">
+                                        <i class="fa fa-exchange"></i> Sincronización Bidireccional
+                                    </button>
+                                    <button class="btn btn-warning" id="btnCopiarACentral" title="Copiar Clientes a Sucursal" style="margin-right: 10px;">
+                                        <i class="fa fa-copy"></i> Copiar a Sucursal
+                                    </button>
+                                    <button class="btn btn-danger" id="btnBorrarClientes" title="Borrar Clientes" style="margin-right: 10px;">
+                                        <i class="fa fa-trash"></i> Borrar Clientes
                                     </button>
                                     <br><br>
                                     <p class="text-muted">
@@ -318,6 +327,112 @@ MODAL PROGRESO DE IMPORTACIÓN
             <div class="modal-footer" id="modalFooterImportacion" style="display: none;">
                 <button type="button" class="btn btn-success" data-dismiss="modal" onclick="window.location.reload();">
                     <i class="fa fa-check"></i> Cerrar y Actualizar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL SINCRONIZACIÓN BIDIRECCIONAL -->
+<div class="modal fade" id="modalSincronizacionBidireccional" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #17a2b8; color: white;">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">
+                    <i class="fa fa-exchange"></i> Configurar Sincronización Bidireccional
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fa fa-info-circle"></i>
+                    <strong>Información:</strong> Selecciona las sucursales que quieres mantener sincronizadas bidireccionalmente con la central.
+                </div>
+                <div class="form-group">
+                    <label>Sucursales Disponibles:</label>
+                    <div id="listaSucursalesBidireccional" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
+                        <!-- Se carga dinámicamente -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-info" id="btnGuardarSincronizacionBidireccional">
+                    <i class="fa fa-save"></i> Guardar Configuración
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL COPIAR A SUCURSAL -->
+<div class="modal fade" id="modalCopiarASucursal" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #f39c12; color: white;">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">
+                    <i class="fa fa-copy"></i> Copiar Clientes a Sucursal
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <strong>Atención:</strong> Esta acción copiará todos los clientes centrales a la sucursal seleccionada.
+                </div>
+                <div class="form-group">
+                    <label>Seleccionar Sucursal Destino:</label>
+                    <select class="form-control" id="selectSucursalDestino">
+                        <option value="">Selecciona una sucursal...</option>
+                        <!-- Se carga dinámicamente -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" id="btnConfirmarCopiarASucursal">
+                    <i class="fa fa-copy"></i> Copiar Clientes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL BORRAR CLIENTES -->
+<div class="modal fade" id="modalBorrarClientes" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #dd4b39; color: white;">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">
+                    <i class="fa fa-trash"></i> Borrar Clientes
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <strong>¡PELIGRO!</strong> Esta acción es irreversible. Selecciona qué clientes quieres borrar.
+                </div>
+                <div class="form-group">
+                    <label>Seleccionar Origen:</label>
+                    <select class="form-control" id="selectOrigenBorrar">
+                        <option value="">Selecciona origen...</option>
+                        <option value="central">Clientes Centrales</option>
+                        <option value="sucursal">Clientes de Sucursal</option>
+                    </select>
+                </div>
+                <div class="form-group" id="divSucursalBorrar" style="display: none;">
+                    <label>Seleccionar Sucursal:</label>
+                    <select class="form-control" id="selectSucursalBorrar">
+                        <option value="">Selecciona una sucursal...</option>
+                        <!-- Se carga dinámicamente -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarBorrarClientes">
+                    <i class="fa fa-trash"></i> Borrar Clientes
                 </button>
             </div>
         </div>

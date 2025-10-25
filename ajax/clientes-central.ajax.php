@@ -178,6 +178,148 @@ switch ($accion) {
         }
         break;
     
+    case "obtenerSucursalesBidireccional":
+        try {
+            $sucursales = ControladorClientesCentral::ctrObtenerSucursalesBidireccional();
+            
+            if ($sucursales !== false) {
+                echo json_encode([
+                    'success' => true,
+                    'sucursales' => $sucursales
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Error obteniendo sucursales'
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+        break;
+    
+    case "obtenerSucursalesDestino":
+        try {
+            $sucursales = ControladorClientesCentral::ctrObtenerSucursalesDestino();
+            
+            if ($sucursales !== false) {
+                echo json_encode([
+                    'success' => true,
+                    'sucursales' => $sucursales
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Error obteniendo sucursales'
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+        break;
+    
+    case "obtenerSucursalesParaBorrar":
+        try {
+            $sucursales = ControladorClientesCentral::ctrObtenerSucursalesParaBorrar();
+            
+            if ($sucursales !== false) {
+                echo json_encode([
+                    'success' => true,
+                    'sucursales' => $sucursales
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Error obteniendo sucursales'
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+        break;
+    
+    case "guardarSincronizacionBidireccional":
+        try {
+            $sucursales = json_decode($_POST["sucursales"], true);
+            $resultado = ControladorClientesCentral::ctrGuardarSincronizacionBidireccional($sucursales);
+            
+            if ($resultado) {
+                echo json_encode([
+                    'success' => true,
+                    'mensaje' => 'Sincronización bidireccional configurada correctamente'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'mensaje' => 'Error configurando sincronización bidireccional'
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+        break;
+    
+    case "copiarClientesASucursal":
+        try {
+            $sucursalId = $_POST["sucursalId"];
+            $resultado = ControladorClientesCentral::ctrCopiarClientesASucursal($sucursalId);
+            
+            if ($resultado) {
+                echo json_encode([
+                    'success' => true,
+                    'mensaje' => 'Clientes copiados correctamente'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'mensaje' => 'Error copiando clientes'
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+        break;
+    
+    case "borrarClientes":
+        try {
+            $origen = $_POST["origen"];
+            $sucursalId = $_POST["sucursalId"] ?? null;
+            $resultado = ControladorClientesCentral::ctrBorrarClientes($origen, $sucursalId);
+            
+            if ($resultado) {
+                echo json_encode([
+                    'success' => true,
+                    'mensaje' => 'Clientes eliminados correctamente'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'mensaje' => 'Error eliminando clientes'
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+        break;
+    
     default:
         echo json_encode([
             'success' => false,

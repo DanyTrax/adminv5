@@ -67,4 +67,58 @@ class ControladorClientesCentral
 	{
 		return ModeloClientesCentral::mdlObtenerSucursalesDisponibles();
 	}
+
+	/*=============================================
+	OBTENER SUCURSALES PARA SINCRONIZACIÓN BIDIRECCIONAL
+	=============================================*/
+
+	static public function ctrObtenerSucursalesBidireccional()
+	{
+		return ModeloClientesCentral::mdlObtenerSucursalesBidireccional();
+	}
+
+	/*=============================================
+	OBTENER SUCURSALES DESTINO PARA COPIAR
+	=============================================*/
+
+	static public function ctrObtenerSucursalesDestino()
+	{
+		return ModeloClientesCentral::mdlObtenerSucursalesDestino();
+	}
+
+	/*=============================================
+	OBTENER SUCURSALES PARA BORRAR
+	=============================================*/
+
+	static public function ctrObtenerSucursalesParaBorrar()
+	{
+		return ModeloClientesCentral::mdlObtenerSucursalesParaBorrar();
+	}
+
+	/*=============================================
+	GUARDAR SINCRONIZACIÓN BIDIRECCIONAL
+	=============================================*/
+
+	static public function ctrGuardarSincronizacionBidireccional($sucursales)
+	{
+		return ModeloClientesCentral::mdlGuardarSincronizacionBidireccional($sucursales);
+	}
+
+	/*=============================================
+	COPIAR CLIENTES A SUCURSAL
+	=============================================*/
+
+	static public function ctrCopiarClientesASucursal($sucursalId)
+	{
+		return ModeloClientesCentral::mdlCopiarClientesASucursal($sucursalId);
+	}
+
+	/*=============================================
+	BORRAR CLIENTES
+	=============================================*/
+
+	static public function ctrBorrarClientes($origen, $sucursalId = null)
+	{
+		return ModeloClientesCentral::mdlBorrarClientes($origen, $sucursalId);
+	}
 }
