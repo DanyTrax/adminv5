@@ -49,19 +49,7 @@
 
                 </li>';
             }
-            if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial") {
-
-                echo '<li>
-
-                    <a href="catalogo-maestro">
-
-                        <i class="fa fa-database"></i>
-                        <span>Catálogo Maestro</span>
-
-                    </a>
-
-                </li>';
-            }
+            // Catálogo Maestro movido a Gestión Central en el cabezote
                        // El enlace a Productos ahora también lo ve el Vendedor
             if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor") {
                 

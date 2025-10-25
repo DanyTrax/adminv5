@@ -91,6 +91,12 @@
 								Sucursales
 							</a>
 						</li>
+						<li>
+							<a href="catalogo-maestro" style="padding: 10px 15px;">
+								<i class="fa fa-database" style="margin-right: 8px; color: #17a2b8;"></i>
+								Catálogo Maestro
+							</a>
+						</li>
 					</ul>
 				</li>
 
