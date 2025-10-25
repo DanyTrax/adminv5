@@ -36,7 +36,7 @@
       	</a>
 
 		<!-- Nombre de la sucursal actual -->
-		<div class="navbar-brand" style="color: white; font-size: 16px; font-weight: 500; margin-left: 20px; line-height: 30px; height: 30px; display: flex; align-items: center;">
+		<div class="navbar-brand" style="color: white; font-size: 20px; font-weight: 500; margin-left: 0px; line-height: 30px; display: flex; align-items: center;">
 			<?php
 			// Obtener nombre de sucursal desde BD local
 			require_once "modelos/conexion.php";
