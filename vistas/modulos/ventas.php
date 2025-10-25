@@ -170,9 +170,9 @@ $formaPago = isset($_GET['formaPago']) ? $_GET['formaPago'] : null;
                       <td>' . $respuestaCliente["nombre"] . '</td>
                       <td>' . ($respuestaUsuario["nombre"] ?? '') . '</td>
                       <td><span class="label label-' . ($value["metodo_pago"] == "Completo" ? "success" : ($value["metodo_pago"] == "Abono" ? "primary" : "danger")) . '">' . $value["metodo_pago"] . '</span></td>
-                      <td>$ ' . number_format($value["total"] ?? 0, 2, ',', '.') . '</td>
+                      <td>$ ' . number_format($value["total"] ?? 0, 0, ',', '.') . '</td>
                       <td>' . $value["fecha_abono"] . '</td>
-                      <td>$ ' . number_format($value["abono"] ?? 0, 2, ',', '.') . '</td>
+                      <td>$ ' . number_format($value["abono"] ?? 0, 0, ',', '.') . '</td>
                       <td>' . $value["medio_pago"] . '</td>
                       <td>' . $botones . '</td>
                     </tr>';

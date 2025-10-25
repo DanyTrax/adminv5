@@ -76,7 +76,7 @@ echo utf8_decode("
     <tr><td colspan='2' style='font-weight:bold; background-color:#00c0ef; color:white;'>TOTAL DE VENTAS POR VENDEDOR</td></tr>
     <tr><td style='font-weight:bold;'>Vendedor</td><td style='font-weight:bold;'>Total Vendido</td></tr>
 ");
-if (!empty($ventasPorVendedor)) { foreach ($ventasPorVendedor as $vendedor) { echo "<tr><td>" . $vendedor['vendedor'] . "</td><td>" . number_format($vendedor['total_vendido'], 2, ',', '') . "</td></tr>"; } }
+if (!empty($ventasPorVendedor)) { foreach ($ventasPorVendedor as $vendedor) { echo "<tr><td>" . $vendedor['vendedor'] . "</td><td>" . number_format($vendedor['total_vendido'], 0, ',', '') . "</td></tr>"; } }
 
 echo "</table>";
 ?>
