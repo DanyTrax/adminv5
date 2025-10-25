@@ -9,10 +9,11 @@ ini_set('display_errors', 1);
 
 // Incluir conexión
 require_once "../modelos/conexion.php";
+require_once "../api-transferencias/conexion-central.php";
 
 try {
     // Verificar conexión
-    $conexion = Conexion::conectar();
+    $conexion = ConexionCentral::conectar();
     if (!$conexion) {
         echo json_encode(["error" => "No hay conexión a la base de datos"]);
         exit;

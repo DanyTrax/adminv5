@@ -2,6 +2,7 @@
 // --- INICIO DE LA SESIÓN Y CARGA DE CLASES ---
 session_start();
 require_once "../../modelos/conexion.php";
+require_once "../../api-transferencias/conexion-central.php";
 
 // --- HEADERS Y NOMBRE DE ARCHIVO ---
 $nombreArchivo = 'registro-descargas';
@@ -25,7 +26,7 @@ $fechaFinal = isset($_GET["fechaFinal"]) ? $_GET["fechaFinal"] : null;
 // OBTENER DATOS DE LA BASE DE DATOS
 // =================================================================
 try {
-    $conexion = Conexion::conectar();
+    $conexion = ConexionCentral::conectar();
     
     // Construir consulta con filtros de fecha
     $whereClause = "";

@@ -15,6 +15,7 @@ if (!class_exists('ModeloRegistroDescargasSimple')) {
 
 // Incluir conexión
 require_once "../modelos/conexion.php";
+require_once "../api-transferencias/conexion-central.php";
 
 // Verificar que se especificó una acción
 if(isset($_POST["accion"])) {

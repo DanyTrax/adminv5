@@ -4,6 +4,7 @@ MODELO REGISTRO DE DESCARGAS SIMPLE - FUNCIONAL
 =============================================*/
 
 require_once "conexion.php";
+require_once "api-transferencias/conexion-central.php";
 
 class ModeloRegistroDescargasSimple {
     
@@ -11,7 +12,7 @@ class ModeloRegistroDescargasSimple {
     REGISTRAR DESCARGA
     =============================================*/
     static public function mdlRegistrarDescarga($datos) {
-        $stmt = Conexion::conectar()->prepare("INSERT INTO registro_descargas_stock_transito (
+        $stmt = ConexionCentral::conectar()->prepare("INSERT INTO registro_descargas_stock_transito (
             codigo_producto, 
             descripcion_producto, 
             cantidad_descargada, 
@@ -98,7 +99,7 @@ class ModeloRegistroDescargasSimple {
             $params[':fecha_hasta'] = $filtros['fecha_hasta'];
         }
         
-        $stmt = Conexion::conectar()->prepare("SELECT * FROM registro_descargas_stock_transito WHERE $where ORDER BY created_at DESC");
+        $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM registro_descargas_stock_transito WHERE $where ORDER BY created_at DESC");
         
         foreach($params as $key => $value) {
             $stmt->bindValue($key, $value);
@@ -125,7 +126,7 @@ class ModeloRegistroDescargasSimple {
             $params[':fecha_hasta'] = $filtros['fecha_hasta'];
         }
         
-        $stmt = Conexion::conectar()->prepare("
+        $stmt = ConexionCentral::conectar()->prepare("
             SELECT 
                 COUNT(*) as total_descargas,
                 SUM(cantidad_descargada) as total_cantidad,
