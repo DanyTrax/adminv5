@@ -20,7 +20,6 @@ require_once "controladores/sucursales.controlador.php";
 require_once "controladores/solicitudes-stock.controlador.php";
 require_once "controladores/despachos.controlador.php";
 require_once "controladores/stock-transito.controlador.php";
-require_once "controladores/historico-transito.controlador.php";
 
 require_once "modelos/usuarios.modelo.php";
 require_once "modelos/categorias.modelo.php";
@@ -36,7 +35,6 @@ require_once "modelos/sucursales.modelo.php";
 require_once "modelos/solicitudes-stock.modelo.php";
 require_once "modelos/despachos.modelo.php";
 require_once "modelos/stock-transito.modelo.php";
-require_once "modelos/historico-transito.modelo.php";
 
 require_once "src/MedioPago.php";
 require_once "src/FormaPago.php"; 

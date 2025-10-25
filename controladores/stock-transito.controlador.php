@@ -686,46 +686,11 @@ class ControladorStockTransito {
     /*=============================================
     REGISTRAR EN HISTÓRICO DE TRÁNSITO
     =============================================*/
+    // FUNCIÓN ELIMINADA: registrarHistoricoTransito
+    // El módulo "Histórico de Movimientos" fue eliminado completamente según solicitud del usuario
     static public function registrarHistoricoTransito($codigo, $descripcion, $cantidad, $tipoMovimiento, $transportadorId, $nombreTransportador, $sucursalOrigen, $sucursalDestino, $usuarioOrigen, $nombreUsuarioOrigen, $usuarioDestino, $nombreUsuarioDestino, $idDespacho, $numeroDespacho, $idSolicitudDescarga, $observaciones) {
-        
-        try {
-            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
-            
-            $stmt = ConexionCentral::conectar()->prepare("
-                INSERT INTO historico_transito 
-                (codigo_producto, descripcion_producto, cantidad, tipo_movimiento, 
-                transportador_id, nombre_transportador, sucursal_origen, sucursal_destino,
-                usuario_origen, nombre_usuario_origen, usuario_destino, nombre_usuario_destino,
-                id_despacho, numero_despacho, id_solicitud_descarga, observaciones) 
-                VALUES 
-                (:codigo, :descripcion, :cantidad, :tipo_movimiento,
-                :transportador_id, :nombre_transportador, :sucursal_origen, :sucursal_destino,
-                :usuario_origen, :nombre_usuario_origen, :usuario_destino, :nombre_usuario_destino,
-                :id_despacho, :numero_despacho, :id_solicitud_descarga, :observaciones)
-            ");
-            
-            $stmt->bindParam(":codigo", $codigo, PDO::PARAM_STR);
-            $stmt->bindParam(":descripcion", $descripcion, PDO::PARAM_STR);
-            $stmt->bindParam(":cantidad", $cantidad, PDO::PARAM_INT);
-            $stmt->bindParam(":tipo_movimiento", $tipoMovimiento, PDO::PARAM_STR);
-            $stmt->bindParam(":transportador_id", $transportadorId, PDO::PARAM_INT);
-            $stmt->bindParam(":nombre_transportador", $nombreTransportador, PDO::PARAM_STR);
-            $stmt->bindParam(":sucursal_origen", $sucursalOrigen, PDO::PARAM_STR);
-            $stmt->bindParam(":sucursal_destino", $sucursalDestino, PDO::PARAM_STR);
-            $stmt->bindParam(":usuario_origen", $usuarioOrigen, PDO::PARAM_INT);
-            $stmt->bindParam(":nombre_usuario_origen", $nombreUsuarioOrigen, PDO::PARAM_STR);
-            $stmt->bindParam(":usuario_destino", $usuarioDestino, PDO::PARAM_INT);
-            $stmt->bindParam(":nombre_usuario_destino", $nombreUsuarioDestino, PDO::PARAM_STR);
-            $stmt->bindParam(":id_despacho", $idDespacho, PDO::PARAM_INT);
-            $stmt->bindParam(":numero_despacho", $numeroDespacho, PDO::PARAM_STR);
-            $stmt->bindParam(":id_solicitud_descarga", $idSolicitudDescarga, PDO::PARAM_INT);
-            $stmt->bindParam(":observaciones", $observaciones, PDO::PARAM_STR);
-            
-            return $stmt->execute();
-            
-        } catch(Exception $e) {
-            return false;
-        }
+        // Función deshabilitada - módulo histórico eliminado
+        return true;
     }
 
     /*=============================================

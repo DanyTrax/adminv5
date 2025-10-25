@@ -121,8 +121,9 @@ class AjaxStockTransito {
             try {
                 require_once "../api-transferencias/conexion-central.php";
                 
-                $sql = "SELECT * FROM historico_transito 
-                        WHERE codigo_producto = :codigo_producto";
+                // CONSULTA ELIMINADA: historico_transito
+                // El módulo "Histórico de Movimientos" fue eliminado completamente
+                $sql = "SELECT 1 as eliminado WHERE 1=0"; // Consulta vacía
                 
                 $parametros = [":codigo_producto" => $codigoProducto];
                 

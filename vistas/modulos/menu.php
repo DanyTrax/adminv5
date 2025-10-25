@@ -178,13 +178,7 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" 
     echo '    </a>
           </li>';
     
-    // OPCIÓN "HISTÓRICO DE MOVIMIENTOS" - Para todos los perfiles
-    echo '<li>
-            <a href="historico-transito">
-              <i class="fa fa-history"></i>
-              <span>Histórico de Movimientos</span>
-            </a>
-          </li>';
+    // OPCIÓN "HISTÓRICO DE MOVIMIENTOS" - ELIMINADA según solicitud del usuario
     
     // OPCIÓN "REGISTRO DE DESCARGAS" - Para todos los perfiles
     echo '<li>
