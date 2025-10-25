@@ -519,27 +519,8 @@ $(document).on('click', '.btnCrearDespachoDesdeSolicitud', function() {
                 // Crear URL con parámetros
                 var url = 'crear-despacho?desde_solicitud=1&id_solicitud=' + idSolicitud + '&numero_solicitud=' + encodeURIComponent(numeroSolicitud);
                 
-                // Mostrar confirmación directa
-                swal({
-                    title: '¿Crear despacho desde solicitud?',
-                    html: `
-                        <p><strong>Solicitud:</strong> ${numeroSolicitud}</p>
-                        <p><strong>Productos:</strong> ${productos.length} productos</p>
-                        <p><strong>Total unidades:</strong> ${solicitud.total_cantidad}</p>
-                        <p>Se procederá a crear el despacho con los productos de esta solicitud.</p>
-                    `,
-                    type: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Crear Despacho',
-                    cancelButtonText: 'Cancelar',
-                    confirmButtonColor: '#28a745',
-                    cancelButtonColor: '#6c757d'
-                }).then(function(result) {
-                    if(result.value) {
-                        // Crear despacho directamente
-                        window.location.href = url;
-                    }
-                });
+                // Mostrar modal de selección de productos
+                mostrarModalSeleccionProductos(solicitud, productos, url);
                 
             } else {
                 swal({
@@ -1945,4 +1926,191 @@ function mostrarStockSucursalesEnTabla(stockData) {
     $('#tbodyStockSucursales').html(tbodyHtml);
     
     console.log("✅ Tabla de stock sucursales cargada correctamente");
+}
+
+/*=============================================
+MOSTRAR MODAL DE SELECCIÓN DE PRODUCTOS
+=============================================*/
+function mostrarModalSeleccionProductos(solicitud, productos, url) {
+    
+    // Crear HTML de la modal
+    var modalHtml = `
+        <div class="modal fade" id="modalSeleccionProductos" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">
+                            <i class="fa fa-shopping-cart"></i> Seleccionar Productos para Despacho
+                        </h4>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <strong>Solicitud:</strong> ${solicitud.numero_solicitud}<br>
+                            <strong>Total productos:</strong> ${productos.length} productos<br>
+                            <strong>Total unidades:</strong> ${solicitud.total_cantidad}
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th width="50">
+                                            <input type="checkbox" id="seleccionarTodos" checked>
+                                        </th>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th width="120">Cantidad Solicitada</th>
+                                        <th width="120">Cantidad a Despachar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listaProductosSeleccion">
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="alert alert-warning" id="alertaProductos" style="display: none;">
+                            <i class="fa fa-exclamation-triangle"></i> 
+                            <span id="mensajeAlerta"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fa fa-times"></i> Cancelar
+                        </button>
+                        <button type="button" class="btn btn-success" id="btnCrearDespachoSeleccion">
+                            <i class="fa fa-truck"></i> Crear Despacho
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remover modal existente si existe
+    $('#modalSeleccionProductos').remove();
+    
+    // Agregar modal al DOM
+    $('body').append(modalHtml);
+    
+    // Llenar tabla de productos
+    var tbodyHtml = '';
+    productos.forEach(function(producto, index) {
+        tbodyHtml += `
+            <tr>
+                <td>
+                    <input type="checkbox" class="producto-checkbox" data-index="${index}" checked>
+                </td>
+                <td><strong>${producto.codigo}</strong></td>
+                <td>${producto.descripcion}</td>
+                <td class="text-center">
+                    <span class="badge badge-primary">${producto.cantidad}</span>
+                </td>
+                <td>
+                    <input type="number" 
+                           class="form-control cantidad-despacho" 
+                           data-index="${index}"
+                           value="${producto.cantidad}" 
+                           min="1" 
+                           max="${producto.cantidad}">
+                </td>
+            </tr>
+        `;
+    });
+    
+    $('#listaProductosSeleccion').html(tbodyHtml);
+    
+    // Configurar eventos
+    configurarEventosModalSeleccion(url);
+    
+    // Mostrar modal
+    $('#modalSeleccionProductos').modal('show');
+}
+
+/*=============================================
+CONFIGURAR EVENTOS DE LA MODAL DE SELECCIÓN
+=============================================*/
+function configurarEventosModalSeleccion(url) {
+    
+    // Seleccionar/deseleccionar todos
+    $('#seleccionarTodos').on('change', function() {
+        var isChecked = $(this).is(':checked');
+        $('.producto-checkbox').prop('checked', isChecked);
+        $('.cantidad-despacho').prop('disabled', !isChecked);
+        validarSeleccion();
+    });
+    
+    // Seleccionar/deseleccionar producto individual
+    $('.producto-checkbox').on('change', function() {
+        var index = $(this).data('index');
+        var isChecked = $(this).is(':checked');
+        $('.cantidad-despacho[data-index="' + index + '"]').prop('disabled', !isChecked);
+        validarSeleccion();
+    });
+    
+    // Cambiar cantidad
+    $('.cantidad-despacho').on('input', function() {
+        validarSeleccion();
+    });
+    
+    // Botón crear despacho
+    $('#btnCrearDespachoSeleccion').on('click', function() {
+        var productosSeleccionados = obtenerProductosSeleccionados();
+        
+        if (productosSeleccionados.length === 0) {
+            mostrarAlerta('warning', 'Debe seleccionar al menos un producto');
+            return;
+        }
+        
+        // Crear URL con productos seleccionados
+        var urlConProductos = url + '&productos_seleccionados=' + encodeURIComponent(JSON.stringify(productosSeleccionados));
+        
+        // Cerrar modal y redirigir
+        $('#modalSeleccionProductos').modal('hide');
+        window.location.href = urlConProductos;
+    });
+}
+
+/*=============================================
+VALIDAR SELECCIÓN DE PRODUCTOS
+=============================================*/
+function validarSeleccion() {
+    var productosSeleccionados = $('.producto-checkbox:checked').length;
+    var totalProductos = $('.producto-checkbox').length;
+    
+    if (productosSeleccionados === 0) {
+        $('#alertaProductos').show();
+        $('#mensajeAlerta').text('Debe seleccionar al menos un producto');
+        $('#btnCrearDespachoSeleccion').prop('disabled', true);
+    } else if (productosSeleccionados < totalProductos) {
+        $('#alertaProductos').show();
+        $('#mensajeAlerta').text(`Seleccionados ${productosSeleccionados} de ${totalProductos} productos`);
+        $('#btnCrearDespachoSeleccion').prop('disabled', false);
+    } else {
+        $('#alertaProductos').hide();
+        $('#btnCrearDespachoSeleccion').prop('disabled', false);
+    }
+}
+
+/*=============================================
+OBTENER PRODUCTOS SELECCIONADOS
+=============================================*/
+function obtenerProductosSeleccionados() {
+    var productosSeleccionados = [];
+    
+    $('.producto-checkbox:checked').each(function() {
+        var index = $(this).data('index');
+        var cantidad = parseInt($('.cantidad-despacho[data-index="' + index + '"]').val());
+        
+        if (cantidad > 0) {
+            productosSeleccionados.push({
+                index: index,
+                cantidad: cantidad
+            });
+        }
+    });
+    
+    return productosSeleccionados;
 }

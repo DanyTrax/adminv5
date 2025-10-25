@@ -669,13 +669,33 @@ function cargarProductosDeSolicitud() {
     try {
         var productos = JSON.parse(solicitudSeleccionada.productos_solicitados);
         
+        // Si hay productos seleccionados, usar solo esos
+        if(window.productosSeleccionados && window.productosSeleccionados.length > 0) {
+            console.log("🔍 Usando productos seleccionados:", window.productosSeleccionados.length, "productos");
+            var productosFiltrados = [];
+            
+            window.productosSeleccionados.forEach(function(seleccion) {
+                var producto = productos[seleccion.index];
+                if(producto) {
+                    // Usar la cantidad seleccionada en lugar de la cantidad original
+                    productosFiltrados.push({
+                        codigo: producto.codigo,
+                        descripcion: producto.descripcion,
+                        cantidad: seleccion.cantidad
+                    });
+                }
+            });
+            
+            productos = productosFiltrados;
+        }
+        
         var productosAgregados = 0;
         var productosActualizados = 0;
         var productosSinStock = [];           // Productos que no tienen nada de stock
         var productosConFaltantes = [];       // Productos con stock parcial
         
         console.log("🔍 Inventario local disponible:", inventarioLocal.length, "productos");
-        console.log("🔍 Productos de solicitud:", productos.length, "productos");
+        console.log("🔍 Productos a procesar:", productos.length, "productos");
         
         productos.forEach(function(producto) {
             console.log("🔍 Buscando producto:", producto.codigo, "en inventario local");
@@ -1512,6 +1532,20 @@ function enviarFormularioDespacho() {
         }
         if($("#formCrearDespacho input[name='idDespachoEditar']").length === 0) {
             $("#formCrearDespacho").append('<input type="hidden" name="idDespachoEditar" value="' + idDespachoEditar + '">');
+        }
+    }
+    
+    // Procesar productos seleccionados desde solicitud
+    if(urlParams.has('productos_seleccionados')) {
+        try {
+            var productosSeleccionados = JSON.parse(decodeURIComponent(urlParams.get('productos_seleccionados')));
+            console.log("✅ Productos seleccionados detectados:", productosSeleccionados);
+            
+            // Guardar productos seleccionados en variable global
+            window.productosSeleccionados = productosSeleccionados;
+            
+        } catch(e) {
+            console.error("❌ Error procesando productos seleccionados:", e);
         }
     }
     
