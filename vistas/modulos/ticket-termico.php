@@ -1,9 +1,11 @@
 <?php
-// Redirigir a la extensión TCPDF
+// Incluir directamente la extensión TCPDF
 $codigo = $_GET["codigo"] ?? "";
 $formato = $_GET["formato"] ?? "ticket";
 
-// Redirigir al archivo de extensión
-header("Location: ../../extensiones/tcpdf/pdf/ticket-termico.php?codigo=" . urlencode($codigo) . "&formato=" . urlencode($formato));
-exit();
+// Cambiar a la carpeta de extensiones para que los require_once funcionen
+chdir("../../extensiones/tcpdf/pdf/");
+
+// Incluir el archivo directamente
+include "ticket-termico.php";
 ?>

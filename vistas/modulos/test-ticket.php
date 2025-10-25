@@ -1,8 +1,10 @@
 <?php
-// Redirigir al archivo de prueba
+// Incluir directamente el archivo de prueba
 $codigo = $_GET["codigo"] ?? "";
 
-// Redirigir al archivo de prueba
-header("Location: ../../test-ticket.php?codigo=" . urlencode($codigo));
-exit();
+// Cambiar al directorio raíz para que los require_once funcionen
+chdir("../../");
+
+// Incluir el archivo directamente
+include "test-ticket.php";
 ?>
