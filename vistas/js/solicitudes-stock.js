@@ -519,27 +519,24 @@ $(document).on('click', '.btnCrearDespachoDesdeSolicitud', function() {
                 // Crear URL con parámetros
                 var url = 'crear-despacho?desde_solicitud=1&id_solicitud=' + idSolicitud + '&numero_solicitud=' + encodeURIComponent(numeroSolicitud);
                 
-                // Mostrar confirmación con opciones
+                // Mostrar confirmación directa
                 swal({
                     title: '¿Crear despacho desde solicitud?',
                     html: `
                         <p><strong>Solicitud:</strong> ${numeroSolicitud}</p>
                         <p><strong>Productos:</strong> ${productos.length} productos</p>
                         <p><strong>Total unidades:</strong> ${solicitud.total_cantidad}</p>
-                        <p>Seleccione cómo desea proceder:</p>
+                        <p>Se procederá a crear el despacho con los productos de esta solicitud.</p>
                     `,
                     type: 'question',
                     showCancelButton: true,
-                    confirmButtonText: 'Ver Stock por Sucursales',
-                    cancelButtonText: 'Crear Despacho Normal',
-                    confirmButtonColor: '#3c8dbc',
-                    cancelButtonColor: '#28a745'
+                    confirmButtonText: 'Crear Despacho',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d'
                 }).then(function(result) {
                     if(result.value) {
-                        // Ver stock por sucursales
-                        mostrarStockPorSucursales(idSolicitud, numeroSolicitud, productos);
-                    } else {
-                        // Crear despacho normal
+                        // Crear despacho directamente
                         window.location.href = url;
                     }
                 });
