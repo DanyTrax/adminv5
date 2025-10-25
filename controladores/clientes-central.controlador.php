@@ -108,9 +108,9 @@ class ControladorClientesCentral
 	COPIAR CLIENTES A SUCURSAL
 	=============================================*/
 
-	static public function ctrCopiarClientesASucursal($sucursalId)
+	static public function ctrCopiarClientesASucursal($direccion, $sucursalId)
 	{
-		return ModeloClientesCentral::mdlCopiarClientesASucursal($sucursalId);
+		return ModeloClientesCentral::mdlCopiarClientesASucursal($direccion, $sucursalId);
 	}
 
 	/*=============================================

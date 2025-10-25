@@ -635,16 +635,11 @@ class ModeloClientesCentral
 	COPIAR CLIENTES A SUCURSAL
 	=============================================*/
 
-	static public function mdlCopiarClientesASucursal($sucursalId)
+	static public function mdlCopiarClientesASucursal($direccion, $sucursalId)
 	{
 		try {
 			$conexionCentral = ConexionCentral::conectar();
 			$conexionCentral->beginTransaction();
-
-			// Obtener clientes centrales
-			$stmt = $conexionCentral->prepare("SELECT * FROM clientes_central WHERE activo = 1");
-			$stmt->execute();
-			$clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 			// Obtener datos de conexión de la sucursal
 			$stmt = $conexionCentral->prepare("
@@ -667,39 +662,86 @@ class ModeloClientesCentral
 
 			$clientesCopiados = 0;
 			$clientesDuplicados = 0;
+			$clientes = [];
 
-			foreach ($clientes as $cliente) {
-				// Verificar si el cliente ya existe en la sucursal
-				$stmt = $conexionLocal->prepare("SELECT id FROM clientes WHERE documento = :documento");
-				$stmt->bindParam(":documento", $cliente['documento'], PDO::PARAM_STR);
+			if ($direccion === "central_a_sucursal") {
+				// Copiar de central a sucursal
+				$stmt = $conexionCentral->prepare("SELECT * FROM clientes_central WHERE activo = 1");
 				$stmt->execute();
-				
-				if ($stmt->fetch()) {
-					$clientesDuplicados++;
-					continue; // Cliente ya existe, saltar
+				$clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+				foreach ($clientes as $cliente) {
+					// Verificar si el cliente ya existe en la sucursal
+					$stmt = $conexionLocal->prepare("SELECT id FROM clientes WHERE documento = :documento");
+					$stmt->bindParam(":documento", $cliente['documento'], PDO::PARAM_STR);
+					$stmt->execute();
+					
+					if ($stmt->fetch()) {
+						$clientesDuplicados++;
+						continue; // Cliente ya existe, saltar
+					}
+
+					// Insertar cliente en la sucursal local
+					$stmt = $conexionLocal->prepare("
+						INSERT INTO clientes (documento, nombre, email, telefono, direccion, fecha_nacimiento, compras, ultima_compra)
+						VALUES (:documento, :nombre, :email, :telefono, :direccion, :fecha_nacimiento, 0, '1900-01-01 00:00:00')
+					");
+					
+					$stmt->bindParam(":documento", $cliente['documento'], PDO::PARAM_STR);
+					$stmt->bindParam(":nombre", $cliente['nombre'], PDO::PARAM_STR);
+					$stmt->bindParam(":email", $cliente['email'], PDO::PARAM_STR);
+					$stmt->bindParam(":telefono", $cliente['telefono'], PDO::PARAM_STR);
+					$stmt->bindParam(":direccion", $cliente['direccion'], PDO::PARAM_STR);
+					$stmt->bindParam(":fecha_nacimiento", $cliente['fecha_nacimiento'], PDO::PARAM_STR);
+					
+					if ($stmt->execute()) {
+						$clientesCopiados++;
+					}
 				}
 
-				// Insertar cliente en la sucursal local
-				$stmt = $conexionLocal->prepare("
-					INSERT INTO clientes (documento, nombre, email, telefono, direccion, fecha_nacimiento, compras, ultima_compra)
-					VALUES (:documento, :nombre, :email, :telefono, :direccion, :fecha_nacimiento, 0, '1900-01-01 00:00:00')
-				");
-				
-				$stmt->bindParam(":documento", $cliente['documento'], PDO::PARAM_STR);
-				$stmt->bindParam(":nombre", $cliente['nombre'], PDO::PARAM_STR);
-				$stmt->bindParam(":email", $cliente['email'], PDO::PARAM_STR);
-				$stmt->bindParam(":telefono", $cliente['telefono'], PDO::PARAM_STR);
-				$stmt->bindParam(":direccion", $cliente['direccion'], PDO::PARAM_STR);
-				$stmt->bindParam(":fecha_nacimiento", $cliente['fecha_nacimiento'], PDO::PARAM_STR);
-				
-				if ($stmt->execute()) {
-					$clientesCopiados++;
+			} elseif ($direccion === "sucursal_a_central") {
+				// Copiar de sucursal a central
+				$stmt = $conexionLocal->prepare("SELECT * FROM clientes");
+				$stmt->execute();
+				$clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+				foreach ($clientes as $cliente) {
+					// Verificar si el cliente ya existe en la central
+					$stmt = $conexionCentral->prepare("SELECT id_central FROM clientes_central WHERE documento = :documento");
+					$stmt->bindParam(":documento", $cliente['documento'], PDO::PARAM_STR);
+					$stmt->execute();
+					
+					if ($stmt->fetch()) {
+						$clientesDuplicados++;
+						continue; // Cliente ya existe, saltar
+					}
+
+					// Insertar cliente en la central
+					$stmt = $conexionCentral->prepare("
+						INSERT INTO clientes_central (documento, email, nombre, telefono, direccion, fecha_nacimiento, sucursales_asignadas, id_local_principal, sucursal_origen, activo)
+						VALUES (:documento, :email, :nombre, :telefono, :direccion, :fecha_nacimiento, :sucursales_asignadas, :id_local_principal, :sucursal_origen, 1)
+					");
+					
+					$stmt->bindParam(":documento", $cliente['documento'], PDO::PARAM_STR);
+					$stmt->bindParam(":email", $cliente['email'], PDO::PARAM_STR);
+					$stmt->bindParam(":nombre", $cliente['nombre'], PDO::PARAM_STR);
+					$stmt->bindParam(":telefono", $cliente['telefono'], PDO::PARAM_STR);
+					$stmt->bindParam(":direccion", $cliente['direccion'], PDO::PARAM_STR);
+					$stmt->bindParam(":fecha_nacimiento", $cliente['fecha_nacimiento'], PDO::PARAM_STR);
+					$stmt->bindParam(":sucursales_asignadas", $sucursalId, PDO::PARAM_STR);
+					$stmt->bindParam(":id_local_principal", $cliente['id'], PDO::PARAM_INT);
+					$stmt->bindParam(":sucursal_origen", $sucursal['nombre'], PDO::PARAM_STR);
+					
+					if ($stmt->execute()) {
+						$clientesCopiados++;
+					}
 				}
 			}
 
 			$conexionCentral->commit();
 			
-			error_log("Clientes copiados a sucursal '{$sucursal['nombre']}': {$clientesCopiados} nuevos, {$clientesDuplicados} duplicados");
+			$direccionTexto = $direccion === "central_a_sucursal" ? "a sucursal" : "desde sucursal";
+			error_log("Clientes copiados {$direccionTexto} '{$sucursal['nombre']}': {$clientesCopiados} nuevos, {$clientesDuplicados} duplicados");
 			return [
 				'success' => true,
 				'copiados' => $clientesCopiados,

@@ -273,8 +273,9 @@ switch ($accion) {
     
     case "copiarClientesASucursal":
         try {
+            $direccion = $_POST["direccion"] ?? "central_a_sucursal";
             $sucursalId = $_POST["sucursalId"];
-            $resultado = ControladorClientesCentral::ctrCopiarClientesASucursal($sucursalId);
+            $resultado = ControladorClientesCentral::ctrCopiarClientesASucursal($direccion, $sucursalId);
             
             if ($resultado && is_array($resultado) && isset($resultado['success'])) {
                 // El modelo retornó un array con estadísticas

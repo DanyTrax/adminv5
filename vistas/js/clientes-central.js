@@ -504,6 +504,17 @@ $(document).ready(function() {
         }
     });
     
+    // Cambio en select de dirección para copiar
+    $(document).on("change", "#selectDireccionCopiar", function() {
+        var direccion = $(this).val();
+        if (direccion === "central_a_sucursal" || direccion === "sucursal_a_central") {
+            $("#divSucursalCopiar").show();
+            cargarSucursalesDestino();
+        } else {
+            $("#divSucursalCopiar").hide();
+        }
+    });
+    
     // Confirmar Sincronización Bidireccional
     $(document).on("click", "#btnGuardarSincronizacionBidireccional", function() {
         guardarSincronizacionBidireccional();
@@ -529,7 +540,8 @@ $(document).ready(function() {
     }
     
     function abrirModalCopiarASucursal() {
-        cargarSucursalesDestino();
+        $("#selectDireccionCopiar").val("");
+        $("#divSucursalCopiar").hide();
         $("#modalCopiarASucursal").modal("show");
     }
     
@@ -666,18 +678,31 @@ $(document).ready(function() {
     }
     
     function confirmarCopiarASucursal() {
+        var direccion = $("#selectDireccionCopiar").val();
         var sucursalId = $("#selectSucursalDestino").val();
         
+        if (!direccion) {
+            swal("Advertencia", "Debes seleccionar una dirección de copia", "warning");
+            return;
+        }
+        
         if (!sucursalId) {
-            swal("Advertencia", "Debes seleccionar una sucursal destino", "warning");
+            swal("Advertencia", "Debes seleccionar una sucursal", "warning");
             return;
         }
         
         var sucursalNombre = $("#selectSucursalDestino option:selected").text();
+        var mensajeConfirmacion = "";
+        
+        if (direccion === "central_a_sucursal") {
+            mensajeConfirmacion = "Se copiarán todos los clientes centrales a: " + sucursalNombre;
+        } else if (direccion === "sucursal_a_central") {
+            mensajeConfirmacion = "Se copiarán todos los clientes de " + sucursalNombre + " a la central";
+        }
         
         swal({
             title: "¿Confirmar copia?",
-            text: "Se copiarán todos los clientes centrales a: " + sucursalNombre,
+            text: mensajeConfirmacion,
             type: "warning",
             showCancelButton: true,
             confirmButtonText: "Sí, copiar",
@@ -689,12 +714,18 @@ $(document).ready(function() {
                     method: "POST",
                     data: {
                         accion: "copiarClientesASucursal",
+                        direccion: direccion,
                         sucursalId: sucursalId
                     },
                     dataType: "json",
                     success: function(respuesta) {
                         if (respuesta.success) {
-                            var mensaje = "Clientes copiados correctamente a " + sucursalNombre + "\n\n";
+                            var mensaje = "";
+                            if (direccion === "central_a_sucursal") {
+                                mensaje = "Clientes copiados correctamente a " + sucursalNombre + "\n\n";
+                            } else {
+                                mensaje = "Clientes copiados correctamente desde " + sucursalNombre + " a la central\n\n";
+                            }
                             mensaje += "📊 Estadísticas:\n";
                             mensaje += "• Nuevos clientes: " + respuesta.copiados + "\n";
                             mensaje += "• Duplicados (omitidos): " + respuesta.duplicados + "\n";

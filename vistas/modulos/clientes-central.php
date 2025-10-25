@@ -365,23 +365,31 @@ MODAL PROGRESO DE IMPORTACIÓN
     </div>
 </div>
 
-<!-- MODAL COPIAR A SUCURSAL -->
+<!-- MODAL COPIAR CLIENTES -->
 <div class="modal fade" id="modalCopiarASucursal" tabindex="-1" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header" style="background: #f39c12; color: white;">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                 <h4 class="modal-title">
-                    <i class="fa fa-copy"></i> Copiar Clientes a Sucursal
+                    <i class="fa fa-copy"></i> Copiar Clientes
                 </h4>
             </div>
             <div class="modal-body">
-                <div class="alert alert-warning">
-                    <i class="fa fa-exclamation-triangle"></i>
-                    <strong>Atención:</strong> Esta acción copiará todos los clientes centrales a la sucursal seleccionada.
+                <div class="alert alert-info">
+                    <i class="fa fa-info-circle"></i>
+                    <strong>Información:</strong> Selecciona la dirección de copia y la sucursal correspondiente.
                 </div>
                 <div class="form-group">
-                    <label>Seleccionar Sucursal Destino:</label>
+                    <label>Seleccionar Dirección de Copia:</label>
+                    <select class="form-control" id="selectDireccionCopiar">
+                        <option value="">Selecciona dirección...</option>
+                        <option value="central_a_sucursal">De Central a Sucursal</option>
+                        <option value="sucursal_a_central">De Sucursal a Central</option>
+                    </select>
+                </div>
+                <div class="form-group" id="divSucursalCopiar" style="display: none;">
+                    <label>Seleccionar Sucursal:</label>
                     <select class="form-control" id="selectSucursalDestino">
                         <option value="">Selecciona una sucursal...</option>
                         <!-- Se carga dinámicamente -->
