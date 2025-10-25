@@ -131,9 +131,21 @@ class imprimirFactura
 		$pdf->setPrintFooter(false);
 		$pdf->SetMargins(4, 0, 0, 0);
 		$pdf->SetFooterMargin(0);
-		$pdf->SetAutoPageBreak(true, 0); // Modificado para evitar saltos de p��gina autom��ticos no deseados
+		$pdf->SetAutoPageBreak(false, 0); // Modificado para evitar saltos de p��gina autom��ticos no deseados
 
-		$pdf->AddPage('P', array(75, 280));
+		// Calcular altura dinámica basada en el contenido
+		$alturaBase = 50; // Altura mínima para encabezado
+		$alturaPorProducto = 15; // Altura aproximada por producto
+		$alturaResumen = 30; // Altura para resumen y totales
+		$alturaNota = 40; // Altura para nota detalle
+		
+		$cantidadProductos = count($productos);
+		$alturaCalculada = $alturaBase + ($cantidadProductos * $alturaPorProducto) + $alturaResumen + $alturaNota;
+		
+		// Asegurar altura mínima y máxima
+		$alturaFinal = max(100, min($alturaCalculada, 400));
+
+		$pdf->AddPage('P', array(75, $alturaFinal));
         $numVendedor = $respuestaVendedor['telefono'] ?? 'N/A';
 		
         //---------------------------------------------------------
