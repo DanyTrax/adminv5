@@ -134,7 +134,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
                 <div class="col-lg-3 col-xs-6">
                     <div class="small-box bg-green">
                         <div class="inner">
-                            <h3>$<?= number_format($totalEntradas, 2) ?></h3>
+                            <h3>$<?= number_format($totalEntradas, 0) ?></h3>
                             <p>Total Entradas (Dinero Ingresado)</p>
                         </div>
                         <div class="icon"><i class="ion ion-arrow-up-a"></i></div>
@@ -143,7 +143,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
                 <div class="col-lg-3 col-xs-6">
                     <div class="small-box bg-yellow">
                         <div class="inner">
-                            <h3>$<?= number_format($totalDeuda, 2) ?></h3>
+                            <h3>$<?= number_format($totalDeuda, 0) ?></h3>
                             <p>Total por Cobrar (Deuda)</p>
                         </div>
                         <div class="icon"><i class="ion ion-alert-circled"></i></div>
@@ -152,7 +152,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
                 <div class="col-lg-3 col-xs-6">
                     <div class="small-box bg-primary">
                         <div class="inner">
-                            <h3>$<?= number_format($totalVendido, 2) ?></h3>
+                            <h3>$<?= number_format($totalVendido, 0) ?></h3>
                             <p>Total Vendido (Generado en Ventas)</p>
                         </div>
                         <div class="icon"><i class="ion ion-social-usd"></i></div>
@@ -161,7 +161,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
                 <div class="col-lg-3 col-xs-6">
                     <div class="small-box bg-orange">
                         <div class="inner">
-                            <h3>$<?= number_format($totalDescuentos, 2) ?></h3>
+                            <h3>$<?= number_format($totalDescuentos, 0) ?></h3>
                             <p>Total Descuentos</p>
                         </div>
                         <div class="icon"><i class="ion ion-arrow-graph-down-right"></i></div>
@@ -186,7 +186,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
                                 echo '<div class="col-lg-3 col-xs-6">
                                         <div class="small-box ' . $colores[$colorIndex] . '">
                                             <div class="inner">
-                                                <h3>$' . number_format($value["total_entradas"], 2) . '</h3>
+                                                <h3>$' . number_format($value["total_entradas"], 0) . '</h3>
                                                 <p>' . $value["medio_pago"] . '</p>
                                             </div>
                                             <div class="icon"><i class="ion ion-social-usd"></i></div>
@@ -213,7 +213,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
                 <div class="col-lg-6 col-xs-12">
                     <div class="small-box bg-aqua">
                         <div class="inner">
-                            <h3>$<?= number_format($arqueoDeEfectivo, 2) ?></h3>
+                            <h3>$<?= number_format($arqueoDeEfectivo, 0) ?></h3>
                             <p>Arqueo de Efectivo (Entradas Efectivo - Gastos Efectivo)</p>
                         </div>
                         <div class="icon"><i class="ion ion-calculator"></i></div>
@@ -222,7 +222,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
                 <div class="col-lg-6 col-xs-12">
                     <div class="small-box bg-red">
                         <div class="inner">
-                            <h3>$<?= number_format($totalGastos["total"] ?? 0, 2) ?></h3>
+                            <h3>$<?= number_format($totalGastos["total"] ?? 0, 0) ?></h3>
                             <p>Total de Gastos (Todos los medios de pago)</p>
                         </div>
                         <div class="icon"><i class="ion ion-arrow-graph-down-right"></i></div>
@@ -247,7 +247,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
                                 echo '<div class="col-lg-3 col-xs-6">
                                         <div class="small-box ' . $coloresGastos[$colorIndexGastos] . '">
                                             <div class="inner">
-                                                <h3>$' . number_format($value["total_gastos"], 2) . '</h3>
+                                                <h3>$' . number_format($value["total_gastos"], 0) . '</h3>
                                                 <p>' . $value["medio_pago"] . '</p>
                                             </div>
                                             <div class="icon"><i class="ion ion-pie-graph"></i></div>
@@ -288,7 +288,7 @@ if($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
                                         echo '<tr>
                                                 <td>'.($key + 1).'</td>
                                                 <td>'.$value["vendedor"].'</td>
-                                                <td>$ '.number_format($value["total_vendido"], 2).'</td>
+                                                <td>$ '.number_format($value["total_vendido"], 0).'</td>
                                               </tr>';
                                     }
                                 } else {
