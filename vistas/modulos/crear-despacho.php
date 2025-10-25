@@ -1083,5 +1083,4 @@ if($modoEdicion && isset($_POST["editarDespacho"])) {
     console.log("- Productos desde solicitud:", window.productosDesdeSolicitud);
 </script>
 
-<!-- Incluir JavaScript específico para crear despacho -->
-<script src="vistas/js/crear-despacho.js"></script>
+<!-- JavaScript específico para crear despacho ya incluido en plantilla.php -->
