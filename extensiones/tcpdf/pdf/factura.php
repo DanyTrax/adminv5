@@ -345,6 +345,10 @@ EOF;
 			error_log("Factura grande detectada: Aplicando factor de proporción 5% (aproximación a 1 hoja)");
 		}
 		
+		// Agregar 1 cm adicional para asegurar espacio suficiente
+		$alturaCalculada = $alturaCalculada + 10; // +10mm (1 cm)
+		error_log("Agregando 1 cm adicional: +10mm");
+		
 		$alturaFinal = max(120, min($alturaCalculada, 600)); // Máximo restaurado a 600mm
 		
 		// Log detallado de la medición
@@ -365,7 +369,7 @@ EOF;
 			error_log("  Factor de proporción: No aplicado (factura normal)");
 		}
 		
-		error_log("  Altura calculada: {$alturaCalculada}mm");
+		error_log("  Altura calculada: {$alturaCalculada}mm (incluye +10mm adicional)");
 		error_log("  Altura final: {$alturaFinal}mm");
 		error_log("=== FIN ESTUDIO ===");
 
