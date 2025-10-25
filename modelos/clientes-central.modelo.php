@@ -638,16 +638,20 @@ class ModeloClientesCentral
 	static public function mdlCopiarClientesASucursal($sucursalId)
 	{
 		try {
-			$conexion = ConexionCentral::conectar();
-			$conexion->beginTransaction();
+			$conexionCentral = ConexionCentral::conectar();
+			$conexionCentral->beginTransaction();
 
 			// Obtener clientes centrales
-			$stmt = $conexion->prepare("SELECT * FROM clientes_central WHERE activo = 1");
+			$stmt = $conexionCentral->prepare("SELECT * FROM clientes_central WHERE activo = 1");
 			$stmt->execute();
 			$clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-			// Obtener información de la sucursal
-			$stmt = $conexion->prepare("SELECT nombre FROM sucursales WHERE id = :id");
+			// Obtener datos de conexión de la sucursal
+			$stmt = $conexionCentral->prepare("
+				SELECT nombre, host_bd, usuario_bd, password_bd, nombre_bd, puerto_bd 
+				FROM sucursales 
+				WHERE id = :id AND activo = 1
+			");
 			$stmt->bindParam(":id", $sucursalId, PDO::PARAM_INT);
 			$stmt->execute();
 			$sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -656,15 +660,55 @@ class ModeloClientesCentral
 				throw new Exception("Sucursal no encontrada");
 			}
 
-			// Aquí deberías implementar la lógica para copiar a la sucursal específica
-			// Por ahora, solo registramos la acción en el log de errores
-			error_log("Clientes copiados a sucursal: " . $sucursal['nombre'] . " (ID: " . $sucursalId . ")");
+			// Conectar a la base de datos local de la sucursal
+			$dsn = "mysql:host={$sucursal['host_bd']};dbname={$sucursal['nombre_bd']};charset=utf8mb4";
+			$conexionLocal = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd']);
+			$conexionLocal->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-			$conexion->commit();
-			return true;
+			$clientesCopiados = 0;
+			$clientesDuplicados = 0;
+
+			foreach ($clientes as $cliente) {
+				// Verificar si el cliente ya existe en la sucursal
+				$stmt = $conexionLocal->prepare("SELECT id FROM clientes WHERE documento = :documento");
+				$stmt->bindParam(":documento", $cliente['documento'], PDO::PARAM_STR);
+				$stmt->execute();
+				
+				if ($stmt->fetch()) {
+					$clientesDuplicados++;
+					continue; // Cliente ya existe, saltar
+				}
+
+				// Insertar cliente en la sucursal local
+				$stmt = $conexionLocal->prepare("
+					INSERT INTO clientes (documento, nombre, email, telefono, direccion, fecha_nacimiento, fecha_creacion)
+					VALUES (:documento, :nombre, :email, :telefono, :direccion, :fecha_nacimiento, NOW())
+				");
+				
+				$stmt->bindParam(":documento", $cliente['documento'], PDO::PARAM_STR);
+				$stmt->bindParam(":nombre", $cliente['nombre'], PDO::PARAM_STR);
+				$stmt->bindParam(":email", $cliente['email'], PDO::PARAM_STR);
+				$stmt->bindParam(":telefono", $cliente['telefono'], PDO::PARAM_STR);
+				$stmt->bindParam(":direccion", $cliente['direccion'], PDO::PARAM_STR);
+				$stmt->bindParam(":fecha_nacimiento", $cliente['fecha_nacimiento'], PDO::PARAM_STR);
+				
+				if ($stmt->execute()) {
+					$clientesCopiados++;
+				}
+			}
+
+			$conexionCentral->commit();
+			
+			error_log("Clientes copiados a sucursal '{$sucursal['nombre']}': {$clientesCopiados} nuevos, {$clientesDuplicados} duplicados");
+			return [
+				'success' => true,
+				'copiados' => $clientesCopiados,
+				'duplicados' => $clientesDuplicados,
+				'total' => count($clientes)
+			];
 
 		} catch (Exception $e) {
-			$conexion->rollback();
+			$conexionCentral->rollback();
 			error_log("Error en mdlCopiarClientesASucursal: " . $e->getMessage());
 			return false;
 		}
@@ -677,35 +721,62 @@ class ModeloClientesCentral
 	static public function mdlBorrarClientes($origen, $sucursalId = null)
 	{
 		try {
-			$conexion = ConexionCentral::conectar();
-			$conexion->beginTransaction();
+			$conexionCentral = ConexionCentral::conectar();
+			$conexionCentral->beginTransaction();
 
 			if ($origen === "central") {
 				// Borrar todos los clientes centrales
-				$stmt = $conexion->prepare("DELETE FROM clientes_central");
+				$stmt = $conexionCentral->prepare("DELETE FROM clientes_central");
 				$stmt->execute();
 				
 				error_log("Todos los clientes centrales eliminados");
+				$conexionCentral->commit();
+				return true;
 
 			} elseif ($origen === "sucursal" && $sucursalId) {
-				// Obtener nombre de sucursal
-				$stmt = $conexion->prepare("SELECT nombre FROM sucursales WHERE id = :id");
+				// Obtener datos de conexión de la sucursal
+				$stmt = $conexionCentral->prepare("
+					SELECT nombre, host_bd, usuario_bd, password_bd, nombre_bd, puerto_bd 
+					FROM sucursales 
+					WHERE id = :id AND activo = 1
+				");
 				$stmt->bindParam(":id", $sucursalId, PDO::PARAM_INT);
 				$stmt->execute();
 				$sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
 
-				if ($sucursal) {
-					// Aquí deberías implementar la lógica para borrar clientes de la sucursal específica
-					// Por ahora, solo registramos la acción
-					error_log("Clientes eliminados de sucursal: " . $sucursal['nombre'] . " (ID: " . $sucursalId . ")");
+				if (!$sucursal) {
+					throw new Exception("Sucursal no encontrada");
 				}
+
+				// Conectar a la base de datos local de la sucursal
+				$dsn = "mysql:host={$sucursal['host_bd']};dbname={$sucursal['nombre_bd']};charset=utf8mb4";
+				$conexionLocal = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd']);
+				$conexionLocal->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+				// Contar clientes antes de borrar
+				$stmt = $conexionLocal->prepare("SELECT COUNT(*) as total FROM clientes");
+				$stmt->execute();
+				$totalClientes = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+				// Borrar todos los clientes de la sucursal
+				$stmt = $conexionLocal->prepare("DELETE FROM clientes");
+				$stmt->execute();
+
+				$conexionCentral->commit();
+				
+				error_log("Clientes eliminados de sucursal '{$sucursal['nombre']}': {$totalClientes} clientes borrados");
+				return [
+					'success' => true,
+					'eliminados' => $totalClientes,
+					'sucursal' => $sucursal['nombre']
+				];
 			}
 
-			$conexion->commit();
+			$conexionCentral->commit();
 			return true;
 
 		} catch (Exception $e) {
-			$conexion->rollback();
+			$conexionCentral->rollback();
 			error_log("Error en mdlBorrarClientes: " . $e->getMessage());
 			return false;
 		}

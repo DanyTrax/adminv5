@@ -694,7 +694,13 @@ $(document).ready(function() {
                     dataType: "json",
                     success: function(respuesta) {
                         if (respuesta.success) {
-                            swal("Éxito", "Clientes copiados correctamente a " + sucursalNombre, "success");
+                            var mensaje = "Clientes copiados correctamente a " + sucursalNombre + "\n\n";
+                            mensaje += "📊 Estadísticas:\n";
+                            mensaje += "• Nuevos clientes: " + respuesta.copiados + "\n";
+                            mensaje += "• Duplicados (omitidos): " + respuesta.duplicados + "\n";
+                            mensaje += "• Total procesados: " + respuesta.total;
+                            
+                            swal("Éxito", mensaje, "success");
                             $("#modalCopiarASucursal").modal("hide");
                             cargarClientesCentrales(); // Recargar la tabla
                         } else {
@@ -752,7 +758,16 @@ $(document).ready(function() {
                     dataType: "json",
                     success: function(respuesta) {
                         if (respuesta.success) {
-                            swal("Éxito", "Clientes eliminados correctamente", "success");
+                            var mensaje = "";
+                            if (origen === "central") {
+                                mensaje = "Todos los clientes centrales han sido eliminados correctamente.";
+                            } else {
+                                mensaje = "Clientes eliminados correctamente de " + respuesta.sucursal + "\n\n";
+                                mensaje += "📊 Estadísticas:\n";
+                                mensaje += "• Clientes eliminados: " + respuesta.eliminados;
+                            }
+                            
+                            swal("Éxito", mensaje, "success");
                             $("#modalBorrarClientes").modal("hide");
                             cargarClientesCentrales(); // Recargar la tabla
                         } else {
