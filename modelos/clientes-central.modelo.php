@@ -682,7 +682,7 @@ class ModeloClientesCentral
 				// Insertar cliente en la sucursal local
 				$stmt = $conexionLocal->prepare("
 					INSERT INTO clientes (documento, nombre, email, telefono, direccion, fecha_nacimiento, compras, ultima_compra)
-					VALUES (:documento, :nombre, :email, :telefono, :direccion, :fecha_nacimiento, 0, NULL)
+					VALUES (:documento, :nombre, :email, :telefono, :direccion, :fecha_nacimiento, 0, '1900-01-01 00:00:00')
 				");
 				
 				$stmt->bindParam(":documento", $cliente['documento'], PDO::PARAM_STR);
