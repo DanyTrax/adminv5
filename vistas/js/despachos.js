@@ -394,8 +394,9 @@ function configurarBotonesModalDespacho(despacho) {
         `;
     }
     
-    // BOTÓN EDITAR (solo pendientes)
-    if(despacho.estado === 'pendiente') {
+    // BOTÓN EDITAR (solo pendientes y NO para Transportador)
+    var perfilUsuario = window.perfilUsuario || "Usuario";
+    if(despacho.estado === 'pendiente' && perfilUsuario !== 'Transportador') {
         html += `
             <button type="button" class="btn btn-info" onclick="editarDespacho(${despacho.id})">
                 <i class="fa fa-edit"></i> Editar
@@ -403,9 +404,8 @@ function configurarBotonesModalDespacho(despacho) {
         `;
     }
     
-    // BOTÓN ELIMINAR (pendientes para todos, cualquier estado para administradores)
-    var perfilUsuario = window.perfilUsuario || "Usuario";
-    var puedeEliminar = despacho.estado === 'pendiente' || perfilUsuario === 'Administrador';
+    // BOTÓN ELIMINAR (pendientes para todos excepto Transportador, cualquier estado para administradores)
+    var puedeEliminar = (despacho.estado === 'pendiente' && perfilUsuario !== 'Transportador') || perfilUsuario === 'Administrador';
     
     if(puedeEliminar) {
         var textoEliminar = despacho.estado === 'pendiente' ? 'Eliminar' : 'Eliminar (Admin)';
