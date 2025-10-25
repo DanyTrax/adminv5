@@ -765,3 +765,9 @@ if($_SESSION["perfil"] == "Administrador") {
 <?php if($_SESSION["perfil"] == "Transportador"): ?>
 <script src="vistas/js/estadisticas-despachos.js"></script>
 <?php endif; ?>
+
+<!-- Establecer perfil de usuario para JavaScript -->
+<script>
+window.perfilUsuario = "<?php echo $_SESSION['perfil']; ?>";
+console.log("Perfil de usuario establecido:", window.perfilUsuario);
+</script>
