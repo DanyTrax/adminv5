@@ -336,25 +336,13 @@ EOF;
 		$factorReduccion = 0.95; // Factor de reducción más conservador (solo 5% menos)
 		$alturaCalculada = ($totalLineas * $interlineaBase) * $factorReduccion;
 		
-		// Factor de proporción progresivo: 5% más por cada aproximación a 1 hoja (297mm)
+		// Factor de proporción: 5% más cuando se aproxima a 1 hoja (297mm)
 		$alturaHoja = 297; // Altura aproximada de 1 hoja A4
-		$factorProporcion = 1.0; // Factor inicial
-		$contadorHojas = 0;
+		$umbralHoja = $alturaHoja * 0.8; // 80% de 1 hoja como umbral (237.6mm)
 		
-		// Calcular cuántas veces se aproxima a 1 hoja
-		while ($alturaCalculada > ($alturaHoja * 0.8)) { // 80% de 1 hoja como umbral
-			$factorProporcion *= 1.05; // 5% más grande por cada aproximación
-			$alturaCalculada = $alturaCalculada * 1.05;
-			$contadorHojas++;
-			
-			// Evitar loop infinito
-			if ($contadorHojas > 10) break;
-		}
-		
-		if ($contadorHojas > 0) {
-			error_log("Factura grande detectada: Aplicando factor de proporción progresivo");
-			error_log("  Aproximaciones a 1 hoja: {$contadorHojas}");
-			error_log("  Factor total aplicado: " . number_format(($factorProporcion - 1) * 100, 1) . "%");
+		if ($alturaCalculada > $umbralHoja) {
+			$alturaCalculada = $alturaCalculada * 1.05; // 5% más grande
+			error_log("Factura grande detectada: Aplicando factor de proporción 5% (aproximación a 1 hoja)");
 		}
 		
 		$alturaFinal = max(120, min($alturaCalculada, 600)); // Máximo restaurado a 600mm
@@ -370,9 +358,9 @@ EOF;
 		error_log("  Total líneas: {$totalLineas} (incluye líneas fijas)");
 		error_log("  Fórmula base: {$totalLineas} × {$interlineaBase}mm × {$factorReduccion}");
 		
-		// Mostrar si se aplicó factor de proporción progresivo
-		if ($contadorHojas > 0) {
-			error_log("  Factor de proporción: Progresivo aplicado ({$contadorHojas} aproximaciones a 1 hoja)");
+		// Mostrar si se aplicó factor de proporción
+		if ($alturaCalculada > $umbralHoja) {
+			error_log("  Factor de proporción: 5% aplicado (aproximación a 1 hoja)");
 		} else {
 			error_log("  Factor de proporción: No aplicado (factura normal)");
 		}
