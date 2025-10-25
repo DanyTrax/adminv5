@@ -4,7 +4,7 @@ MODELO REGISTRO DE DESCARGAS SIMPLE - FUNCIONAL
 =============================================*/
 
 require_once "conexion.php";
-require_once "api-transferencias/conexion-central.php";
+require_once "../api-transferencias/conexion-central.php";
 
 class ModeloRegistroDescargasSimple {
     
