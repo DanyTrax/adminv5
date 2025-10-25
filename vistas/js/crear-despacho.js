@@ -1617,6 +1617,22 @@ function enviarFormularioDespacho() {
         }).then(function(result) {
             if(result.value) {
                 console.log("🔄 Enviando formulario de creación...");
+                
+                // Mostrar "Aprobado" y redirigir directamente
+                swal({
+                    title: "¡Aprobado!",
+                    text: "Despacho creado exitosamente",
+                    type: "success",
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+                // Redirigir automáticamente después de 2 segundos
+                setTimeout(function() {
+                    window.location.href = "index.php?ruta=despachos";
+                }, 2000);
+                
+                // Enviar formulario
                 $("#formCrearDespacho")[0].submit();
             }
         });
