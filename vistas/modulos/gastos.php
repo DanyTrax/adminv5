@@ -90,7 +90,7 @@ if ($xml) {
         ?>
 
         <!-- =================================================================== -->
-        <!-- CORRECCI0ˆ7N 1: Se cambia el ID del bot¨®n a uno ¨²nico para esta p¨¢gina -->
+        <!-- CORRECCIï¿½0ï¿½7N 1: Se cambia el ID del botï¿½ï¿½n a uno ï¿½ï¿½nico para esta pï¿½ï¿½gina -->
         <!-- =================================================================== -->
         <button type="button" class="btn btn-default pull-right" id="daterange-btn-gastos">
           <span>
@@ -145,7 +145,7 @@ if ($xml) {
                         <td>' . ($key + 1) . '</td>
                         <td>' . $vendedor["nombre"] . '</td>
                         <td>' . $value["detalle"] . '</td>
-                        <td>$ ' . number_format((float)$value["valor"], 2, ',', '.') . '</td>
+                        <td>$ ' . number_format((float)$value["valor"], 0, ',', '.') . '</td>
                         <td>' . $value["medio_pago"] . '</td>
                         
                         <td>' . date('Y-m-d H:i:s', strtotime($value["fecha"])) . '</td>
@@ -173,19 +173,19 @@ if ($xml) {
   </section>
 </div>
 
-<!-- (El c¨®digo de tu MODAL va aqu¨ª sin cambios) -->
+<!-- (El cï¿½ï¿½digo de tu MODAL va aquï¿½ï¿½ sin cambios) -->
 
 <!-- =================================================================== -->
-<!-- CORRECCI0ˆ7N 2: Se a0Š9ade el script local para el filtro de fecha -->
+<!-- CORRECCIï¿½0ï¿½7N 2: Se aï¿½0ï¿½9ade el script local para el filtro de fecha -->
 <!-- =================================================================== -->
 <script>
 $(document).ready(function() {
-    // Se apunta al ID ¨²nico 'daterange-btn-gastos'
+    // Se apunta al ID ï¿½ï¿½nico 'daterange-btn-gastos'
     $('#daterange-btn-gastos').daterangepicker(
       {
         ranges: {
           'Hoy': [moment(), moment()], 'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-          '0‰3ltimos 7 d¨ªas': [moment().subtract(6, 'days'), moment()], '0‰3ltimos 30 d¨ªas': [moment().subtract(29, 'days'), moment()],
+          'ï¿½0ï¿½3ltimos 7 dï¿½ï¿½as': [moment().subtract(6, 'days'), moment()], 'ï¿½0ï¿½3ltimos 30 dï¿½ï¿½as': [moment().subtract(29, 'days'), moment()],
           'Este mes': [moment().startOf('month'), moment().endOf('month')],
           'Mes anterior': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
         },
@@ -195,12 +195,12 @@ $(document).ready(function() {
         $('#daterange-btn-gastos span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
         var fechaInicial = start.format('YYYY-MM-DD');
         var fechaFinal = end.format('YYYY-MM-DD');
-        // Se recarga la p¨¢gina con la ruta correcta: 'gastos'
+        // Se recarga la pï¿½ï¿½gina con la ruta correcta: 'gastos'
         window.location = "index.php?ruta=gastos&fechaInicial=" + fechaInicial + "&fechaFinal=" + fechaFinal;
       }
     );
 
-    // Se a0Š9ade la l¨®gica para el bot¨®n "Cancelar"
+    // Se aï¿½0ï¿½9ade la lï¿½ï¿½gica para el botï¿½ï¿½n "Cancelar"
     $('#daterange-btn-gastos').on('cancel.daterangepicker', function(ev, picker) {
         window.location = "gastos";
     });

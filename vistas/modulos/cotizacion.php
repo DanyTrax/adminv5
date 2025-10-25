@@ -121,8 +121,8 @@ $listCotizaciones = ControladorCotizaciones::all();
 
 echo '<td>' . (isset($respuestaUsuario_ab["empresa"]) ? $respuestaUsuario_ab["empresa"] : '') . '</td>
 <td>' . (isset($respuestaUsuario["nombre"]) ? $respuestaUsuario["nombre"] : '') . '</td>
-<td>$ ' . number_format($value["neto"], 2, ",", ".") . '</td>
-<td>$ ' . number_format($value["total"], 2, ",", ".") . '</td>
+<td>$ ' . number_format($value["neto"], 0, ",", ".") . '</td>
+<td>$ ' . number_format($value["total"], 0, ",", ".") . '</td>
 <td>' . $value["fecha_abono"] . '</td>
 <td>' . $botones . '</td>
 </tr>';

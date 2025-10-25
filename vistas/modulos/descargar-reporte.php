@@ -47,29 +47,29 @@ echo utf8_decode("
         <td style='font-weight:bold;'>Total Vendido (Generado en Ventas)</td>
     </tr>
     <tr>
-        <td>" . number_format($totalEntradas["total"] ?? 0, 2, ',', '') . "</td>
-        <td>" . number_format($totalDeuda["total_deuda"] ?? 0, 2, ',', '') . "</td>
-        <td>" . number_format($totalVendido["total_ventas"] ?? 0, 2, ',', '') . "</td>
+        <td>" . number_format($totalEntradas["total"] ?? 0, 0, ',', '') . "</td>
+        <td>" . number_format($totalDeuda["total_deuda"] ?? 0, 0, ',', '') . "</td>
+        <td>" . number_format($totalVendido["total_ventas"] ?? 0, 0, ',', '') . "</td>
     </tr>
 
     <tr></tr>
     <tr><td colspan='2' style='font-weight:bold; background-color:#00a65a; color:white;'>TOTAL DE ENTRADAS POR MEDIO DE PAGO</td></tr>
     <tr><td style='font-weight:bold;'>Medio de Pago</td><td style='font-weight:bold;'>Total Entradas</td></tr>
 ");
-if (!empty($entradasPorMedioPago)) { foreach ($entradasPorMedioPago as $item) { echo "<tr><td>" . $item['medio_pago'] . "</td><td>" . number_format($item['total_entradas'], 2, ',', '') . "</td></tr>"; } }
+if (!empty($entradasPorMedioPago)) { foreach ($entradasPorMedioPago as $item) { echo "<tr><td>" . $item['medio_pago'] . "</td><td>" . number_format($item['total_entradas'], 0, ',', '') . "</td></tr>"; } }
 
 echo utf8_decode("
     <tr></tr>
     <tr><td colspan='2' style='font-weight:bold; background-color:#f39c12; color:white;'>ARQUEO Y RESUMEN DE GASTOS</td></tr>
     <tr><td style='font-weight:bold;'>Concepto</td><td style='font-weight:bold;'>Total</td></tr>
-    <tr><td>Arqueo de Efectivo</td><td>" . number_format(($arqueoEntradasEfectivo["total"] ?? 0) - ($arqueoGastosEfectivo["total"] ?? 0), 2, ',', '') . "</td></tr>
-    <tr><td>Total de Gastos</td><td>" . number_format($totalGastos["total"] ?? 0, 2, ',', '') . "</td></tr>
+    <tr><td>Arqueo de Efectivo</td><td>" . number_format(($arqueoEntradasEfectivo["total"] ?? 0) - ($arqueoGastosEfectivo["total"] ?? 0), 0, ',', '') . "</td></tr>
+    <tr><td>Total de Gastos</td><td>" . number_format($totalGastos["total"] ?? 0, 0, ',', '') . "</td></tr>
 
     <tr></tr>
     <tr><td colspan='2' style='font-weight:bold; background-color:#dd4b39; color:white;'>DESGLOSE DE GASTOS POR MEDIO DE PAGO</td></tr>
     <tr><td style='font-weight:bold;'>Medio de Pago</td><td style='font-weight:bold;'>Total Gastos</td></tr>
 ");
-if (!empty($gastosPorMedioPago)) { foreach ($gastosPorMedioPago as $item) { echo "<tr><td>" . $item['medio_pago'] . "</td><td>" . number_format($item['total_gastos'], 2, ',', '') . "</td></tr>"; } }
+if (!empty($gastosPorMedioPago)) { foreach ($gastosPorMedioPago as $item) { echo "<tr><td>" . $item['medio_pago'] . "</td><td>" . number_format($item['total_gastos'], 0, ',', '') . "</td></tr>"; } }
 
 echo utf8_decode("
     <tr></tr>
