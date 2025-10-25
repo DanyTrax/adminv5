@@ -133,19 +133,23 @@ class imprimirFactura
 		$pdf->SetFooterMargin(0);
 		$pdf->SetAutoPageBreak(false, 0); // Modificado para evitar saltos de p��gina autom��ticos no deseados
 
-		// Calcular altura dinámica basada en interlíneas reales
+		// Calcular altura dinámica basada en la factura específica consultada
 		$interlineaBase = 4; // mm por interlínea (basado en fuente 10px)
 		
-		// Interlíneas fijas para secciones
+		// Interlíneas fijas para secciones (basadas en la estructura real de la factura)
 		$interlineasEncabezado = 12; // Encabezado (fecha, empresa, cliente, vendedor)
 		$interlineasResumen = 8; // Resumen (totales, abonos)
 		$interlineasNota = 10; // Nota detalle y disclaimer
 		
-		// Calcular interlíneas por productos
+		// Calcular interlíneas por productos de esta factura específica
 		$interlineasProductos = 0;
+		$totalCaracteresProductos = 0;
+		$productosLargos = 0;
+		
 		foreach ($productos as $producto) {
 			$descripcion = $producto['descripcion'] ?? '';
 			$longitudDescripcion = strlen($descripcion);
+			$totalCaracteresProductos += $longitudDescripcion;
 			
 			// Calcular líneas de descripción (aproximadamente 35 caracteres por línea)
 			$lineasDescripcion = max(1, ceil($longitudDescripcion / 35));
@@ -153,10 +157,18 @@ class imprimirFactura
 			// 3-4 interlíneas por producto: 1 para descripción + 1 para precio + 1-2 de separación
 			$interlineasPorProducto = max(3, $lineasDescripcion + 2); // Mínimo 3, máximo según descripción
 			
+			// Contar productos con descripciones largas
+			if ($longitudDescripcion > 50) {
+				$productosLargos++;
+			}
+			
 			$interlineasProductos += $interlineasPorProducto;
 		}
 		
-		// Total de interlíneas
+		// Log para debugging (opcional)
+		error_log("Factura {$this->codigo}: {$cantidadProductos} productos, {$totalCaracteresProductos} caracteres totales, {$productosLargos} productos largos");
+		
+		// Total de interlíneas para esta factura específica
 		$totalInterlineas = $interlineasEncabezado + $interlineasProductos + $interlineasResumen + $interlineasNota;
 		
 		// Convertir a milímetros
