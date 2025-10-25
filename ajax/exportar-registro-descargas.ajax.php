@@ -12,6 +12,7 @@ if($_SESSION["perfil"] != "Administrador" && $_SESSION["perfil"] != "Vendedor" &
 }
 
 require_once "../modelos/conexion.php";
+require_once "../api-transferencias/conexion-central.php";
 
 try {
     // Obtener parámetros de fecha
@@ -46,7 +47,7 @@ try {
         ORDER BY fecha_descarga DESC
     ";
     
-    $stmt = Conexion::conectar()->prepare($sql);
+    $stmt = ConexionCentral::conectar()->prepare($sql);
     
     // Bindear parámetros si existen
     foreach($params as $key => $value) {
