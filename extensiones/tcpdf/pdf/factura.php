@@ -176,7 +176,7 @@ class imprimirFactura
 		$pdf->setPrintFooter(false);
 		$pdf->SetMargins(4, 0, 0, 0);
 		$pdf->SetFooterMargin(0);
-		$pdf->SetAutoPageBreak(false, 0); // Modificado para evitar saltos de p��gina autom��ticos no deseados
+		$pdf->SetAutoPageBreak(true, 15); // Modificado para evitar saltos de p��gina autom��ticos no deseados
 
 		$medidor = new MedidorLineas();
 
@@ -354,42 +354,17 @@ EOF;
 		$lineasFooter = $medidor->marcarFin('footer');
 		$totalLineas = $medidor->marcarFin('total');
 		
-		// Calcular altura basada en líneas reales medidas (ajustado)
-		$interlineaBase = 4; // mm por interlínea (restaurado)
-		$factorReduccion = 0.95; // Factor de reducción más conservador (solo 5% menos)
-		$alturaCalculada = ($totalLineas * $interlineaBase) * $factorReduccion;
+		// Con AutoPageBreak activado, usar altura estándar
+		// La división de página se manejará automáticamente después de la nota
+		$alturaFinal = 280; // Altura estándar de página
 		
-		// Factor de proporción: 5% más cuando se aproxima a 1 hoja (297mm)
-		$alturaHoja = 297; // Altura aproximada de 1 hoja A4
-		$umbralHoja = $alturaHoja * 0.8; // 80% de 1 hoja como umbral (237.6mm)
-		
-		if ($alturaCalculada > $umbralHoja) {
-			$alturaCalculada = $alturaCalculada * 1.05; // 5% más grande
-			error_log("Factura grande detectada: Aplicando factor de proporción 5% (aproximación a 1 hoja)");
-		}
-		
-		// Escalado inteligente del margen según el tamaño de la factura
-		$margenAdicional = 0;
-		$tipoFactura = "";
-		
-		if ($alturaCalculada < 150) {
-			// Facturas pequeñas (1 item): margen mínimo
-			$margenAdicional = 5; // 0.5 cm
-			$tipoFactura = "pequeña (1 item)";
-		} elseif ($alturaCalculada < 250) {
-			// Facturas medianas: margen moderado
-			$margenAdicional = 10; // 1 cm
-			$tipoFactura = "mediana";
-		} else {
-			// Facturas grandes: margen exacto
-			$margenAdicional = 15; // 1.5 cm
-			$tipoFactura = "grande";
-		}
-		
-		$alturaCalculada = $alturaCalculada + $margenAdicional;
-		error_log("Factura {$tipoFactura}: Agregando margen de {$margenAdicional}mm");
-		
-		$alturaFinal = max(120, min($alturaCalculada, 600)); // Máximo restaurado a 600mm
+		error_log("=== FACTURA CON AUTOPAGEBREAK ===");
+		error_log("Factura código: {$this->codigo}");
+		error_log("  🔹 Total líneas calculadas: {$totalLineas}");
+		error_log("  🔹 Altura estándar: {$alturaFinal}mm");
+		error_log("  🔹 AutoPageBreak: ACTIVADO (margen 15mm)");
+		error_log("  🔹 División: Después de la nota detalle");
+		error_log("=== FIN CONFIGURACIÓN ===");
 		
 		// Log detallado de la medición
 		error_log("=== ESTUDIO COMPLETO FACTURA {$this->codigo} ===");
