@@ -265,7 +265,7 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Contador" 
             <ul class="treeview-menu">';
 
     // El enlace a "Contabilidad" y "Entradas" solo lo ven Administrador y Contador.
-    if($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Contador"){
+    if($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Control"){
         echo '
          <li>
                 <a href="reportes">
@@ -279,8 +279,11 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Contador" 
                     <i class="fa fa-line-chart"></i>
                     <span>Reporte detallado</span>
                 </a>
-              </li>
-        
+              </li>';
+    }
+    
+    if($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial"){
+        echo '
         <li>
                 <a href="contabilidad">
                     <i class="fa fa-circle-o"></i>
@@ -316,8 +319,11 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Contador" 
                     <i class="fa fa-circle-o"></i>
                     <span>Crear entradas</span>
                 </a>
-              </li>
-                <li class="">
+              </li>';
+    }
+    
+    if($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial"){
+        echo '<li class="">
                 <a href="medios-pago">
                     <i class="fa fa-credit-card"></i>
                     <span>Medios de Pago</span>
