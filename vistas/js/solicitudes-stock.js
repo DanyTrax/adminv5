@@ -2083,13 +2083,21 @@ function configurarEventosModalSeleccion(url) {
     $('#btnCrearDespachoSeleccion').on('click', function() {
         console.log("🔍 BOTÓN CREAR DESPACHO CLICKEADO - INICIO");
         
-        // Crear array con todos los productos (todos están seleccionados)
+        // Obtener productos desde la tabla de la modal
         var productosSeleccionados = [];
-        productos.forEach(function(producto, index) {
-            productosSeleccionados.push({
-                index: index,
-                cantidad: producto.cantidad
-            });
+        $('#listaProductosSeleccion tr').each(function(index) {
+            if (index > 0) { // Saltar header
+                var $row = $(this);
+                var codigo = $row.find('td:first').text().trim();
+                var cantidad = $row.find('.badge').text().trim();
+                
+                if (codigo && cantidad) {
+                    productosSeleccionados.push({
+                        index: index - 1, // Ajustar índice
+                        cantidad: parseInt(cantidad)
+                    });
+                }
+            }
         });
         
         console.log("🔍 Productos seleccionados (todos):", productosSeleccionados);
