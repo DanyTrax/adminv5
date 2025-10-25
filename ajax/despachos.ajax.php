@@ -469,12 +469,13 @@ if(isset($_POST["accion"]) && $_POST["accion"] == "obtener_estadisticas_transpor
         }
         
         // Obtener estadísticas de despachos para el transportador
+        // Incluir despachos asignados al transportador Y despachos pendientes sin asignar
         $stmt = ConexionCentral::conectar()->prepare("
             SELECT 
                 estado,
                 COUNT(*) as cantidad
             FROM despachos 
-            WHERE transportador_id = ?
+            WHERE (transportador_id = ? OR (estado = 'pendiente' AND transportador_id IS NULL))
             GROUP BY estado
         ");
         $stmt->execute([$transportadorId]);
