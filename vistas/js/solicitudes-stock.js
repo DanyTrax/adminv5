@@ -2113,6 +2113,7 @@ function configurarEventosModalSeleccion(url) {
     
     // Botón crear despacho
     $('#btnCrearDespachoSeleccion').on('click', function() {
+        console.log("🔍 BOTÓN CREAR DESPACHO CLICKEADO - INICIO");
         var productosSeleccionados = obtenerProductosSeleccionados();
         
         console.log("🔍 Botón crear despacho clickeado");
@@ -2129,6 +2130,7 @@ function configurarEventosModalSeleccion(url) {
         console.log("🔍 Productos guardados en localStorage:", productosSeleccionados);
         
         // Cerrar modal y redirigir
+        console.log("🔍 Cerrando modal y redirigiendo a:", url);
         $('#modalSeleccionProductos').modal('hide');
         window.location.href = url;
     });
