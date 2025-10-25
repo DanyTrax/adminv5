@@ -17,7 +17,7 @@ if (typeof window.idUsuario === 'undefined') {
 INICIALIZACIÓN
 =============================================*/
 $(document).ready(function() {
-    
+    console.log("🔍 INICIO $(document).ready() - Timestamp:", new Date().toISOString());
     console.log("🚛 Sistema de crear despacho inicializado");
     
     // Cargar inventario local
