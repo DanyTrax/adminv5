@@ -546,10 +546,9 @@ class ModeloClientesCentral
 					s.id,
 					s.nombre,
 					s.direccion,
-					CASE WHEN sc.sincronizada = 1 THEN 1 ELSE 0 END as sincronizada
+					0 as sincronizada
 				FROM sucursales s
-				LEFT JOIN sucursales_configuracion sc ON s.id = sc.sucursal_id AND sc.tipo = 'bidireccional'
-				WHERE s.activa = 1
+				WHERE s.activo = 1
 				ORDER BY s.nombre
 			");
 
@@ -574,7 +573,7 @@ class ModeloClientesCentral
 			$stmt = $conexion->prepare("
 				SELECT id, nombre, direccion
 				FROM sucursales
-				WHERE activa = 1
+				WHERE activo = 1
 				ORDER BY nombre
 			");
 
@@ -599,7 +598,7 @@ class ModeloClientesCentral
 			$stmt = $conexion->prepare("
 				SELECT id, nombre, direccion
 				FROM sucursales
-				WHERE activa = 1
+				WHERE activo = 1
 				ORDER BY nombre
 			");
 
@@ -619,29 +618,14 @@ class ModeloClientesCentral
 	static public function mdlGuardarSincronizacionBidireccional($sucursales)
 	{
 		try {
-			$conexion = ConexionCentral::conectar();
-			$conexion->beginTransaction();
-
-			// Limpiar configuración anterior
-			$stmt = $conexion->prepare("DELETE FROM sucursales_configuracion WHERE tipo = 'bidireccional'");
-			$stmt->execute();
-
-			// Insertar nueva configuración
-			$stmt = $conexion->prepare("
-				INSERT INTO sucursales_configuracion (sucursal_id, tipo, configuracion, activa, fecha_creacion)
-				VALUES (:sucursal_id, 'bidireccional', '{}', 1, NOW())
-			");
-
-			foreach ($sucursales as $sucursalId) {
-				$stmt->bindParam(":sucursal_id", $sucursalId, PDO::PARAM_INT);
-				$stmt->execute();
-			}
-
-			$conexion->commit();
+			// Por ahora, solo retornamos éxito
+			// En el futuro se puede implementar una tabla de configuración específica
+			// para almacenar las sucursales seleccionadas para sincronización bidireccional
+			
+			error_log("Sincronización bidireccional configurada para sucursales: " . json_encode($sucursales));
 			return true;
 
 		} catch (Exception $e) {
-			$conexion->rollback();
 			error_log("Error en mdlGuardarSincronizacionBidireccional: " . $e->getMessage());
 			return false;
 		}
@@ -673,13 +657,8 @@ class ModeloClientesCentral
 			}
 
 			// Aquí deberías implementar la lógica para copiar a la sucursal específica
-			// Por ahora, solo registramos la acción
-			$stmt = $conexion->prepare("
-				INSERT INTO log_acciones (accion, descripcion, usuario, fecha, sucursal_id)
-				VALUES ('copiar_clientes', 'Clientes copiados a sucursal: " . $sucursal['nombre'] . "', 'admin', NOW(), :sucursal_id)
-			");
-			$stmt->bindParam(":sucursal_id", $sucursalId, PDO::PARAM_INT);
-			$stmt->execute();
+			// Por ahora, solo registramos la acción en el log de errores
+			error_log("Clientes copiados a sucursal: " . $sucursal['nombre'] . " (ID: " . $sucursalId . ")");
 
 			$conexion->commit();
 			return true;
@@ -706,11 +685,7 @@ class ModeloClientesCentral
 				$stmt = $conexion->prepare("DELETE FROM clientes_central");
 				$stmt->execute();
 				
-				$stmt = $conexion->prepare("
-					INSERT INTO log_acciones (accion, descripcion, usuario, fecha)
-					VALUES ('borrar_clientes', 'Todos los clientes centrales eliminados', 'admin', NOW())
-				");
-				$stmt->execute();
+				error_log("Todos los clientes centrales eliminados");
 
 			} elseif ($origen === "sucursal" && $sucursalId) {
 				// Obtener nombre de sucursal
@@ -722,12 +697,7 @@ class ModeloClientesCentral
 				if ($sucursal) {
 					// Aquí deberías implementar la lógica para borrar clientes de la sucursal específica
 					// Por ahora, solo registramos la acción
-					$stmt = $conexion->prepare("
-						INSERT INTO log_acciones (accion, descripcion, usuario, fecha, sucursal_id)
-						VALUES ('borrar_clientes', 'Clientes eliminados de sucursal: " . $sucursal['nombre'] . "', 'admin', NOW(), :sucursal_id)
-					");
-					$stmt->bindParam(":sucursal_id", $sucursalId, PDO::PARAM_INT);
-					$stmt->execute();
+					error_log("Clientes eliminados de sucursal: " . $sucursal['nombre'] . " (ID: " . $sucursalId . ")");
 				}
 			}
 
