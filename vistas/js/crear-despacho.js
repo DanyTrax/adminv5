@@ -1597,34 +1597,14 @@ function enviarFormularioDespacho() {
         
         var tipoDespacho = solicitudSeleccionada ? "Despacho desde solicitud" : "Despacho libre";
         
-        // Confirmar creación
-        swal({
-            title: "¿Crear despacho?",
-            html: `
-                <p>Se creará un despacho con:</p>
-                <ul style="text-align: left; display: inline-block;">
-                    <li><strong>${productosDespacho.length}</strong> productos diferentes</li>
-                    <li><strong>${totalCantidad}</strong> unidades totales</li>
-                    <li><strong>Tipo:</strong> ${tipoDespacho}</li>
-                </ul>
-            `,
-            type: "question",
-            showCancelButton: true,
-            confirmButtonColor: "#3c8dbc",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Sí, crear despacho",
-            cancelButtonText: "Cancelar"
-        }).then(function(result) {
-            if(result.value) {
-                console.log("🔄 Enviando formulario de creación...");
-                
-                // Redirigir directamente a despachos
-                window.location.href = "index.php?ruta=despachos";
-                
-                // Enviar formulario
-                $("#formCrearDespacho")[0].submit();
-            }
-        });
+        // Crear despacho directamente
+        console.log("🔄 Creando despacho directamente...");
+        
+        // Redirigir directamente a despachos
+        window.location.href = "index.php?ruta=despachos";
+        
+        // Enviar formulario
+        $("#formCrearDespacho")[0].submit();
     }
 }
 
