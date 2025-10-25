@@ -39,8 +39,9 @@ class MedidorLineas {
 	}
 	
 	public function agregarLinea($contenido = '') {
-		// Contar líneas basado en saltos de línea y contenido
-		$lineasEnContenido = substr_count($contenido, '<br') + substr_count($contenido, "\n") + 1;
+		// Contar líneas de forma más conservadora
+		// Solo contar <br> explícitos, no asumir líneas adicionales
+		$lineasEnContenido = substr_count($contenido, '<br') + 1; // +1 para la línea base
 		$this->lineas += $lineasEnContenido;
 	}
 	
@@ -307,10 +308,11 @@ EOF;
 		$lineasFooter = $medidor->marcarFin('footer');
 		$totalLineas = $medidor->marcarFin('total');
 		
-		// Calcular altura basada en líneas reales medidas
-		$interlineaBase = 4; // mm por interlínea
-		$alturaCalculada = $totalLineas * $interlineaBase;
-		$alturaFinal = max(120, min($alturaCalculada, 600));
+		// Calcular altura basada en líneas reales medidas (más conservador)
+		$interlineaBase = 3.5; // mm por interlínea (reducido de 4)
+		$factorReduccion = 0.85; // Factor de reducción para evitar exceso
+		$alturaCalculada = ($totalLineas * $interlineaBase) * $factorReduccion;
+		$alturaFinal = max(120, min($alturaCalculada, 500)); // Máximo reducido a 500mm
 		
 		// Log detallado de la medición
 		error_log("Factura {$this->codigo} - Medición real:");
@@ -319,7 +321,7 @@ EOF;
 		error_log("  Resumen: {$lineasResumen} líneas");
 		error_log("  Footer: {$lineasFooter} líneas");
 		error_log("  Total: {$totalLineas} líneas");
-		error_log("  Altura calculada: {$alturaCalculada}mm");
+		error_log("  Cálculo: {$totalLineas} líneas × {$interlineaBase}mm × {$factorReduccion} = {$alturaCalculada}mm");
 		error_log("  Altura final: {$alturaFinal}mm");
 
 		// AHORA CREAMOS EL PDF CON LA ALTURA CORRECTA
