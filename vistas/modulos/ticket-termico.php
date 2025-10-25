@@ -8,18 +8,15 @@ while (ob_get_level()) {
     ob_end_clean();
 }
 
-// Cambiar al directorio correcto
-chdir("../../extensiones/tcpdf/pdf/");
-
 // Ejecutar directamente el código del ticket
-require_once "../../../controladores/ventas.controlador.php";
-require_once "../../../modelos/ventas.modelo.php";
-require_once "../../../controladores/clientes.controlador.php";
-require_once "../../../modelos/clientes.modelo.php";
-require_once "../../../controladores/usuarios.controlador.php";
-require_once "../../../modelos/usuarios.modelo.php";
-require_once "../../../controladores/sucursales.controlador.php";
-require_once "../../../modelos/sucursales.modelo.php";
+require_once "../../controladores/ventas.controlador.php";
+require_once "../../modelos/ventas.modelo.php";
+require_once "../../controladores/clientes.controlador.php";
+require_once "../../modelos/clientes.modelo.php";
+require_once "../../controladores/usuarios.controlador.php";
+require_once "../../modelos/usuarios.modelo.php";
+require_once "../../controladores/sucursales.controlador.php";
+require_once "../../modelos/sucursales.modelo.php";
 
 // Obtener datos de la venta
 $itemVenta = "codigo";
@@ -49,7 +46,7 @@ $itemEmpresa = "id";
 $valorEmpresa = 1;
 $respuestaEmpresa = ControladorSucursales::ctrMostrarSucursales($itemEmpresa, $valorEmpresa);
 
-require_once('tcpdf_include.php');
+require_once('../../extensiones/tcpdf/tcpdf_include.php');
 
 // Configuración para ticket térmico (80mm de ancho)
 $pdf = new TCPDF('P', 'mm', array(80, 200), true, 'UTF-8', false);
