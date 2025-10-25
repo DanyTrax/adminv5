@@ -335,6 +335,15 @@ EOF;
 		$interlineaBase = 4; // mm por interlínea (restaurado)
 		$factorReduccion = 0.95; // Factor de reducción más conservador (solo 5% menos)
 		$alturaCalculada = ($totalLineas * $interlineaBase) * $factorReduccion;
+		
+		// Factor de proporción: 5% más grande para facturas grandes
+		$alturaBase = 200; // Altura base para aplicar factor de proporción
+		if ($alturaCalculada > $alturaBase) {
+			$factorProporcion = 1.05; // 5% más grande
+			$alturaCalculada = $alturaCalculada * $factorProporcion;
+			error_log("Factura grande detectada: Aplicando factor de proporción 5%");
+		}
+		
 		$alturaFinal = max(120, min($alturaCalculada, 600)); // Máximo restaurado a 600mm
 		
 		// Log detallado de la medición
@@ -346,7 +355,16 @@ EOF;
 		error_log("  🔹 Footer: {$lineasFooter} líneas + 6 fijas");
 		error_log("📏 CÁLCULO:");
 		error_log("  Total líneas: {$totalLineas} (incluye líneas fijas)");
-		error_log("  Fórmula: {$totalLineas} × {$interlineaBase}mm × {$factorReduccion} = {$alturaCalculada}mm");
+		error_log("  Fórmula base: {$totalLineas} × {$interlineaBase}mm × {$factorReduccion}");
+		
+		// Mostrar si se aplicó factor de proporción
+		if ($alturaCalculada > $alturaBase) {
+			error_log("  Factor de proporción: 5% aplicado (factura grande)");
+		} else {
+			error_log("  Factor de proporción: No aplicado (factura normal)");
+		}
+		
+		error_log("  Altura calculada: {$alturaCalculada}mm");
 		error_log("  Altura final: {$alturaFinal}mm");
 		error_log("=== FIN ESTUDIO ===");
 
