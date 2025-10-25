@@ -1948,16 +1948,42 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
                     </div>
                     <div class="modal-body">
                         <div class="alert alert-info">
-                            <strong>Solicitud:</strong> ${solicitud.numero_solicitud}<br>
-                            <strong>Total productos:</strong> ${productos.length} productos<br>
-                            <strong>Total unidades:</strong> ${solicitud.total_cantidad}
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <strong>Solicitud:</strong><br>
+                                    <span class="badge badge-primary">${solicitud.numero_solicitud}</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Total productos:</strong><br>
+                                    <span class="badge badge-info">${productos.length} productos</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Total unidades:</strong><br>
+                                    <span class="badge badge-secondary">${solicitud.total_cantidad}</span>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="alert alert-light">
-                            <strong><i class="fa fa-info-circle"></i> Información de Stock:</strong><br>
-                            <span class="text-success"><i class="fa fa-check-circle"></i> Verde:</span> Stock suficiente<br>
-                            <span class="text-warning"><i class="fa fa-exclamation-triangle"></i> Amarillo:</span> Stock parcial<br>
-                            <span class="text-danger"><i class="fa fa-times-circle"></i> Rojo:</span> Sin stock
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <strong><i class="fa fa-info-circle"></i> Información de Stock:</strong>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-4">
+                                    <span class="text-success"><i class="fa fa-check-circle"></i> Verde:</span><br>
+                                    <small>Stock suficiente</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="text-warning"><i class="fa fa-exclamation-triangle"></i> Amarillo:</span><br>
+                                    <small>Stock parcial</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <span class="text-danger"><i class="fa fa-times-circle"></i> Rojo:</span><br>
+                                    <small>Sin stock</small>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="table-responsive">
