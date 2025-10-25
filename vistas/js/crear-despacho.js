@@ -920,7 +920,15 @@ console.log("✅ Nota agregada al campo detalleAdicional:", notaGeneral);
             title: tieneProblemas ? "Carga completada con observaciones" : "¡Productos cargados!",
             text: mensaje,
             type: tipoMensaje,
-            confirmButtonText: "Entendido"
+            confirmButtonText: "Continuar",
+            showCancelButton: true,
+            cancelButtonText: "Ver despachos"
+        }).then(function(result) {
+            if(result.dismiss === 'cancel') {
+                // Si hace click en "Ver despachos", redirigir
+                window.location.href = "index.php?ruta=despachos";
+            }
+            // Si hace click en "Continuar", no hacer nada (permanece en la página)
         });
         
         // Limpiar campo de búsqueda para permitir agregar otra solicitud
