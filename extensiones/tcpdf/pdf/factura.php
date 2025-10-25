@@ -133,26 +133,36 @@ class imprimirFactura
 		$pdf->SetFooterMargin(0);
 		$pdf->SetAutoPageBreak(false, 0); // Modificado para evitar saltos de p��gina autom��ticos no deseados
 
-		// Calcular altura dinámica basada en el contenido
-		$alturaBase = 60; // Altura para encabezado (aumentada)
-		$alturaResumen = 40; // Altura para resumen y totales (aumentada)
-		$alturaNota = 50; // Altura para nota detalle (aumentada)
+		// Calcular altura dinámica basada en interlíneas reales
+		$interlineaBase = 4; // mm por interlínea (basado en fuente 10px)
 		
-		$alturaProductos = 0;
+		// Interlíneas fijas para secciones
+		$interlineasEncabezado = 12; // Encabezado (fecha, empresa, cliente, vendedor)
+		$interlineasResumen = 8; // Resumen (totales, abonos)
+		$interlineasNota = 10; // Nota detalle y disclaimer
+		
+		// Calcular interlíneas por productos
+		$interlineasProductos = 0;
 		foreach ($productos as $producto) {
 			$descripcion = $producto['descripcion'] ?? '';
 			$longitudDescripcion = strlen($descripcion);
 			
-			// Calcular líneas necesarias basado en longitud de descripción
-			$lineasPorProducto = max(1, ceil($longitudDescripcion / 35)); // ~35 caracteres por línea
-			$alturaPorProducto = 12 + ($lineasPorProducto * 8); // 12mm base + 8mm por línea adicional
+			// Calcular líneas de descripción (aproximadamente 35 caracteres por línea)
+			$lineasDescripcion = max(1, ceil($longitudDescripcion / 35));
 			
-			$alturaProductos += $alturaPorProducto;
+			// 3-4 interlíneas por producto: 1 para descripción + 1 para precio + 1-2 de separación
+			$interlineasPorProducto = max(3, $lineasDescripcion + 2); // Mínimo 3, máximo según descripción
+			
+			$interlineasProductos += $interlineasPorProducto;
 		}
 		
-		$alturaCalculada = $alturaBase + $alturaProductos + $alturaResumen + $alturaNota;
+		// Total de interlíneas
+		$totalInterlineas = $interlineasEncabezado + $interlineasProductos + $interlineasResumen + $interlineasNota;
 		
-		// Asegurar altura mínima y máxima (aumentada para facturas largas)
+		// Convertir a milímetros
+		$alturaCalculada = $totalInterlineas * $interlineaBase;
+		
+		// Asegurar altura mínima y máxima
 		$alturaFinal = max(120, min($alturaCalculada, 600));
 
 		$pdf->AddPage('P', array(75, $alturaFinal));
