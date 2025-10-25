@@ -1905,6 +1905,7 @@ CARGAR PRODUCTOS DESDE SOLICITUD
 =============================================*/
 function cargarProductosDesdeSolicitud() {
     console.log("🔍 INICIO cargarProductosDesdeSolicitud() - Timestamp:", new Date().toISOString());
+    console.log("🔍 Stack trace:", new Error().stack);
     
     if(!window.solicitudOrigen || !window.productosDesdeSolicitud) {
         console.log("❌ No hay datos de solicitud para cargar");
