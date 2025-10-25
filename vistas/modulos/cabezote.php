@@ -39,12 +39,20 @@
 		<div class="navbar-brand" style="color: white; font-size: 16px; font-weight: 500; margin-left: 20px; line-height: 50px;">
 			<?php
 			// Obtener información de la sucursal actual
-			require_once "controladores/sucursales.controlador.php";
-			$sucursalActual = ControladorSucursales::ctrMostrarSucursales("sucursal_local", "id", $_SESSION["sucursal"], "id");
-			if($sucursalActual) {
-				echo '<i class="fa fa-building" style="margin-right: 8px; color: #fff;"></i>';
-				echo $sucursalActual["nombre"];
-			} else {
+			$sucursalId = isset($_SESSION["sucursal"]) ? $_SESSION["sucursal"] : 1; // Default a sucursal 1
+			
+			try {
+				require_once "controladores/sucursales.controlador.php";
+				$sucursalActual = ControladorSucursales::ctrMostrarSucursales("sucursal_local", "id", $sucursalId, "id");
+				if($sucursalActual && isset($sucursalActual["nombre"])) {
+					echo '<i class="fa fa-building" style="margin-right: 8px; color: #fff;"></i>';
+					echo $sucursalActual["nombre"];
+				} else {
+					echo '<i class="fa fa-building" style="margin-right: 8px; color: #fff;"></i>';
+					echo 'Sucursal Principal';
+				}
+			} catch (Exception $e) {
+				// En caso de error, mostrar sucursal por defecto
 				echo '<i class="fa fa-building" style="margin-right: 8px; color: #fff;"></i>';
 				echo 'Sucursal Principal';
 			}
