@@ -41,7 +41,10 @@ $(document).ready(function() {
     // CARGAR DESDE SOLICITUD SI ES NECESARIO
     if(typeof window.cargarDesdeSolicitud !== 'undefined' && window.cargarDesdeSolicitud) {
         console.log("🚛 Cargando despacho desde solicitud...");
-        cargarProductosDesdeSolicitud();
+        // Usar timeout para evitar ejecución inmediata que causa duplicación
+        setTimeout(function() {
+            cargarProductosDesdeSolicitud();
+        }, 500);
     }
     
     // PRUEBA INMEDIATA DEL ELEMENTO
