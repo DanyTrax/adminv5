@@ -21,7 +21,8 @@ try {
     echo "✅ Conexión local establecida\n";
     
     // Conexión central
-    $conexionCentral = Conexion::conectarCentral();
+    require_once "api-transferencias/conexion-central.php";
+    $conexionCentral = ConexionCentral::conectar();
     echo "✅ Conexión central establecida\n\n";
     
     // ========================================

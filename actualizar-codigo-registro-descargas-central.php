@@ -16,12 +16,21 @@ $archivoModelo = "modelos/registro-descargas-simple.modelo.php";
 if (file_exists($archivoModelo)) {
     $contenido = file_get_contents($archivoModelo);
     
-    // Cambiar Conexion::conectar() por Conexion::conectarCentral()
+    // Cambiar Conexion::conectar() por ConexionCentral::conectar()
     $contenido = str_replace(
         'Conexion::conectar()',
-        'Conexion::conectarCentral()',
+        'ConexionCentral::conectar()',
         $contenido
     );
+    
+    // Agregar require_once para ConexionCentral si no existe
+    if (strpos($contenido, 'require_once "api-transferencias/conexion-central.php"') === false) {
+        $contenido = str_replace(
+            'require_once "modelos/conexion.php";',
+            'require_once "modelos/conexion.php";' . "\n" . 'require_once "api-transferencias/conexion-central.php";',
+            $contenido
+        );
+    }
     
     file_put_contents($archivoModelo, $contenido);
     echo "✅ Modelo actualizado: $archivoModelo\n";
@@ -38,12 +47,21 @@ $archivoAjax = "ajax/datatable-registro-descargas-funcional.ajax.php";
 if (file_exists($archivoAjax)) {
     $contenido = file_get_contents($archivoAjax);
     
-    // Cambiar Conexion::conectar() por Conexion::conectarCentral()
+    // Cambiar Conexion::conectar() por ConexionCentral::conectar()
     $contenido = str_replace(
         'Conexion::conectar()',
-        'Conexion::conectarCentral()',
+        'ConexionCentral::conectar()',
         $contenido
     );
+    
+    // Agregar require_once para ConexionCentral si no existe
+    if (strpos($contenido, 'require_once "api-transferencias/conexion-central.php"') === false) {
+        $contenido = str_replace(
+            'require_once "modelos/conexion.php";',
+            'require_once "modelos/conexion.php";' . "\n" . 'require_once "api-transferencias/conexion-central.php";',
+            $contenido
+        );
+    }
     
     file_put_contents($archivoAjax, $contenido);
     echo "✅ AJAX datatable actualizado: $archivoAjax\n";
@@ -60,12 +78,21 @@ $archivoExcel = "vistas/modulos/descargar-registro-descargas.php";
 if (file_exists($archivoExcel)) {
     $contenido = file_get_contents($archivoExcel);
     
-    // Cambiar Conexion::conectar() por Conexion::conectarCentral()
+    // Cambiar Conexion::conectar() por ConexionCentral::conectar()
     $contenido = str_replace(
         'Conexion::conectar()',
-        'Conexion::conectarCentral()',
+        'ConexionCentral::conectar()',
         $contenido
     );
+    
+    // Agregar require_once para ConexionCentral si no existe
+    if (strpos($contenido, 'require_once "api-transferencias/conexion-central.php"') === false) {
+        $contenido = str_replace(
+            'require_once "modelos/conexion.php";',
+            'require_once "modelos/conexion.php";' . "\n" . 'require_once "api-transferencias/conexion-central.php";',
+            $contenido
+        );
+    }
     
     file_put_contents($archivoExcel, $contenido);
     echo "✅ Descarga Excel actualizada: $archivoExcel\n";
@@ -82,12 +109,21 @@ $archivoRegistro = "ajax/registro-descargas-simple.ajax.php";
 if (file_exists($archivoRegistro)) {
     $contenido = file_get_contents($archivoRegistro);
     
-    // Cambiar Conexion::conectar() por Conexion::conectarCentral()
+    // Cambiar Conexion::conectar() por ConexionCentral::conectar()
     $contenido = str_replace(
         'Conexion::conectar()',
-        'Conexion::conectarCentral()',
+        'ConexionCentral::conectar()',
         $contenido
     );
+    
+    // Agregar require_once para ConexionCentral si no existe
+    if (strpos($contenido, 'require_once "api-transferencias/conexion-central.php"') === false) {
+        $contenido = str_replace(
+            'require_once "modelos/conexion.php";',
+            'require_once "modelos/conexion.php";' . "\n" . 'require_once "api-transferencias/conexion-central.php";',
+            $contenido
+        );
+    }
     
     file_put_contents($archivoRegistro, $contenido);
     echo "✅ AJAX registro actualizado: $archivoRegistro\n";
@@ -104,12 +140,21 @@ $archivoControlador = "controladores/registro-descargas-simple.controlador.php";
 if (file_exists($archivoControlador)) {
     $contenido = file_get_contents($archivoControlador);
     
-    // Cambiar Conexion::conectar() por Conexion::conectarCentral()
+    // Cambiar Conexion::conectar() por ConexionCentral::conectar()
     $contenido = str_replace(
         'Conexion::conectar()',
-        'Conexion::conectarCentral()',
+        'ConexionCentral::conectar()',
         $contenido
     );
+    
+    // Agregar require_once para ConexionCentral si no existe
+    if (strpos($contenido, 'require_once "api-transferencias/conexion-central.php"') === false) {
+        $contenido = str_replace(
+            'require_once "modelos/conexion.php";',
+            'require_once "modelos/conexion.php";' . "\n" . 'require_once "api-transferencias/conexion-central.php";',
+            $contenido
+        );
+    }
     
     file_put_contents($archivoControlador, $contenido);
     echo "✅ Controlador actualizado: $archivoControlador\n";
@@ -123,8 +168,8 @@ if (file_exists($archivoControlador)) {
 echo "🔍 Verificando conexión central...\n";
 
 try {
-    require_once "modelos/conexion.php";
-    $conexion = Conexion::conectarCentral();
+    require_once "api-transferencias/conexion-central.php";
+    $conexion = ConexionCentral::conectar();
     echo "✅ Conexión central verificada\n";
     
     // Verificar que la tabla existe
