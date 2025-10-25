@@ -345,9 +345,26 @@ EOF;
 			error_log("Factura grande detectada: Aplicando factor de proporción 5% (aproximación a 1 hoja)");
 		}
 		
-		// Agregar 1 cm adicional para asegurar espacio suficiente
-		$alturaCalculada = $alturaCalculada + 10; // +10mm (1 cm)
-		error_log("Agregando 1 cm adicional: +10mm");
+		// Escalado inteligente del margen según el tamaño de la factura
+		$margenAdicional = 0;
+		$tipoFactura = "";
+		
+		if ($alturaCalculada < 150) {
+			// Facturas pequeñas (1 item): margen mínimo
+			$margenAdicional = 5; // 0.5 cm
+			$tipoFactura = "pequeña (1 item)";
+		} elseif ($alturaCalculada < 250) {
+			// Facturas medianas: margen moderado
+			$margenAdicional = 10; // 1 cm
+			$tipoFactura = "mediana";
+		} else {
+			// Facturas grandes: margen exacto
+			$margenAdicional = 15; // 1.5 cm
+			$tipoFactura = "grande";
+		}
+		
+		$alturaCalculada = $alturaCalculada + $margenAdicional;
+		error_log("Factura {$tipoFactura}: Agregando margen de {$margenAdicional}mm");
 		
 		$alturaFinal = max(120, min($alturaCalculada, 600)); // Máximo restaurado a 600mm
 		
@@ -369,7 +386,8 @@ EOF;
 			error_log("  Factor de proporción: No aplicado (factura normal)");
 		}
 		
-		error_log("  Altura calculada: {$alturaCalculada}mm (incluye +10mm adicional)");
+		error_log("  Escalado inteligente: Factura {$tipoFactura} (+{$margenAdicional}mm)");
+		error_log("  Altura calculada: {$alturaCalculada}mm");
 		error_log("  Altura final: {$alturaFinal}mm");
 		error_log("=== FIN ESTUDIO ===");
 
