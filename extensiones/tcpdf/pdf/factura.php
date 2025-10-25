@@ -176,7 +176,7 @@ class imprimirFactura
 		$pdf->setPrintFooter(false);
 		$pdf->SetMargins(4, 0, 0, 0);
 		$pdf->SetFooterMargin(0);
-		$pdf->SetAutoPageBreak(true, 15); // Modificado para evitar saltos de p��gina autom��ticos no deseados
+		$pdf->SetAutoPageBreak(false, 0); // Modificado para evitar saltos de p��gina autom��ticos no deseados
 
 		$medidor = new MedidorLineas();
 
@@ -354,41 +354,50 @@ EOF;
 		$lineasFooter = $medidor->marcarFin('footer');
 		$totalLineas = $medidor->marcarFin('total');
 		
-		// Con AutoPageBreak activado, usar altura estándar
-		// La división de página se manejará automáticamente después de la nota
-		$alturaFinal = 280; // Altura estándar de página
+		// Calcular altura dinámica basada en contenido real
+		$interlineaBase = 4; // mm por interlínea
+		$factorReduccion = 0.95; // Factor de reducción conservador
+		$alturaCalculada = ($totalLineas * $interlineaBase) * $factorReduccion;
 		
-		error_log("=== FACTURA CON AUTOPAGEBREAK ===");
+		// Escalado inteligente del margen según el tamaño de la factura
+		$margenAdicional = 0;
+		$tipoFactura = "";
+		
+		if ($alturaCalculada < 150) {
+			// Facturas pequeñas: margen mínimo
+			$margenAdicional = 5; // 0.5 cm
+			$tipoFactura = "pequeña";
+		} elseif ($alturaCalculada < 250) {
+			// Facturas medianas: margen moderado
+			$margenAdicional = 10; // 1 cm
+			$tipoFactura = "mediana";
+		} else {
+			// Facturas grandes: margen exacto
+			$margenAdicional = 15; // 1.5 cm
+			$tipoFactura = "grande";
+		}
+		
+		$alturaCalculada = $alturaCalculada + $margenAdicional;
+		
+		// Establecer límites mínimos y máximos
+		$alturaFinal = max(120, min($alturaCalculada, 600));
+		
+		error_log("=== FACTURA CON ALTURA DINÁMICA ===");
 		error_log("Factura código: {$this->codigo}");
-		error_log("  🔹 Total líneas calculadas: {$totalLineas}");
-		error_log("  🔹 Altura estándar: {$alturaFinal}mm");
-		error_log("  🔹 AutoPageBreak: ACTIVADO (margen 15mm)");
-		error_log("  🔹 División: Después de la nota detalle");
-		error_log("=== FIN CONFIGURACIÓN ===");
+		error_log("  🔹 Total líneas: {$totalLineas}");
+		error_log("  🔹 Altura base: " . ($totalLineas * $interlineaBase) . "mm");
+		error_log("  🔹 Con factor: " . (($totalLineas * $interlineaBase) * $factorReduccion) . "mm");
+		error_log("  🔹 Tipo: {$tipoFactura} (+{$margenAdicional}mm)");
+		error_log("  🔹 Altura final: {$alturaFinal}mm");
+		error_log("=== FIN CÁLCULO ===");
 		
-		// Log detallado de la medición
-		error_log("=== ESTUDIO COMPLETO FACTURA {$this->codigo} ===");
+		// Log simplificado de secciones
 		error_log("📊 SECCIONES:");
-		error_log("  🔹 Encabezado: {$lineasEncabezado} líneas + 3 fijas");
+		error_log("  🔹 Encabezado: {$lineasEncabezado} líneas");
 		error_log("  🔹 Productos: {$lineasProductos} líneas ({$cantidadProductos} productos)");
 		error_log("  🔹 Resumen: {$lineasResumen} líneas");
 		error_log("  🔹 Nota: {$lineasNotaCalculada} líneas" . (!empty($detalle) ? " (con detalle)" : " (sin detalle)"));
-		error_log("  🔹 Footer: {$lineasFooter} líneas + 6 fijas");
-		error_log("📏 CÁLCULO:");
-		error_log("  Total líneas: {$totalLineas} (incluye líneas fijas)");
-		error_log("  Fórmula base: {$totalLineas} × {$interlineaBase}mm × {$factorReduccion}");
-		
-		// Mostrar si se aplicó factor de proporción
-		if ($alturaCalculada > $umbralHoja) {
-			error_log("  Factor de proporción: 5% aplicado (aproximación a 1 hoja)");
-		} else {
-			error_log("  Factor de proporción: No aplicado (factura normal)");
-		}
-		
-		error_log("  Escalado inteligente: Factura {$tipoFactura} (+{$margenAdicional}mm)");
-		error_log("  Altura calculada: {$alturaCalculada}mm");
-		error_log("  Altura final: {$alturaFinal}mm");
-		error_log("=== FIN ESTUDIO ===");
+		error_log("  🔹 Footer: {$lineasFooter} líneas");
 
 		// AHORA CREAMOS EL PDF CON LA ALTURA CORRECTA
 		$pdf->AddPage('P', array(75, $alturaFinal));
