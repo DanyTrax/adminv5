@@ -643,11 +643,13 @@ CARGAR PRODUCTOS DE SOLICITUD - VERSIÓN COMPLETA CON FALTANTES
 =============================================*/
 function cargarProductosDeSolicitud() {
     
-    // Prevenir ejecución duplicada
-    if(window.cargandoProductosSolicitud) {
+    // Prevenir ejecución duplicada con bandera más robusta
+    if(window.cargandoProductosSolicitud === true) {
         console.log("⚠️ Ya se están cargando productos de solicitud, evitando duplicación");
         return;
     }
+    
+    console.log("🚀 Iniciando carga de productos de solicitud...");
     window.cargandoProductosSolicitud = true;
     
     if(!solicitudSeleccionada) {
@@ -1983,8 +1985,10 @@ function cargarProductosDesdeSolicitud() {
     // Cargar productos automáticamente después de que el inventario esté cargado
     if(inventarioLocal.length > 0) {
         console.log("✅ Inventario ya cargado, procediendo con solicitud");
+        console.log("🔍 Bandera actual:", window.cargandoProductosSolicitud);
         // Usar timeout para evitar ejecución inmediata duplicada
         setTimeout(function() {
+            console.log("🔍 Ejecutando cargarProductosDeSolicitud después de timeout");
             cargarProductosDeSolicitud();
         }, 100);
     } else {
@@ -1995,6 +1999,7 @@ function cargarProductosDesdeSolicitud() {
         setTimeout(function() {
             if(inventarioLocal.length > 0) {
                 console.log("✅ Inventario cargado, procediendo con solicitud");
+                console.log("🔍 Bandera actual:", window.cargandoProductosSolicitud);
                 cargarProductosDeSolicitud();
             } else {
                 console.log("❌ No se pudo cargar el inventario local");
