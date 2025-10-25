@@ -1996,7 +1996,8 @@ function cargarProductosDesdeSolicitud() {
         console.log("🔍 Bandera actual:", window.cargandoProductosSolicitud);
         // Usar timeout para evitar ejecución inmediata duplicada
         setTimeout(function() {
-            console.log("🔍 Ejecutando cargarProductosDeSolicitud después de timeout");
+            console.log("🔍 Ejecutando cargarProductosDeSolicitud después de timeout - Timestamp:", new Date().toISOString());
+            console.log("🔍 Stack trace del timeout:", new Error().stack);
             cargarProductosDeSolicitud();
         }, 100);
     } else {
