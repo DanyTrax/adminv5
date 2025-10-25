@@ -1600,6 +1600,9 @@ function enviarFormularioDespacho() {
         // Crear despacho directamente
         console.log("🔄 Creando despacho directamente...");
         
+        // Limpiar parámetros de solicitud de la URL antes de redirigir
+        window.history.replaceState({}, document.title, "crear-despacho");
+        
         // Redirigir directamente a despachos
         window.location.href = "index.php?ruta=despachos";
         
