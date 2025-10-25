@@ -671,7 +671,13 @@ class ModeloClientesCentral
 				$clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 				foreach ($clientes as $cliente) {
-					// Verificar si el cliente ya existe en la sucursal
+					// Validar que el cliente tenga documento válido
+					if (empty($cliente['documento']) || empty($cliente['nombre'])) {
+						$clientesDuplicados++; // Contar como duplicado/inválido
+						continue;
+					}
+					
+					// Verificar si el cliente ya existe en la sucursal por documento
 					$stmt = $conexionLocal->prepare("SELECT id FROM clientes WHERE documento = :documento");
 					$stmt->bindParam(":documento", $cliente['documento'], PDO::PARAM_STR);
 					$stmt->execute();
@@ -696,6 +702,19 @@ class ModeloClientesCentral
 					
 					if ($stmt->execute()) {
 						$clientesCopiados++;
+						
+						// Obtener el ID del cliente recién insertado en la sucursal
+						$nuevoIdLocal = $conexionLocal->lastInsertId();
+						
+						// Actualizar el registro en central con el ID local
+						$stmt = $conexionCentral->prepare("
+							UPDATE clientes_central 
+							SET id_local_principal = :id_local_principal 
+							WHERE documento = :documento
+						");
+						$stmt->bindParam(":id_local_principal", $nuevoIdLocal, PDO::PARAM_INT);
+						$stmt->bindParam(":documento", $cliente['documento'], PDO::PARAM_STR);
+						$stmt->execute();
 					}
 				}
 
@@ -706,7 +725,13 @@ class ModeloClientesCentral
 				$clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 				foreach ($clientes as $cliente) {
-					// Verificar si el cliente ya existe en la central
+					// Validar que el cliente tenga documento válido y ID local
+					if (empty($cliente['documento']) || empty($cliente['nombre']) || empty($cliente['id'])) {
+						$clientesDuplicados++; // Contar como duplicado/inválido
+						continue;
+					}
+					
+					// Verificar si el cliente ya existe en la central por documento
 					$stmt = $conexionCentral->prepare("SELECT id_central FROM clientes_central WHERE documento = :documento");
 					$stmt->bindParam(":documento", $cliente['documento'], PDO::PARAM_STR);
 					$stmt->execute();
@@ -716,7 +741,7 @@ class ModeloClientesCentral
 						continue; // Cliente ya existe, saltar
 					}
 
-					// Insertar cliente en la central
+					// Insertar cliente en la central preservando el ID local original
 					$stmt = $conexionCentral->prepare("
 						INSERT INTO clientes_central (documento, email, nombre, telefono, direccion, fecha_nacimiento, sucursales_asignadas, id_local_principal, sucursal_origen, activo)
 						VALUES (:documento, :email, :nombre, :telefono, :direccion, :fecha_nacimiento, :sucursales_asignadas, :id_local_principal, :sucursal_origen, 1)
@@ -729,7 +754,7 @@ class ModeloClientesCentral
 					$stmt->bindParam(":direccion", $cliente['direccion'], PDO::PARAM_STR);
 					$stmt->bindParam(":fecha_nacimiento", $cliente['fecha_nacimiento'], PDO::PARAM_STR);
 					$stmt->bindParam(":sucursales_asignadas", $sucursalId, PDO::PARAM_STR);
-					$stmt->bindParam(":id_local_principal", $cliente['id'], PDO::PARAM_INT);
+					$stmt->bindParam(":id_local_principal", $cliente['id'], PDO::PARAM_INT); // ✅ PRESERVAR ID LOCAL ORIGINAL
 					$stmt->bindParam(":sucursal_origen", $sucursal['nombre'], PDO::PARAM_STR);
 					
 					if ($stmt->execute()) {
