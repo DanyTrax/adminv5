@@ -318,9 +318,32 @@ EOF;
 </table>
 EOF;
 
-		// MARCADOR: Fin del resumen e inicio del footer
+		// MARCADOR: Fin del resumen e inicio de la nota
 		$medidor->agregarLinea($bloque3);
 		$lineasResumen = $medidor->marcarFin('resumen');
+		
+		// Calcular líneas adicionales para la nota detalle
+		$medidor->marcarInicio('nota');
+		$lineasNota = 0;
+		
+		if (!empty($detalle)) {
+			// Calcular líneas de la nota basado en caracteres
+			$caracteresPorLinea = 35; // Aproximadamente 35 caracteres por línea en el PDF
+			$longitudNota = strlen($detalle);
+			$lineasNota = max(1, ceil($longitudNota / $caracteresPorLinea));
+			
+			// Agregar líneas fijas para el formato de la nota
+			$lineasNota += 3; // "NOTA DETALLE", línea separadora, y espacio
+			
+			$medidor->agregarLineaFija($lineasNota);
+			error_log("Nota detalle: {$longitudNota} caracteres → {$lineasNota} líneas");
+		} else {
+			// Si no hay nota, solo agregar líneas fijas mínimas
+			$medidor->agregarLineaFija(3);
+			error_log("Sin nota detalle: líneas fijas mínimas");
+		}
+		
+		$lineasNotaCalculada = $medidor->marcarFin('nota');
 		
 		// Agregar líneas fijas adicionales para el footer (espacios, márgenes)
 		$medidor->agregarLineaFija(6); // 6 líneas fijas para footer
@@ -374,6 +397,7 @@ EOF;
 		error_log("  🔹 Encabezado: {$lineasEncabezado} líneas + 3 fijas");
 		error_log("  🔹 Productos: {$lineasProductos} líneas ({$cantidadProductos} productos)");
 		error_log("  🔹 Resumen: {$lineasResumen} líneas");
+		error_log("  🔹 Nota: {$lineasNotaCalculada} líneas" . (!empty($detalle) ? " (con detalle)" : " (sin detalle)"));
 		error_log("  🔹 Footer: {$lineasFooter} líneas + 6 fijas");
 		error_log("📏 CÁLCULO:");
 		error_log("  Total líneas: {$totalLineas} (incluye líneas fijas)");
