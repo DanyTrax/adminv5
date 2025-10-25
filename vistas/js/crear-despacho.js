@@ -1544,14 +1544,18 @@ function enviarFormularioDespacho() {
         }
     }
     
-    // Procesar productos seleccionados desde solicitud
-    if(urlParams.has('productos_seleccionados')) {
+    // Procesar productos seleccionados desde solicitud (localStorage)
+    var productosSeleccionadosStorage = localStorage.getItem('productosSeleccionados');
+    if(productosSeleccionadosStorage) {
         try {
-            var productosSeleccionados = JSON.parse(decodeURIComponent(urlParams.get('productos_seleccionados')));
-            console.log("✅ Productos seleccionados detectados:", productosSeleccionados);
+            var productosSeleccionados = JSON.parse(productosSeleccionadosStorage);
+            console.log("✅ Productos seleccionados detectados en localStorage:", productosSeleccionados);
             
             // Guardar productos seleccionados en variable global
             window.productosSeleccionados = productosSeleccionados;
+            
+            // Limpiar localStorage después de usar
+            localStorage.removeItem('productosSeleccionados');
             
         } catch(e) {
             console.error("❌ Error procesando productos seleccionados:", e);

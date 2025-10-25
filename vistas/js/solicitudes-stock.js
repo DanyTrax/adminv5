@@ -2123,14 +2123,14 @@ function configurarEventosModalSeleccion(url) {
             return;
         }
         
-        // Crear URL con productos seleccionados
-        var urlConProductos = url + '&productos_seleccionados=' + encodeURIComponent(JSON.stringify(productosSeleccionados));
+        // Guardar productos seleccionados en localStorage
+        localStorage.setItem('productosSeleccionados', JSON.stringify(productosSeleccionados));
         
-        console.log("🔍 URL final:", urlConProductos);
+        console.log("🔍 Productos guardados en localStorage:", productosSeleccionados);
         
         // Cerrar modal y redirigir
         $('#modalSeleccionProductos').modal('hide');
-        window.location.href = urlConProductos;
+        window.location.href = url;
     });
 }
 
