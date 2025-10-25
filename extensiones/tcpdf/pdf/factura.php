@@ -54,6 +54,12 @@ class MedidorLineas {
 		$this->lineas += $lineasEnContenido;
 	}
 	
+	public function agregarLineaFija($cantidad) {
+		// Agregar líneas fijas (espacios, márgenes, etc.)
+		$this->lineas += $cantidad;
+		error_log("Líneas fijas agregadas: {$cantidad}");
+	}
+	
 	public function getTotalLineas() {
 		return $this->lineas;
 	}
@@ -220,6 +226,10 @@ EOF;
 		// MARCADOR: Fin del encabezado e inicio de productos
 		$medidor->agregarLinea($bloque1);
 		$lineasEncabezado = $medidor->marcarFin('encabezado');
+		
+		// Agregar líneas fijas adicionales para el header (espacios, márgenes)
+		$medidor->agregarLineaFija(3); // 3 líneas fijas para header
+		
 		$medidor->marcarInicio('productos');
 
 		// ---------------------------------------------------------
@@ -311,6 +321,10 @@ EOF;
 		// MARCADOR: Fin del resumen e inicio del footer
 		$medidor->agregarLinea($bloque3);
 		$lineasResumen = $medidor->marcarFin('resumen');
+		
+		// Agregar líneas fijas adicionales para el footer (espacios, márgenes)
+		$medidor->agregarLineaFija(6); // 6 líneas fijas para footer
+		
 		$medidor->marcarInicio('footer');
 		
 		// MARCADOR: Fin del footer y total
@@ -326,12 +340,12 @@ EOF;
 		// Log detallado de la medición
 		error_log("=== ESTUDIO COMPLETO FACTURA {$this->codigo} ===");
 		error_log("📊 SECCIONES:");
-		error_log("  🔹 Encabezado: {$lineasEncabezado} líneas");
+		error_log("  🔹 Encabezado: {$lineasEncabezado} líneas + 3 fijas");
 		error_log("  🔹 Productos: {$lineasProductos} líneas ({$cantidadProductos} productos)");
 		error_log("  🔹 Resumen: {$lineasResumen} líneas");
-		error_log("  🔹 Footer: {$lineasFooter} líneas");
+		error_log("  🔹 Footer: {$lineasFooter} líneas + 6 fijas");
 		error_log("📏 CÁLCULO:");
-		error_log("  Total líneas: {$totalLineas}");
+		error_log("  Total líneas: {$totalLineas} (incluye líneas fijas)");
 		error_log("  Fórmula: {$totalLineas} × {$interlineaBase}mm × {$factorReduccion} = {$alturaCalculada}mm");
 		error_log("  Altura final: {$alturaFinal}mm");
 		error_log("=== FIN ESTUDIO ===");
