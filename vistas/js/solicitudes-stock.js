@@ -523,7 +523,9 @@ $(document).on('click', '.btnCrearDespachoDesdeSolicitud', function() {
                 console.log("🔍 ANTES DE MOSTRAR MODAL - Productos:", productos);
                 
                 // Mostrar modal de selección de productos
+                console.log("🔍 LLAMANDO A mostrarModalSeleccionProductos...");
                 mostrarModalSeleccionProductos(solicitud, productos, url);
+                console.log("🔍 DESPUÉS DE LLAMAR A mostrarModalSeleccionProductos");
                 
             } else {
                 swal({
