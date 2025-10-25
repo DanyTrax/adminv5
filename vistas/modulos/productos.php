@@ -35,17 +35,11 @@ if($_SESSION["perfil"] == "Vendedor" && !isset($_GET["ruta"])){
       <div class="box-header with-border">
   
         <!--=====================================
-        BOTÓN AGREGAR PRODUCTO (CON VALIDACIÓN DE PERFIL)
+        BOTÓN AGREGAR PRODUCTO (OCULTO)
         ======================================-->
         <?php
-        // --- INICIO DE LA CORRECCIÓN ---
-        // Solo se muestra el botón si el perfil es Administrador o Especial
-        if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial") {
-          echo '<button class="btn btn-primary" data-toggle="modal" data-target="#modalAgregarProducto">
-                  Agregar producto
-                </button>';
-        }
-        // --- FIN DE LA CORRECCIÓN ---
+        // Botón de agregar producto oculto según solicitud del usuario
+        // Solo se permite edición de productos existentes
         ?>
 
       </div>
@@ -216,74 +210,29 @@ if($_SESSION["perfil"] == "Vendedor" && !isset($_GET["ruta"])){
         <div class="modal-body">
           <div class="box-body">
           
-            <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-th"></i></span> 
-                <select class="form-control input-lg" name="editarCategoria" readonly required>
-                  <option id="editarCategoria"></option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-code"></i></span> 
-                <input type="text" class="form-control input-lg" id="editarCodigo" name="editarCodigo" readonly required>
-              </div>
-            </div>
-            <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-product-hunt"></i></span> 
-                <input type="text" class="form-control input-lg" id="editarDescripcion" name="editarDescripcion" required>
-              </div>
-            </div>
-            <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-check"></i></span> 
-                <input type="number" class="form-control input-lg" id="editarStock" name="editarStock" min="0" required>
-              </div>
-            </div>
-            <div class="form-group row">
-                <div class="col-xs-12">
-                    <div class="input-group">
-                        <span class="input-group-addon"><i class="fa fa-arrow-down"></i></span> 
-                        <input type="number" class="form-control input-lg" id="editarPrecioVenta" name="editarPrecioVenta" step="any" min="0" required>
-                    </div>
+            <!-- INFORMACIÓN DEL PRODUCTO (SOLO LECTURA) -->
+            <div class="alert alert-info">
+              <h4><i class="fa fa-info-circle"></i> Información del Producto</h4>
+              <div class="row">
+                <div class="col-md-6">
+                  <strong>Categoría:</strong> <span id="infoCategoria"></span><br>
+                  <strong>Código:</strong> <span id="infoCodigo"></span><br>
+                  <strong>Descripción:</strong> <span id="infoDescripcion"></span>
                 </div>
+                <div class="col-md-6">
+                  <strong>Precio de Venta:</strong> <span id="infoPrecioVenta"></span><br>
+                  <strong>Tipo:</strong> <span id="infoTipo"></span><br>
+                  <strong>Stock Actual:</strong> <span id="infoStockActual"></span>
+                </div>
+              </div>
             </div>
-          
+
+            <!-- CAMPOS EDITABLES -->
             <div class="form-group">
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" name="esDivisible" id="esDivisibleEditar">
-                  ¿Este producto es divisible?
-                </label>
-              </div>
-            </div>
-          
-            <div id="camposDivisiblesEditar" style="display:none;">
-              <div class="form-group">
-                <label>Nombre para la Mitad:</label>
-                <input type="text" class="form-control" name="nombreMitad" id="nombreMitadEditar" placeholder="Ej: Descripcion de Media">
-              </div>
-              <div class="form-group">
-                <label>Precio por Mitad:</label>
-                <input type="number" step="any" class="form-control" name="precioMitad" id="precioMitadEditar" placeholder="Precio de la mitad">
-              </div>
-              <div class="form-group">
-                <label>Nombre para el Tercio:</label>
-                <input type="text" class="form-control" name="nombreTercio" id="nombreTercioEditar" placeholder="Ej: Descripcion de Tercio">
-              </div>
-              <div class="form-group">
-                <label>Precio por Tercio:</label>
-                <input type="number" step="any" class="form-control" name="precioTercio" id="precioTercioEditar" placeholder="Precio del tercio">
-              </div>
-              <div class="form-group">
-                <label>Nombre para el Cuarto:</label>
-                <input type="text" class="form-control" name="nombreCuarto" id="nombreCuartoEditar" placeholder="Ej: Descripcion de Cuarto">
-              </div>
-              <div class="form-group">
-                <label>Precio por Cuarto:</label>
-                <input type="number" step="any" class="form-control" name="precioCuarto" id="precioCuartoEditar" placeholder="Precio del cuarto">
+              <label><i class="fa fa-check"></i> Stock/Cantidad</label>
+              <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-cubes"></i></span> 
+                <input type="number" class="form-control input-lg" id="editarStock" name="editarStock" min="0" required>
               </div>
             </div>
 

@@ -106,24 +106,23 @@ static public function ctrEditarProducto() {
             // (Tu lógica para procesar la nueva imagen)
         }
 
-        $esDivisible = isset($_POST["esDivisible"]) ? 1 : 0;
-        
-        // Preparamos todos los datos a guardar
+        // Solo permitir editar stock e imagen
+        // Mantener todos los demás datos del producto actual
         $datos = [
             "id" => $_POST["idProducto"],
-            "id_categoria" => $_POST["editarCategoria"],
-            "codigo" => $_POST["editarCodigo"],
-            "descripcion" => $_POST["editarDescripcion"],
-            "stock" => $_POST["editarStock"],
-            "precio_venta" => $_POST["editarPrecioVenta"],
-            "imagen" => $ruta,
-            "es_divisible" => $esDivisible,
-            "nombre_mitad" => $esDivisible ? $_POST["nombreMitad"] : "",
-            "precio_mitad" => $esDivisible && !empty($_POST["precioMitad"]) ? $_POST["precioMitad"] : 0,
-            "nombre_tercio" => $esDivisible ? $_POST["nombreTercio"] : "",
-            "precio_tercio" => $esDivisible && !empty($_POST["precioTercio"]) ? $_POST["precioTercio"] : 0,
-            "nombre_cuarto" => $esDivisible ? $_POST["nombreCuarto"] : "",
-            "precio_cuarto" => $esDivisible && !empty($_POST["precioCuarto"]) ? $_POST["precioCuarto"] : 0
+            "id_categoria" => $productoActual["id_categoria"], // Mantener original
+            "codigo" => $productoActual["codigo"], // Mantener original
+            "descripcion" => $productoActual["descripcion"], // Mantener original
+            "stock" => $_POST["editarStock"], // Solo esto se puede editar
+            "precio_venta" => $productoActual["precio_venta"], // Mantener original
+            "imagen" => $ruta, // Solo esto se puede editar
+            "es_divisible" => $productoActual["es_divisible"], // Mantener original
+            "nombre_mitad" => $productoActual["nombre_mitad"], // Mantener original
+            "precio_mitad" => $productoActual["precio_mitad"], // Mantener original
+            "nombre_tercio" => $productoActual["nombre_tercio"], // Mantener original
+            "precio_tercio" => $productoActual["precio_tercio"], // Mantener original
+            "nombre_cuarto" => $productoActual["nombre_cuarto"], // Mantener original
+            "precio_cuarto" => $productoActual["precio_cuarto"] // Mantener original
         ];
 
         // Llamamos al modelo para guardar los datos

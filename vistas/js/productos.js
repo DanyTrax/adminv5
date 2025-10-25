@@ -51,10 +51,18 @@ $(document).ready(function() {
             dataType: "json",
             success: function(respuesta) {
                 
-                $("#editarCodigo").val(respuesta["codigo"]);
-                $("#editarDescripcion").val(respuesta["descripcion"]);
+                // LLENAR INFORMACIÓN DE SOLO LECTURA
+                $("#infoCodigo").text(respuesta["codigo"]);
+                $("#infoDescripcion").text(respuesta["descripcion"]);
+                $("#infoPrecioVenta").text("$" + parseFloat(respuesta["precio_venta"]).toLocaleString());
+                $("#infoStockActual").text(respuesta["stock"] + " unidades");
+                
+                // Determinar tipo de producto
+                var tipoProducto = respuesta["es_divisible"] == 1 ? "Divisible" : "Simple";
+                $("#infoTipo").text(tipoProducto);
+
+                // CAMPOS EDITABLES
                 $("#editarStock").val(respuesta["stock"]);
-                $("#editarPrecioVenta").val(respuesta["precio_venta"]);
 
                 // --- LÍNEA CORREGIDA PARA PASAR EL ID ---
                 $("#idProducto").val(respuesta["id"]);
@@ -64,6 +72,7 @@ $(document).ready(function() {
                     $(".previsualizar").attr("src", respuesta["imagen"]);
                 }
 
+                // Obtener nombre de la categoría
                 var datosCategoria = new FormData();
                 datosCategoria.append("idCategoria", respuesta["id_categoria"]);
                 $.ajax({
@@ -72,24 +81,9 @@ $(document).ready(function() {
                     data: datosCategoria,
                     cache: false, contentType: false, processData: false, dataType: "json",
                     success: function(respuestaCategoria) {
-                        $("#editarCategoria").val(respuestaCategoria["id"]);
-                        $("#editarCategoria").html(respuestaCategoria["categoria"]);
+                        $("#infoCategoria").text(respuestaCategoria["categoria"]);
                     }
                 });
-
-                if (respuesta["es_divisible"] == 1) {
-                    $('#esDivisibleEditar').prop('checked', true);
-                    $("#nombreMitadEditar").val(respuesta["nombre_mitad"]);
-                    $("#precioMitadEditar").val(respuesta["precio_mitad"]);
-                    $("#nombreTercioEditar").val(respuesta["nombre_tercio"]);
-                    $("#precioTercioEditar").val(respuesta["precio_tercio"]);
-                    $("#nombreCuartoEditar").val(respuesta["nombre_cuarto"]);
-                    $("#precioCuartoEditar").val(respuesta["precio_cuarto"]);
-                    $('#camposDivisiblesEditar').show();
-                } else {
-                    $('#esDivisibleEditar').prop('checked', false);
-                    $('#camposDivisiblesEditar').hide().find('input').val('');
-                }
             }
         });
     });
