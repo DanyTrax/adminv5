@@ -1978,14 +1978,10 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
                             <table class="table table-striped table-hover">
                                 <thead>
                                     <tr>
-                                        <th width="50">
-                                            <input type="checkbox" id="seleccionarTodos" checked>
-                                        </th>
                                         <th>Código</th>
                                         <th>Descripción</th>
                                         <th width="100">Stock Actual</th>
                                         <th width="100">Cantidad Solicitada</th>
-                                        <th width="120">Cantidad a Despachar</th>
                                     </tr>
                                 </thead>
                                 <tbody id="listaProductosSeleccion">
@@ -2043,15 +2039,8 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
             }
         }
         
-        // Calcular cantidad máxima a despachar (mínimo entre solicitado y stock disponible)
-        var cantidadMaxima = Math.min(producto.cantidad, stockActual);
-        var cantidadInicial = cantidadMaxima > 0 ? cantidadMaxima : 0;
-        
         tbodyHtml += `
             <tr>
-                <td>
-                    <input type="checkbox" class="producto-checkbox" data-index="${index}" ${cantidadInicial > 0 ? 'checked' : ''}>
-                </td>
                 <td><strong>${producto.codigo}</strong></td>
                 <td>${producto.descripcion}</td>
                 <td class="text-center ${stockClass}">
@@ -2059,15 +2048,6 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
                 </td>
                 <td class="text-center">
                     <span class="badge badge-primary">${producto.cantidad}</span>
-                </td>
-                <td>
-                    <input type="number" 
-                           class="form-control cantidad-despacho" 
-                           data-index="${index}"
-                           value="${cantidadInicial}" 
-                           min="0" 
-                           max="${cantidadMaxima}"
-                           ${cantidadInicial === 0 ? 'disabled' : ''}>
                 </td>
             </tr>
         `;
@@ -2089,51 +2069,20 @@ CONFIGURAR EVENTOS DE LA MODAL DE SELECCIÓN
 =============================================*/
 function configurarEventosModalSeleccion(url) {
     
-    // Seleccionar/deseleccionar todos
-    $('#seleccionarTodos').on('change', function() {
-        var isChecked = $(this).is(':checked');
-        $('.producto-checkbox').prop('checked', isChecked);
-        $('.cantidad-despacho').prop('disabled', !isChecked);
-        validarSeleccion();
-    });
-    
-    // Seleccionar/deseleccionar producto individual
-    $('.producto-checkbox').on('change', function() {
-        var index = $(this).data('index');
-        var isChecked = $(this).is(':checked');
-        var cantidadInput = $('.cantidad-despacho[data-index="' + index + '"]');
-        
-        if(isChecked) {
-            cantidadInput.prop('disabled', false);
-            // Si la cantidad es 0, establecerla en 1
-            if(parseInt(cantidadInput.val()) === 0) {
-                cantidadInput.val(1);
-            }
-        } else {
-            cantidadInput.prop('disabled', true);
-            cantidadInput.val(0);
-        }
-        
-        validarSeleccion();
-    });
-    
-    // Cambiar cantidad
-    $('.cantidad-despacho').on('input', function() {
-        validarSeleccion();
-    });
-    
     // Botón crear despacho
     $('#btnCrearDespachoSeleccion').on('click', function() {
         console.log("🔍 BOTÓN CREAR DESPACHO CLICKEADO - INICIO");
-        var productosSeleccionados = obtenerProductosSeleccionados();
         
-        console.log("🔍 Botón crear despacho clickeado");
-        console.log("🔍 Productos seleccionados:", productosSeleccionados);
+        // Crear array con todos los productos (todos están seleccionados)
+        var productosSeleccionados = [];
+        productos.forEach(function(producto, index) {
+            productosSeleccionados.push({
+                index: index,
+                cantidad: producto.cantidad
+            });
+        });
         
-        if (productosSeleccionados.length === 0) {
-            mostrarAlerta('warning', 'Debe seleccionar al menos un producto');
-            return;
-        }
+        console.log("🔍 Productos seleccionados (todos):", productosSeleccionados);
         
         // Guardar productos seleccionados en localStorage
         localStorage.setItem('productosSeleccionados', JSON.stringify(productosSeleccionados));
@@ -2145,51 +2094,4 @@ function configurarEventosModalSeleccion(url) {
         $('#modalSeleccionProductos').modal('hide');
         window.location.href = url;
     });
-}
-
-/*=============================================
-VALIDAR SELECCIÓN DE PRODUCTOS
-=============================================*/
-function validarSeleccion() {
-    var productosSeleccionados = $('.producto-checkbox:checked').length;
-    var totalProductos = $('.producto-checkbox').length;
-    
-    if (productosSeleccionados === 0) {
-        $('#alertaProductos').show();
-        $('#mensajeAlerta').text('Debe seleccionar al menos un producto');
-        $('#btnCrearDespachoSeleccion').prop('disabled', true);
-    } else if (productosSeleccionados < totalProductos) {
-        $('#alertaProductos').show();
-        $('#mensajeAlerta').text(`Seleccionados ${productosSeleccionados} de ${totalProductos} productos`);
-        $('#btnCrearDespachoSeleccion').prop('disabled', false);
-    } else {
-        $('#alertaProductos').hide();
-        $('#btnCrearDespachoSeleccion').prop('disabled', false);
-    }
-}
-
-/*=============================================
-OBTENER PRODUCTOS SELECCIONADOS
-=============================================*/
-function obtenerProductosSeleccionados() {
-    var productosSeleccionados = [];
-    
-    console.log("🔍 Obteniendo productos seleccionados...");
-    
-    $('.producto-checkbox:checked').each(function() {
-        var index = $(this).data('index');
-        var cantidad = parseInt($('.cantidad-despacho[data-index="' + index + '"]').val());
-        
-        console.log("🔍 Producto seleccionado - Index:", index, "Cantidad:", cantidad);
-        
-        if (cantidad > 0) {
-            productosSeleccionados.push({
-                index: index,
-                cantidad: cantidad
-            });
-        }
-    });
-    
-    console.log("🔍 Productos seleccionados finales:", productosSeleccionados);
-    return productosSeleccionados;
 }
