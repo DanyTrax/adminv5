@@ -134,16 +134,26 @@ class imprimirFactura
 		$pdf->SetAutoPageBreak(false, 0); // Modificado para evitar saltos de p��gina autom��ticos no deseados
 
 		// Calcular altura dinámica basada en el contenido
-		$alturaBase = 50; // Altura mínima para encabezado
-		$alturaPorProducto = 15; // Altura aproximada por producto
-		$alturaResumen = 30; // Altura para resumen y totales
-		$alturaNota = 40; // Altura para nota detalle
+		$alturaBase = 60; // Altura para encabezado (aumentada)
+		$alturaResumen = 40; // Altura para resumen y totales (aumentada)
+		$alturaNota = 50; // Altura para nota detalle (aumentada)
 		
-		$cantidadProductos = count($productos);
-		$alturaCalculada = $alturaBase + ($cantidadProductos * $alturaPorProducto) + $alturaResumen + $alturaNota;
+		$alturaProductos = 0;
+		foreach ($productos as $producto) {
+			$descripcion = $producto['descripcion'] ?? '';
+			$longitudDescripcion = strlen($descripcion);
+			
+			// Calcular líneas necesarias basado en longitud de descripción
+			$lineasPorProducto = max(1, ceil($longitudDescripcion / 35)); // ~35 caracteres por línea
+			$alturaPorProducto = 12 + ($lineasPorProducto * 8); // 12mm base + 8mm por línea adicional
+			
+			$alturaProductos += $alturaPorProducto;
+		}
 		
-		// Asegurar altura mínima y máxima
-		$alturaFinal = max(100, min($alturaCalculada, 400));
+		$alturaCalculada = $alturaBase + $alturaProductos + $alturaResumen + $alturaNota;
+		
+		// Asegurar altura mínima y máxima (aumentada para facturas largas)
+		$alturaFinal = max(120, min($alturaCalculada, 600));
 
 		$pdf->AddPage('P', array(75, $alturaFinal));
         $numVendedor = $respuestaVendedor['telefono'] ?? 'N/A';
