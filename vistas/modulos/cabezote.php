@@ -35,6 +35,22 @@
       	
       	</a>
 
+		<!-- Nombre de la sucursal actual -->
+		<div class="navbar-brand" style="color: white; font-size: 16px; font-weight: 500; margin-left: 20px; line-height: 50px;">
+			<?php
+			// Obtener información de la sucursal actual
+			require_once "controladores/sucursales.controlador.php";
+			$sucursalActual = ControladorSucursales::ctrMostrarSucursales("sucursal_local", "id", $_SESSION["sucursal"], "id");
+			if($sucursalActual) {
+				echo '<i class="fa fa-building" style="margin-right: 8px; color: #fff;"></i>';
+				echo $sucursalActual["nombre"];
+			} else {
+				echo '<i class="fa fa-building" style="margin-right: 8px; color: #fff;"></i>';
+				echo 'Sucursal Principal';
+			}
+			?>
+		</div>
+
 		<!-- perfil de usuario -->
 
 		<div class="navbar-custom-menu">
