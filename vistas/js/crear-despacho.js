@@ -1904,6 +1904,7 @@ $(document).ready(function() {
 CARGAR PRODUCTOS DESDE SOLICITUD
 =============================================*/
 function cargarProductosDesdeSolicitud() {
+    console.log("🔍 INICIO cargarProductosDesdeSolicitud() - Timestamp:", new Date().toISOString());
     
     if(!window.solicitudOrigen || !window.productosDesdeSolicitud) {
         console.log("❌ No hay datos de solicitud para cargar");
