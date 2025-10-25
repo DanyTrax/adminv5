@@ -653,6 +653,7 @@ function cargarProductosDeSolicitud() {
     }
     
     console.log("🚀 Iniciando carga de productos de solicitud...");
+    console.log("🔍 PRODUCTOS SELECCIONADOS EN FUNCIÓN:", window.productosSeleccionados);
     window.cargandoProductosSolicitud = true;
     
     if(!solicitudSeleccionada) {
