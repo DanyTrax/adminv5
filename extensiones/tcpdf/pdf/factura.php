@@ -327,20 +327,20 @@ EOF;
 		$lineasNota = 0;
 		
 		if (!empty($detalle)) {
-			// Calcular líneas de la nota basado en caracteres
-			$caracteresPorLinea = 35; // Aproximadamente 35 caracteres por línea en el PDF
+			// Calcular líneas de la nota basado en caracteres (ajustado)
+			$caracteresPorLinea = 45; // Aumentado a 45 caracteres por línea (más realista)
 			$longitudNota = strlen($detalle);
 			$lineasNota = max(1, ceil($longitudNota / $caracteresPorLinea));
 			
-			// Agregar líneas fijas para el formato de la nota
-			$lineasNota += 3; // "NOTA DETALLE", línea separadora, y espacio
+			// Agregar líneas fijas mínimas para el formato de la nota
+			$lineasNota += 2; // Solo "NOTA DETALLE" y línea separadora (reducido de 3 a 2)
 			
 			$medidor->agregarLineaFija($lineasNota);
-			error_log("Nota detalle: {$longitudNota} caracteres → {$lineasNota} líneas");
+			error_log("Nota detalle: {$longitudNota} caracteres → {$lineasNota} líneas (ajustado)");
 		} else {
 			// Si no hay nota, solo agregar líneas fijas mínimas
-			$medidor->agregarLineaFija(3);
-			error_log("Sin nota detalle: líneas fijas mínimas");
+			$medidor->agregarLineaFija(2); // Reducido de 3 a 2
+			error_log("Sin nota detalle: líneas fijas mínimas (ajustado)");
 		}
 		
 		$lineasNotaCalculada = $medidor->marcarFin('nota');
