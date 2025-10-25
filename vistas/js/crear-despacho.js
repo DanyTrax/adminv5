@@ -1658,6 +1658,9 @@ function procesarCreacionDespacho(tipoDespacho) {
             
             if(respuesta.success) {
                 
+                // Limpiar parámetros de solicitud de la URL inmediatamente
+                window.history.replaceState({}, document.title, "crear-despacho");
+                
                 swal({
                     title: "¡Despacho creado!",
                     text: `Se creó el despacho: ${respuesta.numero_despacho || 'Exitosamente'}`,
