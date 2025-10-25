@@ -276,10 +276,17 @@ switch ($accion) {
             $sucursalId = $_POST["sucursalId"];
             $resultado = ControladorClientesCentral::ctrCopiarClientesASucursal($sucursalId);
             
-            if ($resultado) {
+            if ($resultado && is_array($resultado) && isset($resultado['success'])) {
+                // El modelo retornó un array con estadísticas
+                echo json_encode($resultado);
+            } elseif ($resultado) {
+                // El modelo retornó true (éxito simple)
                 echo json_encode([
                     'success' => true,
-                    'mensaje' => 'Clientes copiados correctamente'
+                    'mensaje' => 'Clientes copiados correctamente',
+                    'copiados' => 0,
+                    'duplicados' => 0,
+                    'total' => 0
                 ]);
             } else {
                 echo json_encode([
@@ -301,7 +308,11 @@ switch ($accion) {
             $sucursalId = $_POST["sucursalId"] ?? null;
             $resultado = ControladorClientesCentral::ctrBorrarClientes($origen, $sucursalId);
             
-            if ($resultado) {
+            if ($resultado && is_array($resultado) && isset($resultado['success'])) {
+                // El modelo retornó un array con estadísticas
+                echo json_encode($resultado);
+            } elseif ($resultado) {
+                // El modelo retornó true (éxito simple)
                 echo json_encode([
                     'success' => true,
                     'mensaje' => 'Clientes eliminados correctamente'
