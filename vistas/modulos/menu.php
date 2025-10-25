@@ -274,7 +274,12 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Contador" 
                 </a>
               </li>
         
-        // Reporte detallado eliminado del menú
+        <li>
+                        <a href="reporte-detallado">
+                    <i class="fa fa-line-chart"></i>
+                    <span>Reporte detallado</span>
+                </a>
+              </li>
         
         <li>
                 <a href="contabilidad">
