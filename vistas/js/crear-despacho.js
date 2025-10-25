@@ -643,7 +643,15 @@ CARGAR PRODUCTOS DE SOLICITUD - VERSIÓN COMPLETA CON FALTANTES
 =============================================*/
 function cargarProductosDeSolicitud() {
     
+    // Prevenir ejecución duplicada
+    if(window.cargandoProductosSolicitud) {
+        console.log("⚠️ Ya se están cargando productos de solicitud, evitando duplicación");
+        return;
+    }
+    window.cargandoProductosSolicitud = true;
+    
     if(!solicitudSeleccionada) {
+        window.cargandoProductosSolicitud = false;
         swal({
             title: "Error",
             text: "No hay solicitud seleccionada",
@@ -893,6 +901,9 @@ console.log("✅ Nota agregada al campo detalleAdicional:", notaGeneral);
             confirmButtonText: "Cerrar"
         });
     }
+    
+    // Resetear bandera de carga
+    window.cargandoProductosSolicitud = false;
 }
 
 /*=============================================
