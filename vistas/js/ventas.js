@@ -801,15 +801,15 @@ $(document).on("click", ".btnVerDetalle", function() {
                 $("#medioPagoDetalle").text(respuesta.venta.medio_pago);
                 
                 // Llenar información financiera
-                $("#subtotalDetalle").text("$ " + number_format(respuesta.venta.neto, 2, ',', '.'));
-                $("#impuestosDetalle").text("$ " + number_format(respuesta.venta.impuesto, 2, ',', '.'));
-                $("#descuentoDetalle").text("$ " + number_format(respuesta.venta.descuento || 0, 2, ',', '.'));
-                $("#totalDetalle").text("$ " + number_format(respuesta.venta.total, 2, ',', '.'));
-                $("#abonoDetalle").text("$ " + number_format(respuesta.venta.abono || 0, 2, ',', '.'));
+                $("#subtotalDetalle").text("$ " + number_format(respuesta.venta.neto, 0, ',', '.'));
+                $("#impuestosDetalle").text("$ " + number_format(respuesta.venta.impuesto, 0, ',', '.'));
+                $("#descuentoDetalle").text("$ " + number_format(respuesta.venta.descuento || 0, 0, ',', '.'));
+                $("#totalDetalle").text("$ " + number_format(respuesta.venta.total, 0, ',', '.'));
+                $("#abonoDetalle").text("$ " + number_format(respuesta.venta.abono || 0, 0, ',', '.'));
                 
                 // Calcular saldo pendiente
                 var saldoPendiente = parseFloat(respuesta.venta.total) - parseFloat(respuesta.venta.abono || 0);
-                $("#saldoDetalle").text("$ " + number_format(saldoPendiente, 2, ',', '.'));
+                $("#saldoDetalle").text("$ " + number_format(saldoPendiente, 0, ',', '.'));
                 
                 // Llenar detalles adicionales
                 var detalleNota = respuesta.venta.detalle || '';
@@ -836,7 +836,7 @@ $(document).on("click", ".btnVerDetalle", function() {
                             '<td>' + (index + 1) + '</td>' +
                             '<td>' + producto.descripcion + '</td>' +
                             '<td class="text-center">' + producto.cantidad + '</td>' +
-                            '<td class="text-right">$ ' + number_format(producto.total, 2, ',', '.') + '</td>' +
+                            '<td class="text-right">$ ' + number_format(producto.total, 0, ',', '.') + '</td>' +
                             '</tr>';
                         $("#cuerpoProductosDetalle").append(fila);
                     });
@@ -856,7 +856,7 @@ $(document).on("click", ".btnVerDetalle", function() {
                         var fila = '<tr class="' + estadoClass + '">' +
                             '<td>' + (index + 1) + '</td>' +
                             '<td>' + abono.fecha_abono + '</td>' +
-                            '<td class="text-right">$ ' + number_format(abono.monto_abono, 2, ',', '.') + '</td>' +
+                            '<td class="text-right">$ ' + number_format(abono.monto_abono, 0, ',', '.') + '</td>' +
                             '<td>' + abono.nombre_vendedor_abono + '</td>' +
                             '<td>' + abono.medio_pago + '</td>' +
                             '<td><span class="label label-' + (estadoClass === 'success' ? 'success' : 'warning') + '">' + estadoText + '</span></td>' +
@@ -905,7 +905,7 @@ FUNCIÓN AUXILIAR PARA FORMATEAR NÚMEROS
 function number_format(number, decimals, dec_point, thousands_sep) {
     number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
     var n = !isFinite(+number) ? 0 : +number,
-        prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+        prec = 0, // Forzar 0 decimales
         sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
         dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
         s = '',

@@ -87,7 +87,7 @@ if ($_SESSION["perfil"] == "Especial") {
                                                 <tr>
                                                     <td style="width: 33%">
                                                         <div class="input-group">
-                                                            <input type="number" class="form-control input-lg" min="0" max="40" id="nuevoImpuestoVenta" name="nuevoImpuestoVenta" value="0" required>
+                                                            <input type="number" class="form-control input-lg" min="0" max="40" id="nuevoImpuestoVenta" name="nuevoImpuestoVenta" value="0" step="1" required>
                                                             <input type="hidden" name="nuevoPrecioImpuesto" id="nuevoPrecioImpuesto" required>
                                                             <input type="hidden" name="nuevoPrecioNeto" id="nuevoPrecioNeto" required>
                                                             <span class="input-group-addon"><i class="fa fa-percent"></i></span>
@@ -95,7 +95,7 @@ if ($_SESSION["perfil"] == "Especial") {
                                                     </td>
                                                     <td style="width: 33%">
                                                         <div class="input-group">
-                                                            <input type="number" class="form-control input-lg" min="0" max="80" id="nuevoDescuentoVenta" name="nuevoDescuentoVenta" value="0" required>
+                                                            <input type="number" class="form-control input-lg" min="0" max="80" id="nuevoDescuentoVenta" name="nuevoDescuentoVenta" value="0" step="1" required>
                                                             <input type="hidden" name="nuevoPrecioDescuento" id="nuevoPrecioDescuento" required>
                                                             <span class="input-group-addon"><i class="fa fa-percent"></i></span>
                                                         </div>
@@ -192,7 +192,7 @@ MODAL AGREGAR CLIENTE
                         <div class="form-group">
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-key"></i></span>
-                                <input type="number" min="0" class="form-control input-lg" name="nuevoDocumentoId" placeholder="Ingresar documento" required>
+                                <input type="number" min="0" class="form-control input-lg" name="nuevoDocumentoId" placeholder="Ingresar documento" step="1" required>
                             </div>
                         </div>
                         <div class="form-group">

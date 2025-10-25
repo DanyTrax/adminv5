@@ -114,7 +114,7 @@
                                   </div>
                                 </div>
                                 <div class="col-xs-3">
-                                  <input type="number" class="form-control nuevaCantidadProducto" name="nuevaCantidadProducto" min="1" value="' . $value["cantidad"] . '" stock="' . $stockAntiguo . '" nuevoStock="' . $value["stock"] . '" required>
+                                  <input type="number" class="form-control nuevaCantidadProducto" name="nuevaCantidadProducto" min="1" value="' . $value["cantidad"] . '" stock="' . $stockAntiguo . '" nuevoStock="' . $value["stock"] . '" step="1" required>
                                 </div>
                                 <div class="col-xs-3 ingresoPrecio" style="padding-left:0px">
                                   <div class="input-group">
@@ -133,7 +133,7 @@
                                   </div>
                                 </div>
                                 <div class="col-xs-3 ingresoCantidad">
-                                  <input type="number" class="form-control nuevaCantidadProducto" name="nuevaCantidadProducto" min="1" value="' . $value["cantidad"] . '" required>
+                                  <input type="number" class="form-control nuevaCantidadProducto" name="nuevaCantidadProducto" min="1" value="' . $value["cantidad"] . '" step="1" required>
                                 </div>
                                 <div class="col-xs-3 ingresoPrecio" style="padding-left:0px">
                                   <div class="input-group">
@@ -169,7 +169,7 @@
                         <tr>
                           <td style="width: 33%">
                             <div class="input-group">
-                              <input type="number" class="form-control input-lg" min="0" id="nuevoImpuestoVenta" name="nuevoImpuestoVenta" value="<?php echo number_format($porcentajeImpuesto, 0); ?>" readonly required>
+                              <input type="number" class="form-control input-lg" min="0" id="nuevoImpuestoVenta" name="nuevoImpuestoVenta" value="<?php echo number_format($porcentajeImpuesto, 0); ?>" step="1" readonly required>
                               <input type="hidden" name="nuevoPrecioImpuesto" id="nuevoPrecioImpuesto" value="<?php echo $venta["impuesto"]; ?>" required>
                               <input type="hidden" name="nuevoPrecioNeto" id="nuevoPrecioNeto" value="<?php echo $venta["neto"]; ?>" required>
                               <span class="input-group-addon"><i class="fa fa-percent"></i></span>
@@ -177,7 +177,7 @@
                           </td>
                           <td style="width: 33%">
                             <div class="input-group">
-                              <input type="number" class="form-control input-lg" min="0" id="nuevoDescuentoVenta" name="nuevoDescuentoVenta" value="<?= number_format($porcentajeDescuento, 0) ?>" readonly required>
+                              <input type="number" class="form-control input-lg" min="0" id="nuevoDescuentoVenta" name="nuevoDescuentoVenta" value="<?= number_format($porcentajeDescuento, 0) ?>" step="1" readonly required>
                               <input type="hidden" name="nuevoPrecioDescuento" id="nuevoPrecioDescuento" value="<?= $venta['descuento'] ?>" required>
                               <span class="input-group-addon"><i class="fa fa-percent"></i></span>
                             </div>
@@ -319,7 +319,7 @@ MODAL AGREGAR CLIENTE
 
                 <span class="input-group-addon"><i class="fa fa-key"></i></span>
 
-                <input type="number" min="0" class="form-control input-lg" name="nuevoDocumentoId" placeholder="Ingresar documento" required>
+                <input type="number" min="0" class="form-control input-lg" name="nuevoDocumentoId" placeholder="Ingresar documento" step="1" required>
 
               </div>
 

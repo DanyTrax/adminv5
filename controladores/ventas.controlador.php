@@ -617,9 +617,9 @@ static public function ctrSumaTotalVentasGeneral($fechaInicial, $fechaFinal){
     			<td style='font-weight:bold;'>Total Vendido (Generado en Ventas)</td>
     		</tr>
     		<tr>
-    			<td>" . number_format($totalEntradas["total"] ?? 0, 2) . "</td>
-    			<td>" . number_format($totalDeuda["total_deuda"] ?? 0, 2) . "</td>
-    			<td>" . number_format($totalVendido["total_ventas"] ?? 0, 2) . "</td>
+    			<td>" . number_format($totalEntradas["total"] ?? 0, 0) . "</td>
+    			<td>" . number_format($totalDeuda["total_deuda"] ?? 0, 0) . "</td>
+    			<td>" . number_format($totalVendido["total_ventas"] ?? 0, 0) . "</td>
     		</tr>
     		
     		<tr></tr> <tr><td colspan='2' style='font-weight:bold; background-color:#00a65a; color:white;'>TOTAL DE VENTAS POR VENDEDOR</td></tr>
@@ -633,7 +633,7 @@ static public function ctrSumaTotalVentasGeneral($fechaInicial, $fechaFinal){
     		echo utf8_decode("
     		<tr>
     			<td>" . $vendedor['vendedor'] . "</td>
-    			<td>" . number_format($vendedor['total_vendido'], 2) . "</td>
+    			<td>" . number_format($vendedor['total_vendido'], 0) . "</td>
     		</tr>
     		");
     	}
