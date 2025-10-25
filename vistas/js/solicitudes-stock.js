@@ -1953,6 +1953,13 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
                             <strong>Total unidades:</strong> ${solicitud.total_cantidad}
                         </div>
                         
+                        <div class="alert alert-light">
+                            <strong><i class="fa fa-info-circle"></i> Información de Stock:</strong><br>
+                            <span class="text-success"><i class="fa fa-check-circle"></i> Verde:</span> Stock suficiente<br>
+                            <span class="text-warning"><i class="fa fa-exclamation-triangle"></i> Amarillo:</span> Stock parcial<br>
+                            <span class="text-danger"><i class="fa fa-times-circle"></i> Rojo:</span> Sin stock
+                        </div>
+                        
                         <div class="table-responsive">
                             <table class="table table-striped table-hover">
                                 <thead>
@@ -1962,7 +1969,8 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
                                         </th>
                                         <th>Código</th>
                                         <th>Descripción</th>
-                                        <th width="120">Cantidad Solicitada</th>
+                                        <th width="100">Stock Actual</th>
+                                        <th width="100">Cantidad Solicitada</th>
                                         <th width="120">Cantidad a Despachar</th>
                                     </tr>
                                 </thead>
@@ -1998,13 +2006,43 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
     // Llenar tabla de productos
     var tbodyHtml = '';
     productos.forEach(function(producto, index) {
+        // Buscar stock actual en inventarioLocal
+        var stockActual = 0;
+        var stockClass = 'text-danger';
+        var stockIcon = '<i class="fa fa-times-circle"></i> ';
+        
+        if(window.inventarioLocal && window.inventarioLocal.length > 0) {
+            var productoInventario = window.inventarioLocal.find(function(p) {
+                return p.codigo === producto.codigo;
+            });
+            
+            if(productoInventario) {
+                stockActual = productoInventario.stock || 0;
+                
+                if(stockActual >= producto.cantidad) {
+                    stockClass = 'text-success';
+                    stockIcon = '<i class="fa fa-check-circle"></i> ';
+                } else if(stockActual > 0) {
+                    stockClass = 'text-warning';
+                    stockIcon = '<i class="fa fa-exclamation-triangle"></i> ';
+                }
+            }
+        }
+        
+        // Calcular cantidad máxima a despachar (mínimo entre solicitado y stock disponible)
+        var cantidadMaxima = Math.min(producto.cantidad, stockActual);
+        var cantidadInicial = cantidadMaxima > 0 ? cantidadMaxima : 0;
+        
         tbodyHtml += `
             <tr>
                 <td>
-                    <input type="checkbox" class="producto-checkbox" data-index="${index}" checked>
+                    <input type="checkbox" class="producto-checkbox" data-index="${index}" ${cantidadInicial > 0 ? 'checked' : ''}>
                 </td>
                 <td><strong>${producto.codigo}</strong></td>
                 <td>${producto.descripcion}</td>
+                <td class="text-center ${stockClass}">
+                    ${stockIcon}<strong>${stockActual}</strong>
+                </td>
                 <td class="text-center">
                     <span class="badge badge-primary">${producto.cantidad}</span>
                 </td>
@@ -2012,9 +2050,10 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
                     <input type="number" 
                            class="form-control cantidad-despacho" 
                            data-index="${index}"
-                           value="${producto.cantidad}" 
-                           min="1" 
-                           max="${producto.cantidad}">
+                           value="${cantidadInicial}" 
+                           min="0" 
+                           max="${cantidadMaxima}"
+                           ${cantidadInicial === 0 ? 'disabled' : ''}>
                 </td>
             </tr>
         `;
@@ -2046,7 +2085,19 @@ function configurarEventosModalSeleccion(url) {
     $('.producto-checkbox').on('change', function() {
         var index = $(this).data('index');
         var isChecked = $(this).is(':checked');
-        $('.cantidad-despacho[data-index="' + index + '"]').prop('disabled', !isChecked);
+        var cantidadInput = $('.cantidad-despacho[data-index="' + index + '"]');
+        
+        if(isChecked) {
+            cantidadInput.prop('disabled', false);
+            // Si la cantidad es 0, establecerla en 1
+            if(parseInt(cantidadInput.val()) === 0) {
+                cantidadInput.val(1);
+            }
+        } else {
+            cantidadInput.prop('disabled', true);
+            cantidadInput.val(0);
+        }
+        
         validarSeleccion();
     });
     
