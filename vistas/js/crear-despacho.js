@@ -1983,7 +1983,10 @@ function cargarProductosDesdeSolicitud() {
     // Cargar productos automáticamente después de que el inventario esté cargado
     if(inventarioLocal.length > 0) {
         console.log("✅ Inventario ya cargado, procediendo con solicitud");
-        cargarProductosDeSolicitud();
+        // Usar timeout para evitar ejecución inmediata duplicada
+        setTimeout(function() {
+            cargarProductosDeSolicitud();
+        }, 100);
     } else {
         console.log("⏳ Inventario no cargado, cargando primero...");
         cargarProductosInventario();
