@@ -1986,6 +1986,9 @@ function cargarProductosDesdeSolicitud() {
     $("#idSolicitudOrigenHidden").val(solicitudSeleccionada.id);
     
     // Cargar productos automáticamente después de que el inventario esté cargado
+    console.log("🔍 Verificando inventario local...");
+    console.log("🔍 Inventario disponible:", inventarioLocal.length, "productos");
+    
     if(inventarioLocal.length > 0) {
         console.log("✅ Inventario ya cargado, procediendo con solicitud");
         console.log("🔍 Bandera actual:", window.cargandoProductosSolicitud);
