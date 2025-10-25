@@ -20,6 +20,35 @@ require_once "../../../modelos/productos.modelo.php";
 require_once "../../../controladores/sucursales.controlador.php";
 require_once "../../../modelos/sucursales.modelo.php";
 
+// Clase para medir líneas reales durante la generación
+class MedidorLineas {
+	private $lineas = 0;
+	private $marcadores = [];
+	
+	public function marcarInicio($nombre) {
+		$this->marcadores[$nombre] = $this->lineas;
+	}
+	
+	public function marcarFin($nombre) {
+		if (isset($this->marcadores[$nombre])) {
+			$lineasSeccion = $this->lineas - $this->marcadores[$nombre];
+			error_log("Sección '{$nombre}': {$lineasSeccion} líneas");
+			return $lineasSeccion;
+		}
+		return 0;
+	}
+	
+	public function agregarLinea($contenido = '') {
+		// Contar líneas basado en saltos de línea y contenido
+		$lineasEnContenido = substr_count($contenido, '<br') + substr_count($contenido, "\n") + 1;
+		$this->lineas += $lineasEnContenido;
+	}
+	
+	public function getTotalLineas() {
+		return $this->lineas;
+	}
+}
+
 class imprimirFactura
 {
 
@@ -133,55 +162,18 @@ class imprimirFactura
 		$pdf->SetFooterMargin(0);
 		$pdf->SetAutoPageBreak(false, 0); // Modificado para evitar saltos de p��gina autom��ticos no deseados
 
-		// Calcular altura dinámica basada en la factura específica consultada
-		$interlineaBase = 4; // mm por interlínea (basado en fuente 10px)
-		
-		// Interlíneas fijas para secciones (basadas en la estructura real de la factura)
-		$interlineasEncabezado = 12; // Encabezado (fecha, empresa, cliente, vendedor)
-		$interlineasResumen = 8; // Resumen (totales, abonos)
-		$interlineasNota = 10; // Nota detalle y disclaimer
-		
-		// Calcular interlíneas por productos de esta factura específica
-		$interlineasProductos = 0;
-		$totalCaracteresProductos = 0;
-		$productosLargos = 0;
-		
-		foreach ($productos as $producto) {
-			$descripcion = $producto['descripcion'] ?? '';
-			$longitudDescripcion = strlen($descripcion);
-			$totalCaracteresProductos += $longitudDescripcion;
-			
-			// Calcular líneas de descripción (aproximadamente 35 caracteres por línea)
-			$lineasDescripcion = max(1, ceil($longitudDescripcion / 35));
-			
-			// 3-4 interlíneas por producto: 1 para descripción + 1 para precio + 1-2 de separación
-			$interlineasPorProducto = max(3, $lineasDescripcion + 2); // Mínimo 3, máximo según descripción
-			
-			// Contar productos con descripciones largas
-			if ($longitudDescripcion > 50) {
-				$productosLargos++;
-			}
-			
-			$interlineasProductos += $interlineasPorProducto;
-		}
-		
-		// Log para debugging (opcional)
-		error_log("Factura {$this->codigo}: {$cantidadProductos} productos, {$totalCaracteresProductos} caracteres totales, {$productosLargos} productos largos");
-		
-		// Total de interlíneas para esta factura específica
-		$totalInterlineas = $interlineasEncabezado + $interlineasProductos + $interlineasResumen + $interlineasNota;
-		
-		// Convertir a milímetros
-		$alturaCalculada = $totalInterlineas * $interlineaBase;
-		
-		// Asegurar altura mínima y máxima
-		$alturaFinal = max(120, min($alturaCalculada, 600));
+		$medidor = new MedidorLineas();
 
-		$pdf->AddPage('P', array(75, $alturaFinal));
+		// Primero generamos el contenido para medir las líneas reales
+		$medidor->marcarInicio('total');
         $numVendedor = $respuestaVendedor['telefono'] ?? 'N/A';
 		
         //---------------------------------------------------------
         // SINTAXIS DE ARRAY CORREGIDA: {$array['key']}
+		
+		// MARCADOR: Inicio del encabezado
+		$medidor->marcarInicio('encabezado');
+		
 		$bloque1 = <<<EOF
 <table style="font-size:10px; text-align:center">
 	<tr>
@@ -214,7 +206,11 @@ class imprimirFactura
 	</tr>
 </table>
 EOF;
-		$pdf->writeHTML($bloque1, false, false, false, false, '');
+		
+		// MARCADOR: Fin del encabezado e inicio de productos
+		$medidor->agregarLinea($bloque1);
+		$lineasEncabezado = $medidor->marcarFin('encabezado');
+		$medidor->marcarInicio('productos');
 
 		// ---------------------------------------------------------
 
@@ -240,8 +236,14 @@ EOF;
 	</tr>
 </table>
 EOF;
-			$pdf->writeHTML($bloque2, false, false, false, false, '');
+			
+			// MARCADOR: Agregar líneas de este producto
+			$medidor->agregarLinea($bloque2);
 		}
+		
+		// MARCADOR: Fin de productos e inicio de resumen
+		$lineasProductos = $medidor->marcarFin('productos');
+		$medidor->marcarInicio('resumen');
 		
 		// ---------------------------------------------------------
 		$bloque3 = <<<EOF
@@ -296,6 +298,60 @@ EOF;
 </table>
 EOF;
 
+		// MARCADOR: Fin del resumen e inicio del footer
+		$medidor->agregarLinea($bloque3);
+		$lineasResumen = $medidor->marcarFin('resumen');
+		$medidor->marcarInicio('footer');
+		
+		// MARCADOR: Fin del footer y total
+		$lineasFooter = $medidor->marcarFin('footer');
+		$totalLineas = $medidor->marcarFin('total');
+		
+		// Calcular altura basada en líneas reales medidas
+		$interlineaBase = 4; // mm por interlínea
+		$alturaCalculada = $totalLineas * $interlineaBase;
+		$alturaFinal = max(120, min($alturaCalculada, 600));
+		
+		// Log detallado de la medición
+		error_log("Factura {$this->codigo} - Medición real:");
+		error_log("  Encabezado: {$lineasEncabezado} líneas");
+		error_log("  Productos: {$lineasProductos} líneas");
+		error_log("  Resumen: {$lineasResumen} líneas");
+		error_log("  Footer: {$lineasFooter} líneas");
+		error_log("  Total: {$totalLineas} líneas");
+		error_log("  Altura calculada: {$alturaCalculada}mm");
+		error_log("  Altura final: {$alturaFinal}mm");
+
+		// AHORA CREAMOS EL PDF CON LA ALTURA CORRECTA
+		$pdf->AddPage('P', array(75, $alturaFinal));
+		
+		// Escribir el contenido en el PDF
+		$pdf->writeHTML($bloque1, false, false, false, false, '');
+		
+		foreach ($productos as $key => $item) {
+			$valorUnitario = number_format($item["precio"] ?? 0, 2, ',', '.');
+			$precioTotal = number_format($item["total"] ?? 0, 2, ',', '.');
+			$descripcionItem = $item["descripcion"];
+			$cantidadItem = $item["cantidad"];
+
+			$bloque2 = <<<EOF
+<table style="font-size:10px;">
+	<tr>
+		<td style="width:160px; text-align:left; font-size:9px; padding-left:2px">
+		 {$descripcionItem}
+		</td>
+	</tr>
+	<tr>
+		<td style="width:180px; text-align:right">
+		$ {$valorUnitario} Und * {$cantidadItem}  = $ {$precioTotal}
+		<br>
+		</td>
+	</tr>
+</table>
+EOF;
+			$pdf->writeHTML($bloque2, false, false, false, false, '');
+		}
+		
 		$pdf->writeHTML($bloque3, false, false, false, false, '');
 
 		// ---------------------------------------------------------
