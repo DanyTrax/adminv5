@@ -16,9 +16,17 @@
             <div class="box-header with-border">
                 <h3 class="box-title">Registro de Descargas</h3>
                 <div class="box-tools pull-right">
-                    <button type="button" class="btn btn-success btn-sm" id="btn-exportar-excel">
-                        <i class="fa fa-file-excel-o"></i> Exportar Excel
-                    </button>
+                    <?php
+                        $urlDescarga = "vistas/modulos/descargar-registro-descargas.php";
+                        if (isset($_GET["fechaInicial"])) {
+                            $urlDescarga .= "?fechaInicial=" . $_GET["fechaInicial"] . "&fechaFinal=" . $_GET["fechaFinal"];
+                        }
+                    ?>
+                    <a href="<?= $urlDescarga ?>" style="margin-left:10px;">
+                        <button class="btn btn-success btn-sm" style="margin-right: 15px;">
+                            <i class="fa fa-file-excel-o"></i> Exportar Excel
+                        </button>
+                    </a>
                     <button type="button" class="btn btn-primary btn-sm" onclick="location.reload()">
                         <i class="fa fa-refresh"></i> Actualizar
                     </button>
@@ -111,79 +119,6 @@ $(document).ready(function() {
         });
     }
     
-    // Botón exportar Excel
-    $("#btn-exportar-excel").click(function() {
-        exportarExcel();
-    });
-    
     // El filtro de fechas se activa automáticamente desde filtros-fechas.js
 });
-
-function exportarExcel() {
-    // Obtener parámetros de fecha actuales
-    var fechaInicial = null;
-    var fechaFinal = null;
-    
-    // Verificar si hay parámetros de fecha en la URL
-    var urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('fechaInicial')) {
-        fechaInicial = urlParams.get('fechaInicial');
-        fechaFinal = urlParams.get('fechaFinal');
-    }
-    
-    // Mostrar loading
-    $("#btn-exportar-excel").prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Generando...');
-    
-    // Hacer petición AJAX
-    $.ajax({
-        url: "ajax/exportar-registro-descargas.ajax.php",
-        method: "POST",
-        data: {
-            fechaInicial: fechaInicial,
-            fechaFinal: fechaFinal
-        },
-        dataType: "json",
-        success: function(response) {
-            if (response.success) {
-                // Crear y descargar archivo Excel
-                descargarExcel(response.data, response.filename);
-            } else {
-                alert("Error al generar el reporte: " + response.message);
-            }
-        },
-        error: function() {
-            alert("Error al conectar con el servidor");
-        },
-        complete: function() {
-            // Restaurar botón
-            $("#btn-exportar-excel").prop('disabled', false).html('<i class="fa fa-file-excel-o"></i> Exportar Excel');
-        }
-    });
-}
-
-function descargarExcel(datos, nombreArchivo) {
-    // Crear contenido CSV (compatible con Excel)
-    var contenido = '';
-    
-    datos.forEach(function(fila) {
-        contenido += fila.map(function(celda) {
-            // Escapar comillas y envolver en comillas si contiene comas
-            if (typeof celda === 'string' && (celda.includes(',') || celda.includes('"'))) {
-                return '"' + celda.replace(/"/g, '""') + '"';
-            }
-            return celda;
-        }).join(',') + '\n';
-    });
-    
-    // Crear blob y descargar
-    var blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
-    var link = document.createElement("a");
-    var url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", nombreArchivo.replace('.xlsx', '.csv'));
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
 </script>
