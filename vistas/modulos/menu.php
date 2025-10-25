@@ -238,17 +238,7 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" 
 
                 if ($_SESSION["perfil"] == "Administrador") {
 
-                    echo '<li>
-
-                        <a href="reportes">
-                            
-                            <i class="fa fa-circle-o"></i>
-                            <span>Reporte de ventas</span>
-
-                        </a>
-
-                    </li>';
-                    echo '<li><a href="reporte-detallado"><span>Reporte Detallado</span></a></li>';
+                    // Reporte de ventas y reporte detallado eliminados del menú
                 }
 
 
@@ -284,12 +274,7 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Contador" 
                 </a>
               </li>
         
-        <li>
-                        <a href="reporte-detallado">
-                    <i class="fa fa-line-chart"></i>
-                    <span>Reporte detallado</span>
-                </a>
-              </li>
+        // Reporte detallado eliminado del menú
         
         <li>
                 <a href="contabilidad">
