@@ -79,12 +79,12 @@ class imprimirFactura
 		$fechaVenta = substr($respuestaVenta["fecha_venta"], 0, -8);
 		$fechaAbono = substr($respuestaVenta["fecha_abono"], 0, -8);
 		$productos = json_decode($respuestaVenta["productos"], true);
-		$neto = number_format($respuestaVenta["neto"] ?? 0, 2, ',', '.');
-		$impuesto = number_format($respuestaVenta["impuesto"] ?? 0, 2, ',', '.');
-		$total = number_format($respuestaVenta["total"] ?? 0, 2, ',', '.');
+		$neto = number_format($respuestaVenta["neto"] ?? 0, 0, ',', '.');
+		$impuesto = number_format($respuestaVenta["impuesto"] ?? 0, 0, ',', '.');
+		$total = number_format($respuestaVenta["total"] ?? 0, 0, ',', '.');
 		$detalle = substr($respuestaVenta["detalle"], 0);
-		$inabono = number_format($respuestaVenta["abono"] ?? 0, 2, ',', '.');
-		$ultabono = number_format($respuestaVenta["Ult_abono"] ?? 0, 2, ',', '.');
+		$inabono = number_format($respuestaVenta["abono"] ?? 0, 0, ',', '.');
+		$ultabono = number_format($respuestaVenta["Ult_abono"] ?? 0, 0, ',', '.');
         $mpago = substr($respuestaVenta["metodo_pago"], 0);
 
 		//TRAEMOS LA INFORMACI�0�7N DEL CLIENTE
@@ -147,7 +147,7 @@ class imprimirFactura
         $tikUl = "";
 
 		if ($respuestaVenta["abono"] > 0 && $sumab_tot > 0) {
-			$restabono = "$ " . number_format($sumab_tot, 2, ',', '.');
+			$restabono = "$ " . number_format($sumab_tot, 0, ',', '.');
 			$tikUl = "SE DEBE:";
 		}
 
@@ -155,7 +155,7 @@ class imprimirFactura
 		$tikabono = "";
 		$tiktipo = "";
 		if ($mpago == "Abono") {
-			$tikabono = "$ " . number_format($respuestaVenta["abono"], 2, ',', '.');
+			$tikabono = "$ " . number_format($respuestaVenta["abono"], 0, ',', '.');
 			$tiktipo = "ABONO";
 			$totdebe = "TOTAL";
 		} elseif ($mpago == "Se Debe") {
@@ -236,8 +236,8 @@ EOF;
 
 		foreach ($productos as $key => $item) {
 
-			$valorUnitario = number_format($item["precio"] ?? 0, 2, ',', '.');
-			$precioTotal = number_format($item["total"] ?? 0, 2, ',', '.');
+			$valorUnitario = number_format($item["precio"] ?? 0, 0, ',', '.');
+			$precioTotal = number_format($item["total"] ?? 0, 0, ',', '.');
 			$descripcionItem = $item["descripcion"];
 			$cantidadItem = $item["cantidad"];
 
@@ -422,8 +422,8 @@ EOF;
 		$pdf->writeHTML($bloque1, false, false, false, false, '');
 		
 		foreach ($productos as $key => $item) {
-			$valorUnitario = number_format($item["precio"] ?? 0, 2, ',', '.');
-			$precioTotal = number_format($item["total"] ?? 0, 2, ',', '.');
+			$valorUnitario = number_format($item["precio"] ?? 0, 0, ',', '.');
+			$precioTotal = number_format($item["total"] ?? 0, 0, ',', '.');
 			$descripcionItem = $item["descripcion"];
 			$cantidadItem = $item["cantidad"];
 
