@@ -519,6 +519,9 @@ $(document).on('click', '.btnCrearDespachoDesdeSolicitud', function() {
                 // Crear URL con parámetros
                 var url = 'crear-despacho?desde_solicitud=1&id_solicitud=' + idSolicitud + '&numero_solicitud=' + encodeURIComponent(numeroSolicitud);
                 
+                console.log("🔍 ANTES DE MOSTRAR MODAL - URL:", url);
+                console.log("🔍 ANTES DE MOSTRAR MODAL - Productos:", productos);
+                
                 // Mostrar modal de selección de productos
                 mostrarModalSeleccionProductos(solicitud, productos, url);
                 
@@ -1932,6 +1935,10 @@ function mostrarStockSucursalesEnTabla(stockData) {
 MOSTRAR MODAL DE SELECCIÓN DE PRODUCTOS
 =============================================*/
 function mostrarModalSeleccionProductos(solicitud, productos, url) {
+    console.log("🔍 MOSTRAR MODAL SELECCIÓN - INICIO");
+    console.log("🔍 Solicitud:", solicitud);
+    console.log("🔍 Productos:", productos);
+    console.log("🔍 URL:", url);
     
     // Crear HTML de la modal
     var modalHtml = `
@@ -2070,7 +2077,9 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
     configurarEventosModalSeleccion(url);
     
     // Mostrar modal
+    console.log("🔍 Mostrando modal de selección...");
     $('#modalSeleccionProductos').modal('show');
+    console.log("🔍 Modal mostrada correctamente");
 }
 
 /*=============================================
