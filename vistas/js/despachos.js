@@ -396,18 +396,25 @@ function configurarBotonesModalDespacho(despacho) {
     
     // BOTÓN EDITAR (solo pendientes y NO para Transportador)
     var perfilUsuario = window.perfilUsuario || "Usuario";
+    console.log("🔍 Verificando perfil para botones:", perfilUsuario, "Estado:", despacho.estado);
+    
     if(despacho.estado === 'pendiente' && perfilUsuario !== 'Transportador') {
+        console.log("✅ Mostrando botón Editar");
         html += `
             <button type="button" class="btn btn-info" onclick="editarDespacho(${despacho.id})">
                 <i class="fa fa-edit"></i> Editar
             </button>
         `;
+    } else {
+        console.log("❌ Ocultando botón Editar - Perfil:", perfilUsuario, "Estado:", despacho.estado);
     }
     
     // BOTÓN ELIMINAR (pendientes para todos excepto Transportador, cualquier estado para administradores)
     var puedeEliminar = (despacho.estado === 'pendiente' && perfilUsuario !== 'Transportador') || perfilUsuario === 'Administrador';
+    console.log("🔍 Puede eliminar:", puedeEliminar, "Perfil:", perfilUsuario, "Estado:", despacho.estado);
     
     if(puedeEliminar) {
+        console.log("✅ Mostrando botón Eliminar");
         var textoEliminar = despacho.estado === 'pendiente' ? 'Eliminar' : 'Eliminar (Admin)';
         var claseBoton = despacho.estado === 'pendiente' ? 'btn-danger' : 'btn-warning';
         
@@ -416,6 +423,8 @@ function configurarBotonesModalDespacho(despacho) {
                 <i class="fa fa-trash"></i> ${textoEliminar}
             </button>
         `;
+    } else {
+        console.log("❌ Ocultando botón Eliminar - Perfil:", perfilUsuario, "Estado:", despacho.estado);
     }
     
     $("#botonesAccionDespacho").html(html);
