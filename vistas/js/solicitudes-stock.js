@@ -524,8 +524,12 @@ $(document).on('click', '.btnCrearDespachoDesdeSolicitud', function() {
                 
                 // Mostrar modal de selección de productos
                 console.log("🔍 LLAMANDO A mostrarModalSeleccionProductos...");
-                mostrarModalSeleccionProductos(solicitud, productos, url);
-                console.log("🔍 DESPUÉS DE LLAMAR A mostrarModalSeleccionProductos");
+                try {
+                    mostrarModalSeleccionProductos(solicitud, productos, url);
+                    console.log("🔍 DESPUÉS DE LLAMAR A mostrarModalSeleccionProductos - ÉXITO");
+                } catch(error) {
+                    console.error("❌ ERROR al llamar mostrarModalSeleccionProductos:", error);
+                }
                 
             } else {
                 swal({
@@ -1942,6 +1946,8 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
     console.log("🔍 Productos:", productos);
     console.log("🔍 URL:", url);
     
+    try {
+    
     // Crear HTML de la modal
     var modalHtml = `
         <div class="modal fade" id="modalSeleccionProductos" tabindex="-1" role="dialog">
@@ -2062,6 +2068,10 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
     console.log("🔍 Mostrando modal de selección...");
     $('#modalSeleccionProductos').modal('show');
     console.log("🔍 Modal mostrada correctamente");
+    
+    } catch(error) {
+        console.error("❌ ERROR en mostrarModalSeleccionProductos:", error);
+    }
 }
 
 /*=============================================
