@@ -69,7 +69,6 @@ class imprimirFactura
 {
 
 	public $codigo;
-	public $formato;
 
 	public function traerImpresionFactura()
 	{
@@ -391,5 +390,4 @@ EOF;
 
 $factura = new imprimirFactura();
 $factura->codigo = $_GET["codigo"];
-$factura->formato = $_GET["formato"] ?? 'factura'; // 'factura' o 'ticket'
 $factura->traerImpresionFactura();

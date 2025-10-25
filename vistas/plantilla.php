@@ -170,9 +170,6 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "stock-transito" => ["Administrador", "Vendedor", "Contador", "Transportador"],
         "registro-descargas-simple" => ["Administrador", "Vendedor", "Contador", "Transportador"],
         "registro-descargas-funcional" => ["Administrador", "Vendedor", "Contador", "Transportador"],
-        "ticket-termico" => ["Administrador", "Vendedor", "Contador", "Transportador"],
-        "factura-inteligente" => ["Administrador", "Vendedor", "Contador", "Transportador"],
-        "test-ticket" => ["Administrador", "Vendedor", "Contador", "Transportador"],
         "salir" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"]
       ];
 
