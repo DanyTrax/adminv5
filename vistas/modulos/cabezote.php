@@ -38,24 +38,14 @@
 		<!-- Nombre de la sucursal actual -->
 		<div class="navbar-brand" style="color: white; font-size: 16px; font-weight: 500; margin-left: 20px; line-height: 50px;">
 			<?php
-			// Obtener información de la sucursal actual
-			$sucursalId = isset($_SESSION["sucursal"]) ? $_SESSION["sucursal"] : 1; // Default a sucursal 1
+			// Obtener nombre de sucursal desde BD local
+			require_once "modelos/conexion.php";
+			$stmt = Conexion::conectar()->prepare("SELECT nombre FROM sucursal_local LIMIT 1");
+			$stmt->execute();
+			$sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
 			
-			try {
-				require_once "controladores/sucursales.controlador.php";
-				$sucursalActual = ControladorSucursales::ctrMostrarSucursales("sucursal_local", "id", $sucursalId, "id");
-				if($sucursalActual && isset($sucursalActual["nombre"])) {
-					echo '<i class="fa fa-building" style="margin-right: 8px; color: #fff;"></i>';
-					echo $sucursalActual["nombre"];
-				} else {
-					echo '<i class="fa fa-building" style="margin-right: 8px; color: #fff;"></i>';
-					echo 'Sucursal Principal';
-				}
-			} catch (Exception $e) {
-				// En caso de error, mostrar sucursal por defecto
-				echo '<i class="fa fa-building" style="margin-right: 8px; color: #fff;"></i>';
-				echo 'Sucursal Principal';
-			}
+			echo '<i class="fa fa-building" style="margin-right: 8px; color: #fff;"></i>';
+			echo $sucursal ? $sucursal["nombre"] : 'Sucursal Local';
 			?>
 		</div>
 
