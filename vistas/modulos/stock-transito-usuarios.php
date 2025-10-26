@@ -219,10 +219,20 @@ foreach($transportadores as $productos) {
                                                    </span>
                                                </td>
                                                <td>
-                                                   <span class="text-muted">
-                                                       <i class="fa fa-building"></i> 
-                                                       Múltiples sucursales
-                                                   </span>
+                                                   <?php 
+                                                   // Determinar si hay múltiples sucursales
+                                                   $sucursales = array_unique(array_column($producto['detalles'], 'sucursal_origen'));
+                                                   if (count($sucursales) > 1): ?>
+                                                       <span class="text-muted">
+                                                           <i class="fa fa-building"></i> 
+                                                           Múltiples sucursales
+                                                       </span>
+                                                   <?php else: ?>
+                                                       <span class="text-muted">
+                                                           <i class="fa fa-building"></i> 
+                                                           <?php echo $sucursales[0]; ?>
+                                                       </span>
+                                                   <?php endif; ?>
                                                </td>
                                                <td style="text-align: center;">
                                                    <span class="badge bg-blue" style="font-size: 16px; padding: 8px 12px;">
