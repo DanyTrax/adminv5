@@ -25,14 +25,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     writeLog("Headers: " . print_r(getallheaders(), true));
     writeLog("=== FIN LLAMADA AJAX ===");
     
-    // Responder con JSON para JavaScript
-    header('Content-Type: application/json');
-    echo json_encode([
-        'success' => true,
-        'message' => 'Llamada AJAX capturada correctamente',
-        'timestamp' => date('Y-m-d H:i:s'),
-        'log_file' => $logFile
-    ]);
+    // Procesar los datos con el endpoint real
+    try {
+        writeLog("=== PROCESANDO CON ENDPOINT REAL ===");
+        
+        // Incluir el endpoint AJAX real
+        ob_start();
+        include "ajax/registro-descargas-simple.ajax.php";
+        $output = ob_get_contents();
+        ob_end_clean();
+        
+        writeLog("Respuesta endpoint real: " . $output);
+        
+        // Responder con la respuesta del endpoint real
+        header('Content-Type: application/json');
+        echo $output;
+        
+    } catch (Exception $e) {
+        writeLog("Error procesando endpoint real: " . $e->getMessage());
+        
+        // Responder con error
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'error' => 'Error procesando endpoint real: ' . $e->getMessage(),
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+    }
     exit;
 }
 
