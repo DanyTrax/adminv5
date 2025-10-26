@@ -494,7 +494,7 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
                 
                 // Hacer petición AJAX para registrar la descarga
                 $.ajax({
-                    url: "debug-registro-real.php",
+                    url: "ajax/registro-descargas-simple.ajax.php",
                     method: "POST",
                     data: {
                         accion: "registrar_descarga",
@@ -732,7 +732,7 @@ function registrarDescargaOptimizada(codigoProducto, cantidad, observaciones) {
     
     // Enviar registro por AJAX
     $.ajax({
-        url: "debug-registro-real.php",
+        url: "ajax/registro-descargas-simple.ajax.php",
         method: "POST",
         data: datosRegistro,
         dataType: "json",
