@@ -442,9 +442,28 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
                     }
                 });
                 
-                // Obtener datos de la sucursal
+                // Obtener datos de la sucursal actual desde BD local
                 var sucursalId = "1";
                 var sucursalNombre = "Local Pruebas";
+                
+                // Obtener datos reales de la sucursal
+                $.ajax({
+                    url: "ajax/obtener-sucursal-actual.ajax.php",
+                    method: "GET",
+                    data: { accion: "obtener_sucursal_actual" },
+                    dataType: "json",
+                    async: false, // Síncrono para obtener datos antes de continuar
+                    success: function(respuesta) {
+                        if(respuesta.success) {
+                            sucursalId = respuesta.sucursal.id;
+                            sucursalNombre = respuesta.sucursal.nombre;
+                            console.log("🏢 Datos de sucursal obtenidos:", sucursalId, sucursalNombre);
+                        }
+                    },
+                    error: function() {
+                        console.log("⚠️ Error obteniendo datos de sucursal, usando valores por defecto");
+                    }
+                });
                 
                 // Obtener datos del producto y transportador desde stockSeleccionado
                 var descripcionProducto = "";
@@ -693,17 +712,50 @@ function registrarDescargaSimple(codigoProducto, cantidad, observaciones) {
 REGISTRAR DESCARGA DIRECTA
 =============================================*/
 function registrarDescargaDirecta(codigoProducto, cantidad, observaciones) {
-    // Obtener datos del usuario actual desde la sesión
-    var usuarioId = 1; // Valor por defecto
+    // Obtener datos del usuario actual
+    var usuarioId = 1;
     var usuarioNombre = "Usuario";
+    
+    // Obtener datos reales del usuario
+    $.ajax({
+        url: "ajax/obtener-usuario-actual.ajax.php",
+        method: "GET",
+        dataType: "json",
+        async: false, // Síncrono para obtener datos antes de continuar
+        success: function(respuesta) {
+            if(respuesta.success) {
+                usuarioId = respuesta.usuario.id;
+                usuarioNombre = respuesta.usuario.nombre;
+                console.log("👤 Datos de usuario obtenidos:", usuarioId, usuarioNombre);
+            }
+        },
+        error: function() {
+            console.log("⚠️ Error obteniendo datos de usuario, usando valores por defecto");
+        }
+    });
+    
+    // Obtener datos de la sucursal actual desde BD local
     var sucursalId = 1;
     var sucursalNombre = "Sucursal";
     
-    // Intentar obtener datos del DOM
-    if ($("#usuarioId").length > 0) usuarioId = $("#usuarioId").val() || 1;
-    if ($("#usuarioNombre").length > 0) usuarioNombre = $("#usuarioNombre").val() || "Usuario";
-    if ($("#sucursalId").length > 0) sucursalId = $("#sucursalId").val() || 1;
-    if ($("#sucursalNombre").length > 0) sucursalNombre = $("#sucursalNombre").val() || "Sucursal";
+    // Obtener datos reales de la sucursal
+    $.ajax({
+        url: "ajax/obtener-sucursal-actual.ajax.php",
+        method: "GET",
+        data: { accion: "obtener_sucursal_actual" },
+        dataType: "json",
+        async: false, // Síncrono para obtener datos antes de continuar
+        success: function(respuesta) {
+            if(respuesta.success) {
+                sucursalId = respuesta.sucursal.id;
+                sucursalNombre = respuesta.sucursal.nombre;
+                console.log("🏢 Datos de sucursal obtenidos:", sucursalId, sucursalNombre);
+            }
+        },
+        error: function() {
+            console.log("⚠️ Error obteniendo datos de sucursal, usando valores por defecto");
+        }
+    });
     
     // Obtener información del producto desde stockSeleccionado
     var descripcionProducto = "";
