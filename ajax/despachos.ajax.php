@@ -257,8 +257,7 @@ if(isset($_POST["aceptarDespacho"])){
                 UPDATE despachos 
                 SET estado = 'en_transito', 
                     transportador_id = ?, 
-                    nombre_transportador = ?,
-                    fecha_aceptacion = NOW()
+                    nombre_transportador = ?
                 WHERE id = ?
             ");
             $stmtActualizarDespacho->execute([
