@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         writeLog("=== PROBANDO CONTROLADOR ===");
         
         // Incluir controlador
-        require_once __DIR__ . "/../controladores/registro-descargas-simple.controlador.php";
+        require_once "controladores/registro-descargas-simple.controlador.php";
         $controlador = new ControladorRegistroDescargasSimple();
         $resultado = $controlador->ctrRegistrarDescarga();
         
