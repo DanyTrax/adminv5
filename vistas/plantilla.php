@@ -160,6 +160,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "crear-solicitud-stock" => ["Administrador", "Vendedor", "Contador"],
         "editar-cotizacion" => ["Administrador", "Vendedor", "Contador"],
         "medios-pago" => ["Administrador", "Especial"],
+        "medios-pago-central" => ["Administrador", "Especial"],
         "sucursales" => ["Administrador"], 
         "usuarios-central" => ["Administrador"],
         "clientes-central" => ["Administrador"],
