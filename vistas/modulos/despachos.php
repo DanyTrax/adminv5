@@ -23,17 +23,6 @@
 
     <section class="content">
         <?php if($_SESSION["perfil"] == "Transportador"): ?>
-        <!-- INFORMACIÓN ESPECÍFICA PARA TRANSPORTADOR -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="alert alert-info">
-                    <h4><i class="fa fa-info-circle"></i> Información para Transportador</h4>
-                    <p>Como transportador, puedes <strong>aceptar</strong> despachos pendientes y gestionar tu <strong>stock en tránsito</strong>. 
-                    Los despachos que aceptes se agregarán a tu inventario de productos en tránsito.</p>
-                </div>
-            </div>
-        </div>
-        
         <!-- ESTADÍSTICAS RÁPIDAS PARA TRANSPORTADOR -->
         <div class="row">
             <div class="col-md-3">
