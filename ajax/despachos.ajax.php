@@ -160,14 +160,15 @@ if(isset($_POST["aceptarDespacho"])){
             $stmtOrden->execute([$_SESSION["id"]]);
             $siguienteOrden = $stmtOrden->fetch()['siguiente_orden'];
             
-            // Crear cronología de esta carga
-            $cronologiaCarga = json_encode([
+            // Crear cronología de esta carga (estructura consistente)
+            $cronologiaCarga = [
                 'fecha' => date('Y-m-d H:i:s'),
                 'despacho' => $despacho["numero_despacho"],
                 'sucursal_origen' => $despacho["sucursal_origen"],
-                'productos' => count($productosDespacho),
-                'total_cantidad' => array_sum(array_column($productosDespacho, 'cantidad'))
-            ]);
+                'cantidad_agregada' => array_sum(array_column($productosDespacho, 'cantidad')),
+                'orden_carga' => $siguienteOrden,
+                'productos' => count($productosDespacho)
+            ];
             
             foreach($productosDespacho as $producto) {
                 Logger::stock("AGREGAR_TRANSITO", $producto["codigo"], $producto["cantidad"], "despachos.ajax.php", "aceptarDespacho");
@@ -244,7 +245,7 @@ if(isset($_POST["aceptarDespacho"])){
                         $_SESSION["nombre"],
                         $despacho["sucursal_origen"],
                         $siguienteOrden,
-                        $cronologiaCarga,
+                        json_encode($cronologiaCarga),
                         $despacho["sucursal_origen"]
                     ]);
                     
