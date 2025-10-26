@@ -697,6 +697,8 @@ function registrarDescargaOptimizada(codigoProducto, cantidad, observaciones) {
                 datosRegistro.sucursal_id = respuesta.sucursal.id;
                 datosRegistro.sucursal_nombre = respuesta.sucursal.nombre;
                 console.log("✅ Datos de sucursal obtenidos:", respuesta.sucursal.nombre);
+                console.log("✅ URL Base:", respuesta.sucursal.url_base);
+                console.log("✅ URL API:", respuesta.sucursal.url_api);
             } else {
                 console.log("⚠️ Usando datos de sucursal por defecto");
             }
