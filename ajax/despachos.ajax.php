@@ -252,7 +252,24 @@ if(isset($_POST["aceptarDespacho"])){
                 }
             }
             
-            // 9. Confirmar transacciones
+            // 9. Actualizar el despacho con el transportador_id
+            $stmtActualizarDespacho = $conexionCentral->prepare("
+                UPDATE despachos 
+                SET estado = 'en_transito', 
+                    transportador_id = ?, 
+                    nombre_transportador = ?,
+                    fecha_aceptacion = NOW()
+                WHERE id = ?
+            ");
+            $stmtActualizarDespacho->execute([
+                $_SESSION["id"],
+                $_SESSION["nombre"] ?? "Transportador",
+                $idDespacho
+            ]);
+            
+            Logger::info("✅ Despacho actualizado con transportador_id: " . $_SESSION["id"], "despachos.ajax.php", "aceptarDespacho");
+            
+            // 10. Confirmar transacciones
             Logger::transaction("COMMIT", "despachos", [], "despachos.ajax.php", "aceptarDespacho");
             $conexionLocal->commit();
             $conexionCentral->commit();
