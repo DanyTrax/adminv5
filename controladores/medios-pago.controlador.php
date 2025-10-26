@@ -1,52 +1,62 @@
 <?php
+/*=============================================
+CONTROLADOR MEDIOS DE PAGO (MÓDULO ORIGINAL)
+=============================================*/
+
+require_once __DIR__ . "/../modelos/medios-pago.modelo.php";
 
 class ControladorMediosPago {
-
-    // MOSTRAR
-    static public function ctrMostrarMediosPago(){
-        $tabla = "medios_pago";
-        return ModeloMediosPago::mdlMostrarMediosPago($tabla);
-    }
-
-    // CREAR
-    static public function ctrCrearMedioPago(){
-        if(isset($_POST["nuevoMedioPago"])){
-            $tabla = "medios_pago";
-            $datos = $_POST["nuevoMedioPago"];
-            $respuesta = ModeloMediosPago::mdlCrearMedioPago($tabla, $datos);
-            if($respuesta == "ok"){
-                echo '<script>
-                    swal({ type: "success", title: "El medio de pago ha sido guardado", showConfirmButton: true, confirmButtonText: "Cerrar" }).then(function(result){ if (result.value) { window.location = "medios-pago"; } });
-                </script>';
-            }
+    
+    /*=============================================
+    MOSTRAR MEDIOS DE PAGO
+    =============================================*/
+    static public function ctrMostrarMediosPago() {
+        try {
+            $medios = ModeloMediosPago::mdlMostrarMediosPago();
+            return $medios;
+        } catch (Exception $e) {
+            error_log("Error en ctrMostrarMediosPago: " . $e->getMessage());
+            return [];
         }
     }
-
-    // EDITAR
-    static public function ctrEditarMedioPago(){
-        if(isset($_POST["editarMedioPago"])){
-            $tabla = "medios_pago";
-            $datos = array("id"=>$_POST["idMedioPago"], "nombre"=>$_POST["editarMedioPago"]);
-            $respuesta = ModeloMediosPago::mdlEditarMedioPago($tabla, $datos);
-            if($respuesta == "ok"){
-                echo '<script>
-                    swal({ type: "success", title: "El medio de pago ha sido cambiado", showConfirmButton: true, confirmButtonText: "Cerrar" }).then(function(result){ if (result.value) { window.location = "medios-pago"; } });
-                </script>';
-            }
+    
+    /*=============================================
+    CREAR MEDIO DE PAGO
+    =============================================*/
+    static public function ctrCrearMedioPago($datos) {
+        try {
+            $resultado = ModeloMediosPago::mdlCrearMedioPago($datos);
+            return $resultado;
+        } catch (Exception $e) {
+            error_log("Error en ctrCrearMedioPago: " . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
         }
     }
-
-    // BORRAR
-    static public function ctrBorrarMedioPago(){
-        if(isset($_GET["idMedioPago"])){
-            $tabla = "medios_pago";
-            $datos = $_GET["idMedioPago"];
-            $respuesta = ModeloMediosPago::mdlBorrarMedioPago($tabla, $datos);
-            if($respuesta == "ok"){
-                echo '<script>
-                    swal({ type: "success", title: "El medio de pago ha sido borrado", showConfirmButton: true, confirmButtonText: "Cerrar" }).then(function(result){ if (result.value) { window.location = "medios-pago"; } });
-                </script>';
-            }
+    
+    /*=============================================
+    EDITAR MEDIO DE PAGO
+    =============================================*/
+    static public function ctrEditarMedioPago($datos) {
+        try {
+            $resultado = ModeloMediosPago::mdlEditarMedioPago($datos);
+            return $resultado;
+        } catch (Exception $e) {
+            error_log("Error en ctrEditarMedioPago: " . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+    
+    /*=============================================
+    ELIMINAR MEDIO DE PAGO
+    =============================================*/
+    static public function ctrEliminarMedioPago($id) {
+        try {
+            $resultado = ModeloMediosPago::mdlEliminarMedioPago($id);
+            return $resultado;
+        } catch (Exception $e) {
+            error_log("Error en ctrEliminarMedioPago: " . $e->getMessage());
+            return ['success' => false, 'error' => $e->getMessage()];
         }
     }
 }
+?>
