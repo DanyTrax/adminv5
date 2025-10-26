@@ -402,5 +402,165 @@ class ModeloMediosPagoCentral {
             return ['success' => false, 'error' => 'Error: ' . $e->getMessage()];
         }
     }
+
+    static public function mdlObtenerSucursalesDestinoAsignar() {
+        try {
+            $stmt = ConexionCentral::conectar()->prepare("
+                SELECT id, nombre FROM sucursales WHERE activo = 1 ORDER BY nombre ASC
+            ");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en mdlObtenerSucursalesDestinoAsignar: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    static public function mdlAsignarMediosSucursales($mediosPago, $sucursales) {
+        try {
+            $conexion = ConexionCentral::conectar();
+            $conexion->beginTransaction();
+            
+            $asignaciones = 0;
+            
+            foreach ($mediosPago as $medioId) {
+                foreach ($sucursales as $sucursalId) {
+                    // Verificar si ya existe la asignación
+                    $stmtVerificar = $conexion->prepare("
+                        SELECT id FROM medios_pago_sucursal 
+                        WHERE medio_pago_id = ? AND sucursal_id = ?
+                    ");
+                    $stmtVerificar->execute([$medioId, $sucursalId]);
+                    
+                    if (!$stmtVerificar->fetch()) {
+                        // Si no existe, crear nueva asignación activa
+                        $stmtInsertar = $conexion->prepare("
+                            INSERT INTO medios_pago_sucursal (medio_pago_id, sucursal_id, activo) 
+                            VALUES (?, ?, 1)
+                        ");
+                        $stmtInsertar->execute([$medioId, $sucursalId]);
+                        $asignaciones++;
+                    }
+                }
+            }
+            
+            $conexion->commit();
+            return ['success' => true, 'asignaciones' => $asignaciones];
+            
+        } catch (Exception $e) {
+            $conexion->rollBack();
+            error_log("Error en mdlAsignarMediosSucursales: " . $e->getMessage());
+            return ['success' => false, 'error' => 'Error: ' . $e->getMessage()];
+        }
+    }
+
+    static public function mdlSincronizarSucursalesActivas() {
+        try {
+            $conexion = ConexionCentral::conectar();
+            $conexion->beginTransaction();
+            
+            // Obtener todas las sucursales activas
+            $stmtSucursales = $conexion->prepare("
+                SELECT id FROM sucursales WHERE activo = 1
+            ");
+            $stmtSucursales->execute();
+            $sucursalesActivas = $stmtSucursales->fetchAll(PDO::FETCH_COLUMN);
+            
+            // Obtener todos los medios de pago activos
+            $stmtMedios = $conexion->prepare("
+                SELECT id FROM medios_pago_central WHERE activo = 1
+            ");
+            $stmtMedios->execute();
+            $mediosActivos = $stmtMedios->fetchAll(PDO::FETCH_COLUMN);
+            
+            $sincronizaciones = 0;
+            
+            foreach ($mediosActivos as $medioId) {
+                foreach ($sucursalesActivas as $sucursalId) {
+                    // Verificar si ya existe la asignación
+                    $stmtVerificar = $conexion->prepare("
+                        SELECT id FROM medios_pago_sucursal 
+                        WHERE medio_pago_id = ? AND sucursal_id = ?
+                    ");
+                    $stmtVerificar->execute([$medioId, $sucursalId]);
+                    
+                    if (!$stmtVerificar->fetch()) {
+                        // Si no existe, crear nueva asignación activa
+                        $stmtInsertar = $conexion->prepare("
+                            INSERT INTO medios_pago_sucursal (medio_pago_id, sucursal_id, activo) 
+                            VALUES (?, ?, 1)
+                        ");
+                        $stmtInsertar->execute([$medioId, $sucursalId]);
+                        $sincronizaciones++;
+                    }
+                }
+            }
+            
+            $conexion->commit();
+            return [
+                'success' => true, 
+                'medios_sincronizados' => count($mediosActivos),
+                'sucursales_sincronizadas' => count($sucursalesActivas),
+                'sincronizaciones' => $sincronizaciones
+            ];
+            
+        } catch (Exception $e) {
+            $conexion->rollBack();
+            error_log("Error en mdlSincronizarSucursalesActivas: " . $e->getMessage());
+            return ['success' => false, 'error' => 'Error: ' . $e->getMessage()];
+        }
+    }
+
+    static public function mdlDesactivarTodasSucursales($mediosPago) {
+        try {
+            $conexion = ConexionCentral::conectar();
+            $conexion->beginTransaction();
+            
+            $desactivaciones = 0;
+            
+            foreach ($mediosPago as $medioId) {
+                $stmtDesactivar = $conexion->prepare("
+                    UPDATE medios_pago_sucursal SET activo = 0 WHERE medio_pago_id = ?
+                ");
+                if ($stmtDesactivar->execute([$medioId])) {
+                    $desactivaciones += $stmtDesactivar->rowCount();
+                }
+            }
+            
+            $conexion->commit();
+            return ['success' => true, 'desactivaciones' => $desactivaciones];
+            
+        } catch (Exception $e) {
+            $conexion->rollBack();
+            error_log("Error en mdlDesactivarTodasSucursales: " . $e->getMessage());
+            return ['success' => false, 'error' => 'Error: ' . $e->getMessage()];
+        }
+    }
+
+    static public function mdlEliminarTodasAsignaciones($mediosPago) {
+        try {
+            $conexion = ConexionCentral::conectar();
+            $conexion->beginTransaction();
+            
+            $eliminaciones = 0;
+            
+            foreach ($mediosPago as $medioId) {
+                $stmtEliminar = $conexion->prepare("
+                    DELETE FROM medios_pago_sucursal WHERE medio_pago_id = ?
+                ");
+                if ($stmtEliminar->execute([$medioId])) {
+                    $eliminaciones += $stmtEliminar->rowCount();
+                }
+            }
+            
+            $conexion->commit();
+            return ['success' => true, 'eliminaciones' => $eliminaciones];
+            
+        } catch (Exception $e) {
+            $conexion->rollBack();
+            error_log("Error en mdlEliminarTodasAsignaciones: " . $e->getMessage());
+            return ['success' => false, 'error' => 'Error: ' . $e->getMessage()];
+        }
+    }
 }
 ?>

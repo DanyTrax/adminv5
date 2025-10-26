@@ -1,15 +1,8 @@
 <?php
-/*=============================================
-CONTROLADOR MEDIOS DE PAGO CENTRAL
-=============================================*/
-
 require_once __DIR__ . "/../modelos/medios-pago-central.modelo.php";
 
 class ControladorMediosPagoCentral {
     
-    /*=============================================
-    OBTENER MEDIOS DE PAGO CENTRALES
-    =============================================*/
     static public function ctrObtenerMediosPagoCentral() {
         try {
             $medios = ModeloMediosPagoCentral::mdlObtenerMediosPagoCentral();
@@ -19,9 +12,15 @@ class ControladorMediosPagoCentral {
         }
     }
     
-    /*=============================================
-    OBTENER SUCURSALES PARA ESTADO
-    =============================================*/
+    static public function ctrObtenerMedioPagoCentral($id) {
+        try {
+            $medio = ModeloMediosPagoCentral::mdlObtenerMedioPagoCentral($id);
+            return ['success' => true, 'data' => $medio];
+        } catch (Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
     static public function ctrObtenerSucursalesEstado() {
         try {
             $sucursales = ModeloMediosPagoCentral::mdlObtenerSucursalesEstado();
@@ -30,10 +29,7 @@ class ControladorMediosPagoCentral {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
-    
-    /*=============================================
-    OBTENER ESTADO DE MEDIOS POR SUCURSAL
-    =============================================*/
+
     static public function ctrObtenerEstadoMediosSucursal($sucursalId) {
         try {
             $medios = ModeloMediosPagoCentral::mdlObtenerEstadoMediosSucursal($sucursalId);
@@ -42,130 +38,116 @@ class ControladorMediosPagoCentral {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
-    
-    /*=============================================
-    OBTENER SUCURSALES DESTINO PARA ACTIVACIÓN
-    =============================================*/
-    static public function ctrObtenerSucursalesDestinoActivar() {
+
+    static public function ctrObtenerSucursalesDestinoAsignar() {
         try {
-            $sucursales = ModeloMediosPagoCentral::mdlObtenerSucursalesDestinoActivar();
+            $sucursales = ModeloMediosPagoCentral::mdlObtenerSucursalesDestinoAsignar();
             return ['success' => true, 'data' => $sucursales];
         } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
-    
-    /*=============================================
-    OBTENER SUCURSALES DESTINO PARA DESACTIVACIÓN
-    =============================================*/
-    static public function ctrObtenerSucursalesDestinoDesactivar() {
-        try {
-            $sucursales = ModeloMediosPagoCentral::mdlObtenerSucursalesDestinoDesactivar();
-            return ['success' => true, 'data' => $sucursales];
-        } catch (Exception $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
-    }
-    
-    /*=============================================
-    OBTENER ESTADO COMPLETO
-    =============================================*/
+
     static public function ctrObtenerEstadoCompleto() {
         try {
-            $estado = ModeloMediosPagoCentral::mdlObtenerEstadoCompleto();
-            return ['success' => true, 'data' => $estado];
+            $estadoCompleto = ModeloMediosPagoCentral::mdlObtenerEstadoCompleto();
+            return ['success' => true, 'data' => $estadoCompleto];
         } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
-    
-    /*=============================================
-    OBTENER ESTADO DE MEDIO ESPECÍFICO
-    =============================================*/
-    static public function ctrObtenerEstadoMedio($medioId) {
+
+    static public function ctrObtenerEstadoMedioEspecifico($medioId) {
         try {
-            $estado = ModeloMediosPagoCentral::mdlObtenerEstadoMedio($medioId);
-            return ['success' => true, 'medio' => $estado['medio'], 'sucursales' => $estado['sucursales']];
+            $estado = ModeloMediosPagoCentral::mdlObtenerEstadoMedioEspecifico($medioId);
+            return ['success' => true, 'data' => $estado['data'], 'medio_nombre' => $estado['medio_nombre']];
         } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
     
-    /*=============================================
-    CREAR MEDIO DE PAGO
-    =============================================*/
     static public function ctrCrearMedioPago($datos) {
         try {
-            // Validar datos
-            if (empty($datos['codigo']) || empty($datos['nombre']) || empty($datos['tipo'])) {
-                return ['success' => false, 'error' => 'Todos los campos son obligatorios'];
-            }
-            
             $resultado = ModeloMediosPagoCentral::mdlCrearMedioPago($datos);
             return $resultado;
         } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
-    
-    /*=============================================
-    ACTIVAR MEDIOS EN SUCURSALES
-    =============================================*/
-    static public function ctrActivarMediosSucursales($mediosPago, $sucursales) {
+
+    static public function ctrEditarMedioPago($datos) {
         try {
-            if (empty($mediosPago) || empty($sucursales)) {
-                return ['success' => false, 'error' => 'Debes seleccionar medios y sucursales'];
-            }
-            
-            $resultado = ModeloMediosPagoCentral::mdlActivarMediosSucursales($mediosPago, $sucursales);
+            $resultado = ModeloMediosPagoCentral::mdlEditarMedioPago($datos);
             return $resultado;
         } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
-    
-    /*=============================================
-    DESACTIVAR MEDIOS EN SUCURSALES
-    =============================================*/
-    static public function ctrDesactivarMediosSucursales($mediosPago, $sucursales) {
+
+    static public function ctrEliminarMedioPago($id) {
         try {
-            if (empty($mediosPago) || empty($sucursales)) {
-                return ['success' => false, 'error' => 'Debes seleccionar medios y sucursales'];
-            }
-            
-            $resultado = ModeloMediosPagoCentral::mdlDesactivarMediosSucursales($mediosPago, $sucursales);
+            $resultado = ModeloMediosPagoCentral::mdlEliminarMedioPago($id);
             return $resultado;
         } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
-    
-    /*=============================================
-    TOGGLE ESTADO DE MEDIO EN SUCURSAL
-    =============================================*/
+
+    static public function ctrAsignarMediosSucursales($mediosPago, $sucursales) {
+        try {
+            if (empty($mediosPago) || empty($sucursales)) {
+                return ['success' => false, 'error' => 'Debes seleccionar medios y sucursales'];
+            }
+            
+            $resultado = ModeloMediosPagoCentral::mdlAsignarMediosSucursales($mediosPago, $sucursales);
+            return $resultado;
+        } catch (Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    static public function ctrSincronizarSucursalesActivas() {
+        try {
+            $resultado = ModeloMediosPagoCentral::mdlSincronizarSucursalesActivas();
+            return $resultado;
+        } catch (Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    static public function ctrDesactivarTodasSucursales($mediosPago) {
+        try {
+            if (empty($mediosPago)) {
+                return ['success' => false, 'error' => 'Debes seleccionar medios de pago'];
+            }
+            
+            $resultado = ModeloMediosPagoCentral::mdlDesactivarTodasSucursales($mediosPago);
+            return $resultado;
+        } catch (Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    static public function ctrEliminarTodasAsignaciones($mediosPago) {
+        try {
+            if (empty($mediosPago)) {
+                return ['success' => false, 'error' => 'Debes seleccionar medios de pago'];
+            }
+            
+            $resultado = ModeloMediosPagoCentral::mdlEliminarTodasAsignaciones($mediosPago);
+            return $resultado;
+        } catch (Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
     static public function ctrToggleEstadoMedioSucursal($medioId, $sucursalId, $nuevoEstado) {
         try {
-            if (empty($medioId) || empty($sucursalId)) {
-                return ['success' => false, 'error' => 'ID de medio y sucursal requeridos'];
+            if (empty($medioId) || empty($sucursalId) || !isset($nuevoEstado)) {
+                return ['success' => false, 'error' => 'ID de medio, sucursal y nuevo estado requeridos'];
             }
             
             $resultado = ModeloMediosPagoCentral::mdlToggleEstadoMedioSucursal($medioId, $sucursalId, $nuevoEstado);
-            return $resultado;
-        } catch (Exception $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
-    }
-    
-    /*=============================================
-    ELIMINAR MEDIO DE PAGO
-    =============================================*/
-    static public function ctrEliminarMedioPago($id) {
-        try {
-            if (empty($id)) {
-                return ['success' => false, 'error' => 'ID de medio de pago requerido'];
-            }
-            
-            $resultado = ModeloMediosPagoCentral::mdlEliminarMedioPago($id);
             return $resultado;
         } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
