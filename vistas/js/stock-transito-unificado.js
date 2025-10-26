@@ -687,7 +687,7 @@ function registrarDescargaOptimizada(codigoProducto, cantidad, observaciones) {
     
     // Obtener datos reales de sucursal (si está disponible)
     $.ajax({
-        url: "ajax/obtener-sucursal-actual.ajax.php",
+        url: "ajax/obtener-sucursal-actual-sin-sesion.ajax.php",
         method: "GET",
         data: { accion: "obtener_sucursal_actual" },
         dataType: "json",
@@ -710,7 +710,7 @@ function registrarDescargaOptimizada(codigoProducto, cantidad, observaciones) {
     
     // Obtener datos reales de usuario (si está disponible)
     $.ajax({
-        url: "ajax/obtener-usuario-actual.ajax.php",
+        url: "ajax/obtener-usuario-actual-sin-sesion.ajax.php",
         method: "GET",
         dataType: "json",
         async: false, // Síncrono para obtener datos antes de continuar
