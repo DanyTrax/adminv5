@@ -14,7 +14,7 @@ require_once "controladores/clientes.controlador.php";
 require_once "controladores/ventas.controlador.php";
 require_once "controladores/cotizaciones.controlador.php";
 require_once "controladores/contabilidad.controlador.php";
-require_once "controladores/medios-pago.controlador.php";
+require_once "controladores/medios-pago-central.controlador.php";
 require_once "controladores/catalogo-maestro.controlador.php";
 require_once "controladores/sucursales.controlador.php";
 require_once "controladores/solicitudes-stock.controlador.php";

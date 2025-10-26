@@ -29,6 +29,7 @@ if(isset($_POST["accion"])) {
                 echo json_encode($medios);
                 break;
                 
+<<<<<<< HEAD
             case "obtener_sucursales_estado":
                 $sucursales = ControladorMediosPagoCentral::ctrObtenerSucursalesEstado();
                 echo json_encode($sucursales);
@@ -61,6 +62,29 @@ if(isset($_POST["accion"])) {
                 echo json_encode($estado);
                 break;
                 
+=======
+            case "obtener_sucursales_asignacion":
+                $sucursales = ControladorMediosPagoCentral::ctrObtenerSucursalesAsignacion();
+                echo json_encode($sucursales);
+                break;
+                
+            case "obtener_medios_asignados_sucursal":
+                $sucursalId = $_POST["sucursal_id"];
+                $medios = ControladorMediosPagoCentral::ctrObtenerMediosAsignadosSucursal($sucursalId);
+                echo json_encode($medios);
+                break;
+                
+            case "obtener_sucursales_disponibles_asignacion":
+                $sucursales = ControladorMediosPagoCentral::ctrObtenerSucursalesDisponiblesAsignacion();
+                echo json_encode($sucursales);
+                break;
+                
+            case "obtener_sucursales_destino_copia":
+                $sucursales = ControladorMediosPagoCentral::ctrObtenerSucursalesDestinoCopia();
+                echo json_encode($sucursales);
+                break;
+                
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
             case "crear_medio_pago":
                 $datos = [
                     'codigo' => $_POST["codigo"],
@@ -72,6 +96,7 @@ if(isset($_POST["accion"])) {
                 echo json_encode($resultado);
                 break;
                 
+<<<<<<< HEAD
             case "activar_medios_sucursales":
                 $mediosPago = $_POST["medios_pago"];
                 $sucursales = $_POST["sucursales"];
@@ -91,6 +116,24 @@ if(isset($_POST["accion"])) {
                 $sucursalId = $_POST["sucursal_id"];
                 $nuevoEstado = $_POST["nuevo_estado"];
                 $resultado = ControladorMediosPagoCentral::ctrToggleEstadoMedioSucursal($medioId, $sucursalId, $nuevoEstado);
+=======
+            case "asignar_medios_sucursales":
+                $mediosPago = $_POST["medios_pago"];
+                $sucursales = $_POST["sucursales"];
+                $resultado = ControladorMediosPagoCentral::ctrAsignarMediosSucursales($mediosPago, $sucursales);
+                echo json_encode($resultado);
+                break;
+                
+            case "copiar_medios_masivo":
+                $mediosPago = $_POST["medios_pago"];
+                $sucursales = $_POST["sucursales"];
+                $resultado = ControladorMediosPagoCentral::ctrCopiarMediosMasivo($mediosPago, $sucursales);
+                echo json_encode($resultado);
+                break;
+                
+            case "sincronizar_todos_medios":
+                $resultado = ControladorMediosPagoCentral::ctrSincronizarTodosMedios();
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                 echo json_encode($resultado);
                 break;
                 
@@ -100,6 +143,16 @@ if(isset($_POST["accion"])) {
                 echo json_encode($resultado);
                 break;
                 
+<<<<<<< HEAD
+=======
+            case "desasignar_medio_sucursal":
+                $medioId = $_POST["medio_id"];
+                $sucursalId = $_POST["sucursal_id"];
+                $resultado = ControladorMediosPagoCentral::ctrDesasignarMedioSucursal($medioId, $sucursalId);
+                echo json_encode($resultado);
+                break;
+                
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
             default:
                 echo json_encode(['success' => false, 'error' => 'Acción no reconocida']);
                 break;

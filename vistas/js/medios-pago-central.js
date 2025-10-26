@@ -5,13 +5,18 @@ JAVASCRIPT MEDIOS DE PAGO CENTRAL
 $(document).ready(function() {
     // Cargar datos iniciales
     cargarMediosPagoCentral();
+<<<<<<< HEAD
     cargarSucursalesEstado();
+=======
+    cargarSucursalesAsignacion();
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
     
     // Event listeners
     $("#btnNuevoMedioPago").click(function() {
         abrirModalNuevoMedioPago();
     });
     
+<<<<<<< HEAD
     $("#btnActivarSucursales").click(function() {
         abrirModalActivarSucursales();
     });
@@ -22,12 +27,25 @@ $(document).ready(function() {
     
     $("#btnVerEstado").click(function() {
         mostrarEstadoCompleto();
+=======
+    $("#btnAsignarSucursales").click(function() {
+        abrirModalAsignarSucursales();
+    });
+    
+    $("#btnCopiarMasivo").click(function() {
+        abrirModalCopiaMasiva();
+    });
+    
+    $("#btnSincronizarTodos").click(function() {
+        sincronizarTodosMedios();
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
     });
     
     $("#btnGuardarMedioPago").click(function() {
         guardarMedioPago();
     });
     
+<<<<<<< HEAD
     $("#btnConfirmarActivacion").click(function() {
         confirmarActivacionSucursales();
     });
@@ -38,6 +56,18 @@ $(document).ready(function() {
     
     $("#selectSucursalEstado").change(function() {
         cargarEstadoMediosSucursal($(this).val());
+=======
+    $("#btnConfirmarAsignacion").click(function() {
+        confirmarAsignacionSucursales();
+    });
+    
+    $("#btnConfirmarCopiaMasiva").click(function() {
+        confirmarCopiaMasiva();
+    });
+    
+    $("#selectSucursalAsignacion").change(function() {
+        cargarMediosAsignadosSucursal($(this).val());
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
     });
     
     $("#selectAllMedios").change(function() {
@@ -81,9 +111,12 @@ function cargarMediosPagoCentral() {
                                 <button class="btn btn-xs btn-primary" onclick="editarMedioPago(${medio.id})" title="Editar">
                                     <i class="fa fa-edit"></i>
                                 </button>
+<<<<<<< HEAD
                                 <button class="btn btn-xs btn-info" onclick="verEstadoMedio(${medio.id})" title="Ver Estado">
                                     <i class="fa fa-eye"></i>
                                 </button>
+=======
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                                 <button class="btn btn-xs btn-danger" onclick="eliminarMedioPago(${medio.id})" title="Eliminar">
                                     <i class="fa fa-trash"></i>
                                 </button>
@@ -108,12 +141,21 @@ function cargarMediosPagoCentral() {
     });
 }
 
+<<<<<<< HEAD
 // Cargar sucursales para estado
 function cargarSucursalesEstado() {
     $.ajax({
         url: "ajax/medios-pago-central.ajax.php",
         method: "POST",
         data: { accion: "obtener_sucursales_estado" },
+=======
+// Cargar sucursales para asignación
+function cargarSucursalesAsignacion() {
+    $.ajax({
+        url: "ajax/medios-pago-central.ajax.php",
+        method: "POST",
+        data: { accion: "obtener_sucursales_asignacion" },
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
         dataType: "json",
         success: function(respuesta) {
             if (respuesta.success) {
@@ -121,16 +163,27 @@ function cargarSucursalesEstado() {
                 respuesta.data.forEach(function(sucursal) {
                     html += `<option value="${sucursal.id}">${sucursal.nombre}</option>`;
                 });
+<<<<<<< HEAD
                 $("#selectSucursalEstado").html(html);
+=======
+                $("#selectSucursalAsignacion").html(html);
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
             }
         }
     });
 }
 
+<<<<<<< HEAD
 // Cargar estado de medios por sucursal
 function cargarEstadoMediosSucursal(sucursalId) {
     if (!sucursalId) {
         $("#estadoMediosSucursal").html('<p class="text-muted">Selecciona una sucursal para ver el estado de los medios</p>');
+=======
+// Cargar medios asignados por sucursal
+function cargarMediosAsignadosSucursal(sucursalId) {
+    if (!sucursalId) {
+        $("#mediosAsignadosSucursal").html('<p class="text-muted">Selecciona una sucursal para ver sus medios asignados</p>');
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
         return;
     }
     
@@ -138,7 +191,11 @@ function cargarEstadoMediosSucursal(sucursalId) {
         url: "ajax/medios-pago-central.ajax.php",
         method: "POST",
         data: { 
+<<<<<<< HEAD
             accion: "obtener_estado_medios_sucursal",
+=======
+            accion: "obtener_medios_asignados_sucursal",
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
             sucursal_id: sucursalId
         },
         dataType: "json",
@@ -159,8 +216,13 @@ function cargarEstadoMediosSucursal(sucursalId) {
                                     <p>${estadoBadge}</p>
                                 </div>
                                 <div class="media-right">
+<<<<<<< HEAD
                                     <button class="btn btn-xs btn-warning" onclick="toggleEstadoMedioSucursal(${medio.id}, ${sucursalId}, ${medio.activo ? 0 : 1})" title="${medio.activo ? 'Desactivar' : 'Activar'}">
                                         <i class="fa fa-${medio.activo ? 'times' : 'check'}"></i>
+=======
+                                    <button class="btn btn-xs btn-danger" onclick="desasignarMedioSucursal(${medio.id}, ${sucursalId})" title="Desasignar">
+                                        <i class="fa fa-times"></i>
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                                     </button>
                                 </div>
                             </div>
@@ -170,7 +232,11 @@ function cargarEstadoMediosSucursal(sucursalId) {
                     html = '<p class="text-muted">No hay medios asignados a esta sucursal</p>';
                 }
                 
+<<<<<<< HEAD
                 $("#estadoMediosSucursal").html(html);
+=======
+                $("#mediosAsignadosSucursal").html(html);
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
             }
         }
     });
@@ -187,6 +253,7 @@ function actualizarMediosSeleccionados() {
         });
     });
     
+<<<<<<< HEAD
     // Actualizar en modal de activación
     var htmlActivar = "";
     if (mediosSeleccionados.length > 0) {
@@ -208,6 +275,29 @@ function actualizarMediosSeleccionados() {
         htmlDesactivar = '<p class="text-muted">Selecciona medios de pago de la tabla</p>';
     }
     $("#mediosSeleccionadosDesactivar").html(htmlDesactivar);
+=======
+    // Actualizar en modal de asignación
+    var htmlAsignacion = "";
+    if (mediosSeleccionados.length > 0) {
+        mediosSeleccionados.forEach(function(medio) {
+            htmlAsignacion += `<span class="label label-primary" style="margin: 2px;">${medio.codigo}</span>`;
+        });
+    } else {
+        htmlAsignacion = '<p class="text-muted">Selecciona medios de pago de la tabla</p>';
+    }
+    $("#mediosSeleccionadosAsignacion").html(htmlAsignacion);
+    
+    // Actualizar en modal de copia masiva
+    var htmlCopia = "";
+    if (mediosSeleccionados.length > 0) {
+        mediosSeleccionados.forEach(function(medio) {
+            htmlCopia += `<span class="label label-warning" style="margin: 2px;">${medio.codigo}</span>`;
+        });
+    } else {
+        htmlCopia = '<p class="text-muted">Selecciona medios de pago de la tabla</p>';
+    }
+    $("#mediosSeleccionadosCopia").html(htmlCopia);
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
 }
 
 // Abrir modal nuevo medio de pago
@@ -216,8 +306,13 @@ function abrirModalNuevoMedioPago() {
     $("#modalNuevoMedioPago").modal("show");
 }
 
+<<<<<<< HEAD
 // Abrir modal activar sucursales
 function abrirModalActivarSucursales() {
+=======
+// Abrir modal asignar sucursales
+function abrirModalAsignarSucursales() {
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
     var mediosSeleccionados = $(".checkbox-medio:checked").length;
     if (mediosSeleccionados === 0) {
         Swal.fire({
@@ -229,12 +324,21 @@ function abrirModalActivarSucursales() {
         return;
     }
     
+<<<<<<< HEAD
     cargarSucursalesDestinoActivar();
     $("#modalActivarSucursales").modal("show");
 }
 
 // Abrir modal desactivar sucursales
 function abrirModalDesactivarSucursales() {
+=======
+    cargarSucursalesDisponiblesAsignacion();
+    $("#modalAsignarSucursales").modal("show");
+}
+
+// Abrir modal copia masiva
+function abrirModalCopiaMasiva() {
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
     var mediosSeleccionados = $(".checkbox-medio:checked").length;
     if (mediosSeleccionados === 0) {
         Swal.fire({
@@ -246,6 +350,7 @@ function abrirModalDesactivarSucursales() {
         return;
     }
     
+<<<<<<< HEAD
     cargarSucursalesDestinoDesactivar();
     $("#modalDesactivarSucursales").modal("show");
 }
@@ -256,6 +361,18 @@ function cargarSucursalesDestinoActivar() {
         url: "ajax/medios-pago-central.ajax.php",
         method: "POST",
         data: { accion: "obtener_sucursales_destino_activar" },
+=======
+    cargarSucursalesDestinoCopia();
+    $("#modalCopiaMasiva").modal("show");
+}
+
+// Cargar sucursales disponibles para asignación
+function cargarSucursalesDisponiblesAsignacion() {
+    $.ajax({
+        url: "ajax/medios-pago-central.ajax.php",
+        method: "POST",
+        data: { accion: "obtener_sucursales_disponibles_asignacion" },
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
         dataType: "json",
         success: function(respuesta) {
             if (respuesta.success) {
@@ -264,24 +381,41 @@ function cargarSucursalesDestinoActivar() {
                     html += `
                         <div class="checkbox">
                             <label>
+<<<<<<< HEAD
                                 <input type="checkbox" class="checkbox-sucursal-activar" value="${sucursal.id}">
+=======
+                                <input type="checkbox" class="checkbox-sucursal-asignacion" value="${sucursal.id}">
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                                 ${sucursal.nombre}
                             </label>
                         </div>
                     `;
                 });
+<<<<<<< HEAD
                 $("#sucursalesDestinoActivar").html(html);
+=======
+                $("#sucursalesDisponiblesAsignacion").html(html);
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
             }
         }
     });
 }
 
+<<<<<<< HEAD
 // Cargar sucursales destino para desactivación
 function cargarSucursalesDestinoDesactivar() {
     $.ajax({
         url: "ajax/medios-pago-central.ajax.php",
         method: "POST",
         data: { accion: "obtener_sucursales_destino_desactivar" },
+=======
+// Cargar sucursales destino para copia masiva
+function cargarSucursalesDestinoCopia() {
+    $.ajax({
+        url: "ajax/medios-pago-central.ajax.php",
+        method: "POST",
+        data: { accion: "obtener_sucursales_destino_copia" },
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
         dataType: "json",
         success: function(respuesta) {
             if (respuesta.success) {
@@ -290,13 +424,21 @@ function cargarSucursalesDestinoDesactivar() {
                     html += `
                         <div class="checkbox">
                             <label>
+<<<<<<< HEAD
                                 <input type="checkbox" class="checkbox-sucursal-desactivar" value="${sucursal.id}">
+=======
+                                <input type="checkbox" class="checkbox-sucursal-copia" value="${sucursal.id}">
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                                 ${sucursal.nombre}
                             </label>
                         </div>
                     `;
                 });
+<<<<<<< HEAD
                 $("#sucursalesDestinoDesactivar").html(html);
+=======
+                $("#sucursalesDestinoCopia").html(html);
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
             }
         }
     });
@@ -350,15 +492,24 @@ function guardarMedioPago() {
     });
 }
 
+<<<<<<< HEAD
 // Confirmar activación en sucursales
 function confirmarActivacionSucursales() {
+=======
+// Confirmar asignación a sucursales
+function confirmarAsignacionSucursales() {
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
     var mediosSeleccionados = [];
     $(".checkbox-medio:checked").each(function() {
         mediosSeleccionados.push($(this).val());
     });
     
     var sucursalesSeleccionadas = [];
+<<<<<<< HEAD
     $(".checkbox-sucursal-activar:checked").each(function() {
+=======
+    $(".checkbox-sucursal-asignacion:checked").each(function() {
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
         sucursalesSeleccionadas.push($(this).val());
     });
     
@@ -373,7 +524,11 @@ function confirmarActivacionSucursales() {
     }
     
     var datos = {
+<<<<<<< HEAD
         accion: "activar_medios_sucursales",
+=======
+        accion: "asignar_medios_sucursales",
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
         medios_pago: mediosSeleccionados,
         sucursales: sucursalesSeleccionadas
     };
@@ -388,11 +543,19 @@ function confirmarActivacionSucursales() {
                 Swal.fire({
                     type: "success",
                     title: "¡Éxito!",
+<<<<<<< HEAD
                     text: `Medios activados en ${respuesta.activaciones} sucursales`,
                     showConfirmButton: false,
                     timer: 2000
                 });
                 $("#modalActivarSucursales").modal("hide");
+=======
+                    text: `Medios asignados a ${respuesta.asignaciones} sucursales`,
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                $("#modalAsignarSucursales").modal("hide");
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                 cargarMediosPagoCentral();
             } else {
                 Swal.fire({
@@ -406,15 +569,24 @@ function confirmarActivacionSucursales() {
     });
 }
 
+<<<<<<< HEAD
 // Confirmar desactivación en sucursales
 function confirmarDesactivacionSucursales() {
+=======
+// Confirmar copia masiva
+function confirmarCopiaMasiva() {
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
     var mediosSeleccionados = [];
     $(".checkbox-medio:checked").each(function() {
         mediosSeleccionados.push($(this).val());
     });
     
     var sucursalesSeleccionadas = [];
+<<<<<<< HEAD
     $(".checkbox-sucursal-desactivar:checked").each(function() {
+=======
+    $(".checkbox-sucursal-copia:checked").each(function() {
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
         sucursalesSeleccionadas.push($(this).val());
     });
     
@@ -422,18 +594,27 @@ function confirmarDesactivacionSucursales() {
         Swal.fire({
             type: "warning",
             title: "Selección Requerida",
+<<<<<<< HEAD
             text: "Debes seleccionar al menos una sucursal",
+=======
+            text: "Debes seleccionar al menos una sucursal destino",
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
             showConfirmButton: true
         });
         return;
     }
     
     var datos = {
+<<<<<<< HEAD
         accion: "desactivar_medios_sucursales",
+=======
+        accion: "copiar_medios_masivo",
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
         medios_pago: mediosSeleccionados,
         sucursales: sucursalesSeleccionadas
     };
     
+<<<<<<< HEAD
     $.ajax({
         url: "ajax/medios-pago-central.ajax.php",
         method: "POST",
@@ -458,10 +639,48 @@ function confirmarDesactivacionSucursales() {
                     showConfirmButton: true
                 });
             }
+=======
+    Swal.fire({
+        title: "¿Confirmar Copia Masiva?",
+        text: `Se copiarán ${mediosSeleccionados.length} medios a ${sucursalesSeleccionadas.length} sucursales en sus BD locales`,
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, Copiar",
+        cancelButtonText: "Cancelar"
+    }).then((result) => {
+        if (result.value) {
+            $.ajax({
+                url: "ajax/medios-pago-central.ajax.php",
+                method: "POST",
+                data: datos,
+                dataType: "json",
+                success: function(respuesta) {
+                    if (respuesta.success) {
+                        Swal.fire({
+                            type: "success",
+                            title: "¡Éxito!",
+                            text: `Medios copiados a BD local de ${respuesta.copias} sucursales`,
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                        $("#modalCopiaMasiva").modal("hide");
+                        cargarMediosPagoCentral();
+                    } else {
+                        Swal.fire({
+                            type: "error",
+                            title: "Error",
+                            text: respuesta.error,
+                            showConfirmButton: true
+                        });
+                    }
+                }
+            });
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
         }
     });
 }
 
+<<<<<<< HEAD
 // Mostrar estado completo
 function mostrarEstadoCompleto() {
     $.ajax({
@@ -490,6 +709,44 @@ function mostrarEstadoCompleto() {
                     showConfirmButton: true
                 });
             }
+=======
+// Sincronizar todos los medios
+function sincronizarTodosMedios() {
+    Swal.fire({
+        title: "¿Confirmar Sincronización Completa?",
+        text: "Esto copiará TODOS los medios de pago centrales a las BD locales de TODAS las sucursales",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, Sincronizar",
+        cancelButtonText: "Cancelar"
+    }).then((result) => {
+        if (result.value) {
+            $.ajax({
+                url: "ajax/medios-pago-central.ajax.php",
+                method: "POST",
+                data: { accion: "sincronizar_todos_medios" },
+                dataType: "json",
+                success: function(respuesta) {
+                    if (respuesta.success) {
+                        Swal.fire({
+                            type: "success",
+                            title: "¡Éxito!",
+                            text: `Sincronización completada: ${respuesta.sincronizados} medios copiados a BD locales`,
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                        cargarMediosPagoCentral();
+                    } else {
+                        Swal.fire({
+                            type: "error",
+                            title: "Error",
+                            text: respuesta.error,
+                            showConfirmButton: true
+                        });
+                    }
+                }
+            });
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
         }
     });
 }
@@ -512,6 +769,7 @@ function editarMedioPago(id) {
     console.log("Editar medio de pago:", id);
 }
 
+<<<<<<< HEAD
 // Ver estado de medio específico
 function verEstadoMedio(id) {
     $.ajax({
@@ -543,6 +801,8 @@ function verEstadoMedio(id) {
     });
 }
 
+=======
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
 // Eliminar medio de pago
 function eliminarMedioPago(id) {
     Swal.fire({
@@ -586,6 +846,7 @@ function eliminarMedioPago(id) {
     });
 }
 
+<<<<<<< HEAD
 // Toggle estado de medio en sucursal
 function toggleEstadoMedioSucursal(medioId, sucursalId, nuevoEstado) {
     var accion = nuevoEstado ? "activar" : "desactivar";
@@ -597,6 +858,16 @@ function toggleEstadoMedioSucursal(medioId, sucursalId, nuevoEstado) {
         type: "warning",
         showCancelButton: true,
         confirmButtonText: `Sí, ${texto}`,
+=======
+// Desasignar medio de sucursal
+function desasignarMedioSucursal(medioId, sucursalId) {
+    Swal.fire({
+        title: "¿Confirmar Desasignación?",
+        text: "El medio de pago se desasignará de esta sucursal",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, Desasignar",
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
         cancelButtonText: "Cancelar"
     }).then((result) => {
         if (result.value) {
@@ -604,10 +875,16 @@ function toggleEstadoMedioSucursal(medioId, sucursalId, nuevoEstado) {
                 url: "ajax/medios-pago-central.ajax.php",
                 method: "POST",
                 data: { 
+<<<<<<< HEAD
                     accion: "toggle_estado_medio_sucursal",
                     medio_id: medioId,
                     sucursal_id: sucursalId,
                     nuevo_estado: nuevoEstado
+=======
+                    accion: "desasignar_medio_sucursal",
+                    medio_id: medioId,
+                    sucursal_id: sucursalId
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                 },
                 dataType: "json",
                 success: function(respuesta) {
@@ -615,11 +892,19 @@ function toggleEstadoMedioSucursal(medioId, sucursalId, nuevoEstado) {
                         Swal.fire({
                             type: "success",
                             title: "¡Éxito!",
+<<<<<<< HEAD
                             text: `Medio ${texto}do correctamente`,
                             showConfirmButton: false,
                             timer: 2000
                         });
                         cargarEstadoMediosSucursal(sucursalId);
+=======
+                            text: "Medio de pago desasignado correctamente",
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                        cargarMediosAsignadosSucursal(sucursalId);
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                     } else {
                         Swal.fire({
                             type: "error",

@@ -18,10 +18,18 @@ if (!in_array($_SESSION["perfil"], ["Administrador", "Especial"])) {
         <h1>
             <i class="fa fa-credit-card"></i>
             Medios de Pago Central
+<<<<<<< HEAD
             <small>Gestión Centralizada</small>
         </h1>
         <ol class="breadcrumb">
             <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
+=======
+            <small>Gestión Centralizada - BD Central</small>
+        </h1>
+        <ol class="breadcrumb">
+            <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
+            <li><a href="gestion-central"><i class="fa fa-cogs"></i> Gestion Central</a></li>
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
             <li class="active">Medios de Pago Central</li>
         </ol>
     </section>
@@ -43,6 +51,7 @@ if (!in_array($_SESSION["perfil"], ["Administrador", "Especial"])) {
                                 <button class="btn btn-primary" id="btnNuevoMedioPago" title="Crear Nuevo Medio de Pago">
                                     <i class="fa fa-plus"></i> Nuevo Medio de Pago
                                 </button>
+<<<<<<< HEAD
                                 <button class="btn btn-success" id="btnActivarSucursales" title="Activar Medios en Sucursales">
                                     <i class="fa fa-check"></i> Activar en Sucursales
                                 </button>
@@ -51,6 +60,16 @@ if (!in_array($_SESSION["perfil"], ["Administrador", "Especial"])) {
                                 </button>
                                 <button class="btn btn-info" id="btnVerEstado" title="Ver Estado por Sucursal">
                                     <i class="fa fa-eye"></i> Ver Estado
+=======
+                                <button class="btn btn-success" id="btnAsignarSucursales" title="Asignar Medios a Sucursales">
+                                    <i class="fa fa-building"></i> Asignar a Sucursales
+                                </button>
+                                <button class="btn btn-info" id="btnCopiarMasivo" title="Copia Masiva de Medios">
+                                    <i class="fa fa-copy"></i> Copia Masiva
+                                </button>
+                                <button class="btn btn-warning" id="btnSincronizarTodos" title="Sincronizar Todos los Medios">
+                                    <i class="fa fa-refresh"></i> Sincronizar Todos
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                                 </button>
                             </div>
                         </div>
@@ -93,25 +112,43 @@ if (!in_array($_SESSION["perfil"], ["Administrador", "Especial"])) {
                 </div>
             </div>
 
+<<<<<<< HEAD
             <!-- Estado por Sucursal -->
+=======
+            <!-- Asignación por Sucursal -->
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
             <div class="col-lg-4">
                 <div class="box box-info">
                     <div class="box-header with-border">
                         <h3 class="box-title">
                             <i class="fa fa-building"></i>
+<<<<<<< HEAD
                             Estado por Sucursal
+=======
+                            Asignación por Sucursal
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                         </h3>
                     </div>
                     <div class="box-body">
                         <div class="form-group">
+<<<<<<< HEAD
                             <label for="selectSucursalEstado">Seleccionar Sucursal:</label>
                             <select class="form-control" id="selectSucursalEstado">
+=======
+                            <label for="selectSucursalAsignacion">Seleccionar Sucursal:</label>
+                            <select class="form-control" id="selectSucursalAsignacion">
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                                 <option value="">Seleccionar sucursal...</option>
                             </select>
                         </div>
                         
+<<<<<<< HEAD
                         <div id="estadoMediosSucursal">
                             <p class="text-muted">Selecciona una sucursal para ver el estado de los medios</p>
+=======
+                        <div id="mediosAsignadosSucursal">
+                            <p class="text-muted">Selecciona una sucursal para ver sus medios asignados</p>
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                         </div>
                     </div>
                 </div>
@@ -166,28 +203,47 @@ if (!in_array($_SESSION["perfil"], ["Administrador", "Especial"])) {
     </div>
 </div>
 
+<<<<<<< HEAD
 <!-- Modal Activar en Sucursales -->
 <div class="modal fade" id="modalActivarSucursales" tabindex="-1" role="dialog">
+=======
+<!-- Modal Asignar a Sucursales -->
+<div class="modal fade" id="modalAsignarSucursales" tabindex="-1" role="dialog">
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                 <h4 class="modal-title">
+<<<<<<< HEAD
                     <i class="fa fa-check"></i>
                     Activar Medios de Pago en Sucursales
+=======
+                    <i class="fa fa-building"></i>
+                    Asignar Medios de Pago a Sucursales
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                 </h4>
             </div>
             <div class="modal-body">
                 <div class="row">
                     <div class="col-md-6">
                         <h5>Medios Seleccionados:</h5>
+<<<<<<< HEAD
                         <div id="mediosSeleccionadosActivar">
+=======
+                        <div id="mediosSeleccionadosAsignacion">
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                             <p class="text-muted">Selecciona medios de pago de la tabla</p>
                         </div>
                     </div>
                     <div class="col-md-6">
+<<<<<<< HEAD
                         <h5>Sucursales Destino:</h5>
                         <div id="sucursalesDestinoActivar">
+=======
+                        <h5>Sucursales Disponibles:</h5>
+                        <div id="sucursalesDisponiblesAsignacion">
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                             <!-- Se carga via AJAX -->
                         </div>
                     </div>
@@ -195,34 +251,57 @@ if (!in_array($_SESSION["perfil"], ["Administrador", "Especial"])) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+<<<<<<< HEAD
                 <button type="button" class="btn btn-success" id="btnConfirmarActivacion">Activar</button>
+=======
+                <button type="button" class="btn btn-success" id="btnConfirmarAsignacion">Asignar</button>
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
             </div>
         </div>
     </div>
 </div>
 
+<<<<<<< HEAD
 <!-- Modal Desactivar en Sucursales -->
 <div class="modal fade" id="modalDesactivarSucursales" tabindex="-1" role="dialog">
+=======
+<!-- Modal Copia Masiva -->
+<div class="modal fade" id="modalCopiaMasiva" tabindex="-1" role="dialog">
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
                 <h4 class="modal-title">
+<<<<<<< HEAD
                     <i class="fa fa-times"></i>
                     Desactivar Medios de Pago en Sucursales
+=======
+                    <i class="fa fa-copy"></i>
+                    Copia Masiva de Medios de Pago
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                 </h4>
             </div>
             <div class="modal-body">
                 <div class="row">
                     <div class="col-md-6">
                         <h5>Medios Seleccionados:</h5>
+<<<<<<< HEAD
                         <div id="mediosSeleccionadosDesactivar">
+=======
+                        <div id="mediosSeleccionadosCopia">
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                             <p class="text-muted">Selecciona medios de pago de la tabla</p>
                         </div>
                     </div>
                     <div class="col-md-6">
+<<<<<<< HEAD
                         <h5>Sucursales:</h5>
                         <div id="sucursalesDestinoDesactivar">
+=======
+                        <h5>Sucursales Destino:</h5>
+                        <div id="sucursalesDestinoCopia">
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
                             <!-- Se carga via AJAX -->
                         </div>
                     </div>
@@ -230,7 +309,11 @@ if (!in_array($_SESSION["perfil"], ["Administrador", "Especial"])) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+<<<<<<< HEAD
                 <button type="button" class="btn btn-warning" id="btnConfirmarDesactivacion">Desactivar</button>
+=======
+                <button type="button" class="btn btn-warning" id="btnConfirmarCopiaMasiva">Copiar</button>
+>>>>>>> d87c20f53cc1d45f1dc53f773d4e1987fddd46a7
             </div>
         </div>
     </div>
