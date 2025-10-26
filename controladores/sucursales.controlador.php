@@ -251,6 +251,9 @@ class ControladorSucursales {
                         ];
                         
                         ModeloSucursales::mdlConfigurarSucursalLocal('sucursal_local', $datosLocal);
+                        
+                        // Actualizar archivo de conexión
+                        self::actualizarArchivoConexion($datos);
                     }
                     
                     echo '<script>
@@ -675,6 +678,60 @@ class ControladorSucursales {
                 'success' => false,
                 'message' => 'Error al obtener sucursales: ' . $e->getMessage()
             ];
+        }
+    }
+
+    /*=============================================
+    ACTUALIZAR ARCHIVO DE CONEXIÓN
+    =============================================*/
+    static public function actualizarArchivoConexion($datos) {
+        try {
+            $archivoConexion = __DIR__ . '/../modelos/conexion.php';
+            
+            // Verificar que el archivo existe y es escribible
+            if (!file_exists($archivoConexion)) {
+                error_log("Error: Archivo conexion.php no encontrado en: " . $archivoConexion);
+                return false;
+            }
+            
+            if (!is_writable($archivoConexion)) {
+                error_log("Error: Archivo conexion.php no es escribible: " . $archivoConexion);
+                return false;
+            }
+            
+            // Crear el contenido del archivo con los nuevos datos
+            $contenido = '<?php
+
+class Conexion{
+
+	static public function conectar(){
+
+		$link = new PDO("mysql:host=' . $datos["host_bd"] . ';dbname=' . $datos["nombre_bd"] . '",
+			            "' . $datos["usuario_bd"] . '",
+			            "' . $datos["password_bd"] . '");
+
+		$link->exec("set names utf8");
+
+		return $link;
+
+	}
+
+}
+
+?>';
+            
+            // Escribir el archivo
+            if (file_put_contents($archivoConexion, $contenido) !== false) {
+                error_log("✅ Archivo conexion.php actualizado correctamente");
+                return true;
+            } else {
+                error_log("❌ Error escribiendo archivo conexion.php");
+                return false;
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en actualizarArchivoConexion: " . $e->getMessage());
+            return false;
         }
     }
 }
