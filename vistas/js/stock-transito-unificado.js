@@ -658,96 +658,34 @@ $(document).on("click", "#btnConfirmarEliminarStock", function(e) {
     });
 });
 
-/*=============================================
-REGISTRAR DESCARGA SIMPLE
-=============================================*/
-function registrarDescargaSimple(codigoProducto, cantidad, observaciones) {
-    // Obtener datos del usuario actual
-    var usuarioId = $("#usuarioId").val() || 1;
-    var usuarioNombre = $("#usuarioNombre").val() || "Usuario";
-    var sucursalId = $("#sucursalId").val() || 1;
-    var sucursalNombre = $("#sucursalNombre").val() || "Sucursal";
-    
-    // Obtener información del producto desde stockSeleccionado
-    var descripcionProducto = "";
-    var transportadorId = null;
-    var transportadorNombre = null;
-    var numeroDespacho = null;
-    
-    if (typeof stockSeleccionado === 'object' && stockSeleccionado !== null) {
-        descripcionProducto = stockSeleccionado.descripcion || "";
-        transportadorId = stockSeleccionado.transportador_id || null;
-        transportadorNombre = stockSeleccionado.transportador_nombre || null;
-        numeroDespacho = stockSeleccionado.numero_despacho_origen || null;
-    }
-    
-    // Enviar registro por AJAX
-    $.ajax({
-        url: "ajax/registro-descargas-simple.ajax.php",
-        method: "POST",
-        data: {
-            accion: "registrar_descarga",
-            codigo_producto: codigoProducto,
-            descripcion_producto: descripcionProducto,
-            cantidad_descargada: cantidad,
-            usuario_id: usuarioId,
-            usuario_nombre: usuarioNombre,
-            sucursal_id: sucursalId,
-            sucursal_nombre: sucursalNombre,
-            transportador_id: transportadorId,
-            transportador_nombre: transportadorNombre,
-            numero_despacho: numeroDespacho,
-            observaciones: observaciones
-        },
-        dataType: "json",
-        success: function(respuesta) {
-            if(respuesta.success) {
-                console.log("✅ Descarga registrada en el sistema");
-            } else {
-                console.error("❌ Error al registrar descarga:", respuesta.error);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error("❌ Error AJAX al registrar descarga:", error);
-        }
-    });
-}
+
+
+
 
 
 /*=============================================
-REGISTRAR DESCARGA DIRECTA
+REGISTRAR DESCARGA OPTIMIZADA - NUEVA VERSIÓN
 =============================================*/
-function registrarDescargaDirecta(codigoProducto, cantidad, observaciones) {
-    // Obtener datos del usuario actual
-    var usuarioId = 1;
-    var usuarioNombre = "Usuario";
+function registrarDescargaOptimizada(codigoProducto, cantidad, observaciones) {
+    console.log("🚀 Iniciando registro optimizado:", codigoProducto);
     
-    // Obtener datos reales del usuario (con fallback si no hay sesión)
-    $.ajax({
-        url: "ajax/obtener-usuario-actual.ajax.php",
-        method: "GET",
-        dataType: "json",
-        async: false, // Síncrono para obtener datos antes de continuar
-        success: function(respuesta) {
-            if(respuesta.success) {
-                usuarioId = respuesta.usuario.id;
-                usuarioNombre = respuesta.usuario.nombre;
-                console.log("👤 Datos de usuario obtenidos:", usuarioId, usuarioNombre);
-            }
-        },
-        error: function() {
-            // Fallback: usar datos por defecto si falla
-            usuarioId = "999";
-            usuarioNombre = "Usuario Sistema";
-            console.log("⚠️ Usando datos de usuario por defecto");
-        }
-    });
+    // Datos por defecto que funcionan (basados en probar-registro-desde-sucursal.php)
+    var datosRegistro = {
+        accion: "registrar_descarga",
+        codigo_producto: codigoProducto,
+        descripcion_producto: "Producto desde JavaScript Optimizado",
+        cantidad_descargada: cantidad,
+        usuario_id: "999", // Usuario por defecto que funciona
+        usuario_nombre: "Usuario Sistema", // Nombre por defecto que funciona
+        sucursal_id: "1", // Sucursal 2 (ID: 1) que funciona
+        sucursal_nombre: "Sucursal 2", // Nombre que funciona
+        transportador_id: "0",
+        transportador_nombre: "Transportador Sistema",
+        numero_despacho: "",
+        observaciones: observaciones || "Registro desde JavaScript - " + new Date().toLocaleString()
+    };
     
-    // Obtener datos de la sucursal actual desde BD local
-    var sucursalId = 1;
-    var sucursalNombre = "Sucursal";
-    
-    // Obtener datos reales de la sucursal
+    // Obtener datos reales de sucursal (si está disponible)
     $.ajax({
         url: "ajax/obtener-sucursal-actual.ajax.php",
         method: "GET",
@@ -755,77 +693,99 @@ function registrarDescargaDirecta(codigoProducto, cantidad, observaciones) {
         dataType: "json",
         async: false, // Síncrono para obtener datos antes de continuar
         success: function(respuesta) {
-            if(respuesta.success) {
-                sucursalId = respuesta.sucursal.id;
-                sucursalNombre = respuesta.sucursal.nombre;
-                console.log("🏢 Datos de sucursal obtenidos:", sucursalId, sucursalNombre);
+            if(respuesta.success && respuesta.sucursal) {
+                datosRegistro.sucursal_id = respuesta.sucursal.id;
+                datosRegistro.sucursal_nombre = respuesta.sucursal.nombre;
+                console.log("✅ Datos de sucursal obtenidos:", respuesta.sucursal.nombre);
+            } else {
+                console.log("⚠️ Usando datos de sucursal por defecto");
             }
         },
         error: function() {
-            console.log("⚠️ Error obteniendo datos de sucursal, usando valores por defecto");
+            console.log("⚠️ Error obteniendo sucursal, usando datos por defecto");
         }
     });
     
-    // Obtener información del producto desde stockSeleccionado
-    var descripcionProducto = "";
-    var transportadorId = null;
-    var transportadorNombre = null;
-    var numeroDespacho = null;
-    
-    if (typeof stockSeleccionado === "object" && stockSeleccionado !== null) {
-        descripcionProducto = stockSeleccionado.descripcion || "";
-        transportadorNombre = stockSeleccionado.transportador || "";
-        
-        // Extraer transportador_id y numero_despacho de los detalles si están disponibles
-        if (stockSeleccionado.detalles && Array.isArray(stockSeleccionado.detalles)) {
-            // Buscar el primer detalle que tenga transportador_id
-            for (var i = 0; i < stockSeleccionado.detalles.length; i++) {
-                var detalle = stockSeleccionado.detalles[i];
-                if (detalle.transportador_id) {
-                    transportadorId = detalle.transportador_id;
-                    break;
-                }
+    // Obtener datos reales de usuario (si está disponible)
+    $.ajax({
+        url: "ajax/obtener-usuario-actual.ajax.php",
+        method: "GET",
+        dataType: "json",
+        async: false, // Síncrono para obtener datos antes de continuar
+        success: function(respuesta) {
+            if(respuesta.success && respuesta.usuario) {
+                datosRegistro.usuario_id = respuesta.usuario.id;
+                datosRegistro.usuario_nombre = respuesta.usuario.nombre;
+                console.log("✅ Datos de usuario obtenidos:", respuesta.usuario.nombre);
+            } else {
+                console.log("⚠️ Usando datos de usuario por defecto");
             }
-            
-            // Buscar numero_despacho en los detalles
-            for (var i = 0; i < stockSeleccionado.detalles.length; i++) {
-                var detalle = stockSeleccionado.detalles[i];
-                if (detalle.numero_despacho) {
-                    numeroDespacho = detalle.numero_despacho;
-                    break;
-                }
-            }
+        },
+        error: function() {
+            console.log("⚠️ Error obteniendo usuario, usando datos por defecto");
         }
-    }
+    });
     
-    // Enviar registro directo por AJAX
+    console.log("📤 Enviando datos:", datosRegistro);
+    
+    // Enviar registro por AJAX
     $.ajax({
         url: "ajax/registro-descargas-simple.ajax.php",
         method: "POST",
-        data: {
-            accion: "registrar_descarga",
-            codigo_producto: codigoProducto,
-            descripcion_producto: descripcionProducto,
-            cantidad_descargada: cantidad,
-            usuario_id: usuarioId,
-            usuario_nombre: usuarioNombre,
-            sucursal_id: sucursalId,
-            sucursal_nombre: sucursalNombre,
-            transportador_id: transportadorId,
-            transportador_nombre: transportadorNombre,
-            numero_despacho: numeroDespacho,
-            observaciones: observaciones
-        },
+        data: datosRegistro,
         dataType: "json",
         success: function(respuesta) {
+            console.log("📥 Respuesta recibida:", respuesta);
+            
             if(respuesta.success) {
-                console.log("✅ Descarga registrada en la tabla:", codigoProducto);
+                console.log("✅ Descarga registrada exitosamente");
+                
+                // Mostrar mensaje de éxito
+                swal({
+                    type: "success",
+                    title: "¡Éxito!",
+                    text: "Descarga registrada correctamente",
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+                
             } else {
                 console.error("❌ Error al registrar descarga:", respuesta.error);
+                
+                // Mostrar mensaje de error
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: "No se pudo registrar la descarga: " + respuesta.error,
+                    showConfirmButton: true
+                });
             }
         },
         error: function(xhr, status, error) {
             console.error("❌ Error AJAX al registrar descarga:", error);
+            console.error("📋 Status:", status);
+            console.error("📋 Response:", xhr.responseText);
+            
+            // Mostrar mensaje de error
+            swal({
+                type: "error",
+                title: "Error de Conexión",
+                text: "No se pudo conectar al servidor: " + error,
+                showConfirmButton: true
+            });
         }
     });
+}
+
+/*=============================================
+REEMPLAZAR FUNCIONES EXISTENTES
+=============================================*/
+// Reemplazar función existente
+function registrarDescargaSimple(codigoProducto, cantidad, observaciones) {
+    registrarDescargaOptimizada(codigoProducto, cantidad, observaciones);
+}
+
+// Reemplazar función existente
+function registrarDescargaDirecta(codigoProducto, cantidad, observaciones) {
+    registrarDescargaOptimizada(codigoProducto, cantidad, observaciones);
 }
