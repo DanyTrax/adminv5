@@ -200,96 +200,156 @@ class ModeloMediosPagoCentral {
     }
     
     /*=============================================
-    COPIAR MEDIOS MASIVO
+    COPIAR MEDIOS MASIVO A BD LOCAL
     =============================================*/
     static public function mdlCopiarMediosMasivo($mediosPago, $sucursales) {
         try {
-            $conexion = ConexionCentral::conectar();
-            $conexion->beginTransaction();
+            $conexionCentral = ConexionCentral::conectar();
+            $conexionCentral->beginTransaction();
             
             $copias = 0;
             
             foreach ($mediosPago as $medioId) {
-                foreach ($sucursales as $sucursalId) {
-                    // Verificar si ya existe la asignación
-                    $stmtVerificar = $conexion->prepare("
-                        SELECT id FROM medios_pago_sucursal 
-                        WHERE medio_pago_id = ? AND sucursal_id = ?
-                    ");
-                    $stmtVerificar->execute([$medioId, $sucursalId]);
-                    
-                    if (!$stmtVerificar->fetch()) {
-                        // Crear nueva asignación
-                        $stmtCopiar = $conexion->prepare("
-                            INSERT INTO medios_pago_sucursal (medio_pago_id, sucursal_id) 
-                            VALUES (?, ?)
+                // Obtener datos del medio desde BD central
+                $stmtMedio = $conexionCentral->prepare("
+                    SELECT codigo, nombre, descripcion, tipo 
+                    FROM medios_pago_central 
+                    WHERE id = ?
+                ");
+                $stmtMedio->execute([$medioId]);
+                $medio = $stmtMedio->fetch(PDO::FETCH_ASSOC);
+                
+                if ($medio) {
+                    foreach ($sucursales as $sucursalId) {
+                        // Obtener datos de conexión de la sucursal
+                        $stmtSucursal = $conexionCentral->prepare("
+                            SELECT host_bd, nombre_bd, usuario_bd, password_bd, puerto_bd
+                            FROM sucursales 
+                            WHERE id = ?
                         ");
-                        $stmtCopiar->execute([$medioId, $sucursalId]);
-                        $copias++;
+                        $stmtSucursal->execute([$sucursalId]);
+                        $sucursal = $stmtSucursal->fetch(PDO::FETCH_ASSOC);
+                        
+                        if ($sucursal) {
+                            try {
+                                // Conectar a BD local de la sucursal
+                                $dsn = "mysql:host={$sucursal['host_bd']};port={$sucursal['puerto_bd']};dbname={$sucursal['nombre_bd']};charset=utf8mb4";
+                                $conexionLocal = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd']);
+                                $conexionLocal->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                                
+                                // Verificar si el medio ya existe en BD local
+                                $stmtVerificar = $conexionLocal->prepare("
+                                    SELECT id FROM medios_pago 
+                                    WHERE nombre = ? AND activo = 1
+                                ");
+                                $stmtVerificar->execute([$medio['nombre']]);
+                                
+                                if (!$stmtVerificar->fetch()) {
+                                    // Insertar medio en BD local
+                                    $stmtInsertar = $conexionLocal->prepare("
+                                        INSERT INTO medios_pago (nombre, activo) 
+                                        VALUES (?, 1)
+                                    ");
+                                    $stmtInsertar->execute([$medio['nombre']]);
+                                    $copias++;
+                                }
+                                
+                                // Crear asignación en BD central
+                                $stmtAsignar = $conexionCentral->prepare("
+                                    INSERT IGNORE INTO medios_pago_sucursal (medio_pago_id, sucursal_id) 
+                                    VALUES (?, ?)
+                                ");
+                                $stmtAsignar->execute([$medioId, $sucursalId]);
+                                
+                            } catch (Exception $e) {
+                                error_log("Error conectando a sucursal {$sucursalId}: " . $e->getMessage());
+                            }
+                        }
                     }
                 }
             }
             
-            $conexion->commit();
+            $conexionCentral->commit();
             return ['success' => true, 'copias' => $copias];
             
         } catch (Exception $e) {
-            $conexion->rollBack();
+            $conexionCentral->rollBack();
             error_log("Error en mdlCopiarMediosMasivo: " . $e->getMessage());
             return ['success' => false, 'error' => 'Error: ' . $e->getMessage()];
         }
     }
     
     /*=============================================
-    SINCRONIZAR TODOS LOS MEDIOS
+    SINCRONIZAR TODOS LOS MEDIOS A BD LOCAL
     =============================================*/
     static public function mdlSincronizarTodosMedios() {
         try {
-            $conexion = ConexionCentral::conectar();
-            $conexion->beginTransaction();
+            $conexionCentral = ConexionCentral::conectar();
+            $conexionCentral->beginTransaction();
             
             // Obtener todos los medios de pago activos
-            $stmtMedios = $conexion->prepare("
-                SELECT id FROM medios_pago_central WHERE activo = 1
+            $stmtMedios = $conexionCentral->prepare("
+                SELECT id, codigo, nombre, descripcion, tipo 
+                FROM medios_pago_central 
+                WHERE activo = 1
             ");
             $stmtMedios->execute();
-            $medios = $stmtMedios->fetchAll(PDO::FETCH_COLUMN);
+            $medios = $stmtMedios->fetchAll(PDO::FETCH_ASSOC);
             
             // Obtener todas las sucursales activas
-            $stmtSucursales = $conexion->prepare("
-                SELECT id FROM sucursales WHERE activo = 1
+            $stmtSucursales = $conexionCentral->prepare("
+                SELECT id, host_bd, nombre_bd, usuario_bd, password_bd, puerto_bd
+                FROM sucursales 
+                WHERE activo = 1
             ");
             $stmtSucursales->execute();
-            $sucursales = $stmtSucursales->fetchAll(PDO::FETCH_COLUMN);
+            $sucursales = $stmtSucursales->fetchAll(PDO::FETCH_ASSOC);
             
             $sincronizados = 0;
             
-            foreach ($medios as $medioId) {
-                foreach ($sucursales as $sucursalId) {
-                    // Verificar si ya existe la asignación
-                    $stmtVerificar = $conexion->prepare("
-                        SELECT id FROM medios_pago_sucursal 
-                        WHERE medio_pago_id = ? AND sucursal_id = ?
-                    ");
-                    $stmtVerificar->execute([$medioId, $sucursalId]);
-                    
-                    if (!$stmtVerificar->fetch()) {
-                        // Crear nueva asignación
-                        $stmtSincronizar = $conexion->prepare("
-                            INSERT INTO medios_pago_sucursal (medio_pago_id, sucursal_id) 
+            foreach ($medios as $medio) {
+                foreach ($sucursales as $sucursal) {
+                    try {
+                        // Conectar a BD local de la sucursal
+                        $dsn = "mysql:host={$sucursal['host_bd']};port={$sucursal['puerto_bd']};dbname={$sucursal['nombre_bd']};charset=utf8mb4";
+                        $conexionLocal = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd']);
+                        $conexionLocal->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                        
+                        // Verificar si el medio ya existe en BD local
+                        $stmtVerificar = $conexionLocal->prepare("
+                            SELECT id FROM medios_pago 
+                            WHERE nombre = ? AND activo = 1
+                        ");
+                        $stmtVerificar->execute([$medio['nombre']]);
+                        
+                        if (!$stmtVerificar->fetch()) {
+                            // Insertar medio en BD local
+                            $stmtInsertar = $conexionLocal->prepare("
+                                INSERT INTO medios_pago (nombre, activo) 
+                                VALUES (?, 1)
+                            ");
+                            $stmtInsertar->execute([$medio['nombre']]);
+                            $sincronizados++;
+                        }
+                        
+                        // Crear asignación en BD central
+                        $stmtAsignar = $conexionCentral->prepare("
+                            INSERT IGNORE INTO medios_pago_sucursal (medio_pago_id, sucursal_id) 
                             VALUES (?, ?)
                         ");
-                        $stmtSincronizar->execute([$medioId, $sucursalId]);
-                        $sincronizados++;
+                        $stmtAsignar->execute([$medio['id'], $sucursal['id']]);
+                        
+                    } catch (Exception $e) {
+                        error_log("Error sincronizando medio {$medio['id']} con sucursal {$sucursal['id']}: " . $e->getMessage());
                     }
                 }
             }
             
-            $conexion->commit();
+            $conexionCentral->commit();
             return ['success' => true, 'sincronizados' => $sincronizados];
             
         } catch (Exception $e) {
-            $conexion->rollBack();
+            $conexionCentral->rollBack();
             error_log("Error en mdlSincronizarTodosMedios: " . $e->getMessage());
             return ['success' => false, 'error' => 'Error: ' . $e->getMessage()];
         }

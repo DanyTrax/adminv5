@@ -18,10 +18,11 @@ if (!in_array($_SESSION["perfil"], ["Administrador", "Especial"])) {
         <h1>
             <i class="fa fa-credit-card"></i>
             Medios de Pago Central
-            <small>Gestión Centralizada</small>
+            <small>Gestión Centralizada - BD Central</small>
         </h1>
         <ol class="breadcrumb">
             <li><a href="inicio"><i class="fa fa-dashboard"></i> Inicio</a></li>
+            <li><a href="gestion-central"><i class="fa fa-cogs"></i> Gestion Central</a></li>
             <li class="active">Medios de Pago Central</li>
         </ol>
     </section>

@@ -431,30 +431,41 @@ function confirmarCopiaMasiva() {
         sucursales: sucursalesSeleccionadas
     };
     
-    $.ajax({
-        url: "ajax/medios-pago-central.ajax.php",
-        method: "POST",
-        data: datos,
-        dataType: "json",
-        success: function(respuesta) {
-            if (respuesta.success) {
-                Swal.fire({
-                    type: "success",
-                    title: "¡Éxito!",
-                    text: `Medios copiados a ${respuesta.copias} sucursales`,
-                    showConfirmButton: false,
-                    timer: 2000
-                });
-                $("#modalCopiaMasiva").modal("hide");
-                cargarMediosPagoCentral();
-            } else {
-                Swal.fire({
-                    type: "error",
-                    title: "Error",
-                    text: respuesta.error,
-                    showConfirmButton: true
-                });
-            }
+    Swal.fire({
+        title: "¿Confirmar Copia Masiva?",
+        text: `Se copiarán ${mediosSeleccionados.length} medios a ${sucursalesSeleccionadas.length} sucursales en sus BD locales`,
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, Copiar",
+        cancelButtonText: "Cancelar"
+    }).then((result) => {
+        if (result.value) {
+            $.ajax({
+                url: "ajax/medios-pago-central.ajax.php",
+                method: "POST",
+                data: datos,
+                dataType: "json",
+                success: function(respuesta) {
+                    if (respuesta.success) {
+                        Swal.fire({
+                            type: "success",
+                            title: "¡Éxito!",
+                            text: `Medios copiados a BD local de ${respuesta.copias} sucursales`,
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                        $("#modalCopiaMasiva").modal("hide");
+                        cargarMediosPagoCentral();
+                    } else {
+                        Swal.fire({
+                            type: "error",
+                            title: "Error",
+                            text: respuesta.error,
+                            showConfirmButton: true
+                        });
+                    }
+                }
+            });
         }
     });
 }
@@ -462,8 +473,8 @@ function confirmarCopiaMasiva() {
 // Sincronizar todos los medios
 function sincronizarTodosMedios() {
     Swal.fire({
-        title: "¿Confirmar Sincronización?",
-        text: "Esto sincronizará todos los medios de pago con todas las sucursales",
+        title: "¿Confirmar Sincronización Completa?",
+        text: "Esto copiará TODOS los medios de pago centrales a las BD locales de TODAS las sucursales",
         type: "warning",
         showCancelButton: true,
         confirmButtonText: "Sí, Sincronizar",
@@ -480,7 +491,7 @@ function sincronizarTodosMedios() {
                         Swal.fire({
                             type: "success",
                             title: "¡Éxito!",
-                            text: `Sincronización completada: ${respuesta.sincronizados} medios`,
+                            text: `Sincronización completada: ${respuesta.sincronizados} medios copiados a BD locales`,
                             showConfirmButton: false,
                             timer: 2000
                         });
