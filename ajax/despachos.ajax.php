@@ -468,33 +468,42 @@ if(isset($_POST["accion"]) && $_POST["accion"] == "obtener_estadisticas_transpor
             sendJsonResponse(["success" => false, "error" => "ID de transportador no válido"]);
         }
         
-        // Obtener estadísticas de despachos para el transportador
-        // Incluir despachos asignados al transportador Y despachos pendientes sin asignar
-        $stmt = ConexionCentral::conectar()->prepare("
+        // Obtener estadísticas separadas:
+        // 1. Despachos pendientes sin asignar (que puede aceptar)
+        // 2. Despachos asignados al transportador (que ya gestiona)
+        
+        // Despachos pendientes sin asignar
+        $stmtPendientes = ConexionCentral::conectar()->prepare("
+            SELECT COUNT(*) as cantidad
+            FROM despachos 
+            WHERE estado = 'pendiente' AND transportador_id IS NULL
+        ");
+        $stmtPendientes->execute();
+        $pendientes = $stmtPendientes->fetch(PDO::FETCH_ASSOC);
+        
+        // Despachos asignados al transportador
+        $stmtAsignados = ConexionCentral::conectar()->prepare("
             SELECT 
                 estado,
                 COUNT(*) as cantidad
             FROM despachos 
-            WHERE (transportador_id = ? OR (estado = 'pendiente' AND transportador_id IS NULL))
+            WHERE transportador_id = ?
             GROUP BY estado
         ");
-        $stmt->execute([$transportadorId]);
-        $estadisticasRaw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmtAsignados->execute([$transportadorId]);
+        $asignadosRaw = $stmtAsignados->fetchAll(PDO::FETCH_ASSOC);
         
         // Inicializar contadores
         $estadisticas = [
-            'pendientes' => 0,
+            'pendientes' => (int)$pendientes['cantidad'],
             'en_transito' => 0,
             'entregados' => 0,
             'cancelados' => 0
         ];
         
-        // Procesar resultados
-        foreach($estadisticasRaw as $estadistica) {
+        // Procesar despachos asignados
+        foreach($asignadosRaw as $estadistica) {
             switch($estadistica['estado']) {
-                case 'pendiente':
-                    $estadisticas['pendientes'] = (int)$estadistica['cantidad'];
-                    break;
                 case 'aceptado':
                 case 'en_transito':
                     $estadisticas['en_transito'] += (int)$estadistica['cantidad'];
