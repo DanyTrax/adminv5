@@ -428,7 +428,7 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
                 var usuarioId = "0";
                 var usuarioNombre = "Usuario";
                 
-                // Obtener usuario actual
+                // Obtener usuario actual (con fallback si no hay sesión)
                 $.ajax({
                     url: "ajax/obtener-usuario-actual.ajax.php",
                     method: "GET",
@@ -439,6 +439,12 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
                             usuarioId = respuesta.usuario.id;
                             usuarioNombre = respuesta.usuario.nombre;
                         }
+                    },
+                    error: function() {
+                        // Fallback: usar datos por defecto si falla
+                        usuarioId = "999";
+                        usuarioNombre = "Usuario Sistema";
+                        console.log("⚠️ Usando datos de usuario por defecto");
                     }
                 });
                 
@@ -716,7 +722,7 @@ function registrarDescargaDirecta(codigoProducto, cantidad, observaciones) {
     var usuarioId = 1;
     var usuarioNombre = "Usuario";
     
-    // Obtener datos reales del usuario
+    // Obtener datos reales del usuario (con fallback si no hay sesión)
     $.ajax({
         url: "ajax/obtener-usuario-actual.ajax.php",
         method: "GET",
@@ -730,7 +736,10 @@ function registrarDescargaDirecta(codigoProducto, cantidad, observaciones) {
             }
         },
         error: function() {
-            console.log("⚠️ Error obteniendo datos de usuario, usando valores por defecto");
+            // Fallback: usar datos por defecto si falla
+            usuarioId = "999";
+            usuarioNombre = "Usuario Sistema";
+            console.log("⚠️ Usando datos de usuario por defecto");
         }
     });
     
