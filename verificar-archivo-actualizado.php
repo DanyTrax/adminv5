@@ -25,7 +25,7 @@ try {
     echo "<h3>🔍 Verificación de Características:</h3>\n";
     
     $caracteristicas = [
-        'BD LOCAL' => strpos($contenido, 'BD LOCAL de esta sucursal') !== false,
+        'BD LOCAL' => strpos($contenido, 'BD LOCAL de esta sucursal') !== false || strpos($contenido, 'base de datos LOCAL') !== false,
         'Tabla medios_pago' => strpos($contenido, 'FROM medios_pago') !== false,
         'Filtro activo' => strpos($contenido, 'WHERE activo = 1') !== false,
         'Campo id' => strpos($contenido, 'id,') !== false,
