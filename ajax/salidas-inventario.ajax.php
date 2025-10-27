@@ -1,7 +1,7 @@
 <?php
 
-require_once "../controladores/salidas-inventario.controlador.php";
-require_once "../modelos/salidas-inventario.modelo.php";
+require_once __DIR__ . "/../controladores/salidas-inventario.controlador.php";
+require_once __DIR__ . "/../modelos/salidas-inventario.modelo.php";
 
 /*=============================================
 BUSCAR PRODUCTOS PARA AJAX

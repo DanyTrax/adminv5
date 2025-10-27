@@ -1,6 +1,6 @@
 <?php
 
-require_once "modelos/conexion.php";
+require_once __DIR__ . "/conexion.php";
 
 class ModeloSalidasInventario{
 
