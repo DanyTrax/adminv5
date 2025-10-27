@@ -1,7 +1,10 @@
 <?php
 /**
- * API para obtener medios de pago activos de sucursales
+ * API para obtener medios de pago activos de esta sucursal
  * Utilizado por el instalador para importar medios de pago
+ * 
+ * IMPORTANTE: Este archivo debe estar en CADA SUCURSAL
+ * Debe consultar la BD LOCAL de la sucursal, no el central
  */
 
 header('Content-Type: application/json');
@@ -10,10 +13,10 @@ header('Access-Control-Allow-Methods: GET, POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
 try {
-    // Incluir configuración
+    // Incluir configuración local de esta sucursal
     require_once __DIR__ . '/../config.php';
     
-    // Conectar a la base de datos central
+    // Conectar a la base de datos LOCAL de esta sucursal
     $pdo = new PDO(
         "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8",
         DB_USER,
@@ -24,16 +27,17 @@ try {
         ]
     );
     
-    // Obtener medios de pago activos de todas las sucursales
+    // Obtener medios de pago activos de esta sucursal específica
     $stmt = $pdo->prepare("
-        SELECT DISTINCT 
-            mp.nombre,
-            mp.descripcion,
-            mp.activo,
-            mp.fecha_creacion
-        FROM medios_pago mp
-        WHERE mp.activo = 1
-        ORDER BY mp.nombre ASC
+        SELECT 
+            id,
+            nombre,
+            descripcion,
+            activo,
+            fecha_creacion
+        FROM medios_pago
+        WHERE activo = 1
+        ORDER BY nombre ASC
     ");
     
     $stmt->execute();

@@ -1,17 +1,14 @@
 <?php
 /**
- * Script de prueba para verificar la importación corregida
- * Usa conexion-central para obtener sucursales activas
+ * Script de prueba para verificar la API de medios de pago corregida
  */
 
-echo "<h2>🔍 Verificación de Importación Corregida</h2>\n";
+echo "<h2>🧪 Prueba de API de Medios de Pago Corregida</h2>\n";
 
 try {
-    // Probar la API de sucursales activas
-    echo "<h3>🌐 Probando API de Sucursales Activas:</h3>\n";
-    
-    $url_api = 'https://pruebas2.acplasticos.com/api-transferencias/obtener-sucursales-activas.php';
-    echo "<p><strong>URL API:</strong> $url_api</p>\n";
+    // Probar la API local corregida
+    $url_api = 'https://pruebas2.acplasticos.com/api-transferencias/obtener-medios-pago-activos.php';
+    echo "<p><strong>Probando URL:</strong> $url_api</p>\n";
     
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url_api);
@@ -25,92 +22,101 @@ try {
     $error = curl_error($ch);
     curl_close($ch);
     
+    echo "<h3>📊 Resultado:</h3>\n";
+    echo "<p><strong>HTTP Code:</strong> $http_code</p>\n";
+    
     if ($error) {
         echo "<p style='color: red;'>❌ Error cURL: $error</p>\n";
     } elseif ($http_code !== 200) {
         echo "<p style='color: red;'>❌ HTTP Error: $http_code</p>\n";
-        echo "<p><strong>Respuesta:</strong> $response</p>\n";
+        echo "<p><strong>Respuesta:</strong> " . htmlspecialchars($response) . "</p>\n";
     } else {
+        echo "<p style='color: green;'>✅ Conexión exitosa</p>\n";
+        
         $data = json_decode($response, true);
-        if ($data && isset($data['success']) && $data['success']) {
-            echo "<p style='color: green;'>✅ Conexión exitosa - {$data['total']} sucursales disponibles</p>\n";
+        echo "<p><strong>JSON válido:</strong> " . (json_last_error() === JSON_ERROR_NONE ? '✅ Sí' : '❌ No') . "</p>\n";
+        
+        if ($data) {
+            echo "<p><strong>Success:</strong> " . ($data['success'] ? '✅ Sí' : '❌ No') . "</p>\n";
+            echo "<p><strong>Mensaje:</strong> " . ($data['message'] ?? 'N/A') . "</p>\n";
+            echo "<p><strong>Total medios:</strong> " . ($data['total'] ?? 0) . "</p>\n";
             
-            echo "<h4>Sucursales Disponibles:</h4>\n";
-            echo "<table border='1' style='border-collapse: collapse; width: 100%;'>\n";
-            echo "<tr style='background: #f0f0f0;'>\n";
-            echo "<th>ID</th><th>Código</th><th>Nombre</th><th>URL Base</th><th>URL API</th>\n";
-            echo "</tr>\n";
-            
-            foreach ($data['sucursales'] as $sucursal) {
-                echo "<tr>\n";
-                echo "<td>{$sucursal['id']}</td>\n";
-                echo "<td>{$sucursal['codigo_sucursal']}</td>\n";
-                echo "<td>{$sucursal['nombre']}</td>\n";
-                echo "<td>{$sucursal['url_base']}</td>\n";
-                echo "<td>{$sucursal['url_api']}</td>\n";
-                echo "</tr>\n";
-            }
-            
-            echo "</table>\n";
-            
-            // Probar conexión a medios de pago de cada sucursal
-            echo "<h3>💳 Probando Medios de Pago por Sucursal:</h3>\n";
-            
-            foreach ($data['sucursales'] as $sucursal) {
-                echo "<h4>Probando: {$sucursal['nombre']}</h4>\n";
+            if (isset($data['medios_pago']) && is_array($data['medios_pago'])) {
+                echo "<h3>💳 Medios de Pago Encontrados:</h3>\n";
                 
-                $url_medios = rtrim($sucursal['url_api'], '/') . '/obtener-medios-pago-activos.php';
-                echo "<p><strong>URL Medios:</strong> $url_medios</p>\n";
-                
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $url_medios);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                
-                $response_medios = curl_exec($ch);
-                $http_code_medios = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                $error_medios = curl_error($ch);
-                curl_close($ch);
-                
-                if ($error_medios) {
-                    echo "<p style='color: red;'>❌ Error cURL: $error_medios</p>\n";
-                } elseif ($http_code_medios !== 200) {
-                    echo "<p style='color: red;'>❌ HTTP Error: $http_code_medios</p>\n";
+                if (empty($data['medios_pago'])) {
+                    echo "<p style='color: orange;'>⚠️ No hay medios de pago en esta sucursal</p>\n";
                 } else {
-                    $data_medios = json_decode($response_medios, true);
-                    if ($data_medios && isset($data_medios['success']) && $data_medios['success']) {
-                        echo "<p style='color: green;'>✅ Medios de pago: {$data_medios['total']} disponibles</p>\n";
-                        
-                        if (!empty($data_medios['medios_pago'])) {
-                            echo "<ul>\n";
-                            foreach ($data_medios['medios_pago'] as $medio) {
-                                echo "<li><strong>{$medio['nombre']}</strong> - {$medio['descripcion']}</li>\n";
-                            }
-                            echo "</ul>\n";
-                        }
-                    } else {
-                        echo "<p style='color: orange;'>⚠️ Respuesta inválida o sin medios de pago</p>\n";
+                    echo "<table border='1' style='border-collapse: collapse; width: 100%;'>\n";
+                    echo "<tr style='background: #f0f0f0;'>\n";
+                    echo "<th>ID</th><th>Nombre</th><th>Descripción</th><th>Activo</th>\n";
+                    echo "</tr>\n";
+                    
+                    foreach ($data['medios_pago'] as $medio) {
+                        echo "<tr>\n";
+                        echo "<td>{$medio['id'] ?? 'N/A'}</td>\n";
+                        echo "<td><strong>{$medio['nombre']}</strong></td>\n";
+                        echo "<td>{$medio['descripcion'] ?? ''}</td>\n";
+                        echo "<td>" . ($medio['activo'] ? '✅ Sí' : '❌ No') . "</td>\n";
+                        echo "</tr>\n";
                     }
+                    
+                    echo "</table>\n";
                 }
-                
-                echo "<hr>\n";
+            } else {
+                echo "<p style='color: red;'>❌ No hay array de medios de pago</p>\n";
             }
-            
         } else {
-            echo "<p style='color: orange;'>⚠️ Respuesta inválida del central</p>\n";
-            echo "<p><strong>Respuesta:</strong> " . htmlspecialchars($response) . "</p>\n";
+            echo "<p style='color: red;'>❌ No se pudo decodificar JSON</p>\n";
+            echo "<p><strong>Respuesta raw:</strong> " . htmlspecialchars($response) . "</p>\n";
         }
+    }
+    
+    echo "<h3>🎯 Prueba de la Sucursal SUC001:</h3>\n";
+    echo "<p>Ahora vamos a probar la sucursal SUC001 que antes daba error 500:</p>\n";
+    
+    $url_sucursal = 'https://pruebas.acrilicosinfinito.com/api-transferencias/obtener-medios-pago-activos.php';
+    echo "<p><strong>URL Sucursal:</strong> $url_sucursal</p>\n";
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url_sucursal);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    
+    $response_sucursal = curl_exec($ch);
+    $http_code_sucursal = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error_sucursal = curl_error($ch);
+    curl_close($ch);
+    
+    echo "<p><strong>HTTP Code Sucursal:</strong> $http_code_sucursal</p>\n";
+    
+    if ($error_sucursal) {
+        echo "<p style='color: red;'>❌ Error cURL Sucursal: $error_sucursal</p>\n";
+    } elseif ($http_code_sucursal === 500) {
+        echo "<p style='color: red;'>❌ Aún hay error 500 en la sucursal</p>\n";
+        echo "<p><strong>Necesitas hacer pull de los cambios al cPanel de la sucursal</strong></p>\n";
+    } elseif ($http_code_sucursal === 200) {
+        echo "<p style='color: green;'>✅ ¡Sucursal funcionando correctamente!</p>\n";
+        
+        $data_sucursal = json_decode($response_sucursal, true);
+        if ($data_sucursal && isset($data_sucursal['success']) && $data_sucursal['success']) {
+            echo "<p><strong>Medios de pago en sucursal:</strong> {$data_sucursal['total']}</p>\n";
+        }
+    } else {
+        echo "<p style='color: orange;'>⚠️ HTTP Code inesperado: $http_code_sucursal</p>\n";
     }
     
 } catch (Exception $e) {
     echo "<p style='color: red;'>❌ Error general: " . $e->getMessage() . "</p>\n";
 }
 
-echo "<h3>📋 Resumen:</h3>\n";
-echo "<p>✅ API de sucursales activas usa conexion-central.php</p>\n";
-echo "<p>✅ API de medios de pago usa tabla medios_pago local</p>\n";
-echo "<p>✅ No hay consultas a tabla 'sucursales' inexistente</p>\n";
-echo "<p>✅ Flujo de importación corregido</p>\n";
+echo "<h3>📋 Instrucciones:</h3>\n";
+echo "<ol>\n";
+echo "<li><strong>Hacer pull de los cambios:</strong> git pull origin main</li>\n";
+echo "<li><strong>Verificar que el archivo se actualizó:</strong> api-transferencias/obtener-medios-pago-activos.php</li>\n";
+echo "<li><strong>Probar la API:</strong> Debe devolver medios de pago de la BD local</li>\n";
+echo "<li><strong>Probar el instalador:</strong> Debe importar medios correctos</li>\n";
+echo "</ol>\n";
 ?>
