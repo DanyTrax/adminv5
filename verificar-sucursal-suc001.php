@@ -6,20 +6,14 @@
 echo "<h2>🔍 Verificación de Medios de Pago en SUC001</h2>\n";
 
 try {
-    // 1. Primero obtener la URL correcta de SUC001 desde la tabla sucursales
-    echo "<h3>1. 🔍 Obteniendo URL correcta de SUC001:</h3>\n";
+    // 1. Primero obtener la URL correcta de SUC001 desde la tabla sucursales del CENTRAL
+    echo "<h3>1. 🔍 Obteniendo URL correcta de SUC001 desde BD Central:</h3>\n";
     
-    require_once 'config.php';
+    // Incluir conexion-central para conectar a BD central
+    require_once 'api-transferencias/conexion-central.php';
     
-    $pdo = new PDO(
-        "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8",
-        DB_USER,
-        DB_PASS,
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-        ]
-    );
+    // Conectar a la base de datos central
+    $pdo = ConexionCentral::conectar();
     
     // Obtener datos de SUC001 desde la tabla sucursales
     $stmt = $pdo->prepare("

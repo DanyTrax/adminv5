@@ -6,20 +6,14 @@
 echo "<h2>🔍 Verificación de Todas las Sucursales</h2>\n";
 
 try {
-    // 1. Obtener todas las sucursales activas
-    echo "<h3>1. 🔍 Obteniendo sucursales activas:</h3>\n";
+    // 1. Obtener todas las sucursales activas desde la BD CENTRAL
+    echo "<h3>1. 🔍 Obteniendo sucursales activas desde BD Central:</h3>\n";
     
-    require_once 'config.php';
+    // Incluir conexion-central para conectar a BD central
+    require_once 'api-transferencias/conexion-central.php';
     
-    $pdo = new PDO(
-        "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8",
-        DB_USER,
-        DB_PASS,
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-        ]
-    );
+    // Conectar a la base de datos central
+    $pdo = ConexionCentral::conectar();
     
     // Obtener todas las sucursales activas
     $stmt = $pdo->prepare("
