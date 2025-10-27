@@ -894,6 +894,9 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_central, $sucu
                                 <button type="button" class="btn btn-outline-primary btn-sm" onclick="mostrarModalSucursales()">
                                     <i class="fas fa-list"></i> Seleccionar Sucursales
                                 </button>
+                                <button type="button" class="btn btn-outline-info btn-sm ms-2" onclick="mostrarVistaPrevia()">
+                                    <i class="fas fa-eye"></i> Ver Medios de Pago
+                                </button>
                                 <div id="sucursales-seleccionadas" class="mt-2"></div>
                                 <input type="hidden" name="sucursales_seleccionadas" id="sucursales_seleccionadas" value="">
                             </div>
@@ -1307,6 +1310,13 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_central, $sucu
             document.getElementById('error-sucursales').style.display = 'block';
             document.getElementById('error-sucursales').innerHTML = 
                 `<i class="fas fa-exclamation-triangle"></i><strong>Error:</strong> ${mensaje}`;
+        }
+
+        // Mostrar vista previa de medios de pago
+        function mostrarVistaPrevia() {
+            // Abrir vista previa en nueva ventana
+            const urlVistaPrevia = '../vista-previa-medios-pago.php';
+            window.open(urlVistaPrevia, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
         }
     </script>
 </body>
