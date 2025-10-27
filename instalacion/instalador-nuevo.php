@@ -1159,6 +1159,15 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_central, $sucu
                         <div id="sucursales-container">
                             <!-- Las sucursales se cargarán aquí dinámicamente -->
                         </div>
+                        
+                        <!-- Sección para mostrar medios de pago de sucursales seleccionadas -->
+                        <div id="medios-pago-seleccionados" style="display: none; margin-top: 20px;">
+                            <hr>
+                            <h6><i class="fas fa-credit-card text-info"></i> Medios de Pago de Sucursales Seleccionadas:</h6>
+                            <div id="lista-medios-pago">
+                                <!-- Los medios de pago se mostrarán aquí -->
+                            </div>
+                        </div>
                     </div>
                     
                     <div id="error-sucursales" style="display: none;" class="alert alert-danger">
@@ -1262,6 +1271,9 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_central, $sucu
             } else {
                 sucursalesSeleccionadas.push({id: id, nombre: nombre});
             }
+            
+            // Mostrar medios de pago de sucursales seleccionadas
+            mostrarMediosPagoSeleccionados();
         }
 
         // Seleccionar todas las sucursales
@@ -1270,6 +1282,7 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_central, $sucu
             document.querySelectorAll('#sucursales-container input[type="checkbox"]').forEach(cb => {
                 cb.checked = true;
             });
+            mostrarMediosPagoSeleccionados();
         }
 
         // Deseleccionar todas las sucursales
@@ -1278,6 +1291,7 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_central, $sucu
             document.querySelectorAll('#sucursales-container input[type="checkbox"]').forEach(cb => {
                 cb.checked = false;
             });
+            mostrarMediosPagoSeleccionados();
         }
 
         // Confirmar selección
@@ -1317,6 +1331,109 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_central, $sucu
             // Abrir vista previa en nueva ventana
             const urlVistaPrevia = '../vista-previa-medios-pago.php';
             window.open(urlVistaPrevia, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+        }
+
+        // Mostrar medios de pago de sucursales seleccionadas
+        function mostrarMediosPagoSeleccionados() {
+            const container = document.getElementById('medios-pago-seleccionados');
+            const listaMedios = document.getElementById('lista-medios-pago');
+            
+            if (sucursalesSeleccionadas.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'block';
+            listaMedios.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Cargando medios de pago...</div>';
+            
+            // Obtener medios de pago de cada sucursal seleccionada
+            Promise.all(sucursalesSeleccionadas.map(sucursal => obtenerMediosPagoSucursal(sucursal)))
+                .then(resultados => {
+                    mostrarListaMediosPago(resultados);
+                })
+                .catch(error => {
+                    listaMedios.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Error al cargar medios de pago: ' + error.message + '</div>';
+                });
+        }
+
+        // Obtener medios de pago de una sucursal específica
+        function obtenerMediosPagoSucursal(sucursal) {
+            return new Promise((resolve, reject) => {
+                // Buscar la sucursal en sucursalesDisponibles para obtener sus datos
+                const sucursalData = sucursalesDisponibles.find(s => s.id == sucursal.id);
+                if (!sucursalData) {
+                    reject(new Error('Datos de sucursal no encontrados'));
+                    return;
+                }
+                
+                // Construir URL de la API de la sucursal
+                const urlApi = sucursalData.url_api + 'obtener-medios-pago-activos.php';
+                
+                fetch(urlApi)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            resolve({
+                                sucursal: sucursal,
+                                medios_pago: data.medios_pago || []
+                            });
+                        } else {
+                            reject(new Error(data.message || 'Error al obtener medios de pago'));
+                        }
+                    })
+                    .catch(error => {
+                        reject(error);
+                    });
+            });
+        }
+
+        // Mostrar lista de medios de pago
+        function mostrarListaMediosPago(resultados) {
+            const listaMedios = document.getElementById('lista-medios-pago');
+            
+            if (resultados.length === 0) {
+                listaMedios.innerHTML = '<div class="alert alert-info"><i class="fas fa-info-circle"></i> No hay sucursales seleccionadas</div>';
+                return;
+            }
+            
+            let html = '';
+            let todosMediosPago = [];
+            
+            resultados.forEach(resultado => {
+                if (resultado.medios_pago.length > 0) {
+                    html += `<div class="card mb-2">
+                        <div class="card-header py-2">
+                            <h6 class="mb-0"><i class="fas fa-building text-primary"></i> ${resultado.sucursal.nombre}</h6>
+                        </div>
+                        <div class="card-body py-2">
+                            <div class="row">`;
+                    
+                    resultado.medios_pago.forEach(medio => {
+                        html += `<div class="col-md-6 mb-1">
+                            <span class="badge bg-success me-1">${medio.nombre}</span>
+                        </div>`;
+                        todosMediosPago.push(medio.nombre);
+                    });
+                    
+                    html += `</div>
+                        </div>
+                    </div>`;
+                } else {
+                    html += `<div class="alert alert-warning py-2">
+                        <i class="fas fa-exclamation-triangle"></i> ${resultado.sucursal.nombre}: No tiene medios de pago
+                    </div>`;
+                }
+            });
+            
+            // Mostrar resumen
+            const mediosUnicos = [...new Set(todosMediosPago)];
+            html += `<div class="alert alert-info mt-3">
+                <h6><i class="fas fa-list"></i> Resumen de Importación:</h6>
+                <p class="mb-1"><strong>Total medios de pago únicos:</strong> ${mediosUnicos.length}</p>
+                <p class="mb-0"><strong>Medios de pago:</strong> ${mediosUnicos.join(', ')}</p>
+            </div>`;
+            
+            listaMedios.innerHTML = html;
         }
     </script>
 </body>
