@@ -1,12 +1,16 @@
 <?php
 /**
- * Script para generar el archivo obtener-medios-pago-activos.php correcto
- * Este archivo debe estar en CADA SUCURSAL
+ * Script para generar el archivo correcto para SUC001
  */
 
-echo "<h2>🔧 Generando Archivo Correcto para Sucursales</h2>\n";
+echo "<h2>📄 Generador de Archivo Correcto para SUC001</h2>\n";
 
-$contenido_archivo = '<?php
+echo "<h3>🔧 Archivo: obtener-medios-pago-activos.php</h3>\n";
+echo "<p><strong>Para instalar en:</strong> https://pruebas.acrilicosinfinito.com/api-transferencias/</p>\n";
+
+echo "<h3>📝 Contenido Completo del Archivo:</h3>\n";
+echo "<textarea style='width: 100%; height: 400px; font-family: monospace; font-size: 12px;' readonly>\n";
+echo htmlspecialchars('<?php
 /**
  * API para obtener medios de pago activos de esta sucursal
  * Utilizado por el instalador para importar medios de pago
@@ -39,12 +43,8 @@ try {
     $stmt = $pdo->prepare("
         SELECT 
             id,
-            nombre,
-            descripcion,
-            activo,
-            fecha_creacion
+            nombre
         FROM medios_pago
-        WHERE activo = 1
         ORDER BY nombre ASC
     ");
     
@@ -77,39 +77,53 @@ try {
         \'medios_pago\' => []
     ], JSON_UNESCAPED_UNICODE);
 }
-?>';
-
-// Guardar el archivo
-$archivo_destino = 'obtener-medios-pago-activos.php';
-file_put_contents($archivo_destino, $contenido_archivo);
-
-echo "<p style='color: green;'>✅ Archivo generado: $archivo_destino</p>\n";
+?>');
+echo "</textarea>\n";
 
 echo "<h3>📋 Instrucciones de Instalación:</h3>\n";
 echo "<ol>\n";
-echo "<li><strong>Para cada sucursal:</strong></li>\n";
-echo "<ul>\n";
-echo "<li>Acceder al servidor de la sucursal</li>\n";
-echo "<li>Ir a la carpeta <code>api-transferencias/</code></li>\n";
-echo "<li>Reemplazar el archivo <code>obtener-medios-pago-activos.php</code> existente</li>\n";
-echo "<li>Verificar que el archivo consulte la BD local de la sucursal</li>\n";
-echo "</ul>\n";
-echo "<li><strong>Verificar funcionamiento:</strong></li>\n";
-echo "<ul>\n";
-echo "<li>Probar: <code>https://sucursal.ejemplo.com/api-transferencias/obtener-medios-pago-activos.php</code></li>\n";
-echo "<li>Debe devolver JSON con medios de pago de esa sucursal específica</li>\n";
-echo "</ul>\n";
+echo "<li><strong>Acceder al servidor de SUC001:</strong> pruebas.acrilicosinfinito.com</li>\n";
+echo "<li><strong>Ir a la carpeta:</strong> api-transferencias/</li>\n";
+echo "<li><strong>Hacer backup del archivo actual:</strong> obtener-medios-pago-activos.php.backup</li>\n";
+echo "<li><strong>Crear nuevo archivo:</strong> obtener-medios-pago-activos.php</li>\n";
+echo "<li><strong>Copiar el contenido:</strong> Del textarea de arriba</li>\n";
+echo "<li><strong>Guardar el archivo</strong></li>\n";
+echo "<li><strong>Verificar permisos:</strong> 644 o 755</li>\n";
 echo "</ol>\n";
 
-echo "<h3>🎯 Arquitectura Correcta:</h3>\n";
-echo "<ul>\n";
-echo "<li><strong>BD Central:</strong> Tabla <code>sucursales</code> (datos de sucursales activas)</li>\n";
-echo "<li><strong>BD Local de cada sucursal:</strong> Tabla <code>medios_pago</code> (medios específicos)</li>\n";
-echo "<li><strong>Instalador:</strong> Obtiene sucursales del central, conecta a cada sucursal</li>\n";
-echo "<li><strong>Cada sucursal:</strong> Devuelve sus propios medios de pago locales</li>\n";
-echo "</ul>\n";
+echo "<h3>🧪 Prueba de Funcionamiento:</h3>\n";
+echo "<p>Después de instalar, probar esta URL:</p>\n";
+echo "<p><strong>URL:</strong> <a href='https://pruebas.acrilicosinfinito.com/api-transferencias/obtener-medios-pago-activos.php' target='_blank'>https://pruebas.acrilicosinfinito.com/api-transferencias/obtener-medios-pago-activos.php</a></p>\n";
+
+echo "<h3>✅ Respuesta Esperada:</h3>\n";
+echo "<pre style='background: #e8f5e8; padding: 10px; border: 1px solid #4caf50;'>\n";
+echo htmlspecialchars('{
+    "success": true,
+    "message": "Medios de pago obtenidos exitosamente",
+    "total": 3,
+    "medios_pago": [
+        {
+            "id": "1",
+            "nombre": "Efectivo"
+        },
+        {
+            "id": "2",
+            "nombre": "Tarjeta de Crédito"
+        }
+    ]
+}');
+echo "</pre>\n";
+
+echo "<h3>🎯 Después de la Instalación:</h3>\n";
+echo "<p>Una vez instalado el archivo correcto:</p>\n";
+echo "<ol>\n";
+echo "<li><strong>Probar la URL:</strong> Debe devolver JSON con medios de pago</li>\n";
+echo "<li><strong>Ejecutar verificación:</strong> verificar-sucursal-suc001.php</li>\n";
+echo "<li><strong>Probar instalador:</strong> Debe importar medios de SUC001</li>\n";
+echo "</ol>\n";
 
 echo "<h3>⚠️ Nota Importante:</h3>\n";
 echo "<p>Este archivo debe estar en <strong>CADA SUCURSAL</strong>, no en el central.</p>\n";
 echo "<p>Cada sucursal debe consultar su propia tabla <code>medios_pago</code> local.</p>\n";
+echo "<p>El instalador conectará a cada sucursal para obtener sus medios de pago.</p>\n";
 ?>
