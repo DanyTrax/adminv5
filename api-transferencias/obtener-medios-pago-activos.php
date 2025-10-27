@@ -31,12 +31,8 @@ try {
     $stmt = $pdo->prepare("
         SELECT 
             id,
-            nombre,
-            descripcion,
-            activo,
-            fecha_creacion
+            nombre
         FROM medios_pago
-        WHERE activo = 1
         ORDER BY nombre ASC
     ");
     
