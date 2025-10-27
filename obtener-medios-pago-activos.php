@@ -5,6 +5,8 @@
  * 
  * IMPORTANTE: Este archivo debe estar en CADA SUCURSAL
  * Debe consultar la BD LOCAL de la sucursal, no el central
+ * 
+ * NOTA: La tabla medios_pago solo tiene campos: id, nombre
  */
 
 header('Content-Type: application/json');
@@ -27,16 +29,13 @@ try {
         ]
     );
     
-    // Obtener medios de pago activos de esta sucursal específica
+    // Obtener medios de pago de esta sucursal específica
+    // IMPORTANTE: Solo consultar campos que existen: id, nombre
     $stmt = $pdo->prepare("
         SELECT 
             id,
-            nombre,
-            descripcion,
-            activo,
-            fecha_creacion
+            nombre
         FROM medios_pago
-        WHERE activo = 1
         ORDER BY nombre ASC
     ");
     
