@@ -669,11 +669,13 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_sucursal, $suc
         $medios_importados = 0;
         $sucursales_procesadas = 0;
         
-        // Procesar cada sucursal activa
+        // Procesar cada sucursal seleccionada
         foreach ($sucursales_activas as $sucursal) {
             try {
-                // Construir URL de la API de la sucursal
+                // Construir URL de la API de la sucursal usando url_api del central
                 $url_api_sucursal = rtrim($sucursal['url_api'], '/') . '/';
+                
+                error_log("Intentando conectar a sucursal: {$sucursal['nombre']} - URL: $url_api_sucursal");
                 
                 // Obtener medios de pago de esta sucursal
                 $ch = curl_init();
@@ -685,7 +687,13 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_sucursal, $suc
                 
                 $response = curl_exec($ch);
                 $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $error = curl_error($ch);
                 curl_close($ch);
+                
+                if ($error) {
+                    error_log("Error cURL al conectar con {$sucursal['nombre']}: $error");
+                    continue;
+                }
                 
                 if ($http_code !== 200 || !$response) {
                     error_log("Error al obtener medios de pago de {$sucursal['nombre']}: HTTP $http_code");
@@ -695,7 +703,7 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_sucursal, $suc
                 $medios_pago_data = json_decode($response, true);
                 
                 if (!$medios_pago_data || !isset($medios_pago_data['success']) || !$medios_pago_data['success']) {
-                    error_log("Respuesta inválida de {$sucursal['nombre']} para medios de pago");
+                    error_log("Respuesta inválida de {$sucursal['nombre']} para medios de pago: " . json_encode($medios_pago_data));
                     continue;
                 }
                 
