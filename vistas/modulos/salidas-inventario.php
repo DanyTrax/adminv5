@@ -224,8 +224,16 @@ MODAL AGREGAR SALIDA
                 
                 <span class="input-group-addon"><i class="fa fa-file-text"></i></span> 
 
-                <input type="text" class="form-control input-lg" name="nuevaRemision" placeholder="Número de remisión o factura">
+                <input type="text" class="form-control input-lg" name="nuevaRemision" id="buscarRemision" placeholder="Buscar remisión/factura por código..." autocomplete="off">
 
+              </div>
+
+              <!-- RESULTADOS DE BÚSQUEDA DE REMISIONES -->
+              
+              <div id="resultadosRemisiones" style="display: none; max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; background: white; position: absolute; z-index: 1000; width: 100%;">
+                
+                <!-- Los resultados se cargarán aquí -->
+                
               </div>
 
             </div>

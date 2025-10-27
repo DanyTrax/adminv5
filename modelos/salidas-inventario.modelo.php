@@ -131,4 +131,38 @@ class ModeloSalidasInventario{
 
 	}
 
+	/*=============================================
+	BUSCAR REMISIONES/FACTURAS PARA AJAX
+	=============================================*/
+
+	static public function mdlBuscarRemisiones($busqueda){
+
+		$stmt = Conexion::conectar()->prepare("SELECT 
+			v.id,
+			v.codigo,
+			v.total,
+			v.fecha_venta,
+			v.metodo_pago,
+			c.nombre as cliente_nombre,
+			u.nombre as vendedor_nombre
+		FROM ventas v
+		LEFT JOIN clientes c ON v.id_cliente = c.id
+		LEFT JOIN usuarios u ON v.id_vendedor = u.id
+		WHERE v.codigo LIKE :busqueda
+		ORDER BY v.codigo DESC
+		LIMIT 10");
+
+		$busqueda = "%".$busqueda."%";
+		$stmt -> bindParam(":busqueda", $busqueda, PDO::PARAM_STR);
+
+		$stmt -> execute();
+
+		return $stmt -> fetchAll();
+
+		$stmt -> close();
+
+		$stmt = null;
+
+	}
+
 }

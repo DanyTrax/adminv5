@@ -202,6 +202,95 @@ $("input[name='nuevaCantidad']").on("input", function(){
 });
 
 /*=============================================
+BÚSQUEDA AJAX DE REMISIONES
+=============================================*/
+
+// Búsqueda de remisiones con AJAX
+$("#buscarRemision").on("keyup", function(){
+    
+    var busqueda = $(this).val();
+    var resultados = $("#resultadosRemisiones");
+    
+    if(busqueda.length >= 2){
+        
+        var datos = new FormData();
+        datos.append("buscarRemisiones", busqueda);
+
+        $.ajax({
+            url: "ajax/salidas-inventario.ajax.php",
+            method: "POST",
+            data: datos,
+            cache: false,
+            contentType: false,
+            processData: false,
+            dataType: "json",
+            success: function(respuesta){
+                
+                if(respuesta.length > 0){
+                    
+                    var html = "";
+                    
+                    for(var i = 0; i < respuesta.length; i++){
+                        
+                        html += '<div class="resultado-remision" style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;" ' +
+                                'data-codigo="' + respuesta[i]["codigo"] + '">' +
+                                '<strong>Remisión #' + respuesta[i]["codigo"] + '</strong><br>' +
+                                '<small class="text-muted">Cliente: ' + respuesta[i]["cliente_nombre"] + ' | Vendedor: ' + respuesta[i]["vendedor_nombre"] + '<br>' +
+                                'Total: $' + parseFloat(respuesta[i]["total"]).toFixed(0) + ' | Fecha: ' + respuesta[i]["fecha_venta"] + '</small>' +
+                                '</div>';
+                    }
+                    
+                    resultados.html(html);
+                    resultados.show();
+                    
+                } else {
+                    
+                    resultados.html('<div style="padding: 10px; color: #999;">No se encontraron remisiones</div>');
+                    resultados.show();
+                    
+                }
+                
+            },
+            error: function(){
+                resultados.html('<div style="padding: 10px; color: #d9534f;">Error al buscar remisiones</div>');
+                resultados.show();
+            }
+        });
+        
+    } else {
+        resultados.hide();
+    }
+});
+
+/*=============================================
+SELECCIONAR REMISIÓN
+=============================================*/
+
+$(document).on("click", ".resultado-remision", function(){
+    
+    var codigo = $(this).data("codigo");
+    
+    // Llenar campo de remisión
+    $("#buscarRemision").val(codigo);
+    
+    // Ocultar resultados
+    $("#resultadosRemisiones").hide();
+    
+});
+
+/*=============================================
+OCULTAR RESULTADOS DE REMISIONES AL HACER CLIC FUERA
+=============================================*/
+
+$(document).on("click", function(e){
+    
+    if(!$(e.target).closest("#buscarRemision, #resultadosRemisiones").length){
+        $("#resultadosRemisiones").hide();
+    }
+    
+});
+
+/*=============================================
 LIMPIAR FORMULARIO AL CERRAR MODAL
 =============================================*/
 
@@ -212,10 +301,11 @@ $("#modalAgregarSalida").on("hidden.bs.modal", function(){
     $("#nuevoProducto").val("");
     $("input[name='nuevaCantidad']").val("");
     $("textarea[name='nuevaDescripcion']").val("");
-    $("input[name='nuevaRemision']").val("");
+    $("#buscarRemision").val("");
     
     // Ocultar elementos
     $("#productoSeleccionado").hide();
     $("#resultadosProductos").hide();
+    $("#resultadosRemisiones").hide();
     
 });

@@ -16,3 +16,17 @@ if(isset($_POST["buscarProductos"])){
 	echo json_encode($productos);
 
 }
+
+/*=============================================
+BUSCAR REMISIONES PARA AJAX
+=============================================*/
+
+if(isset($_POST["buscarRemisiones"])){
+
+	$busqueda = $_POST["buscarRemisiones"];
+
+	$remisiones = ModeloSalidasInventario::mdlBuscarRemisiones($busqueda);
+
+	echo json_encode($remisiones);
+
+}
