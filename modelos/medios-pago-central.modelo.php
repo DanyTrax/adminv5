@@ -139,41 +139,18 @@ class ModeloMediosPagoCentral {
         try {
             $stmt = ConexionCentral::conectar()->prepare("
                 SELECT 
-                    s.id,
-                    s.nombre,
-                    mpc.id as medio_id,
                     mpc.nombre as medio_nombre,
+                    s.nombre as sucursal_nombre,
                     COALESCE(mps.activo, 0) as activo
-                FROM sucursales s
-                CROSS JOIN medios_pago_central mpc
+                FROM medios_pago_central mpc
+                CROSS JOIN sucursales s
                 LEFT JOIN medios_pago_sucursal mps ON mpc.id = mps.medio_pago_id AND s.id = mps.sucursal_id
-                WHERE s.activo = 1 AND mpc.activo = 1
-                ORDER BY s.nombre, mpc.codigo
+                WHERE mpc.activo = 1 AND s.activo = 1
+                ORDER BY mpc.nombre, s.nombre ASC
             ");
             
             $stmt->execute();
-            $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Agrupar por sucursal
-            $sucursales = [];
-            foreach ($resultados as $row) {
-                $sucursalId = $row['id'];
-                if (!isset($sucursales[$sucursalId])) {
-                    $sucursales[$sucursalId] = [
-                        'id' => $row['id'],
-                        'nombre' => $row['nombre'],
-                        'medios' => []
-                    ];
-                }
-                
-                $sucursales[$sucursalId]['medios'][] = [
-                    'id' => $row['medio_id'],
-                    'nombre' => $row['medio_nombre'],
-                    'activo' => $row['activo']
-                ];
-            }
-            
-            return array_values($sucursales);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
             error_log("Error en mdlObtenerEstadoCompleto: " . $e->getMessage());
             return [];
