@@ -35,6 +35,31 @@ class ModeloMediosPagoCentral {
     }
     
     /*=============================================
+    OBTENER MEDIO DE PAGO ESPECÍFICO
+    =============================================*/
+    static public function mdlObtenerMedioPagoCentral($id) {
+        try {
+            $stmt = ConexionCentral::conectar()->prepare("
+                SELECT 
+                    id,
+                    codigo,
+                    nombre,
+                    descripcion,
+                    tipo,
+                    activo
+                FROM medios_pago_central 
+                WHERE id = :id
+            ");
+            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error en mdlObtenerMedioPagoCentral: " . $e->getMessage());
+            return null;
+        }
+    }
+    
+    /*=============================================
     OBTENER SUCURSALES PARA ESTADO
     =============================================*/
     static public function mdlObtenerSucursalesEstado() {
@@ -129,6 +154,34 @@ class ModeloMediosPagoCentral {
         } catch (Exception $e) {
             error_log("Error en mdlObtenerSucursalesDestinoDesactivar: " . $e->getMessage());
             return [];
+        }
+    }
+    
+    /*=============================================
+    OBTENER ESTADO DE MEDIO ESPECÍFICO
+    =============================================*/
+    static public function mdlObtenerEstadoMedioEspecifico($medioId) {
+        try {
+            $stmtMedio = ConexionCentral::conectar()->prepare("
+                SELECT nombre FROM medios_pago_central WHERE id = ?
+            ");
+            $stmtMedio->execute([$medioId]);
+            $medioNombre = $stmtMedio->fetchColumn();
+
+            $stmt = ConexionCentral::conectar()->prepare("
+                SELECT 
+                    s.nombre as sucursal_nombre,
+                    COALESCE(mps.activo, 0) as activo
+                FROM sucursales s
+                LEFT JOIN medios_pago_sucursal mps ON s.id = mps.sucursal_id AND mps.medio_pago_id = ?
+                WHERE s.activo = 1
+                ORDER BY s.nombre ASC
+            ");
+            $stmt->execute([$medioId]);
+            return ['data' => $stmt->fetchAll(PDO::FETCH_ASSOC), 'medio_nombre' => $medioNombre];
+        } catch (Exception $e) {
+            error_log("Error en mdlObtenerEstadoMedioEspecifico: " . $e->getMessage());
+            return ['data' => [], 'medio_nombre' => ''];
         }
     }
     
