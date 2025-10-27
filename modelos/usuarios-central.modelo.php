@@ -13,6 +13,9 @@ class ModeloUsuariosCentral {
         try {
             $conexion = ConexionCentral::conectar();
             
+            // Log de datos recibidos para debugging
+            error_log("Datos recibidos en mdlCrearUsuarioCentral: " . json_encode($datos));
+            
             // Verificar si el usuario ya existe
             $stmt = $conexion->prepare("
                 SELECT id FROM usuarios_central 
@@ -51,10 +54,22 @@ class ModeloUsuariosCentral {
                 }
             }
             
+            // Limpiar y validar el campo perfil
+            $perfil = trim($datos['perfil']);
+            $perfilesValidos = ['Administrador', 'Especial', 'Vendedor', 'Contador', 'Transportador', 'Limitado'];
+            
+            if (!in_array($perfil, $perfilesValidos)) {
+                error_log("Perfil inválido recibido: '" . $perfil . "'");
+                return [
+                    'success' => false,
+                    'error' => 'Perfil no válido: ' . $perfil
+                ];
+            }
+            
             $stmt->bindParam(":nombre", $datos['nombre'], PDO::PARAM_STR);
             $stmt->bindParam(":usuario", $datos['usuario'], PDO::PARAM_STR);
             $stmt->bindParam(":password", $datos['password'], PDO::PARAM_STR);
-            $stmt->bindParam(":perfil", $datos['perfil'], PDO::PARAM_STR);
+            $stmt->bindParam(":perfil", $perfil, PDO::PARAM_STR);
             $stmt->bindParam(":foto", $foto, PDO::PARAM_STR);
             $stmt->bindParam(":telefono", $datos['telefono'], PDO::PARAM_STR);
             $stmt->bindParam(":direccion", $datos['direccion'], PDO::PARAM_STR);
