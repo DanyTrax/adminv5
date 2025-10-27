@@ -57,7 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'url_base' => $_POST['url_base'] ?? '',
             'url_api' => $_POST['url_api'] ?? '',
             'url_central' => $_POST['url_central'] ?? '',
-            'importar_medios_pago' => isset($_POST['importar_medios_pago']) ? 1 : 0
+            'importar_medios_pago' => isset($_POST['importar_medios_pago']) ? 1 : 0,
+            'sucursales_seleccionadas' => $_POST['sucursales_seleccionadas'] ?? '[]'
         ];
         
         // Validar datos básicos
@@ -199,7 +200,8 @@ function ejecutarInstalacionCompleta() {
         
         // 4.1. Importar medios de pago si está marcada la opción
         if ($datos_sucursal['importar_medios_pago']) {
-            importarMediosPagoDeSucursalesActivas($pdo, $datos_sucursal);
+            $sucursales_seleccionadas = json_decode($datos_sucursal['sucursales_seleccionadas'], true);
+            importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_sucursal, $sucursales_seleccionadas);
         }
         
         // 5. Registrar sucursal en el sistema central
@@ -607,27 +609,60 @@ function registrarSucursalEnCentral($datos_sucursal, $datos_central) {
     return true;
 }
 
-// Función para importar medios de pago de sucursales activas
-function importarMediosPagoDeSucursalesActivas($pdo, $datos_sucursal) {
+// Función para importar medios de pago de sucursales seleccionadas
+function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_sucursal, $sucursales_seleccionadas) {
     try {
-        // Obtener sucursales activas de la BD local
-        $stmt = $pdo->prepare("
-            SELECT DISTINCT 
-                s.codigo_sucursal,
-                s.nombre,
-                s.url_base,
-                s.url_api
-            FROM sucursales s
-            WHERE s.activo = 1 
-            AND s.codigo_sucursal != ?
-            ORDER BY s.nombre ASC
-        ");
+        if (empty($sucursales_seleccionadas)) {
+            error_log("No hay sucursales seleccionadas para importar medios de pago");
+            return false;
+        }
         
-        $stmt->execute([$datos_sucursal['codigo_sucursal']]);
-        $sucursales_activas = $stmt->fetchAll();
+        // Obtener datos de las sucursales seleccionadas desde el central
+        $url_central = $datos_sucursal['url_central'];
+        if (empty($url_central)) {
+            error_log("URL central no configurada para importar medios de pago");
+            return false;
+        }
+        
+        // Construir URL de la API central
+        $url_api_central = rtrim($url_central, '/') . '/api-transferencias/';
+        
+        // Obtener datos completos de las sucursales seleccionadas
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url_api_central . 'obtener-sucursales-activas.php');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($http_code !== 200 || !$response) {
+            error_log("Error al obtener datos de sucursales del central: HTTP $http_code");
+            return false;
+        }
+        
+        $sucursales_data = json_decode($response, true);
+        
+        if (!$sucursales_data || !isset($sucursales_data['success']) || !$sucursales_data['success']) {
+            error_log("Respuesta inválida del central para sucursales");
+            return false;
+        }
+        
+        // Filtrar solo las sucursales seleccionadas
+        $sucursales_activas = [];
+        foreach ($sucursales_data['sucursales'] as $sucursal) {
+            foreach ($sucursales_seleccionadas as $seleccionada) {
+                if ($sucursal['id'] == $seleccionada['id']) {
+                    $sucursales_activas[] = $sucursal;
+                    break;
+                }
+            }
+        }
         
         if (empty($sucursales_activas)) {
-            error_log("No hay sucursales activas para importar medios de pago");
+            error_log("No se encontraron datos de las sucursales seleccionadas");
             return false;
         }
         
@@ -847,7 +882,16 @@ function importarMediosPagoDeSucursalesActivas($pdo, $datos_sucursal) {
                                     <i class="fas fa-credit-card text-primary"></i>
                                     <strong>Importar medios de pago de sucursales activas</strong>
                                 </label>
-                                <div class="form-text">Se importarán automáticamente los medios de pago configurados en otras sucursales activas de la BD local</div>
+                                <div class="form-text">Seleccione de qué sucursales activas importar los medios de pago</div>
+                            </div>
+                            
+                            <!-- Botón para seleccionar sucursales -->
+                            <div id="seleccion-sucursales" style="display: none; margin-top: 15px;">
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="mostrarModalSucursales()">
+                                    <i class="fas fa-list"></i> Seleccionar Sucursales
+                                </button>
+                                <div id="sucursales-seleccionadas" class="mt-2"></div>
+                                <input type="hidden" name="sucursales_seleccionadas" id="sucursales_seleccionadas" value="">
                             </div>
                         </div>
                         
@@ -1074,7 +1118,190 @@ function importarMediosPagoDeSucursalesActivas($pdo, $datos_sucursal) {
             </div>
         </div>
     </div>
+
+    <!-- Modal para seleccionar sucursales -->
+    <div class="modal fade" id="modalSucursales" tabindex="-1" aria-labelledby="modalSucursalesLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalSucursalesLabel">
+                        <i class="fas fa-building text-primary"></i>
+                        Seleccionar Sucursales para Importar Medios de Pago
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="cargando-sucursales" class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2">Cargando sucursales activas...</p>
+                    </div>
+                    
+                    <div id="lista-sucursales" style="display: none;">
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="seleccionarTodas()">
+                                <i class="fas fa-check-square"></i> Seleccionar Todas
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="deseleccionarTodas()">
+                                <i class="fas fa-square"></i> Deseleccionar Todas
+                            </button>
+                        </div>
+                        
+                        <div id="sucursales-container">
+                            <!-- Las sucursales se cargarán aquí dinámicamente -->
+                        </div>
+                    </div>
+                    
+                    <div id="error-sucursales" style="display: none;" class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Error:</strong> No se pudieron cargar las sucursales activas.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmarSeleccion()">
+                        <i class="fas fa-check"></i> Confirmar Selección
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Variables globales
+        let sucursalesDisponibles = [];
+        let sucursalesSeleccionadas = [];
+
+        // Mostrar/ocultar sección de selección según checkbox
+        document.getElementById('importar_medios_pago').addEventListener('change', function() {
+            const seleccionDiv = document.getElementById('seleccion-sucursales');
+            if (this.checked) {
+                seleccionDiv.style.display = 'block';
+            } else {
+                seleccionDiv.style.display = 'none';
+                sucursalesSeleccionadas = [];
+                actualizarSucursalesSeleccionadas();
+            }
+        });
+
+        // Mostrar modal de sucursales
+        function mostrarModalSucursales() {
+            const modal = new bootstrap.Modal(document.getElementById('modalSucursales'));
+            modal.show();
+            cargarSucursalesActivas();
+        }
+
+        // Cargar sucursales activas desde el central
+        function cargarSucursalesActivas() {
+            const urlCentral = document.querySelector('input[name="url_central"]').value;
+            if (!urlCentral) {
+                mostrarError('URL Central no configurada');
+                return;
+            }
+
+            const urlApi = urlCentral.replace(/\/$/, '') + '/api-transferencias/obtener-sucursales-activas.php';
+            
+            fetch(urlApi)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        sucursalesDisponibles = data.sucursales;
+                        mostrarSucursales();
+                    } else {
+                        mostrarError(data.message || 'Error al cargar sucursales');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarError('Error de conexión: ' + error.message);
+                });
+        }
+
+        // Mostrar sucursales en la modal
+        function mostrarSucursales() {
+            const container = document.getElementById('sucursales-container');
+            container.innerHTML = '';
+
+            sucursalesDisponibles.forEach(sucursal => {
+                const div = document.createElement('div');
+                div.className = 'form-check mb-2';
+                div.innerHTML = `
+                    <input class="form-check-input" type="checkbox" 
+                           id="sucursal_${sucursal.id}" 
+                           value="${sucursal.id}"
+                           onchange="toggleSucursal(${sucursal.id}, '${sucursal.nombre}')">
+                    <label class="form-check-label" for="sucursal_${sucursal.id}">
+                        <strong>${sucursal.nombre}</strong> (${sucursal.codigo_sucursal})
+                        <br><small class="text-muted">${sucursal.direccion || 'Sin dirección'}</small>
+                    </label>
+                `;
+                container.appendChild(div);
+            });
+
+            document.getElementById('cargando-sucursales').style.display = 'none';
+            document.getElementById('lista-sucursales').style.display = 'block';
+        }
+
+        // Toggle sucursal seleccionada
+        function toggleSucursal(id, nombre) {
+            const index = sucursalesSeleccionadas.findIndex(s => s.id === id);
+            if (index > -1) {
+                sucursalesSeleccionadas.splice(index, 1);
+            } else {
+                sucursalesSeleccionadas.push({id: id, nombre: nombre});
+            }
+        }
+
+        // Seleccionar todas las sucursales
+        function seleccionarTodas() {
+            sucursalesSeleccionadas = [...sucursalesDisponibles];
+            document.querySelectorAll('#sucursales-container input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+            });
+        }
+
+        // Deseleccionar todas las sucursales
+        function deseleccionarTodas() {
+            sucursalesSeleccionadas = [];
+            document.querySelectorAll('#sucursales-container input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+        }
+
+        // Confirmar selección
+        function confirmarSeleccion() {
+            actualizarSucursalesSeleccionadas();
+            bootstrap.Modal.getInstance(document.getElementById('modalSucursales')).hide();
+        }
+
+        // Actualizar display de sucursales seleccionadas
+        function actualizarSucursalesSeleccionadas() {
+            const container = document.getElementById('sucursales-seleccionadas');
+            const hiddenInput = document.getElementById('sucursales_seleccionadas');
+            
+            if (sucursalesSeleccionadas.length === 0) {
+                container.innerHTML = '<small class="text-muted">No hay sucursales seleccionadas</small>';
+                hiddenInput.value = '';
+            } else {
+                const badges = sucursalesSeleccionadas.map(s => 
+                    `<span class="badge bg-primary me-1">${s.nombre}</span>`
+                ).join('');
+                container.innerHTML = `<div class="mt-1">${badges}</div>`;
+                hiddenInput.value = JSON.stringify(sucursalesSeleccionadas);
+            }
+        }
+
+        // Mostrar error
+        function mostrarError(mensaje) {
+            document.getElementById('cargando-sucursales').style.display = 'none';
+            document.getElementById('lista-sucursales').style.display = 'none';
+            document.getElementById('error-sucursales').style.display = 'block';
+            document.getElementById('error-sucursales').innerHTML = 
+                `<i class="fas fa-exclamation-triangle"></i><strong>Error:</strong> ${mensaje}`;
+        }
+    </script>
 </body>
 </html>
