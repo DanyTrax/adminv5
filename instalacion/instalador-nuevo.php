@@ -549,27 +549,8 @@ function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario, $datos_bd
         ''  // direccion vacía
     ]);
     
-    // Insertar categorías básicas iniciales
-    $categorias_basicas = [
-        'General',
-        'Electrónicos',
-        'Ropa',
-        'Hogar',
-        'Deportes',
-        'Libros',
-        'Juguetes',
-        'Alimentación',
-        'Belleza',
-        'Automotriz'
-    ];
-    
-    foreach ($categorias_basicas as $categoria) {
-        $stmt = $pdo->prepare("INSERT INTO categorias (categoria) VALUES (?)");
-        $stmt->execute([$categoria]);
-    }
-    
-    // Los medios de pago se importarán desde las sucursales seleccionadas
-    // No se crean medios genéricos para evitar duplicados
+    // Las categorías y medios de pago se importarán desde las sucursales seleccionadas
+    // No se crean datos genéricos para evitar duplicados y datos innecesarios
     
     // Verificar que el usuario se creó correctamente
     $stmt = $pdo->prepare("SELECT id, usuario, password FROM usuarios WHERE usuario = ?");
