@@ -6,11 +6,52 @@
 echo "<h2>🔍 Verificación de Medios de Pago en SUC001</h2>\n";
 
 try {
-    // Probar sucursal SUC001
-    echo "<h3>🏢 Probando sucursal SUC001:</h3>\n";
+    // 1. Primero obtener la URL correcta de SUC001 desde la tabla sucursales
+    echo "<h3>1. 🔍 Obteniendo URL correcta de SUC001:</h3>\n";
     
-    $url_sucursal = 'https://pruebas.acrilicosinfinito.com/api-transferencias/obtener-medios-pago-activos.php';
-    echo "<p><strong>URL:</strong> $url_sucursal</p>\n";
+    require_once 'config.php';
+    
+    $pdo = new PDO(
+        "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8",
+        DB_USER,
+        DB_PASS,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+        ]
+    );
+    
+    // Obtener datos de SUC001 desde la tabla sucursales
+    $stmt = $pdo->prepare("
+        SELECT 
+            id,
+            codigo_sucursal,
+            nombre,
+            url_base,
+            url_api
+        FROM sucursales
+        WHERE codigo_sucursal = 'SUC001'
+        LIMIT 1
+    ");
+    
+    $stmt->execute();
+    $sucursal = $stmt->fetch();
+    
+    if (!$sucursal) {
+        echo "<p style='color: red;'>❌ No se encontró SUC001 en la tabla sucursales</p>\n";
+        exit;
+    }
+    
+    echo "<p><strong>Sucursal encontrada:</strong> {$sucursal['nombre']} ({$sucursal['codigo_sucursal']})</p>\n";
+    echo "<p><strong>URL Base:</strong> {$sucursal['url_base']}</p>\n";
+    echo "<p><strong>URL API:</strong> {$sucursal['url_api']}</p>\n";
+    
+    // Construir URL correcta usando url_api
+    $url_sucursal = rtrim($sucursal['url_api'], '/') . '/obtener-medios-pago-activos.php';
+    
+    // 2. Probar sucursal SUC001
+    echo "<h3>2. 🏢 Probando sucursal SUC001:</h3>\n";
+    echo "<p><strong>URL construida:</strong> $url_sucursal</p>\n";
     
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url_sucursal);
