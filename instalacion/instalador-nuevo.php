@@ -610,65 +610,104 @@ function registrarSucursalEnCentral($datos_sucursal, $datos_central) {
 // Función para importar medios de pago de sucursales activas
 function importarMediosPagoDeSucursalesActivas($pdo, $datos_sucursal) {
     try {
-        // Conectar a la base de datos central
-        $url_central = $datos_sucursal['url_central'];
-        if (empty($url_central)) {
-            error_log("URL central no configurada para importar medios de pago");
-            return false;
-        }
+        // Obtener sucursales activas de la BD local
+        $stmt = $pdo->prepare("
+            SELECT DISTINCT 
+                s.codigo_sucursal,
+                s.nombre,
+                s.url_base,
+                s.url_api
+            FROM sucursales s
+            WHERE s.activo = 1 
+            AND s.codigo_sucursal != ?
+            ORDER BY s.nombre ASC
+        ");
         
-        // Construir URL de la API central
-        $url_api_central = rtrim($url_central, '/') . '/api-transferencias/';
+        $stmt->execute([$datos_sucursal['codigo_sucursal']]);
+        $sucursales_activas = $stmt->fetchAll();
         
-        // Obtener medios de pago de sucursales activas desde el central
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url_api_central . 'obtener-medios-pago-activos.php');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        
-        $response = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        
-        if ($http_code !== 200 || !$response) {
-            error_log("Error al obtener medios de pago del central: HTTP $http_code");
-            return false;
-        }
-        
-        $medios_pago_data = json_decode($response, true);
-        
-        if (!$medios_pago_data || !isset($medios_pago_data['success']) || !$medios_pago_data['success']) {
-            error_log("Respuesta inválida del central para medios de pago");
+        if (empty($sucursales_activas)) {
+            error_log("No hay sucursales activas para importar medios de pago");
             return false;
         }
         
         $medios_importados = 0;
+        $sucursales_procesadas = 0;
         
-        // Insertar cada medio de pago en la sucursal local
-        foreach ($medios_pago_data['medios_pago'] as $medio) {
+        // Procesar cada sucursal activa
+        foreach ($sucursales_activas as $sucursal) {
             try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO medios_pago (
-                        nombre, descripcion, activo, fecha_creacion
-                    ) VALUES (?, ?, 1, NOW())
-                ");
+                // Construir URL de la API de la sucursal
+                $url_api_sucursal = rtrim($sucursal['url_api'], '/') . '/';
                 
-                $stmt->execute([
-                    $medio['nombre'],
-                    $medio['descripcion'] ?? ''
-                ]);
+                // Obtener medios de pago de esta sucursal
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url_api_sucursal . 'obtener-medios-pago-activos.php');
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
                 
-                $medios_importados++;
-                error_log("Medio de pago importado: " . $medio['nombre']);
+                $response = curl_exec($ch);
+                $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
                 
-            } catch (PDOException $e) {
-                error_log("Error al insertar medio de pago '{$medio['nombre']}': " . $e->getMessage());
+                if ($http_code !== 200 || !$response) {
+                    error_log("Error al obtener medios de pago de {$sucursal['nombre']}: HTTP $http_code");
+                    continue;
+                }
+                
+                $medios_pago_data = json_decode($response, true);
+                
+                if (!$medios_pago_data || !isset($medios_pago_data['success']) || !$medios_pago_data['success']) {
+                    error_log("Respuesta inválida de {$sucursal['nombre']} para medios de pago");
+                    continue;
+                }
+                
+                // Insertar cada medio de pago en la sucursal local
+                foreach ($medios_pago_data['medios_pago'] as $medio) {
+                    try {
+                        // Verificar si ya existe
+                        $stmt_check = $pdo->prepare("
+                            SELECT id FROM medios_pago 
+                            WHERE nombre = ? AND activo = 1
+                        ");
+                        $stmt_check->execute([$medio['nombre']]);
+                        
+                        if ($stmt_check->fetch()) {
+                            error_log("Medio de pago '{$medio['nombre']}' ya existe, omitiendo");
+                            continue;
+                        }
+                        
+                        $stmt = $pdo->prepare("
+                            INSERT INTO medios_pago (
+                                nombre, descripcion, activo, fecha_creacion
+                            ) VALUES (?, ?, 1, NOW())
+                        ");
+                        
+                        $stmt->execute([
+                            $medio['nombre'],
+                            $medio['descripcion'] ?? ''
+                        ]);
+                        
+                        $medios_importados++;
+                        error_log("Medio de pago importado de {$sucursal['nombre']}: " . $medio['nombre']);
+                        
+                    } catch (PDOException $e) {
+                        error_log("Error al insertar medio de pago '{$medio['nombre']}' de {$sucursal['nombre']}: " . $e->getMessage());
+                        continue;
+                    }
+                }
+                
+                $sucursales_procesadas++;
+                
+            } catch (Exception $e) {
+                error_log("Error al procesar sucursal {$sucursal['nombre']}: " . $e->getMessage());
                 continue;
             }
         }
         
-        error_log("Importación completada: $medios_importados medios de pago importados");
+        error_log("Importación completada: $medios_importados medios de pago importados de $sucursales_procesadas sucursales");
         return true;
         
     } catch (Exception $e) {
@@ -808,7 +847,7 @@ function importarMediosPagoDeSucursalesActivas($pdo, $datos_sucursal) {
                                     <i class="fas fa-credit-card text-primary"></i>
                                     <strong>Importar medios de pago de sucursales activas</strong>
                                 </label>
-                                <div class="form-text">Se importarán automáticamente los medios de pago configurados en otras sucursales activas</div>
+                                <div class="form-text">Se importarán automáticamente los medios de pago configurados en otras sucursales activas de la BD local</div>
                             </div>
                         </div>
                         
