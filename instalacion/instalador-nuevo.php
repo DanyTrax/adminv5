@@ -678,7 +678,7 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_central, $sucu
                 
                 error_log("Intentando conectar a sucursal: {$sucursal['nombre']} - URL: $url_api_sucursal");
                 
-                // Obtener medios de pago de esta sucursal
+                // Obtener medios de pago de esta sucursal específica
                 $ch = curl_init();
                 curl_setopt($ch, CURLOPT_URL, $url_api_sucursal . 'obtener-medios-pago-activos.php');
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -707,6 +707,8 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_central, $sucu
                     error_log("Respuesta inválida de {$sucursal['nombre']} para medios de pago: " . json_encode($medios_pago_data));
                     continue;
                 }
+                
+                error_log("Medios de pago encontrados en {$sucursal['nombre']}: " . count($medios_pago_data['medios_pago']));
                 
                 // Insertar cada medio de pago en la sucursal local
                 foreach ($medios_pago_data['medios_pago'] as $medio) {
