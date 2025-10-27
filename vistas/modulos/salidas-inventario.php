@@ -147,7 +147,7 @@ MODAL AGREGAR SALIDA
                 
                 <span class="input-group-addon"><i class="fa fa-user"></i></span> 
 
-                <input type="text" class="form-control input-lg" name="nuevoUsuario" value="<?php echo $_SESSION["nombre"]; ?>" readonly required>
+                <input type="text" class="form-control input-lg" value="<?php echo $_SESSION["nombre"]; ?>" readonly>
 
                 <input type="hidden" name="nuevoUsuario" value="<?php echo $_SESSION["id"]; ?>">
 

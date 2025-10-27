@@ -54,8 +54,9 @@ class ControladorSalidasInventario{
 				$tablaProductos = "productos";
 				$itemProducto = "id";
 				$valorProducto = $_POST["nuevoProducto"];
+				$ordenProducto = "id DESC";
 
-				$producto = ModeloProductos::mdlMostrarProductos($tablaProductos, $itemProducto, $valorProducto);
+				$producto = ModeloProductos::mdlMostrarProductos($tablaProductos, $itemProducto, $valorProducto, $ordenProducto);
 
 				if($producto){
 
