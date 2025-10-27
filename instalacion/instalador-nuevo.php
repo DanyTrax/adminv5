@@ -477,6 +477,23 @@ function crearTablasBD($pdo) {
             Ult_abono FLOAT NOT NULL,
             medio_pago VARCHAR(50) DEFAULT NULL,
             PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci",
+        
+        // 13. Tabla salidas_inventario
+        "CREATE TABLE IF NOT EXISTS salidas_inventario (
+            id INT(11) NOT NULL AUTO_INCREMENT,
+            id_producto INT(11) NOT NULL,
+            id_usuario INT(11) NOT NULL,
+            cantidad DECIMAL(10,2) NOT NULL,
+            descripcion TEXT,
+            numero_remision VARCHAR(255),
+            fecha_salida DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            FOREIGN KEY (id_producto) REFERENCES productos(id) ON DELETE CASCADE ON UPDATE CASCADE,
+            FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE,
+            KEY idx_fecha_salida (fecha_salida),
+            KEY idx_id_producto (id_producto),
+            KEY idx_id_usuario (id_usuario)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci"
     ];
     
