@@ -19,7 +19,7 @@ try {
     if ($tabla) {
         echo "<p style='color: green;'>✅ Tabla 'sucursal_local' existe</p>\n";
         
-        // Obtener datos de sucursal_local
+        // Obtener datos de sucursales con datos de conexión BD local
         $stmt = $pdo->query("
             SELECT 
                 id,
@@ -32,7 +32,7 @@ try {
                 puerto_bd,
                 url_base,
                 url_api
-            FROM sucursal_local
+            FROM sucursales
             WHERE activo = 1
             ORDER BY nombre ASC
         ");

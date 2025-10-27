@@ -14,20 +14,19 @@ try {
     
     $stmt = $pdo->prepare("
         SELECT 
-            s.id,
-            s.codigo_sucursal,
-            s.nombre,
-            s.url_base,
-            s.url_api,
-            sl.usuario_bd,
-            sl.password_bd,
-            sl.nombre_bd,
-            sl.host_bd,
-            sl.puerto_bd
-        FROM sucursales s
-        LEFT JOIN sucursal_local sl ON s.id = sl.id
-        WHERE s.activo = 1
-        ORDER BY s.nombre ASC
+            id,
+            codigo_sucursal,
+            nombre,
+            url_base,
+            url_api,
+            usuario_bd,
+            password_bd,
+            nombre_bd,
+            host_bd,
+            puerto_bd
+        FROM sucursales
+        WHERE activo = 1
+        ORDER BY nombre ASC
     ");
     
     $stmt->execute();
