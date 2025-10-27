@@ -55,7 +55,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'telefono' => $_POST['telefono'] ?? '',
             'email' => $_POST['email'] ?? '',
             'url_base' => $_POST['url_base'] ?? '',
-            'url_api' => $_POST['url_api'] ?? ''
+            'url_api' => $_POST['url_api'] ?? '',
+            'url_central' => $_POST['url_central'] ?? '',
+            'importar_medios_pago' => isset($_POST['importar_medios_pago']) ? 1 : 0
         ];
         
         // Validar datos básicos
@@ -194,6 +196,11 @@ function ejecutarInstalacionCompleta() {
         
         // 4. Insertar datos iniciales
         insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario, $datos_bd);
+        
+        // 4.1. Importar medios de pago si está marcada la opción
+        if ($datos_sucursal['importar_medios_pago']) {
+            importarMediosPagoDeSucursalesActivas($pdo, $datos_sucursal);
+        }
         
         // 5. Registrar sucursal en el sistema central
         registrarSucursalEnCentral($datos_sucursal, $datos_central);
@@ -408,6 +415,8 @@ function crearTablasBD($pdo) {
             puerto_bd INT(11) DEFAULT 3306,
             url_base VARCHAR(255) NOT NULL,
             url_api VARCHAR(255) NOT NULL,
+            url_central VARCHAR(255) DEFAULT NULL,
+            importar_medios_pago TINYINT(1) DEFAULT 0,
             es_principal TINYINT(1) DEFAULT 0,
             activo TINYINT(1) DEFAULT 1,
             registrada_en_central TINYINT(1) DEFAULT 0,
@@ -480,8 +489,8 @@ function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario, $datos_bd
         INSERT INTO sucursal_local (
             codigo_sucursal, nombre, direccion, telefono, email, 
             usuario_bd, password_bd, nombre_bd, host_bd, puerto_bd,
-            url_base, url_api, es_principal, activo, registrada_en_central
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, 0)
+            url_base, url_api, url_central, importar_medios_pago, es_principal, activo, registrada_en_central
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, 0)
     ");
     $stmt->execute([
         $datos_sucursal['codigo_sucursal'],
@@ -495,7 +504,9 @@ function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario, $datos_bd
         $datos_bd['host'], // host_bd
         $datos_bd['puerto'], // puerto_bd
         $datos_sucursal['url_base'],
-        $datos_sucursal['url_api']
+        $datos_sucursal['url_api'],
+        $datos_sucursal['url_central'],
+        $datos_sucursal['importar_medios_pago']
     ]);
     
     // Insertar primer usuario administrador con estructura exacta
@@ -570,8 +581,9 @@ function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario, $datos_bd
 function detectarUrlActual() {
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'];
-    $script = dirname($_SERVER['SCRIPT_NAME']);
-    $base_url = $protocol . '://' . $host . $script;
+    
+    // Obtener solo la URL base sin rutas adicionales
+    $base_url = $protocol . '://' . $host;
     
     // Limpiar la URL para que termine con /
     if (substr($base_url, -1) !== '/') {
@@ -593,6 +605,76 @@ function registrarSucursalEnCentral($datos_sucursal, $datos_central) {
     // Esta función se implementaría para registrar la sucursal en el sistema central
     // Por ahora solo retornamos true
     return true;
+}
+
+// Función para importar medios de pago de sucursales activas
+function importarMediosPagoDeSucursalesActivas($pdo, $datos_sucursal) {
+    try {
+        // Conectar a la base de datos central
+        $url_central = $datos_sucursal['url_central'];
+        if (empty($url_central)) {
+            error_log("URL central no configurada para importar medios de pago");
+            return false;
+        }
+        
+        // Construir URL de la API central
+        $url_api_central = rtrim($url_central, '/') . '/api-transferencias/';
+        
+        // Obtener medios de pago de sucursales activas desde el central
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url_api_central . 'obtener-medios-pago-activos.php');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($http_code !== 200 || !$response) {
+            error_log("Error al obtener medios de pago del central: HTTP $http_code");
+            return false;
+        }
+        
+        $medios_pago_data = json_decode($response, true);
+        
+        if (!$medios_pago_data || !isset($medios_pago_data['success']) || !$medios_pago_data['success']) {
+            error_log("Respuesta inválida del central para medios de pago");
+            return false;
+        }
+        
+        $medios_importados = 0;
+        
+        // Insertar cada medio de pago en la sucursal local
+        foreach ($medios_pago_data['medios_pago'] as $medio) {
+            try {
+                $stmt = $pdo->prepare("
+                    INSERT INTO medios_pago (
+                        nombre, descripcion, activo, fecha_creacion
+                    ) VALUES (?, ?, 1, NOW())
+                ");
+                
+                $stmt->execute([
+                    $medio['nombre'],
+                    $medio['descripcion'] ?? ''
+                ]);
+                
+                $medios_importados++;
+                error_log("Medio de pago importado: " . $medio['nombre']);
+                
+            } catch (PDOException $e) {
+                error_log("Error al insertar medio de pago '{$medio['nombre']}': " . $e->getMessage());
+                continue;
+            }
+        }
+        
+        error_log("Importación completada: $medios_importados medios de pago importados");
+        return true;
+        
+    } catch (Exception $e) {
+        error_log("Error en importarMediosPagoDeSucursalesActivas: " . $e->getMessage());
+        return false;
+    }
 }
 
 ?>
@@ -709,6 +791,27 @@ function registrarSucursalEnCentral($datos_sucursal, $datos_central) {
                                 </div>
                             </div>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">URL del Sistema Central</label>
+                            <input type="url" class="form-control" name="url_central" 
+                                   placeholder="https://central.empresa.com/" 
+                                   value="<?= $_SESSION['datos_sucursal']['url_central'] ?? detectarUrlActual() ?>">
+                            <div class="form-text">URL del sistema central para sincronización</div>
+                        </div>
+                        
+                        <!-- Opción para importar medios de pago -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="importar_medios_pago" id="importar_medios_pago" 
+                                       value="1" <?= isset($_SESSION['datos_sucursal']['importar_medios_pago']) ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="importar_medios_pago">
+                                    <i class="fas fa-credit-card text-primary"></i>
+                                    <strong>Importar medios de pago de sucursales activas</strong>
+                                </label>
+                                <div class="form-text">Se importarán automáticamente los medios de pago configurados en otras sucursales activas</div>
+                            </div>
+                        </div>
+                        
                         <div class="text-end">
                             <button type="submit" class="btn btn-install">
                                 <i class="fas fa-arrow-right"></i> Siguiente
