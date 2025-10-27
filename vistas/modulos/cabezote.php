@@ -97,12 +97,6 @@
 								Catálogo Maestro
 							</a>
 						</li>
-						<li>
-							<a href="medios-pago-central" style="padding: 10px 15px;">
-								<i class="fa fa-credit-card" style="margin-right: 8px; color: #e74c3c;"></i>
-								Medios de Pago Central
-							</a>
-						</li>
 					</ul>
 				</li>
 
