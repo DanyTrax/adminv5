@@ -61,13 +61,13 @@ class ModeloUsuariosCentral {
             // Log del perfil procesado
             error_log("Perfil procesado: '" . $perfil . "' (longitud: " . strlen($perfil) . ")");
             
-            $stmt->bindParam(":nombre", $datos['nombre'], PDO::PARAM_STR);
-            $stmt->bindParam(":usuario", $datos['usuario'], PDO::PARAM_STR);
-            $stmt->bindParam(":password", $datos['password'], PDO::PARAM_STR);
-            $stmt->bindParam(":perfil", $perfil, PDO::PARAM_STR);
-            $stmt->bindParam(":foto", $foto, PDO::PARAM_STR);
-            $stmt->bindParam(":telefono", $datos['telefono'], PDO::PARAM_STR);
-            $stmt->bindParam(":direccion", $datos['direccion'], PDO::PARAM_STR);
+            $stmt->bindValue(":nombre", $datos['nombre'], PDO::PARAM_STR);
+            $stmt->bindValue(":usuario", $datos['usuario'], PDO::PARAM_STR);
+            $stmt->bindValue(":password", $datos['password'], PDO::PARAM_STR);
+            $stmt->bindValue(":perfil", $perfil, PDO::PARAM_STR);
+            $stmt->bindValue(":foto", $foto, PDO::PARAM_STR);
+            $stmt->bindValue(":telefono", $datos['telefono'], PDO::PARAM_STR);
+            $stmt->bindValue(":direccion", $datos['direccion'], PDO::PARAM_STR);
             
             if ($stmt->execute()) {
                 return [
