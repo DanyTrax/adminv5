@@ -163,6 +163,28 @@ class ControladorSalidasInventario{
 
 		if(isset($_GET["idSalida"])){
 
+			// Solo Administrador puede eliminar salidas
+			if($_SESSION["perfil"] != "Administrador"){
+				echo'<script>
+
+					swal({
+						  type: "error",
+						  title: "¡Sin permisos!",
+						  text: "Solo los Administradores pueden eliminar salidas de inventario",
+						  showConfirmButton: true,
+						  confirmButtonText: "Cerrar"
+						  }).then(function(result){
+							if (result.value) {
+
+							window.location = "salidas-inventario";
+
+							}
+						})
+
+				</script>';
+				return;
+			}
+
 			$tabla ="salidas_inventario";
 			$datos = $_GET["idSalida"];
 

@@ -82,9 +82,16 @@ $salidasInventario = ControladorSalidasInventario::ctrMostrarSalidasInventario(n
                           <td>'.$value["descripcion"].'</td>
                           <td>'.$value["numero_remision"].'</td>
                           <td>'.$value["fecha_salida"].'</td>
-                          <td>
-                            <button class="btn btn-danger btnEliminarSalida" idSalida="'.$value["id"].'"><i class="fa fa-times"></i></button>
-                          </td>
+                          <td>';
+                          
+                          // Solo Administrador puede eliminar salidas
+                          if($_SESSION["perfil"] == "Administrador"){
+                              echo '<button class="btn btn-danger btnEliminarSalida" idSalida="'.$value["id"].'"><i class="fa fa-times"></i></button>';
+                          } else {
+                              echo '<span class="text-muted">Sin permisos</span>';
+                          }
+                          
+                          echo '</td>
                         </tr>';
 
                 }
