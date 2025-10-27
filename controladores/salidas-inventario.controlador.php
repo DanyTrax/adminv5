@@ -99,12 +99,11 @@ class ControladorSalidasInventario{
 					$nuevoStock = $producto["stock"] - $_POST["nuevaCantidad"];
 					
 					$tablaProductos = "productos";
-					$itemProducto = "id";
-					$valorProducto = $_POST["nuevoProducto"];
-					$itemStock = "stock";
+					$campoStock = "stock";
 					$valorStock = $nuevoStock;
+					$idProducto = $_POST["nuevoProducto"];
 
-					$actualizarStock = ModeloProductos::mdlActualizarProducto($tablaProductos, $itemProducto, $valorProducto, $itemStock, $valorStock);
+					$actualizarStock = ModeloProductos::mdlActualizarCampo($tablaProductos, $campoStock, $valorStock, $idProducto);
 
 					if($actualizarStock == "ok"){
 
