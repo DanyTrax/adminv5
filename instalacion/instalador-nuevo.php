@@ -56,7 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'email' => $_POST['email'] ?? '',
             'url_base' => $_POST['url_base'] ?? '',
             'url_api' => $_POST['url_api'] ?? '',
-            'url_central' => $_POST['url_central'] ?? '',
             'importar_medios_pago' => isset($_POST['importar_medios_pago']) ? 1 : 0,
             'sucursales_seleccionadas' => $_POST['sucursales_seleccionadas'] ?? '[]'
         ];
@@ -143,6 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'api_key' => $_POST['api_key'] ?? ''
         ];
         
+        // Validar datos centrales
         if (empty($datos_central['url_central'])) {
             $mensaje = 'La URL del sistema central es obligatoria.';
             $tipo_mensaje = 'error';
@@ -201,7 +201,8 @@ function ejecutarInstalacionCompleta() {
         // 4.1. Importar medios de pago si está marcada la opción
         if ($datos_sucursal['importar_medios_pago']) {
             $sucursales_seleccionadas = json_decode($datos_sucursal['sucursales_seleccionadas'], true);
-            importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_sucursal, $sucursales_seleccionadas);
+            $datos_central = $_SESSION['datos_central'] ?? [];
+            importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_central, $sucursales_seleccionadas);
         }
         
         // 5. Registrar sucursal en el sistema central
@@ -610,7 +611,7 @@ function registrarSucursalEnCentral($datos_sucursal, $datos_central) {
 }
 
 // Función para importar medios de pago de sucursales seleccionadas
-function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_sucursal, $sucursales_seleccionadas) {
+function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_central, $sucursales_seleccionadas) {
     try {
         if (empty($sucursales_seleccionadas)) {
             error_log("No hay sucursales seleccionadas para importar medios de pago");
@@ -618,7 +619,7 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_sucursal, $suc
         }
         
         // Obtener datos de las sucursales seleccionadas desde el central
-        $url_central = $datos_sucursal['url_central'];
+        $url_central = $datos_central['url_central'] ?? '';
         if (empty($url_central)) {
             error_log("URL central no configurada para importar medios de pago");
             return false;
@@ -873,13 +874,6 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_sucursal, $suc
                                 </div>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">URL del Sistema Central</label>
-                            <input type="url" class="form-control" name="url_central" 
-                                   placeholder="https://central.empresa.com/" 
-                                   value="<?= $_SESSION['datos_sucursal']['url_central'] ?? detectarUrlActual() ?>">
-                            <div class="form-text">URL del sistema central para sincronización</div>
-                        </div>
                         
                         <!-- Opción para importar medios de pago -->
                         <div class="mb-3">
@@ -1018,8 +1012,9 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_sucursal, $suc
                         <div class="mb-3">
                             <label class="form-label">URL del Sistema Central *</label>
                             <input type="url" class="form-control" name="url_central" 
-                                   value="<?= $_SESSION['datos_central']['url_central'] ?? '' ?>" required
+                                   value="<?= $_SESSION['datos_central']['url_central'] ?? detectarUrlActual() ?>" required
                                    placeholder="https://central.empresa.com/">
+                            <div class="form-text">Se detectó automáticamente la URL actual</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">API Key (Opcional)</label>
@@ -1204,9 +1199,10 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_sucursal, $suc
 
         // Cargar sucursales activas desde el central
         function cargarSucursalesActivas() {
-            const urlCentral = document.querySelector('input[name="url_central"]').value;
+            // Usar la URL central del paso 4 (se configurará después)
+            const urlCentral = '<?= $_SESSION["datos_central"]["url_central"] ?? detectarUrlActual() ?>';
             if (!urlCentral) {
-                mostrarError('URL Central no configurada');
+                mostrarError('URL Central no configurada. Complete el paso 4 primero.');
                 return;
             }
 
