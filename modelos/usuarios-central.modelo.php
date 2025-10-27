@@ -36,23 +36,15 @@ class ModeloUsuariosCentral {
                 INSERT INTO usuarios_central (
                     nombre, usuario, password, perfil, foto, 
                     telefono, direccion, activo, 
-                    sincronizado, fecha_creacion, sucursales_asignadas
+                    sincronizado, fecha_creacion
                 ) VALUES (
                     :nombre, :usuario, :password, :perfil, :foto,
                     :telefono, :direccion, 1,
-                    0, NOW(), :sucursales_asignadas
+                    0, NOW()
                 )
             ");
             
             $foto = !empty($datos['foto']) ? $datos['foto'] : 'vistas/img/usuarios/default/anonymous.png';
-            $sucursalesAsignadas = '';
-            if (!empty($datos['sucursales_asignadas'])) {
-                if (is_array($datos['sucursales_asignadas'])) {
-                    $sucursalesAsignadas = implode(',', $datos['sucursales_asignadas']);
-                } else {
-                    $sucursalesAsignadas = $datos['sucursales_asignadas'];
-                }
-            }
             
             // Limpiar y validar el campo perfil
             $perfil = trim($datos['perfil']);
@@ -66,6 +58,9 @@ class ModeloUsuariosCentral {
                 ];
             }
             
+            // Log del perfil procesado
+            error_log("Perfil procesado: '" . $perfil . "' (longitud: " . strlen($perfil) . ")");
+            
             $stmt->bindParam(":nombre", $datos['nombre'], PDO::PARAM_STR);
             $stmt->bindParam(":usuario", $datos['usuario'], PDO::PARAM_STR);
             $stmt->bindParam(":password", $datos['password'], PDO::PARAM_STR);
@@ -73,7 +68,6 @@ class ModeloUsuariosCentral {
             $stmt->bindParam(":foto", $foto, PDO::PARAM_STR);
             $stmt->bindParam(":telefono", $datos['telefono'], PDO::PARAM_STR);
             $stmt->bindParam(":direccion", $datos['direccion'], PDO::PARAM_STR);
-            $stmt->bindParam(":sucursales_asignadas", $sucursalesAsignadas, PDO::PARAM_STR);
             
             if ($stmt->execute()) {
                 return [
