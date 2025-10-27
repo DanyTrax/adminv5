@@ -716,7 +716,7 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_central, $sucu
                         // Verificar si ya existe
                         $stmt_check = $pdo->prepare("
                             SELECT id FROM medios_pago 
-                            WHERE nombre = ? AND activo = 1
+                            WHERE nombre = ?
                         ");
                         $stmt_check->execute([$medio['nombre']]);
                         
@@ -727,13 +727,12 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_central, $sucu
                         
                         $stmt = $pdo->prepare("
                             INSERT INTO medios_pago (
-                                nombre, descripcion, activo, fecha_creacion
-                            ) VALUES (?, ?, 1, NOW())
+                                nombre
+                            ) VALUES (?)
                         ");
                         
                         $stmt->execute([
-                            $medio['nombre'],
-                            $medio['descripcion'] ?? ''
+                            $medio['nombre']
                         ]);
                         
                         $medios_importados++;
