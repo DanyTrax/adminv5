@@ -414,6 +414,35 @@ class ModeloMediosPagoCentral {
     }
     
     /*=============================================
+    EDITAR MEDIO DE PAGO
+    =============================================*/
+    static public function mdlEditarMedioPago($datos) {
+        try {
+            $pdo = ConexionCentral::conectar();
+            $stmt = $pdo->prepare("
+                UPDATE medios_pago_central 
+                SET codigo = :codigo, nombre = :nombre, descripcion = :descripcion, tipo = :tipo, activo = :activo
+                WHERE id = :id
+            ");
+            $stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_STR);
+            $stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
+            $stmt->bindParam(":descripcion", $datos["descripcion"], PDO::PARAM_STR);
+            $stmt->bindParam(":tipo", $datos["tipo"], PDO::PARAM_STR);
+            $stmt->bindParam(":activo", $datos["activo"], PDO::PARAM_BOOL);
+            $stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
+            
+            if ($stmt->execute()) {
+                return ['success' => true, 'message' => 'Medio de pago actualizado correctamente'];
+            } else {
+                return ['success' => false, 'error' => 'Error al actualizar medio de pago'];
+            }
+        } catch (Exception $e) {
+            error_log("Error en mdlEditarMedioPago: " . $e->getMessage());
+            return ['success' => false, 'error' => 'Error: ' . $e->getMessage()];
+        }
+    }
+    
+    /*=============================================
     ELIMINAR MEDIO DE PAGO
     =============================================*/
     static public function mdlEliminarMedioPago($id) {

@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password_instalacion'
         $_SESSION['instalacion_tiempo'] = time();
         $_SESSION['intentos'] = 0;
         
-        header('Location: instalador.php');
+        header('Location: instalador-nuevo.php');
         exit;
     } else {
         // Password incorrecto
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password_instalacion'
 if (isset($_SESSION['instalacion_logueado']) && $_SESSION['instalacion_logueado'] === true) {
     // Verificar tiempo de sesión (60 minutos)
     if (isset($_SESSION['instalacion_tiempo']) && (time() - $_SESSION['instalacion_tiempo']) < 3600) {
-        header('Location: instalador.php');
+        header('Location: instalador-nuevo.php');
         exit;
     } else {
         // Sesión expirada
