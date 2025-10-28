@@ -704,25 +704,35 @@ class ControladorStockTransito {
                         codigo_producto,
                         descripcion_producto,
                         cantidad_descargada,
+                        usuario_id,
                         usuario_nombre,
-                        transportador_nombre,
+                        sucursal_id,
                         sucursal_nombre,
+                        transportador_id,
+                        transportador_nombre,
                         numero_despacho,
                         observaciones,
                         fecha_descarga,
+                        ip_usuario,
+                        user_agent,
                         created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, NOW())
                 ");
                 
                 $stmt->execute([
                     $codigo,
                     $descripcion,
                     $cantidad,
+                    $usuarioDestino ?? $usuarioOrigen ?? 1,
                     $nombreUsuarioDestino ?? $nombreUsuarioOrigen ?? "Usuario",
-                    $nombreTransportador ?? "Sin transportador",
+                    1, // sucursal_id - usar valor por defecto
                     $sucursalDestino ?? $sucursalOrigen ?? "Sucursal",
+                    $transportadorId ?? 1,
+                    $nombreTransportador ?? "Sin transportador",
                     $numeroDespacho ?? "Sin despacho",
-                    $observaciones ?? "Descarga registrada"
+                    $observaciones ?? "Descarga registrada",
+                    $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+                    $_SERVER['HTTP_USER_AGENT'] ?? 'Sistema'
                 ]);
                 
                 error_log("✅ REGISTRO DE DESCARGA CREADO - Código: $codigo, Cantidad: $cantidad, Usuario: " . ($nombreUsuarioDestino ?? $nombreUsuarioOrigen ?? "Usuario"));
