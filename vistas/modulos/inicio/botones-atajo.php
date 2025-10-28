@@ -162,7 +162,7 @@ $modulos_disponibles = [
     ],
     "crear-solicitud-stock" => [
         "icono" => "fa-plus",
-        "titulo" => "Crear Solicitud",
+        "titulo" => "Crear Solicitud de Stock",
         "descripcion" => "Nueva solicitud de stock",
         "color" => "bg-orange",
         "perfiles" => ["Administrador", "Vendedor", "Contador"]
@@ -191,7 +191,7 @@ foreach ($modulos_disponibles as $ruta => $modulo) {
 $categorias = [
     "Ventas" => ["ventas", "crear-venta", "clientes"],
     "Inventario" => ["productos", "categorias", "salidas-inventario", "entradas", "crear-entradas"],
-    "Logística" => ["solicitudes-stock", "crear-solicitud-stock", "despachos", "crear-despacho", "registro-descargas-funcional"],
+    "Logística" => ["solicitudes-stock", "crear-solicitud-stock", "despachos", "crear-despacho", "stock-transito", "registro-descargas-funcional"],
     "Administración" => ["usuarios", "sucursales", "usuarios-central", "clientes-central", "categorias-central", "personalizacion-colores-simplificado"],
     "Reportes" => ["reportes", "reporte-detallado", "medios-pago", "contabilidad"]
 ];
