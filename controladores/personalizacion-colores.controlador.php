@@ -3,6 +3,8 @@
 CONTROLADOR PERSONALIZACIÓN DE COLORES
 =============================================*/
 
+require_once __DIR__ . "/../modelos/personalizacion-colores.modelo.php";
+
 class ControladorPersonalizacionColores {
     
     /*=============================================

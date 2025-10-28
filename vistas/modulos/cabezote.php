@@ -87,7 +87,7 @@
 						</li>
 						<li>
 							<a href="personalizacion-colores" style="padding: 10px 15px;">
-								<i class="fa fa-palette" style="margin-right: 8px; color: #e91e63;"></i>
+								<i class="fa fa-paint-brush" style="margin-right: 8px; color: #e91e63;"></i>
 								Personalización de Colores
 							</a>
 						</li>

@@ -126,7 +126,7 @@ $modulos_disponibles = [
         "perfiles" => ["Administrador"]
     ],
     "personalizacion-colores" => [
-        "icono" => "fa-palette",
+        "icono" => "fa-paint-brush",
         "titulo" => "Personalización",
         "descripcion" => "Personalizar colores del sistema",
         "color" => "bg-pink",
