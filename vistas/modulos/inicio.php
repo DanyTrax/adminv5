@@ -21,6 +21,9 @@
             ?>
         </div> 
 
+        <!-- Botones de Atajo -->
+        <?php include "inicio/botones-atajo.php"; ?>
+
         <div class="row">
             <div class="col-lg-12">
                 <?php
