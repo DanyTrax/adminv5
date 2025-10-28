@@ -53,16 +53,28 @@ if (isset($_GET['eliminar'])) {
                                 <div class="color-preview" style="background-color: <?= $configuracionActual['navbar_color'] ?>; color: <?= $configuracionActual['navbar_text_color'] ?>; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
                                     <strong>Navbar Color:</strong> <?= $configuracionActual['navbar_color'] ?>
                                 </div>
+                                <div class="color-preview" style="background-color: <?= $configuracionActual['navbar_hover_color'] ?>; color: <?= $configuracionActual['navbar_text_color'] ?>; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                                    <strong>Navbar Hover:</strong> <?= $configuracionActual['navbar_hover_color'] ?>
+                                </div>
                                 
                                 <h4><i class="fa fa-bars"></i> Barra Lateral</h4>
                                 <div class="color-preview" style="background-color: <?= $configuracionActual['sidebar_color'] ?>; color: <?= $configuracionActual['sidebar_text_color'] ?>; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
                                     <strong>Sidebar Color:</strong> <?= $configuracionActual['sidebar_color'] ?>
+                                </div>
+                                <div class="color-preview" style="background-color: <?= $configuracionActual['sidebar_hover_color'] ?>; color: <?= $configuracionActual['sidebar_text_color'] ?>; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                                    <strong>Sidebar Hover:</strong> <?= $configuracionActual['sidebar_hover_color'] ?>
+                                </div>
+                                <div class="color-preview" style="background-color: <?= $configuracionActual['active_menu_color'] ?>; color: <?= $configuracionActual['active_menu_text_color'] ?>; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                                    <strong>Menú Activo:</strong> <?= $configuracionActual['active_menu_color'] ?>
                                 </div>
                                 
                                 <h4><i class="fa fa-image"></i> Logos e Iconos</h4>
                                 <div class="color-preview" style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
                                     <div style="color: <?= $configuracionActual['logo_mini_color'] ?>; font-weight: bold;">Logo Mini: <?= $configuracionActual['logo_mini_color'] ?></div>
                                     <div style="color: <?= $configuracionActual['logo_lg_color'] ?>; font-weight: bold;">Logo LG: <?= $configuracionActual['logo_lg_color'] ?></div>
+                                    <div style="background-color: <?= $configuracionActual['logo_background_color'] ?>; color: <?= $configuracionActual['logo_mini_color'] ?>; padding: 5px; border-radius: 3px; margin-top: 5px;">
+                                        <strong>Fondo Logo:</strong> <?= $configuracionActual['logo_background_color'] ?>
+                                    </div>
                                     <div style="color: <?= $configuracionActual['icon_color'] ?>; font-weight: bold;">Iconos: <?= $configuracionActual['icon_color'] ?></div>
                                 </div>
                             </div>
@@ -73,6 +85,19 @@ if (isset($_GET['eliminar'])) {
                                     <strong>Gradiente Login</strong><br>
                                     <small>Desde: <?= $configuracionActual['login_gradient_start'] ?></small><br>
                                     <small>Hasta: <?= $configuracionActual['login_gradient_end'] ?></small>
+                                </div>
+                                
+                                <h4><i class="fa fa-mouse-pointer"></i> Efectos Hover</h4>
+                                <div class="color-preview" style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+                                    <div style="background-color: <?= $configuracionActual['sidebar_toggle_hover_color'] ?>; color: white; padding: 5px; border-radius: 3px; margin-bottom: 5px;">
+                                        <strong>Toggle Hover:</strong> <?= $configuracionActual['sidebar_toggle_hover_color'] ?>
+                                    </div>
+                                    <div style="background-color: <?= $configuracionActual['dropdown_hover_color'] ?>; color: #333; padding: 5px; border-radius: 3px; margin-bottom: 5px;">
+                                        <strong>Dropdown Hover:</strong> <?= $configuracionActual['dropdown_hover_color'] ?>
+                                    </div>
+                                    <div style="color: <?= $configuracionActual['link_hover_color'] ?>; font-weight: bold;">
+                                        <strong>Enlaces Hover:</strong> <?= $configuracionActual['link_hover_color'] ?>
+                                    </div>
                                 </div>
                                 
                                 <h4><i class="fa fa-info-circle"></i> Información</h4>
@@ -198,6 +223,15 @@ if (isset($_GET['eliminar'])) {
                                     </span>
                                 </div>
                             </div>
+                            <div class="form-group">
+                                <label for="navbar_hover_color">Color Hover</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="navbar_hover_color" name="navbar_hover_color" value="#2c3e50" required>
+                                    <span class="input-group-addon">
+                                        <input type="text" class="form-control color-text" value="#2c3e50" readonly>
+                                    </span>
+                                </div>
+                            </div>
                             
                             <h4><i class="fa fa-bars"></i> Barra Lateral</h4>
                             <div class="form-group">
@@ -215,6 +249,33 @@ if (isset($_GET['eliminar'])) {
                                     <input type="color" class="form-control" id="sidebar_text_color" name="sidebar_text_color" value="#b8c7ce" required>
                                     <span class="input-group-addon">
                                         <input type="text" class="form-control color-text" value="#b8c7ce" readonly>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="sidebar_hover_color">Color Hover</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="sidebar_hover_color" name="sidebar_hover_color" value="#1a252f" required>
+                                    <span class="input-group-addon">
+                                        <input type="text" class="form-control color-text" value="#1a252f" readonly>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="active_menu_color">Color Menú Activo</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="active_menu_color" name="active_menu_color" value="#1a252f" required>
+                                    <span class="input-group-addon">
+                                        <input type="text" class="form-control color-text" value="#1a252f" readonly>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="active_menu_text_color">Color Texto Menú Activo</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="active_menu_text_color" name="active_menu_text_color" value="#ffffff" required>
+                                    <span class="input-group-addon">
+                                        <input type="text" class="form-control color-text" value="#ffffff" readonly>
                                     </span>
                                 </div>
                             </div>
@@ -241,11 +302,69 @@ if (isset($_GET['eliminar'])) {
                                 </div>
                             </div>
                             <div class="form-group">
+                                <label for="logo_background_color">Color Fondo Logo</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="logo_background_color" name="logo_background_color" value="#3c8dbc" required>
+                                    <span class="input-group-addon">
+                                        <input type="text" class="form-control color-text" value="#3c8dbc" readonly>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
                                 <label for="icon_color">Color de Iconos</label>
                                 <div class="input-group">
                                     <input type="color" class="form-control" id="icon_color" name="icon_color" value="#3c8dbc" required>
                                     <span class="input-group-addon">
                                         <input type="text" class="form-control color-text" value="#3c8dbc" readonly>
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <h4><i class="fa fa-mouse-pointer"></i> Efectos Hover</h4>
+                            <div class="form-group">
+                                <label for="sidebar_toggle_hover_color">Color Toggle Hover</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="sidebar_toggle_hover_color" name="sidebar_toggle_hover_color" value="#2c3e50" required>
+                                    <span class="input-group-addon">
+                                        <input type="text" class="form-control color-text" value="#2c3e50" readonly>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="dropdown_hover_color">Color Dropdown Hover</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="dropdown_hover_color" name="dropdown_hover_color" value="#f5f5f5" required>
+                                    <span class="input-group-addon">
+                                        <input type="text" class="form-control color-text" value="#f5f5f5" readonly>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="link_hover_color">Color Enlaces Hover</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="link_hover_color" name="link_hover_color" value="#2c3e50" required>
+                                    <span class="input-group-addon">
+                                        <input type="text" class="form-control color-text" value="#2c3e50" readonly>
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <h4><i class="fa fa-square"></i> Botones</h4>
+                            <div class="form-group">
+                                <label for="button_primary_color">Color Botones Primarios</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="button_primary_color" name="button_primary_color" value="#3c8dbc" required>
+                                    <span class="input-group-addon">
+                                        <input type="text" class="form-control color-text" value="#3c8dbc" readonly>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="button_primary_hover_color">Color Botones Primarios Hover</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="button_primary_hover_color" name="button_primary_hover_color" value="#2c3e50" required>
+                                    <span class="input-group-addon">
+                                        <input type="text" class="form-control color-text" value="#2c3e50" readonly>
                                     </span>
                                 </div>
                             </div>

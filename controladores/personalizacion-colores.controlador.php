@@ -27,11 +27,21 @@ class ControladorPersonalizacionColores {
                 'nombre_configuracion',
                 'navbar_color',
                 'navbar_text_color',
+                'navbar_hover_color',
                 'sidebar_color',
                 'sidebar_text_color',
+                'sidebar_hover_color',
                 'logo_mini_color',
                 'logo_lg_color',
+                'logo_background_color',
                 'icon_color',
+                'sidebar_toggle_hover_color',
+                'dropdown_hover_color',
+                'button_primary_color',
+                'button_primary_hover_color',
+                'link_hover_color',
+                'active_menu_color',
+                'active_menu_text_color',
                 'login_gradient_start',
                 'login_gradient_end',
                 'login_logo_color',
@@ -74,11 +84,21 @@ class ControladorPersonalizacionColores {
                 'nombre_configuracion' => $_POST['nombre_configuracion'],
                 'navbar_color' => $_POST['navbar_color'],
                 'navbar_text_color' => $_POST['navbar_text_color'],
+                'navbar_hover_color' => $_POST['navbar_hover_color'],
                 'sidebar_color' => $_POST['sidebar_color'],
                 'sidebar_text_color' => $_POST['sidebar_text_color'],
+                'sidebar_hover_color' => $_POST['sidebar_hover_color'],
                 'logo_mini_color' => $_POST['logo_mini_color'],
                 'logo_lg_color' => $_POST['logo_lg_color'],
+                'logo_background_color' => $_POST['logo_background_color'],
                 'icon_color' => $_POST['icon_color'],
+                'sidebar_toggle_hover_color' => $_POST['sidebar_toggle_hover_color'],
+                'dropdown_hover_color' => $_POST['dropdown_hover_color'],
+                'button_primary_color' => $_POST['button_primary_color'],
+                'button_primary_hover_color' => $_POST['button_primary_hover_color'],
+                'link_hover_color' => $_POST['link_hover_color'],
+                'active_menu_color' => $_POST['active_menu_color'],
+                'active_menu_text_color' => $_POST['active_menu_text_color'],
                 'login_gradient_start' => $_POST['login_gradient_start'],
                 'login_gradient_end' => $_POST['login_gradient_end'],
                 'login_logo_color' => $_POST['login_logo_color'],
@@ -211,7 +231,7 @@ class ControladorPersonalizacionColores {
             }
             
             .navbar .navbar-nav > li > a:hover {
-                background-color: rgba(255,255,255,0.1) !important;
+                background-color: {$configuracion['navbar_hover_color']} !important;
             }
             
             /* Sidebar */
@@ -224,10 +244,19 @@ class ControladorPersonalizacionColores {
             }
             
             .sidebar-menu > li > a:hover {
-                background-color: rgba(255,255,255,0.1) !important;
+                background-color: {$configuracion['sidebar_hover_color']} !important;
+            }
+            
+            .sidebar-menu > li.active > a {
+                background-color: {$configuracion['active_menu_color']} !important;
+                color: {$configuracion['active_menu_text_color']} !important;
             }
             
             /* Logo */
+            .main-header .logo {
+                background-color: {$configuracion['logo_background_color']} !important;
+            }
+            
             .logo-mini {
                 color: {$configuracion['logo_mini_color']} !important;
             }
@@ -236,9 +265,35 @@ class ControladorPersonalizacionColores {
                 color: {$configuracion['logo_lg_color']} !important;
             }
             
+            /* Sidebar Toggle */
+            .sidebar-toggle:hover {
+                background-color: {$configuracion['sidebar_toggle_hover_color']} !important;
+            }
+            
             /* Iconos */
             .fa, .icon {
                 color: {$configuracion['icon_color']} !important;
+            }
+            
+            /* Dropdowns */
+            .dropdown-menu > li > a:hover {
+                background-color: {$configuracion['dropdown_hover_color']} !important;
+            }
+            
+            /* Botones Primarios */
+            .btn-primary {
+                background-color: {$configuracion['button_primary_color']} !important;
+                border-color: {$configuracion['button_primary_color']} !important;
+            }
+            
+            .btn-primary:hover {
+                background-color: {$configuracion['button_primary_hover_color']} !important;
+                border-color: {$configuracion['button_primary_hover_color']} !important;
+            }
+            
+            /* Enlaces */
+            a:hover {
+                color: {$configuracion['link_hover_color']} !important;
             }
             
             /* Login Page */
