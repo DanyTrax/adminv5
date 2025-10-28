@@ -232,18 +232,43 @@ $categorias = [
                         </h4>
                         
                         <div class="row">
-                            <?php foreach ($modulos_categoria_disponibles as $ruta => $modulo): ?>
-                                <div class="col-lg-3 col-md-4 col-sm-6" style="margin-bottom: 15px;">
-                                    <a href="<?php echo $url . $ruta; ?>" class="btn btn-app" style="width: 100%; height: 80px; padding: 10px;">
-                                        <span class="badge <?php echo $modulo['color']; ?>" style="font-size: 20px; padding: 8px;">
-                                            <i class="fa <?php echo $modulo['icono']; ?>"></i>
-                                        </span>
-                                        <div style="margin-top: 5px;">
-                                            <strong style="font-size: 12px;"><?php echo $modulo['titulo']; ?></strong>
+                            <?php 
+                            // Para Logística, mantener el orden específico
+                            if ($nombre_categoria == "Logística") {
+                                $orden_logistica = ["solicitudes-stock", "crear-solicitud-stock", "despachos", "crear-despacho", "stock-transito", "registro-descargas-funcional"];
+                                foreach ($orden_logistica as $ruta) {
+                                    if (isset($modulos_categoria_disponibles[$ruta])) {
+                                        $modulo = $modulos_categoria_disponibles[$ruta];
+                                        ?>
+                                        <div class="col-lg-3 col-md-4 col-sm-6" style="margin-bottom: 15px;">
+                                            <a href="<?php echo $url . $ruta; ?>" class="btn btn-app" style="width: 100%; height: 80px; padding: 10px;">
+                                                <span class="badge <?php echo $modulo['color']; ?>" style="font-size: 20px; padding: 8px;">
+                                                    <i class="fa <?php echo $modulo['icono']; ?>"></i>
+                                                </span>
+                                                <div style="margin-top: 5px;">
+                                                    <strong style="font-size: 12px;"><?php echo $modulo['titulo']; ?></strong>
+                                                </div>
+                                            </a>
                                         </div>
-                                    </a>
-                                </div>
-                            <?php endforeach; ?>
+                                        <?php
+                                    }
+                                }
+                            } else {
+                                // Para otras categorías, usar el orden normal
+                                foreach ($modulos_categoria_disponibles as $ruta => $modulo): ?>
+                                    <div class="col-lg-3 col-md-4 col-sm-6" style="margin-bottom: 15px;">
+                                        <a href="<?php echo $url . $ruta; ?>" class="btn btn-app" style="width: 100%; height: 80px; padding: 10px;">
+                                            <span class="badge <?php echo $modulo['color']; ?>" style="font-size: 20px; padding: 8px;">
+                                                <i class="fa <?php echo $modulo['icono']; ?>"></i>
+                                            </span>
+                                            <div style="margin-top: 5px;">
+                                                <strong style="font-size: 12px;"><?php echo $modulo['titulo']; ?></strong>
+                                            </div>
+                                        </a>
+                                    </div>
+                                <?php endforeach;
+                            }
+                            ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
