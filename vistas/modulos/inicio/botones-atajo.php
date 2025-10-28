@@ -90,6 +90,20 @@ $modulos_disponibles = [
         "color" => "bg-navy",
         "perfiles" => ["Administrador", "Contador"]
     ],
+    "gastos" => [
+        "icono" => "fa-money",
+        "titulo" => "Gastos",
+        "descripcion" => "Registro de gastos",
+        "color" => "bg-red",
+        "perfiles" => ["Administrador", "Contador"]
+    ],
+    "crear-gastos" => [
+        "icono" => "fa-plus-circle",
+        "titulo" => "Crear Gasto",
+        "descripcion" => "Registrar nuevo gasto",
+        "color" => "bg-red",
+        "perfiles" => ["Administrador", "Contador"]
+    ],
     "salidas-inventario" => [
         "icono" => "fa-sign-out",
         "titulo" => "Salidas Inventario",
@@ -190,7 +204,7 @@ foreach ($modulos_disponibles as $ruta => $modulo) {
 // Agrupar módulos por categorías para mejor organización
 $categorias = [
     "Ventas" => ["ventas", "crear-venta", "clientes"],
-    "Inventario" => ["productos", "categorias", "salidas-inventario", "entradas", "crear-entradas"],
+    "Inventario" => ["productos", "categorias", "salidas-inventario"],
     "Logística" => [
         0 => "solicitudes-stock",
         1 => "crear-solicitud-stock", 
@@ -200,7 +214,7 @@ $categorias = [
         5 => "registro-descargas-funcional"
     ],
     "Administración" => ["usuarios", "sucursales", "usuarios-central", "clientes-central", "categorias-central", "personalizacion-colores-simplificado"],
-    "Reportes" => ["reportes", "reporte-detallado", "medios-pago", "contabilidad"]
+    "Contabilidad" => ["entradas", "crear-entradas", "gastos", "crear-gastos", "reportes", "reporte-detallado", "medios-pago", "contabilidad"]
 ];
 
 ?>
