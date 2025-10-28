@@ -10,9 +10,10 @@ $username = 'epicosie_central'; // usuario de tu BD central
 $password = 'tu_password_aqui'; // contraseña de tu BD central
 
 try {
-    // Conectar a la base de datos central
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb3", $username, $password);
+    // Conectar a la base de datos central con charset específico
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     
     echo "✅ Conectado a la base de datos central: $dbname\n\n";
     
@@ -48,7 +49,7 @@ try {
         usuario_creador INT,
         INDEX idx_activo (activo),
         INDEX idx_usuario_creador (usuario_creador)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci
     ";
     
     $pdo->exec($sql);
