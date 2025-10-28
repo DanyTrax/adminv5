@@ -219,8 +219,10 @@ $(document).ready(function() {
             // Cargar sucursales asignadas
             cargarSucursalesAsignadas(cliente.sucursales_asignadas);
         } else {
-            // Modo creación
+            // Modo creación - establecer fecha actual
             $("#tituloModalCliente").text("Crear Cliente Central");
+            var fechaActual = new Date().toISOString().split('T')[0];
+            $("#fechaNacimientoCliente").val(fechaActual);
             cargarSucursalesAsignadas("");
         }
         

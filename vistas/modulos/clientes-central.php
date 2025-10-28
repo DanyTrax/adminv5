@@ -205,12 +205,12 @@ MODAL CREAR/EDITAR CLIENTE CENTRAL
                             </div>
                         </div>
 
-                        <!-- FECHA DE NACIMIENTO -->
+                        <!-- FECHA DE CREACIÓN -->
                         <div class="form-group">
-                            <label for="fechaNacimientoCliente">Fecha de Nacimiento</label>
+                            <label for="fechaNacimientoCliente">Fecha de Creación</label>
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-                                <input type="date" class="form-control" id="fechaNacimientoCliente" name="fecha_nacimiento" autocomplete="off">
+                                <input type="date" class="form-control" id="fechaNacimientoCliente" name="fecha_nacimiento" autocomplete="off" readonly>
                             </div>
                         </div>
 
