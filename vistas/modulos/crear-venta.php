@@ -177,6 +177,7 @@ MODAL AGREGAR CLIENTE
     <div class="modal-dialog">
         <div class="modal-content">
             <form role="form" method="post">
+                <input type="hidden" name="origen" value="crear-venta">
                 <div class="modal-header" style="background:#3c8dbc; color:white">
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">Agregar cliente</h4>
@@ -192,25 +193,25 @@ MODAL AGREGAR CLIENTE
                         <div class="form-group">
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-key"></i></span>
-                                <input type="number" min="0" class="form-control input-lg" name="nuevoDocumentoId" placeholder="Ingresar documento" step="1" required>
+                                <input type="text" class="form-control input-lg" name="nuevoDocumentoId" placeholder="NIT o Documento (máximo 11 dígitos)" maxlength="11" pattern="[0-9]{1,11}" required>
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-                                <input type="email" class="form-control input-lg" name="nuevoEmail" placeholder="Ingresar email" required>
+                                <input type="email" class="form-control input-lg" name="nuevoEmail" placeholder="Ingresar email">
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-                                <input type="text" class="form-control input-lg" name="nuevoTelefono" placeholder="Ingresar teléfono" data-inputmask="'mask':'(999) 999-9999'" data-mask required>
+                                <input type="text" class="form-control input-lg" name="nuevoTelefono" placeholder="Ingresar teléfono (7-10 dígitos)" pattern="[0-9]{7,10}" minlength="7" maxlength="10" required>
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
-                                <input type="text" class="form-control input-lg" name="nuevaDireccion" placeholder="Ingresar dirección" required>
+                                <input type="text" class="form-control input-lg" name="nuevaDireccion" placeholder="Ingresar dirección (acepta caracteres especiales)">
                             </div>
                         </div>
                     </div>

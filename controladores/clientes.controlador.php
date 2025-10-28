@@ -58,22 +58,48 @@ class ControladorClientes
 
 				if ($respuesta == "ok") {
 
-					echo '<script>
+					// Verificar si viene de crear venta
+					if (isset($_POST["origen"]) && $_POST["origen"] == "crear-venta") {
+						
+						echo '<script>
+						
+						swal({
+							  type: "success",
+							  title: "El cliente ha sido guardado correctamente",
+							  showConfirmButton: true,
+							  confirmButtonText: "Continuar con la venta"
+							  }).then(function(result){
+										if (result.value) {
 
-					swal({
-						  type: "success",
-						  title: "El cliente ha sido guardado correctamente",
-						  showConfirmButton: true,
-						  confirmButtonText: "Cerrar"
-						  }).then(function(result){
-									if (result.value) {
+										// Cerrar modal y recargar página para actualizar lista de clientes
+										$("#modalAgregarCliente").modal("hide");
+										location.reload();
 
-									window.location = "clientes";
+										}
+									})
+						
+						</script>';
+						
+					} else {
+						
+						echo '<script>
+						
+						swal({
+							  type: "success",
+							  title: "El cliente ha sido guardado correctamente",
+							  showConfirmButton: true,
+							  confirmButtonText: "Cerrar"
+							  }).then(function(result){
+										if (result.value) {
 
-									}
-								})
+										window.location = "clientes";
 
-					</script>';
+										}
+									})
+						
+						</script>';
+						
+					}
 				} else {
 					echo '<script>
 
