@@ -402,8 +402,8 @@ function configurarBotonesModalDespacho(despacho) {
         console.log("❌ Ocultando botón Cancelar - Perfil:", perfilUsuario, "Estado:", despacho.estado);
     }
     
-    // BOTÓN EDITAR (solo pendientes y NO para Transportador/Limitado)
-    if(despacho.estado === 'pendiente' && perfilUsuario !== 'Transportador' && perfilUsuario !== 'Limitado') {
+    // BOTÓN EDITAR (solo pendientes y solo Administrador/Especial/Contador)
+    if(despacho.estado === 'pendiente' && (perfilUsuario === 'Administrador' || perfilUsuario === 'Especial' || perfilUsuario === 'Contador')) {
         console.log("✅ Mostrando botón Editar");
         html += `
             <button type="button" class="btn btn-info" onclick="editarDespacho(${despacho.id})">
@@ -414,8 +414,8 @@ function configurarBotonesModalDespacho(despacho) {
         console.log("❌ Ocultando botón Editar - Perfil:", perfilUsuario, "Estado:", despacho.estado);
     }
     
-    // BOTÓN ELIMINAR (pendientes para todos excepto Transportador/Limitado, cualquier estado solo para administradores)
-    var puedeEliminar = (despacho.estado === 'pendiente' && perfilUsuario !== 'Transportador' && perfilUsuario !== 'Limitado') || perfilUsuario === 'Administrador';
+    // BOTÓN ELIMINAR (pendientes solo para Administrador/Especial/Contador, cualquier estado solo para administradores)
+    var puedeEliminar = (despacho.estado === 'pendiente' && (perfilUsuario === 'Administrador' || perfilUsuario === 'Especial' || perfilUsuario === 'Contador')) || perfilUsuario === 'Administrador';
     console.log("🔍 Puede eliminar:", puedeEliminar, "Perfil:", perfilUsuario, "Estado:", despacho.estado);
     
     if(puedeEliminar) {
