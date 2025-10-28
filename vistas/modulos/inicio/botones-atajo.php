@@ -191,7 +191,14 @@ foreach ($modulos_disponibles as $ruta => $modulo) {
 $categorias = [
     "Ventas" => ["ventas", "crear-venta", "clientes"],
     "Inventario" => ["productos", "categorias", "salidas-inventario", "entradas", "crear-entradas"],
-    "Logística" => ["solicitudes-stock", "crear-solicitud-stock", "despachos", "crear-despacho", "stock-transito", "registro-descargas-funcional"],
+    "Logística" => [
+        0 => "solicitudes-stock",
+        1 => "crear-solicitud-stock", 
+        2 => "despachos",
+        3 => "crear-despacho",
+        4 => "stock-transito",
+        5 => "registro-descargas-funcional"
+    ],
     "Administración" => ["usuarios", "sucursales", "usuarios-central", "clientes-central", "categorias-central", "personalizacion-colores-simplificado"],
     "Reportes" => ["reportes", "reporte-detallado", "medios-pago", "contabilidad"]
 ];
