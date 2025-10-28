@@ -127,7 +127,7 @@ try {
     echo utf8_decode("</table>");
     
 } catch (Exception $e) {
-    echo "Error al generar Excel: " . $e->getMessage();
+    die('Error al generar Excel: ' . $e->getMessage());
 }
 
 ?>
