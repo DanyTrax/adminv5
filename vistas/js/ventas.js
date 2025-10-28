@@ -930,19 +930,109 @@ ACTUALIZAR LISTA DE CLIENTES DESPUÉS DE CREAR UNO NUEVO
 function actualizarListaClientes(clienteCreado) {
     console.log("🔄 Actualizando lista de clientes con:", clienteCreado);
     
-    // Crear nueva opción para el cliente
-    var nuevaOpcion = $('<option></option>')
-        .attr('value', clienteCreado.id)
-        .text(clienteCreado.nombre + ' - ' + clienteCreado.documento);
-    
-    // Agregar la nueva opción al select de clientes
-    $('#seleccionarCliente').append(nuevaOpcion);
-    
     // Seleccionar automáticamente el cliente recién creado
-    $('#seleccionarCliente').val(clienteCreado.id);
-    
-    // Trigger del evento change para actualizar la interfaz
-    $('#seleccionarCliente').trigger('change');
+    seleccionarCliente(clienteCreado);
     
     console.log("✅ Cliente agregado y seleccionado:", clienteCreado.nombre);
 }
+
+/*=============================================
+AUTOCOMPLETADO DE CLIENTES EN CREAR VENTA
+=============================================*/
+$(document).ready(function() {
+    
+    // Variables para el autocompletado
+    var timeoutBusqueda;
+    var clientesCargados = [];
+    
+    // Evento de escritura en el campo de búsqueda
+    $('#buscarCliente').on('input', function() {
+        var busqueda = $(this).val().trim();
+        
+        // Limpiar timeout anterior
+        clearTimeout(timeoutBusqueda);
+        
+        // Si está vacío, ocultar sugerencias
+        if(busqueda.length === 0) {
+            $('#sugerenciasClientes').hide();
+            $('#idClienteSeleccionado').val('');
+            return;
+        }
+        
+        // Buscar después de 300ms de inactividad
+        timeoutBusqueda = setTimeout(function() {
+            buscarClientes(busqueda);
+        }, 300);
+    });
+    
+    // Ocultar sugerencias al hacer clic fuera
+    $(document).on('click', function(e) {
+        if(!$(e.target).closest('#buscarCliente, #sugerenciasClientes').length) {
+            $('#sugerenciasClientes').hide();
+        }
+    });
+    
+    // Función para buscar clientes
+    function buscarClientes(busqueda) {
+        $.ajax({
+            url: 'ajax/buscar-clientes.ajax.php',
+            method: 'POST',
+            data: { buscarCliente: busqueda },
+            dataType: 'json',
+            success: function(clientes) {
+                mostrarSugerencias(clientes);
+            },
+            error: function() {
+                console.error('Error al buscar clientes');
+            }
+        });
+    }
+    
+    // Función para mostrar sugerencias
+    function mostrarSugerencias(clientes) {
+        var $sugerencias = $('#sugerenciasClientes');
+        
+        if(clientes.length === 0) {
+            $sugerencias.html('<div class="sugerencia-cliente">No se encontraron clientes</div>').show();
+            return;
+        }
+        
+        var html = '';
+        clientes.forEach(function(cliente) {
+            html += '<div class="sugerencia-cliente" data-cliente=\'' + JSON.stringify(cliente) + '\'>';
+            html += '<div class="nombre">' + cliente.nombre + '</div>';
+            html += '<div class="documento">Documento: ' + cliente.documento + '</div>';
+            if(cliente.email) {
+                html += '<div class="email">' + cliente.email + '</div>';
+            }
+            html += '</div>';
+        });
+        
+        $sugerencias.html(html).show();
+        
+        // Evento de clic en sugerencia
+        $sugerencias.find('.sugerencia-cliente').on('click', function() {
+            var cliente = JSON.parse($(this).attr('data-cliente'));
+            seleccionarCliente(cliente);
+        });
+    }
+    
+    // Función para seleccionar un cliente
+    function seleccionarCliente(cliente) {
+        $('#buscarCliente').val(cliente.nombre + ' - ' + cliente.documento);
+        $('#idClienteSeleccionado').val(cliente.id);
+        $('#sugerenciasClientes').hide();
+        
+        // Trigger del evento change para actualizar la interfaz
+        $('#idClienteSeleccionado').trigger('change');
+        
+        console.log("✅ Cliente seleccionado:", cliente.nombre);
+    }
+    
+    // Función global para actualizar lista de clientes (usada desde el controlador)
+    window.actualizarListaClientes = function(clienteCreado) {
+        console.log("🔄 Actualizando lista de clientes con:", clienteCreado);
+        seleccionarCliente(clienteCreado);
+        console.log("✅ Cliente agregado y seleccionado:", clienteCreado.nombre);
+    };
+});

@@ -54,19 +54,11 @@ if ($_SESSION["perfil"] == "Especial") {
                                 <div class="form-group">
                                     <div class="input-group">
                                         <span class="input-group-addon"><i class="fa fa-users"></i></span>
-                                        <select class="form-control" id="seleccionarCliente" name="seleccionarCliente" required>
-                                            <option value="">Seleccionar cliente</option>
-                                            <?php
-                                            $item = null;
-                                            $valor = null;
-                                            $categorias = ControladorClientes::ctrMostrarClientes($item, $valor);
-                                            foreach ($categorias as $key => $value) {
-                                                echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                                            }
-                                            ?>
-                                        </select>
+                                        <input type="text" class="form-control" id="buscarCliente" name="buscarCliente" placeholder="Buscar cliente por nombre o documento..." autocomplete="off" required>
+                                        <input type="hidden" id="idClienteSeleccionado" name="seleccionarCliente">
                                         <span class="input-group-addon"><button type="button" class="btn btn-default btn-xs" data-toggle="modal" data-target="#modalAgregarCliente" data-dismiss="modal">Agregar cliente</button></span>
                                     </div>
+                                    <div id="sugerenciasClientes" class="sugerencias-clientes" style="display: none;"></div>
                                 </div>
                                 <div class="form-group row nuevoProducto"></div>
                                 <input type="hidden" id="listaProductos" name="listaProductos">
@@ -228,6 +220,58 @@ MODAL AGREGAR CLIENTE
         </div>
     </div>
 </div>
+
+<style>
+/* Estilos para el autocompletado de clientes */
+.sugerencias-clientes {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.sugerencia-cliente {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+}
+
+.sugerencia-cliente:hover {
+    background-color: #f5f5f5;
+}
+
+.sugerencia-cliente:last-child {
+    border-bottom: none;
+}
+
+.sugerencia-cliente .nombre {
+    font-weight: bold;
+    color: #333;
+}
+
+.sugerencia-cliente .documento {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.sugerencia-cliente .email {
+    color: #999;
+    font-size: 0.8em;
+}
+
+.form-group {
+    position: relative;
+}
+</style>
+
 <script>
   // Esta variable estará disponible para el archivo ventas.js que se carga después
   var listaMediosPago = <?php echo json_encode($mediosPago); ?>;
