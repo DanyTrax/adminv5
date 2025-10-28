@@ -561,8 +561,6 @@ function insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario, $datos_bd
         throw new Exception('Error: No se pudo crear el usuario administrador');
     }
     
-    // Log para debugging
-    error_log("Usuario creado exitosamente: " . $usuario_creado['usuario'] . " (ID: " . $usuario_creado['id'] . ")");
 }
 
 // Función para detectar URL actual
@@ -1217,7 +1215,6 @@ function importarMediosPagoDeSucursalesSeleccionadas($pdo, $datos_central, $sucu
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
                     mostrarError('Error de conexión: ' + error.message);
                 });
         }

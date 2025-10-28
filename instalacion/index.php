@@ -13,14 +13,10 @@ define('TIEMPO_BLOQUEO', 300); // 5 minutos
 
 // Procesar login
 $error = '';
-$debug_info = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password_instalacion'])) {
     
     $password_ingresada = $_POST['password_instalacion'];
-    $debug_info['password_length'] = strlen($password_ingresada);
-    $debug_info['expected_password'] = 'InstalarAdmin2024!';
-    $debug_info['matches'] = ($password_ingresada === INSTALACION_PASSWORD);
     
     // Verificar intentos
     $intentos = $_SESSION['intentos'] ?? 0;
@@ -94,11 +90,6 @@ if (isset($_SESSION['instalacion_logueado']) && $_SESSION['instalacion_logueado'
             background: #f8d7da; color: #721c24; padding: 15px; 
             border: 1px solid #f5c6cb; border-radius: 5px; margin: 15px 0; 
         }
-        .debug { 
-            background: #e8f4f8; color: #0c5460; padding: 15px; 
-            border: 1px solid #bee5eb; border-radius: 5px; margin: 15px 0; 
-            text-align: left; font-size: 12px;
-        }
         .info { 
             background: #d4edda; color: #155724; padding: 15px; 
             border: 1px solid #c3e6cb; border-radius: 5px; margin: 15px 0; 
@@ -107,10 +98,6 @@ if (isset($_SESSION['instalacion_logueado']) && $_SESSION['instalacion_logueado'
         .footer { 
             margin-top: 30px; font-size: 12px; color: #666; 
             border-top: 1px solid #eee; padding-top: 15px;
-        }
-        .test-btn { 
-            background: #28a745; padding: 8px 12px; margin: 5px; 
-            font-size: 12px; border-radius: 3px; border: none; color: white; cursor: pointer;
         }
     </style>
 </head>
@@ -141,7 +128,7 @@ if (isset($_SESSION['instalacion_logueado']) && $_SESSION['instalacion_logueado'
                    name="password_instalacion" 
                    placeholder="Ingrese la contraseña maestra"
                    required 
-                   autocomplete="off">
+                   autocomplete="new-password">
         </div>
         
         <button type="submit" class="btn">
@@ -149,23 +136,6 @@ if (isset($_SESSION['instalacion_logueado']) && $_SESSION['instalacion_logueado'
         </button>
     </form>
     
-    <!-- Botones de prueba -->
-    <div style="margin-top: 20px;">
-        <button type="button" class="test-btn" onclick="autoFill()">
-            🔑 Auto-completar
-        </button>
-        <button type="button" class="test-btn" onclick="toggleDebug()">
-            🐛 Debug
-        </button>
-    </div>
-    
-    <!-- Debug info (oculto por defecto) -->
-    <?php if (isset($_GET['debug']) && !empty($debug_info)): ?>
-        <div class="debug">
-            <strong>🐛 Información de Debug:</strong><br>
-            <pre><?php echo json_encode($debug_info, JSON_PRETTY_PRINT); ?></pre>
-        </div>
-    <?php endif; ?>
     
     <div class="info">
         <strong>🛡️ Configuración de Seguridad:</strong><br>
@@ -185,23 +155,6 @@ if (isset($_SESSION['instalacion_logueado']) && $_SESSION['instalacion_logueado'
 <script>
 // Auto-focus
 document.getElementById('password_instalacion').focus();
-
-// Auto-completar para pruebas
-function autoFill() {
-    document.getElementById('password_instalacion').value = 'InstalarAdmin2024!';
-}
-
-// Toggle debug
-function toggleDebug() {
-    const currentUrl = window.location.href.split('?')[0];
-    const hasDebug = window.location.search.includes('debug');
-    
-    if (hasDebug) {
-        window.location.href = currentUrl;
-    } else {
-        window.location.href = currentUrl + '?debug=1';
-    }
-}
 
 // Envío del formulario
 document.querySelector('form').addEventListener('submit', function() {
