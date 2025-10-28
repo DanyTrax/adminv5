@@ -14,12 +14,34 @@ class ControladorClientes
 
 		if (isset($_POST["nuevoCliente"])) {
 
+			// Debug: Log de los datos recibidos
+			error_log("=== DEBUG CLIENTES - DATOS RECIBIDOS ===");
+			error_log("nuevoCliente: " . $_POST["nuevoCliente"]);
+			error_log("nuevoDocumentoId: " . $_POST["nuevoDocumentoId"]);
+			error_log("nuevoEmail: " . $_POST["nuevoEmail"]);
+			error_log("nuevoTelefono: " . $_POST["nuevoTelefono"]);
+			error_log("nuevaDireccion: " . $_POST["nuevaDireccion"]);
+
+			// Validaciones individuales con debug
+			$validacionNombre = preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)]+$/', $_POST["nuevoCliente"]);
+			$validacionDocumento = preg_match('/^[0-9]+$/', $_POST["nuevoDocumentoId"]);
+			$validacionEmail = preg_match('/^[@\.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoEmail"]);
+			$validacionTelefono = preg_match('/^[0-9]{7,10}$/', $_POST["nuevoTelefono"]);
+			$validacionDireccion = preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@]+$/', $_POST["nuevaDireccion"]);
+
+			error_log("=== DEBUG CLIENTES - RESULTADOS VALIDACIÓN ===");
+			error_log("Nombre válido: " . ($validacionNombre ? "SÍ" : "NO"));
+			error_log("Documento válido: " . ($validacionDocumento ? "SÍ" : "NO"));
+			error_log("Email válido: " . ($validacionEmail ? "SÍ" : "NO"));
+			error_log("Teléfono válido: " . ($validacionTelefono ? "SÍ" : "NO"));
+			error_log("Dirección válida: " . ($validacionDireccion ? "SÍ" : "NO"));
+
 			if (
-				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)]+$/', $_POST["nuevoCliente"]) &&
-				preg_match('/^[0-9]+$/', $_POST["nuevoDocumentoId"]) &&
-				preg_match('/^[@\.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoEmail"]) &&
-				preg_match('/^[0-9]{7,10}$/', $_POST["nuevoTelefono"]) &&
-				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@]+$/', $_POST["nuevaDireccion"])
+				$validacionNombre &&
+				$validacionDocumento &&
+				$validacionEmail &&
+				$validacionTelefono &&
+				$validacionDireccion
 			) {
 
 				$tabla = "clientes";
