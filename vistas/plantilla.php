@@ -45,6 +45,9 @@ $url = $protocol . $host . $script_name;
   <!-- Toastr CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
+  <!-- CSS DINÁMICO GLOBAL -->
+  <?php include_once "css-dinamico-global.php"; ?>
+
   <script src="<?php echo $url; ?>vistas/bower_components/jquery/dist/jquery.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/fastclick/lib/fastclick.js"></script>

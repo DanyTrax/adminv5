@@ -1,5 +1,5 @@
 <?php
-require_once "controladores/personalizacion-colores-simplificado.controlador.php";
+require_once "controladores/personalizacion-colores-simplificado-funcional.controlador.php";
 
 // Obtener configuración actual
 $configuracionActual = ControladorPersonalizacionColores::ctrMostrarConfiguracionActiva();
@@ -83,24 +83,48 @@ if (isset($_GET['eliminar'])) {
                         
                         <div class="row">
                             <div class="col-md-12">
-                                <h4><i class="fa fa-image"></i> Imágenes</h4>
+                                <h4><i class="fa fa-image"></i> Imágenes del Sistema</h4>
+                                <div class="alert alert-info">
+                                    <i class="fa fa-info-circle"></i> <strong>Instrucciones:</strong> Haz clic en cualquier imagen para cambiarla desde tu equipo.
+                                </div>
                                 <div class="row">
                                     <div class="col-md-4">
-                                        <div class="color-preview" style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 10px; text-align: center;">
-                                            <img src="<?= $configuracionActual['icono_pequeno'] ?>" style="max-width: 50px; max-height: 50px;">
-                                            <br><small>Icono Pequeño</small>
+                                        <div class="image-upload-container" style="text-align: center; margin-bottom: 20px;">
+                                            <div class="image-preview-box" id="preview-icono-pequeno" style="border: 2px dashed #ddd; padding: 20px; border-radius: 5px; cursor: pointer; background-color: #f9f9f9; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s ease;" onclick="abrirSelectorImagen('icono-pequeno')">
+                                                <img src="<?= $configuracionActual['icono_pequeno'] ?>" style="max-width: 50px; max-height: 50px; margin-bottom: 10px;">
+                                                <div style="color: #666; font-size: 12px;">
+                                                    <i class="fa fa-camera" style="font-size: 16px; margin-bottom: 5px; display: block;"></i>
+                                                    <strong>Icono Pequeño</strong><br>
+                                                    <small>Haz clic para cambiar</small>
+                                                </div>
+                                            </div>
+                                            <input type="file" id="file-icono-pequeno" accept="image/*" style="display: none;" onchange="subirImagen('icono-pequeno', this)">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
-                                        <div class="color-preview" style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 10px; text-align: center;">
-                                            <img src="<?= $configuracionActual['logo_menu'] ?>" style="max-width: 100px; max-height: 50px;">
-                                            <br><small>Logo Menú</small>
+                                        <div class="image-upload-container" style="text-align: center; margin-bottom: 20px;">
+                                            <div class="image-preview-box" id="preview-logo-menu" style="border: 2px dashed #ddd; padding: 20px; border-radius: 5px; cursor: pointer; background-color: #f9f9f9; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s ease;" onclick="abrirSelectorImagen('logo-menu')">
+                                                <img src="<?= $configuracionActual['logo_menu'] ?>" style="max-width: 100px; max-height: 50px; margin-bottom: 10px;">
+                                                <div style="color: #666; font-size: 12px;">
+                                                    <i class="fa fa-camera" style="font-size: 16px; margin-bottom: 5px; display: block;"></i>
+                                                    <strong>Logo Menú</strong><br>
+                                                    <small>Haz clic para cambiar</small>
+                                                </div>
+                                            </div>
+                                            <input type="file" id="file-logo-menu" accept="image/*" style="display: none;" onchange="subirImagen('logo-menu', this)">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
-                                        <div class="color-preview" style="background-color: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 10px; text-align: center;">
-                                            <img src="<?= $configuracionActual['logo_login'] ?>" style="max-width: 100px; max-height: 50px;">
-                                            <br><small>Logo Login</small>
+                                        <div class="image-upload-container" style="text-align: center; margin-bottom: 20px;">
+                                            <div class="image-preview-box" id="preview-logo-login" style="border: 2px dashed #ddd; padding: 20px; border-radius: 5px; cursor: pointer; background-color: #f9f9f9; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s ease;" onclick="abrirSelectorImagen('logo-login')">
+                                                <img src="<?= $configuracionActual['logo_login'] ?>" style="max-width: 100px; max-height: 50px; margin-bottom: 10px;">
+                                                <div style="color: #666; font-size: 12px;">
+                                                    <i class="fa fa-camera" style="font-size: 16px; margin-bottom: 5px; display: block;"></i>
+                                                    <strong>Logo Login</strong><br>
+                                                    <small>Haz clic para cambiar</small>
+                                                </div>
+                                            </div>
+                                            <input type="file" id="file-logo-login" accept="image/*" style="display: none;" onchange="subirImagen('logo-login', this)">
                                         </div>
                                     </div>
                                 </div>
@@ -166,13 +190,13 @@ if (isset($_GET['eliminar'])) {
                                         <td><?= date('d/m/Y H:i', strtotime($config['fecha_actualizacion'])) ?></td>
                                         <td>
                                             <?php if (!$config['activo']): ?>
-                                                <a href="personalizacion-colores?activar=<?= $config['id'] ?>" class="btn btn-success btn-xs">
+                                                <a href="personalizacion-colores-simplificado?activar=<?= $config['id'] ?>" class="btn btn-success btn-xs">
                                                     <i class="fa fa-check"></i> Activar
                                                 </a>
                                             <?php endif; ?>
                                             
                                             <?php if (count($todasConfiguraciones) > 1): ?>
-                                                <a href="personalizacion-colores?eliminar=<?= $config['id'] ?>" class="btn btn-danger btn-xs" onclick="return confirm('¿Estás seguro de eliminar esta configuración?')">
+                                                <a href="personalizacion-colores-simplificado?eliminar=<?= $config['id'] ?>" class="btn btn-danger btn-xs" onclick="return confirm('¿Estás seguro de eliminar esta configuración?')">
                                                     <i class="fa fa-trash"></i> Eliminar
                                                 </a>
                                             <?php endif; ?>
@@ -193,7 +217,7 @@ if (isset($_GET['eliminar'])) {
 <div class="modal fade" id="modalNuevaConfiguracion" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <form method="post" id="formNuevaConfiguracion">
+            <form method="post" id="formNuevaConfiguracion" enctype="multipart/form-data">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">
@@ -278,20 +302,6 @@ if (isset($_GET['eliminar'])) {
                                     </span>
                                 </div>
                             </div>
-                            
-                            <h4><i class="fa fa-image"></i> Imágenes</h4>
-                            <div class="form-group">
-                                <label for="icono_pequeno">Icono Pequeño</label>
-                                <input type="text" class="form-control" id="icono_pequeno" name="icono_pequeno" value="vistas/img/plantilla/icono-blanco.png" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="logo_menu">Logo Menú</label>
-                                <input type="text" class="form-control" id="logo_menu" name="logo_menu" value="vistas/img/plantilla/logo-blanco-lineal.png" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="logo_login">Logo Login</label>
-                                <input type="text" class="form-control" id="logo_login" name="logo_login" value="vistas/img/plantilla/Infinito1.png" required>
-                            </div>
                         </div>
                     </div>
                     
@@ -332,9 +342,6 @@ if (isset($_GET['eliminar'])) {
     </div>
 </div>
 
-<!-- Incluir estilos dinámicos -->
-<?= ControladorPersonalizacionColores::ctrAplicarConfiguracionEstilos() ?>
-
 <script>
 $(document).ready(function() {
     // Actualizar vista previa cuando cambien los colores
@@ -349,30 +356,113 @@ $(document).ready(function() {
         textInput.val(colorInput.val());
     });
     
-    function actualizarVistaPrevia() {
-        var navbarColor = $('#navbar_color').val();
-        var sidebarColor = $('#sidebar_color').val();
-        var sidebarTextColor = $('#sidebar_text_color').val();
-        var gradientStart = $('#login_gradient_start').val();
-        var gradientEnd = $('#login_gradient_end').val();
-        
-        $('.preview-navbar').css({
-            'background-color': navbarColor
-        });
-        
-        $('.preview-sidebar').css({
-            'background-color': sidebarColor,
-            'color': sidebarTextColor
-        });
-        
-        $('.preview-login').css({
-            'background': 'linear-gradient(135deg, ' + gradientStart + ' 0%, ' + gradientEnd + ' 100%)'
-        });
-    }
-    
     // Inicializar vista previa
     actualizarVistaPrevia();
 });
+
+// Función para abrir el selector de imágenes
+function abrirSelectorImagen(tipo) {
+    document.getElementById('file-' + tipo).click();
+}
+
+// Función para subir imagen
+function subirImagen(tipo, input) {
+    var file = input.files[0];
+    if (!file) return;
+    
+    // Mostrar indicador de carga
+    var previewBox = document.getElementById('preview-' + tipo);
+    previewBox.innerHTML = '<div style="text-align: center; color: #666;"><i class="fa fa-spinner fa-spin" style="font-size: 24px;"></i><br><small>Subiendo imagen...</small></div>';
+    
+    // Crear FormData para enviar la imagen
+    var formData = new FormData();
+    formData.append('accion', 'subir_imagen');
+    formData.append('tipo', tipo);
+    formData.append('imagen', file);
+    
+    // Enviar imagen al servidor
+    $.ajax({
+        url: 'ajax/personalizacion-colores.ajax.php',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            try {
+                var data = JSON.parse(response);
+                if (data.success) {
+                    // Actualizar la imagen en la vista previa
+                    var img = previewBox.querySelector('img');
+                    if (img) {
+                        img.src = data.ruta_imagen + '?t=' + new Date().getTime();
+                    } else {
+                        previewBox.innerHTML = '<img src="' + data.ruta_imagen + '?t=' + new Date().getTime() + '" style="max-width: ' + (tipo === 'icono-pequeno' ? '50px' : '100px') + '; max-height: ' + (tipo === 'icono-pequeno' ? '50px' : '50px') + '; margin-bottom: 10px;"><div style="color: #666; font-size: 12px;"><i class="fa fa-check text-success" style="font-size: 16px; margin-bottom: 5px; display: block;"></i><strong>' + (tipo === 'icono-pequeno' ? 'Icono Pequeño' : tipo === 'logo-menu' ? 'Logo Menú' : 'Logo Login') + '</strong><br><small>Imagen actualizada</small></div>';
+                    }
+                    
+                    // Mostrar mensaje de éxito
+                    swal({
+                        type: "success",
+                        title: "¡Imagen actualizada!",
+                        text: "La imagen se ha subido y aplicado correctamente en todo el sistema",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                    
+                    // Recargar la página después de 2 segundos para aplicar los cambios
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+            } catch (e) {
+                console.error('Error parsing response:', e);
+                mostrarError('Error al procesar la respuesta del servidor');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error AJAX:', error);
+            mostrarError('Error de conexión: ' + error);
+        }
+    });
+}
+
+// Función para mostrar error
+function mostrarError(mensaje) {
+    swal({
+        type: "error",
+        title: "Error",
+        text: mensaje,
+        showConfirmButton: true,
+        confirmButtonText: "Cerrar"
+    });
+    
+    // Restaurar la vista previa original
+    setTimeout(function() {
+        window.location.reload();
+    }, 2000);
+}
+
+function actualizarVistaPrevia() {
+    var navbarColor = $('#navbar_color').val();
+    var sidebarColor = $('#sidebar_color').val();
+    var sidebarTextColor = $('#sidebar_text_color').val();
+    var gradientStart = $('#login_gradient_start').val();
+    var gradientEnd = $('#login_gradient_end').val();
+    
+    $('.preview-navbar').css({
+        'background-color': navbarColor
+    });
+    
+    $('.preview-sidebar').css({
+        'background-color': sidebarColor,
+        'color': sidebarTextColor
+    });
+    
+    $('.preview-login').css({
+        'background': 'linear-gradient(135deg, ' + gradientStart + ' 0%, ' + gradientEnd + ' 100%)'
+    });
+}
 </script>
 
 <style>
@@ -396,5 +486,21 @@ $(document).ready(function() {
 
 .input-group .form-control:last-child {
     border-left: none;
+}
+
+.image-preview-box:hover {
+    border-color: #3c8dbc !important;
+    background-color: #f0f8ff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.image-preview-box:hover .fa-camera {
+    color: #3c8dbc !important;
+}
+
+.image-preview-box:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 </style>
