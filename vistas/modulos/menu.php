@@ -8,20 +8,21 @@
 </li>
             <?php
 
+            // Inicio disponible para todos los usuarios
+            echo '<li class="active">
+
+                <a href="inicio">
+
+                    <i class="fa fa-home"></i>
+                    <span>Inicio</span>
+
+                </a>
+
+            </li>';
+
             if ($_SESSION["perfil"] == "Administrador") {
 
-                echo '<li class="active">
-
-                    <a href="inicio">
-
-                        <i class="fa fa-home"></i>
-                        <span>Inicio</span>
-
-                    </a>
-
-                </li>
-
-                <li>
+                echo '<li>
 
                     <a href="usuarios">
 
