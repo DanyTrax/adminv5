@@ -114,6 +114,9 @@ function mostrarDetallesDespacho(despacho) {
     // CONFIGURAR BOTONES DE ACCIÓN
     configurarBotonesModalDespacho(despacho);
     
+    // CONFIGURAR BOTONES DE EXPORTACIÓN
+    configurarBotonesExportacion(despacho.id);
+    
     // MOSTRAR MODAL
     $("#modalVerDespacho").modal("show");
 }
@@ -886,6 +889,184 @@ $(document).ready(function() {
     }, 60000);
     
     console.log("✅ Sistema de despachos inicializado correctamente");
+});
+
+/*=============================================
+CONFIGURAR BOTONES DE EXPORTACIÓN
+=============================================*/
+function configurarBotonesExportacion(idDespacho) {
+    
+    console.log("📄 Configurando botones de exportación para despacho ID:", idDespacho);
+    
+    // Asignar ID del despacho a los botones
+    $(".btnExportarPDF").attr("idDespacho", idDespacho);
+    $(".btnExportarExcel").attr("idDespacho", idDespacho);
+}
+
+/*=============================================
+EXPORTAR DESPACHO A PDF
+=============================================*/
+$(document).on("click", ".btnExportarPDF", function(){
+    
+    var idDespacho = $(this).attr("idDespacho");
+    console.log("📄 Exportando despacho a PDF ID:", idDespacho);
+    
+    if(!idDespacho) {
+        swal({
+            title: "Error",
+            text: "No se pudo identificar el despacho",
+            type: "error",
+            confirmButtonText: "Cerrar"
+        });
+        return;
+    }
+    
+    // Mostrar loading
+    swal({
+        title: "Generando PDF...",
+        text: "Por favor espere mientras se genera el documento",
+        type: "info",
+        showConfirmButton: false,
+        allowOutsideClick: false
+    });
+    
+    var datos = new FormData();
+    datos.append("accion", "exportar_pdf");
+    datos.append("idDespacho", idDespacho);
+    
+    $.ajax({
+        url: "ajax/exportar-despacho-detalle.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function(respuesta) {
+            
+            console.log("📄 Respuesta exportación PDF:", respuesta);
+            
+            if(respuesta.success) {
+                // Cerrar loading
+                swal.close();
+                
+                // Crear enlace de descarga
+                var link = document.createElement('a');
+                link.href = respuesta.url;
+                link.download = respuesta.nombreArchivo;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                swal({
+                    title: "¡PDF Generado!",
+                    text: "El documento se ha descargado correctamente",
+                    type: "success",
+                    confirmButtonText: "Cerrar"
+                });
+                
+            } else {
+                swal({
+                    title: "Error",
+                    text: respuesta.error || "No se pudo generar el PDF",
+                    type: "error",
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error AJAX PDF:", error);
+            swal({
+                title: "Error de conexión",
+                text: "No se pudo conectar con el servidor",
+                type: "error",
+                confirmButtonText: "Cerrar"
+            });
+        }
+    });
+});
+
+/*=============================================
+EXPORTAR DESPACHO A EXCEL
+=============================================*/
+$(document).on("click", ".btnExportarExcel", function(){
+    
+    var idDespacho = $(this).attr("idDespacho");
+    console.log("📊 Exportando despacho a Excel ID:", idDespacho);
+    
+    if(!idDespacho) {
+        swal({
+            title: "Error",
+            text: "No se pudo identificar el despacho",
+            type: "error",
+            confirmButtonText: "Cerrar"
+        });
+        return;
+    }
+    
+    // Mostrar loading
+    swal({
+        title: "Generando Excel...",
+        text: "Por favor espere mientras se genera el documento",
+        type: "info",
+        showConfirmButton: false,
+        allowOutsideClick: false
+    });
+    
+    var datos = new FormData();
+    datos.append("accion", "exportar_excel");
+    datos.append("idDespacho", idDespacho);
+    
+    $.ajax({
+        url: "ajax/exportar-despacho-detalle.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function(respuesta) {
+            
+            console.log("📊 Respuesta exportación Excel:", respuesta);
+            
+            if(respuesta.success) {
+                // Cerrar loading
+                swal.close();
+                
+                // Crear enlace de descarga
+                var link = document.createElement('a');
+                link.href = respuesta.url;
+                link.download = respuesta.nombreArchivo;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                swal({
+                    title: "¡Excel Generado!",
+                    text: "El documento se ha descargado correctamente",
+                    type: "success",
+                    confirmButtonText: "Cerrar"
+                });
+                
+            } else {
+                swal({
+                    title: "Error",
+                    text: respuesta.error || "No se pudo generar el Excel",
+                    type: "error",
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("Error AJAX Excel:", error);
+            swal({
+                title: "Error de conexión",
+                text: "No se pudo conectar con el servidor",
+                type: "error",
+                confirmButtonText: "Cerrar"
+            });
+        }
+    });
 });
 
 /*=============================================

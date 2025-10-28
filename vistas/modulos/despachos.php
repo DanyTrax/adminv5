@@ -339,6 +339,16 @@
             <!-- FOOTER CON BOTONES -->
             <div class="modal-footer">
                 
+                <!-- BOTONES DE EXPORTACIÓN -->
+                <div class="pull-left">
+                    <button type="button" class="btn btn-success btnExportarPDF" idDespacho="" title="Exportar a PDF">
+                        <i class="fa fa-file-pdf-o"></i> PDF
+                    </button>
+                    <button type="button" class="btn btn-primary btnExportarExcel" idDespacho="" title="Exportar a Excel">
+                        <i class="fa fa-file-excel-o"></i> Excel
+                    </button>
+                </div>
+                
                 <!-- BOTONES DE ACCIÓN SEGÚN ESTADO Y PERFIL -->
                 <div id="botonesAccionDespacho">
                     <!-- Se muestran dinámicamente según permisos -->
