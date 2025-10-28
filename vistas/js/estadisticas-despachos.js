@@ -2,10 +2,10 @@
 CARGAR ESTADÍSTICAS PARA TRANSPORTADOR
 =============================================*/
 function cargarEstadisticasTransportador() {
-    
+
     // Solo cargar si estamos en la página de despachos y el usuario es transportador
     if (typeof $ !== 'undefined' && $('#contadorPendientes').length > 0) {
-        
+
         $.ajax({
             url: "ajax/despachos.ajax.php",
             method: "POST",
@@ -14,22 +14,18 @@ function cargarEstadisticasTransportador() {
             },
             dataType: "json",
             success: function(respuesta) {
-                
+
                 if (respuesta.success) {
                     // Actualizar contadores
                     $('#contadorPendientes').text(respuesta.estadisticas.pendientes || 0);
                     $('#contadorEnTransito').text(respuesta.estadisticas.en_transito || 0);
                     $('#contadorEntregados').text(respuesta.estadisticas.entregados || 0);
                     $('#contadorCancelados').text(respuesta.estadisticas.cancelados || 0);
-                    
-                    console.log("📊 Estadísticas cargadas:", respuesta.estadisticas);
-                } else {
-                    console.error("Error al cargar estadísticas:", respuesta.error);
-                }
+} else {
+}
             },
             error: function(xhr, status, error) {
-                console.error("Error AJAX al cargar estadísticas:", error);
-            }
+}
         });
     }
 }

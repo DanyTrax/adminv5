@@ -310,8 +310,6 @@ function sumarTotalPrecios() {
 	$("#totalVenta").val(sumaTotalPrecio);
 	$("#nuevoTotalVenta").attr("total", sumaTotalPrecio);
 }
-
-
 /*=============================================
 FUNCIÓN AGREGAR IMPUESTO
 =============================================*/
@@ -463,8 +461,6 @@ function listarProductos() {
 	}
 	$("#listaProductos").val(JSON.stringify(listaProductos));
 }
-
-
 /*=============================================
 BOTON EDITAR VENTA
 =============================================*/
@@ -515,7 +511,7 @@ $(".tablas").on("click", ".btnEliminarVenta", function(){
 		confirmButtonText: '¡Sí, borrar venta!'
 	}).then(function(result){
 		if (result.value) {
-			
+
 			// Creamos los datos que se enviarán al servidor
 			var datos = new FormData();
             datos.append("idVentaBorrar", idVenta);
@@ -556,9 +552,6 @@ $(".tablas").on("click", ".btnImprimirFactura", function() {
 	var codigoVenta = $(this).attr("codigoVenta");
 	window.open("extensiones/tcpdf/pdf/factura.php?codigo=" + codigoVenta, "_blank");
 });
-
-
-
 /*=============================================
 ABRIR ARCHIVO XML EN NUEVA PESTAÑA
 =============================================*/
@@ -713,7 +706,7 @@ $("#nuevoDescuentoVenta").change(function() {
 GUARDAR CAMBIOS DE LA VENTA (EDITAR)
 =============================================*/
 $('#formEditarVenta').on('submit', function(event) {
-    
+
     event.preventDefault(); // Previene la recarga de la página
 
     listarProductos(); // Actualiza la lista de productos antes de enviar
@@ -724,7 +717,8 @@ $('#formEditarVenta').on('submit', function(event) {
             title: 'No hay productos',
             text: 'Debes agregar al menos un producto a la venta.'
         });
-        return; 
+        return;
+
     }
 
     var datos = $(this).serialize();
@@ -734,7 +728,7 @@ $('#formEditarVenta').on('submit', function(event) {
         method: "POST",
         data: datos,
         success: function(respuesta) {
-            
+
             if (respuesta.trim() === "ok") {
                 swal({
                     type: 'success',
@@ -763,25 +757,25 @@ VER DETALLE DE VENTA
 $(document).on("click", ".btnVerDetalle", function() {
     var idVenta = $(this).attr("idVenta");
     var codigoVenta = $(this).attr("codigoVenta");
-    
+
     // Mostrar modal
     $("#modalDetalleVenta").modal("show");
-    
+
     // Limpiar contenido anterior
     $("#cuerpoProductosDetalle").empty();
     $("#cuerpoHistorialAbonos").empty();
     $("#sinProductos").hide();
     $("#sinHistorial").hide();
-    
+
     // Mostrar loading
     $("#cuerpoProductosDetalle").html('<tr><td colspan="4" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando productos...</td></tr>');
     $("#cuerpoHistorialAbonos").html('<tr><td colspan="6" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando historial...</td></tr>');
-    
+
     // Obtener datos de la venta
     var datos = new FormData();
     datos.append("accion", "obtener_detalle_venta");
     datos.append("idVenta", idVenta);
-    
+
     $.ajax({
         url: "ajax/ventas-detalle.ajax.php",
         method: "POST",
@@ -799,38 +793,38 @@ $(document).on("click", ".btnVerDetalle", function() {
                 $("#fechaDetalle").text(respuesta.venta.fecha_venta);
                 $("#formaPagoDetalle").text(respuesta.venta.metodo_pago);
                 $("#medioPagoDetalle").text(respuesta.venta.medio_pago);
-                
+
                 // Llenar información financiera
                 $("#subtotalDetalle").text("$ " + number_format(respuesta.venta.neto, 0, ',', '.'));
                 $("#impuestosDetalle").text("$ " + number_format(respuesta.venta.impuesto, 0, ',', '.'));
                 $("#descuentoDetalle").text("$ " + number_format(respuesta.venta.descuento || 0, 0, ',', '.'));
                 $("#totalDetalle").text("$ " + number_format(respuesta.venta.total, 0, ',', '.'));
                 $("#abonoDetalle").text("$ " + number_format(respuesta.venta.abono || 0, 0, ',', '.'));
-                
+
                 // Calcular saldo pendiente
                 var saldoPendiente = parseFloat(respuesta.venta.total) - parseFloat(respuesta.venta.abono || 0);
                 $("#saldoDetalle").text("$ " + number_format(saldoPendiente, 0, ',', '.'));
-                
+
                 // Llenar detalles adicionales
                 var detalleNota = respuesta.venta.detalle || '';
                 var pagoDetalle = respuesta.venta.pago || '';
-                
+
                 if (detalleNota.trim() !== '') {
                     $("#detalleNotaTexto").removeClass('text-muted').text(detalleNota);
                 } else {
                     $("#detalleNotaTexto").addClass('text-muted').text('Sin detalles adicionales');
                 }
-                
+
                 if (pagoDetalle.trim() !== '') {
                     $("#pagoDetalleTexto").removeClass('text-muted').text(pagoDetalle);
                 } else {
                     $("#pagoDetalleTexto").addClass('text-muted').text('Sin información de pago');
                 }
-                
+
                 // Llenar productos
                 if (respuesta.productos && respuesta.productos.length > 0) {
                     $("#cuerpoProductosDetalle").empty();
-                    
+
                     respuesta.productos.forEach(function(producto, index) {
                         var fila = '<tr>' +
                             '<td>' + (index + 1) + '</td>' +
@@ -844,15 +838,15 @@ $(document).on("click", ".btnVerDetalle", function() {
                     $("#cuerpoProductosDetalle").empty();
                     $("#sinProductos").show();
                 }
-                
+
                 // Llenar historial de abonos
                 if (respuesta.historial_abonos && respuesta.historial_abonos.length > 0) {
                     $("#cuerpoHistorialAbonos").empty();
-                    
+
                     respuesta.historial_abonos.forEach(function(abono, index) {
                         var estadoClass = abono.observaciones === "Pago completo" ? "success" : "warning";
                         var estadoText = abono.observaciones === "Pago completo" ? "Completo" : "Parcial";
-                        
+
                         var fila = '<tr class="' + estadoClass + '">' +
                             '<td>' + (index + 1) + '</td>' +
                             '<td>' + abono.fecha_abono + '</td>' +
@@ -867,7 +861,7 @@ $(document).on("click", ".btnVerDetalle", function() {
                     $("#cuerpoHistorialAbonos").empty();
                     $("#sinHistorial").show();
                 }
-                
+
             } else {
                 swal({
                     type: 'error',
@@ -878,8 +872,7 @@ $(document).on("click", ".btnVerDetalle", function() {
             }
         },
         error: function(xhr, status, error) {
-            console.error("Error AJAX:", error);
-            swal({
+swal({
                 type: 'error',
                 title: 'Error de conexión',
                 text: 'No se pudo cargar el detalle de la venta'
@@ -928,50 +921,46 @@ function number_format(number, decimals, dec_point, thousands_sep) {
 ACTUALIZAR LISTA DE CLIENTES DESPUÉS DE CREAR UNO NUEVO
 =============================================*/
 function actualizarListaClientes(clienteCreado) {
-    console.log("🔄 Actualizando lista de clientes con:", clienteCreado);
-    
-    // Seleccionar automáticamente el cliente recién creado
+// Seleccionar automáticamente el cliente recién creado
     seleccionarCliente(clienteCreado);
-    
-    console.log("✅ Cliente agregado y seleccionado:", clienteCreado.nombre);
 }
 
 /*=============================================
 AUTOCOMPLETADO DE CLIENTES EN CREAR VENTA
 =============================================*/
 $(document).ready(function() {
-    
+
     // Variables para el autocompletado
     var timeoutBusqueda;
     var clientesCargados = [];
-    
+
     // Evento de escritura en el campo de búsqueda
     $('#buscarCliente').on('input', function() {
         var busqueda = $(this).val().trim();
-        
+
         // Limpiar timeout anterior
         clearTimeout(timeoutBusqueda);
-        
+
         // Si está vacío, ocultar sugerencias
         if(busqueda.length === 0) {
             $('#sugerenciasClientes').hide();
             $('#idClienteSeleccionado').val('');
             return;
         }
-        
+
         // Buscar después de 300ms de inactividad
         timeoutBusqueda = setTimeout(function() {
             buscarClientes(busqueda);
         }, 300);
     });
-    
+
     // Ocultar sugerencias al hacer clic fuera
     $(document).on('click', function(e) {
         if(!$(e.target).closest('#buscarCliente, #sugerenciasClientes').length) {
             $('#sugerenciasClientes').hide();
         }
     });
-    
+
     // Función para buscar clientes
     function buscarClientes(busqueda) {
         $.ajax({
@@ -983,20 +972,19 @@ $(document).ready(function() {
                 mostrarSugerencias(clientes);
             },
             error: function() {
-                console.error('Error al buscar clientes');
-            }
+}
         });
     }
-    
+
     // Función para mostrar sugerencias
     function mostrarSugerencias(clientes) {
         var $sugerencias = $('#sugerenciasClientes');
-        
+
         if(clientes.length === 0) {
             $sugerencias.html('<div class="sugerencia-cliente">No se encontraron clientes</div>').show();
             return;
         }
-        
+
         var html = '';
         clientes.forEach(function(cliente) {
             html += '<div class="sugerencia-cliente" data-cliente=\'' + JSON.stringify(cliente) + '\'>';
@@ -1007,32 +995,28 @@ $(document).ready(function() {
             }
             html += '</div>';
         });
-        
+
         $sugerencias.html(html).show();
-        
+
         // Evento de clic en sugerencia
         $sugerencias.find('.sugerencia-cliente').on('click', function() {
             var cliente = JSON.parse($(this).attr('data-cliente'));
             seleccionarCliente(cliente);
         });
     }
-    
+
     // Función para seleccionar un cliente
     function seleccionarCliente(cliente) {
         $('#buscarCliente').val(cliente.nombre + ' - ' + cliente.documento);
         $('#idClienteSeleccionado').val(cliente.id);
         $('#sugerenciasClientes').hide();
-        
+
         // Trigger del evento change para actualizar la interfaz
         $('#idClienteSeleccionado').trigger('change');
-        
-        console.log("✅ Cliente seleccionado:", cliente.nombre);
-    }
-    
+}
+
     // Función global para actualizar lista de clientes (usada desde el controlador)
     window.actualizarListaClientes = function(clienteCreado) {
-        console.log("🔄 Actualizando lista de clientes con:", clienteCreado);
-        seleccionarCliente(clienteCreado);
-        console.log("✅ Cliente agregado y seleccionado:", clienteCreado.nombre);
-    };
+seleccionarCliente(clienteCreado);
+};
 });

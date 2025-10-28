@@ -1,82 +1,76 @@
-console.log("📋 Script categorias-central.js INICIANDO CARGA");
+
 $(document).ready(function() {
-    console.log("📋 Script categorias-central.js cargado correctamente");
-    
-    // Variables globales
+// Variables globales
     var tablaCategorias;
     var soloActivas = false;
-    
+
     // Inicializar interfaz
     inicializarInterfaz();
-    
+
     // Event listeners
     $('.btnCrearCategoriaCentral').click(function() {
         mostrarModalCrear();
     });
-    
+
     $('.btnSincronizarCategorias').click(function() {
-        console.log("🔄 Botón de sincronización clickeado");
-        mostrarModalSincronizacion();
+mostrarModalSincronizacion();
     });
-    
+
     // Verificar que el botón existe en el DOM
-    console.log("🔍 Verificando botón de sincronización...");
-    console.log("🔍 Botones encontrados:", $('.btnSincronizarCategorias').length);
-    if ($('.btnSincronizarCategorias').length === 0) {
-        console.error("❌ No se encontró el botón .btnSincronizarCategorias");
-    } else {
-        console.log("✅ Botón .btnSincronizarCategorias encontrado");
-    }
-    
+
+if ($('.btnSincronizarCategorias').length === 0) {
+} else {
+}
+
     $('.btnFiltrarActivas').click(function() {
         soloActivas = true;
         $(this).addClass('btn-primary').removeClass('btn-default');
         $('.btnFiltrarTodas').addClass('btn-default').removeClass('btn-primary');
         cargarCategorias();
     });
-    
+
     $('.btnFiltrarTodas').click(function() {
         soloActivas = false;
         $(this).addClass('btn-primary').removeClass('btn-default');
         $('.btnFiltrarActivas').addClass('btn-default').removeClass('btn-primary');
         cargarCategorias();
     });
-    
+
     // Formulario crear categoría
     $('#formCrearCategoriaCentral').on('submit', function(e) {
         e.preventDefault();
         crearCategoria();
     });
-    
+
     // Formulario editar categoría
     $('#formEditarCategoriaCentral').on('submit', function(e) {
         e.preventDefault();
         editarCategoria();
     });
-    
+
     // Confirmar eliminación
     $('#btnConfirmarEliminacionCategoria').click(function() {
         eliminarCategoria();
     });
-    
+
     // Confirmar sincronización
     $('#btnConfirmarSincronizacion').click(function() {
         ejecutarSincronizacion();
     });
-    
+
     // Delegación de eventos para botones dinámicos
     $(document).on('click', '.btnEditarCategoriaCentral', function() {
         var idCategoria = $(this).attr('idCategoria');
         var categoria = $(this).attr('categoria');
         mostrarModalEditar(idCategoria, categoria);
     });
-    
+
     $(document).on('click', '.btnEliminarCategoriaCentral', function() {
         var idCategoria = $(this).attr('idCategoria');
         var nombreCategoria = $(this).attr('nombreCategoria');
         mostrarModalEliminar(idCategoria, nombreCategoria);
     });
-    
+
     /*=============================================
     INICIALIZAR INTERFAZ
     =============================================*/
@@ -84,7 +78,7 @@ $(document).ready(function() {
         cargarCategorias();
         $('.btnFiltrarTodas').addClass('btn-primary').removeClass('btn-default');
     }
-    
+
     /*=============================================
     CARGAR CATEGORÍAS
     =============================================*/
@@ -101,30 +95,28 @@ $(document).ready(function() {
                 if (respuesta.success) {
                     mostrarCategorias(respuesta.data);
                 } else {
-                    console.error("Error al cargar categorías:", respuesta.message);
-                }
+}
             },
             error: function(xhr, status, error) {
-                console.error("Error AJAX:", error);
-            }
+}
         });
     }
-    
+
     /*=============================================
     MOSTRAR CATEGORÍAS EN TABLA
     =============================================*/
     function mostrarCategorias(categorias) {
         var tbody = $('.tablaCategoriasCentral tbody');
         tbody.empty();
-        
+
         if (categorias.length === 0) {
             tbody.append('<tr><td colspan="4" class="text-center">No hay categorías disponibles</td></tr>');
             return;
         }
-        
+
         categorias.forEach(function(categoria, index) {
             var fechaCreacion = new Date(categoria.fecha).toLocaleDateString('es-ES');
-            
+
             var acciones = '<div class="btn-group">' +
                 '<button class="btn btn-warning btn-xs btnEditarCategoriaCentral" ' +
                 'idCategoria="' + categoria.id + '" ' +
@@ -139,18 +131,18 @@ $(document).ready(function() {
                 '<i class="fa fa-trash"></i>' +
                 '</button>' +
                 '</div>';
-            
+
             var fila = '<tr>' +
                 '<td>' + (index + 1) + '</td>' +
                 '<td><strong>' + categoria.categoria + '</strong></td>' +
                 '<td>' + fechaCreacion + '</td>' +
                 '<td>' + acciones + '</td>' +
                 '</tr>';
-            
+
             tbody.append(fila);
         });
     }
-    
+
     /*=============================================
     MOSTRAR MODAL CREAR
     =============================================*/
@@ -159,7 +151,7 @@ $(document).ready(function() {
         $('#error-categoria').text('');
         $('#modalCrearCategoriaCentral').modal('show');
     }
-    
+
     /*=============================================
     MOSTRAR MODAL EDITAR
     =============================================*/
@@ -169,7 +161,7 @@ $(document).ready(function() {
         $('#error-categoria-editar').text('');
         $('#modalEditarCategoriaCentral').modal('show');
     }
-    
+
     /*=============================================
     MOSTRAR MODAL ELIMINAR
     =============================================*/
@@ -178,14 +170,14 @@ $(document).ready(function() {
         $('#btnConfirmarEliminacionCategoria').attr('idCategoria', idCategoria);
         $('#modalConfirmarEliminacionCategoria').modal('show');
     }
-    
+
     /*=============================================
     CREAR CATEGORÍA
     =============================================*/
     function crearCategoria() {
         var formData = new FormData($('#formCrearCategoriaCentral')[0]);
         formData.append('accion', 'crear');
-        
+
         $.ajax({
             url: "ajax/categorias-original.ajax.php",
             method: "POST",
@@ -207,14 +199,14 @@ $(document).ready(function() {
             }
         });
     }
-    
+
     /*=============================================
     EDITAR CATEGORÍA
     =============================================*/
     function editarCategoria() {
         var formData = new FormData($('#formEditarCategoriaCentral')[0]);
         formData.append('accion', 'editar');
-        
+
         $.ajax({
             url: "ajax/categorias-original.ajax.php",
             method: "POST",
@@ -236,13 +228,13 @@ $(document).ready(function() {
             }
         });
     }
-    
+
     /*=============================================
     ELIMINAR CATEGORÍA
     =============================================*/
     function eliminarCategoria() {
         var idCategoria = $('#btnConfirmarEliminacionCategoria').attr('idCategoria');
-        
+
         $.ajax({
             url: "ajax/categorias-original.ajax.php",
             method: "POST",
@@ -266,34 +258,28 @@ $(document).ready(function() {
             }
         });
     }
-    
+
     /*=============================================
     MOSTRAR MODAL SINCRONIZACIÓN
     =============================================*/
     function mostrarModalSincronizacion() {
-        console.log("🔄 Mostrando modal de sincronización");
-        
-        // Resetear modal
+// Resetear modal
         $('#info-sincronizacion').hide();
         $('#resultado-sincronizacion').hide();
         $('#btnConfirmarSincronizacion').show().html('<i class="fa fa-refresh"></i> Sí, Sincronizar');
-        
+
         // Mostrar modal
         $('#modalSincronizarCategorias').modal('show');
     }
-    
+
     /*=============================================
     EJECUTAR SINCRONIZACIÓN
     =============================================*/
     function ejecutarSincronizacion() {
-        console.log("🔄 Ejecutando sincronización...");
-        
-        // Mostrar loading en modal
+// Mostrar loading en modal
         $('#info-sincronizacion').show();
         $('#btnConfirmarSincronizacion').hide();
-        
-        console.log("📡 Enviando petición AJAX...");
-                $.ajax({
+$.ajax({
                     url: "ajax/categorias-original.ajax.php",
                     method: "POST",
                     data: {
@@ -302,9 +288,7 @@ $(document).ready(function() {
             dataType: "json",
             timeout: 30000, // 30 segundos timeout
             success: function(respuesta) {
-                console.log("📥 Respuesta recibida:", respuesta);
-                
-                if (respuesta && respuesta.success) {
+if (respuesta && respuesta.success) {
                     // Mostrar resultado exitoso
                     $('#info-sincronizacion').hide();
                     $('#resultado-sincronizacion').show();
@@ -312,32 +296,24 @@ $(document).ready(function() {
                         '<p>' + respuesta.message + '</p>' +
                         '<p><strong>Sucursales sincronizadas:</strong> ' + respuesta.sucursales_sincronizadas + '/' + respuesta.total_sucursales + '</p>'
                     );
-                    
+
                     // Cambiar botón a "Cerrar"
                     $('#btnConfirmarSincronizacion').show().html('<i class="fa fa-check"></i> Cerrar').removeClass('btn-success').addClass('btn-primary');
-                    
+
                     // Recargar categorías
                     cargarCategorias();
-                    
+
                     // Auto-cerrar después de 3 segundos
                     setTimeout(function() {
                         $('#modalSincronizarCategorias').modal('hide');
                     }, 3000);
-                    
+
                 } else {
-                    console.error("❌ Error en respuesta:", respuesta);
-                    mostrarErrorSincronizacion(respuesta ? respuesta.message : "Respuesta inválida");
+mostrarErrorSincronizacion(respuesta ? respuesta.message : "Respuesta inválida");
                 }
             },
             error: function(xhr, status, error) {
-                console.error("❌ Error AJAX:", {
-                    status: status,
-                    error: error,
-                    responseText: xhr.responseText,
-                    statusCode: xhr.status
-                });
-                
-                let mensajeError = "Error al sincronizar categorías";
+let mensajeError = "Error al sincronizar categorías";
                 if (xhr.status === 0) {
                     mensajeError = "Error de conexión. Verifica tu conexión a internet.";
                 } else if (xhr.status === 404) {
@@ -345,12 +321,12 @@ $(document).ready(function() {
                 } else if (xhr.status === 500) {
                     mensajeError = "Error del servidor. Revisa los logs.";
                 }
-                
+
                 mostrarErrorSincronizacion(mensajeError);
             }
         });
     }
-    
+
     /*=============================================
     MOSTRAR ERROR EN SINCRONIZACIÓN
     =============================================*/
@@ -361,11 +337,11 @@ $(document).ready(function() {
         $('#resultado-sincronizacion .fa').removeClass('fa-check-circle').addClass('fa-exclamation-circle');
         $('#resultado-sincronizacion strong').text('Error en Sincronización');
         $('#detalles-sincronizacion').html('<p>' + mensaje + '</p>');
-        
+
         // Cambiar botón a "Cerrar"
         $('#btnConfirmarSincronizacion').show().html('<i class="fa fa-times"></i> Cerrar').removeClass('btn-success').addClass('btn-danger');
     }
-    
+
     /*=============================================
     MOSTRAR SWEET ALERT
     =============================================*/
@@ -377,6 +353,4 @@ $(document).ready(function() {
             confirmButtonText: "Aceptar"
         });
     }
-    
-    console.log("📋 Script categorias-central.js COMPLETAMENTE CARGADO");
 });

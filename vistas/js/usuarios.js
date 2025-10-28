@@ -129,8 +129,6 @@ $(".tablas").on("click", ".btnActivar", function () {
 						window.location = "usuarios";
 
 					}
-
-
 				});
 
 			}

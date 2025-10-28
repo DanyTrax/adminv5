@@ -24,8 +24,6 @@ $(".tablas").on("click", ".btnEditarCategoria", function(){
      	}
 
 	})
-
-
 })
 
 /*=============================================

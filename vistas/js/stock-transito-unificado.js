@@ -8,9 +8,7 @@ var timeoutBusqueda;
 
 // Función para buscar productos
 function buscarProductos(termino = "", transportadorId = null) {
-    console.log("🔍 Buscando productos:", { termino, transportadorId });
-    
-    $.ajax({
+$.ajax({
         url: "ajax/buscar-stock-transito.ajax.php",
         method: "POST",
         data: {
@@ -22,15 +20,12 @@ function buscarProductos(termino = "", transportadorId = null) {
         success: function(respuesta) {
             if(respuesta.success) {
                 $("#listaProductos").html(respuesta.html);
-                console.log("✅ Productos cargados correctamente");
-            } else {
-                console.error("❌ Error al buscar productos:", respuesta.error);
-                $("#listaProductos").html("<div class='alert alert-warning'>No se encontraron productos</div>");
+} else {
+$("#listaProductos").html("<div class='alert alert-warning'>No se encontraron productos</div>");
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            console.error("❌ Error AJAX al buscar productos:", textStatus, errorThrown);
-            $("#listaProductos").html("<div class='alert alert-danger'>Error al cargar productos</div>");
+$("#listaProductos").html("<div class='alert alert-danger'>Error al cargar productos</div>");
         }
     });
 }
@@ -58,31 +53,29 @@ function limpiarFiltros() {
 
 // Inicializar cuando el documento esté listo
 $(document).ready(function() {
-    console.log("🚀 Inicializando stock en tránsito");
-    
-    // Búsqueda en tiempo real con debounce
+// Búsqueda en tiempo real con debounce
     $("#buscarProducto").on("input", function() {
         var termino = $(this).val();
         var transportadorId = $("#filtroTransportador").val();
-        
+
         // Limpiar timeout anterior
         if(timeoutBusqueda) {
             clearTimeout(timeoutBusqueda);
         }
-        
+
         // Establecer nuevo timeout (500ms de delay)
         timeoutBusqueda = setTimeout(function() {
             buscarProductos(termino, transportadorId);
         }, 500);
     });
-    
+
     // Event listener para cambio de transportador
     $("#filtroTransportador").on("change", function() {
         var transportadorId = $(this).val();
         var termino = $("#buscarProducto").val();
         buscarProductos(termino, transportadorId);
     });
-    
+
     // Cargar productos iniciales
     buscarProductos();
 });
@@ -90,24 +83,19 @@ $(document).ready(function() {
 // Event listener para botón de detalle de stock-transito
 $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
     e.preventDefault();
-    
+
     var codigo = $(this).data("codigo");
     var descripcion = $(this).data("descripcion");
     var detalles = $(this).data("detalles");
     var cronologia = $(this).data("cronologia");
     var cantidadTotal = $(this).data("cantidad-total");
     var transportador = $(this).data("transportador");
-    
-    console.log("🔍 DEBUG: Mostrando detalle del producto:", {
-        codigo, descripcion, cantidadTotal, transportador, detalles, cronologia
-    });
-    
-    // Llenar información básica
+// Llenar información básica
     $("#detalleCodigoProducto").text(codigo);
     $("#detalleDescripcionProducto").text(descripcion);
     $("#detalleTransportador").text(transportador);
     $("#detalleCantidadTotal").text(cantidadTotal);
-    
+
     // Llenar tabla de despachos
     var tablaHtml = "";
     detalles.forEach(function(detalle, index) {
@@ -122,7 +110,7 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
         `;
     });
     $("#detalleTablaDespachos").html(tablaHtml);
-    
+
     // Llenar cronología como tabla horizontal
     var cronologiaHtml = `
         <div class="cronologia-tabla">
@@ -139,11 +127,12 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
                 </thead>
                 <tbody>
     `;
-    
+
     cronologia.forEach(function(entrada, index) {
         var numeroDespacho = entrada.despacho || 'N/A';
         cronologiaHtml += `
-            <tr class="cronologia-fila" 
+            <tr class="cronologia-fila"
+
                 data-despacho="${numeroDespacho}"
                 style="cursor: pointer;">
                 <td style="text-align: center; font-weight: bold;">#${entrada.orden_carga || (index + 1)}</td>
@@ -152,7 +141,8 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
                 <td style="text-align: center; font-weight: bold;">${entrada.cantidad_agregada || entrada.total_cantidad}</td>
                 <td style="text-align: center;">${new Date(entrada.fecha).toLocaleString()}</td>
                 <td style="text-align: center;">
-                    <button class="btn btn-info btn-xs btnVerProductos" 
+                    <button class="btn btn-info btn-xs btnVerProductos"
+
                             data-despacho="${numeroDespacho}"
                             style="padding: 2px 8px; font-size: 10px;">
                         <i class="fa fa-list"></i> Ver
@@ -161,32 +151,32 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
             </tr>
         `;
     });
-    
+
     cronologiaHtml += `
                 </tbody>
             </table>
         </div>
     `;
     $("#detalleCronologia").html(cronologiaHtml);
-    
+
     // Event listener para botón de ver productos
     $(document).on("click", ".btnVerProductos", function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         var numeroDespacho = $(this).data('despacho');
         if (numeroDespacho && numeroDespacho !== 'N/A') {
             mostrarProductosDespacho(numeroDespacho);
         }
     });
-    
+
     // Event listener para cerrar modal al hacer click fuera
     $(document).on("click", function(e) {
         if (!$(e.target).closest('#modalProductosDespacho, .btnVerProductos').length) {
             $('#modalProductosDespacho').modal('hide');
         }
     });
-    
+
     // Mostrar modal
     $("#modalDetalleProducto").modal("show");
 });
@@ -195,10 +185,10 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
 MOSTRAR PRODUCTOS DEL DESPACHO EN MODAL GRANDE
 =============================================*/
 function mostrarProductosDespacho(numeroDespacho) {
-    
+
     // Actualizar título del modal
     $('#modalProductosDespacho .modal-title').html(`<i class="fa fa-list"></i> Productos del Despacho ${numeroDespacho}`);
-    
+
     // Mostrar loading
     $('#tablaProductosDespacho').html(`
         <div class="text-center" style="padding: 20px;">
@@ -206,10 +196,10 @@ function mostrarProductosDespacho(numeroDespacho) {
             <p style="margin-top: 10px;">Cargando productos del despacho...</p>
         </div>
     `);
-    
+
     // Mostrar modal
     $('#modalProductosDespacho').modal('show');
-    
+
     // Cargar productos
     $.ajax({
         url: "ajax/despachos.ajax.php",
@@ -220,9 +210,9 @@ function mostrarProductosDespacho(numeroDespacho) {
         },
         dataType: "json",
         success: function(respuesta) {
-            
+
             if (respuesta.success && respuesta.productos) {
-                
+
                 var productosHtml = `
                     <table class="table table-striped table-bordered" style="margin: 0; font-size: 13px;">
                         <thead style="background-color: #f5f5f5;">
@@ -236,7 +226,7 @@ function mostrarProductosDespacho(numeroDespacho) {
                         </thead>
                         <tbody>
                 `;
-                
+
                 respuesta.productos.forEach(function(producto, index) {
                     productosHtml += `
                         <tr>
@@ -248,14 +238,14 @@ function mostrarProductosDespacho(numeroDespacho) {
                         </tr>
                     `;
                 });
-                
+
                 productosHtml += `
                         </tbody>
                     </table>
                 `;
-                
+
                 $('#tablaProductosDespacho').html(productosHtml);
-                
+
             } else {
                 $('#tablaProductosDespacho').html(`
                     <div class="alert alert-warning text-center" style="margin: 20px;">
@@ -265,7 +255,7 @@ function mostrarProductosDespacho(numeroDespacho) {
                     </div>
                 `);
             }
-            
+
         },
         error: function() {
             $('#tablaProductosDespacho').html(`
@@ -283,18 +273,13 @@ function mostrarProductosDespacho(numeroDespacho) {
 $(document).on("click", "#btnDescargarDesdeDetalle", function(e) {
     e.preventDefault();
     $("#modalDetalleProducto").modal("hide");
-    
+
     // Obtener datos del producto desde el modal de detalle
     var codigo = $("#detalleCodigoProducto").text();
     var descripcion = $("#detalleDescripcionProducto").text();
     var cantidad = $("#detalleCantidadTotal").text();
     var transportador = $("#detalleTransportador").text();
-    
-    console.log("🔍 DEBUG: Descarga desde detalle:", {
-        codigo, descripcion, cantidad, transportador
-    });
-    
-    // Verificar que el código no esté vacío
+// Verificar que el código no esté vacío
     if(!codigo || codigo === '-' || codigo.trim() === '') {
         swal({
             type: "error",
@@ -305,7 +290,7 @@ $(document).on("click", "#btnDescargarDesdeDetalle", function(e) {
         });
         return;
     }
-    
+
     // Establecer datos globalmente y mostrar modal de descarga
     stockSeleccionado = {
         codigo: codigo,
@@ -313,7 +298,7 @@ $(document).on("click", "#btnDescargarDesdeDetalle", function(e) {
         transportador: transportador,
         detalles: detalles
     };
-    
+
     // Llenar modal de descarga
     $("#descargaCodigo").text(codigo);
     $("#descargaDescripcion").text(descripcion);
@@ -321,12 +306,12 @@ $(document).on("click", "#btnDescargarDesdeDetalle", function(e) {
     $("#descargaOrigen").text("Múltiples sucursales");
     $("#descargaDespacho").text("Varios despachos");
     $("#descargaCantidadDisponible").val(cantidad);
-    
+
     // Configurar máximo en el input
     $("#cantidadDescargar").attr("max", cantidad);
     $("#cantidadDescargar").val("");
     $("#observacionesDescarga").val("");
-    
+
     // Mostrar modal
     $("#modalDescargaDirecta").modal("show");
 });
@@ -334,25 +319,20 @@ $(document).on("click", "#btnDescargarDesdeDetalle", function(e) {
 // Event listener para botones de descarga
 $(document).on("click", ".btnDescargaDirecta", function(e) {
     e.preventDefault();
-    
+
     var codigo = $(this).data('codigo');
     var descripcion = $(this).data('descripcion');
     var cantidad = $(this).data('cantidad');
     var transportador = $(this).data('transportador');
     var detalles = $(this).data('detalles');
-    
-    console.log("🔍 DEBUG: Iniciando descarga consolidada:", {
-        codigo, descripcion, cantidad, transportador, detalles
-    });
-    
-    // Guardar datos globalmente
+// Guardar datos globalmente
     stockSeleccionado = {
         codigo: codigo,
         descripcion: descripcion,
         transportador: transportador,
         detalles: detalles
     };
-    
+
     // Llenar modal
     $("#descargaCodigo").text(codigo);
     $("#descargaDescripcion").text(descripcion);
@@ -360,12 +340,12 @@ $(document).on("click", ".btnDescargaDirecta", function(e) {
     $("#descargaOrigen").text("Múltiples sucursales");
     $("#descargaDespacho").text(detalles ? detalles.length + " despachos" : "N/A");
     $("#descargaCantidadDisponible").val(cantidad);
-    
+
     // Configurar máximo en el input
     $("#cantidadDescargar").attr("max", cantidad);
     $("#cantidadDescargar").val("");
     $("#observacionesDescarga").val("");
-    
+
     // Mostrar modal
     $("#modalDescargaDirecta").modal("show");
 });
@@ -373,18 +353,9 @@ $(document).on("click", ".btnDescargaDirecta", function(e) {
 // Event listener para el formulario de descarga
 $(document).on("submit", "#formDescargaDirecta", function(e) {
     e.preventDefault();
-    
-    console.log("📤 Formulario de descarga enviado");
-    
-    var cantidadDescargar = $("#cantidadDescargar").val();
+var cantidadDescargar = $("#cantidadDescargar").val();
     var observaciones = $("#observacionesDescarga").val();
-    
-    console.log("📥 Datos del formulario:", {
-        cantidadDescargar,
-        observaciones
-    });
-    
-    if(!cantidadDescargar || cantidadDescargar <= 0) {
+if(!cantidadDescargar || cantidadDescargar <= 0) {
         swal({
             type: "error",
             title: "Cantidad inválida",
@@ -394,23 +365,16 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
         });
         return;
     }
-    
+
     // Usar el código de producto guardado globalmente
     var codigoProducto = stockSeleccionado.codigo;
-    
-    console.log("📤 Enviando descarga AJAX:", {
-        codigoProducto,
-        cantidadDescargar,
-        observaciones
-    });
-    
-    // Enviar datos por AJAX
+// Enviar datos por AJAX
     var datos = new FormData();
     datos.append("descargarStockDirecto", true);
     datos.append("codigoProducto", codigoProducto);
     datos.append("cantidadDescargar", cantidadDescargar);
     datos.append("observaciones", observaciones);
-    
+
     $.ajax({
         url: "ajax/stock-transito.ajax.php",
         method: "POST",
@@ -422,12 +386,10 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
         success: function(respuesta) {
             if(respuesta.success) {
                 // 🔗 REGISTRO DIRECTO - Registrar descarga en la tabla
-                console.log("🔗 Registrando descarga directamente:", codigoProducto, cantidadDescargar);
-                
-                // Obtener datos del usuario actual via AJAX
+// Obtener datos del usuario actual via AJAX
                 var usuarioId = "0";
                 var usuarioNombre = "Usuario";
-                
+
                 // Obtener usuario actual (con fallback si no hay sesión)
                 $.ajax({
                     url: "ajax/obtener-usuario-actual.ajax.php",
@@ -444,14 +406,13 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
                         // Fallback: usar datos por defecto si falla
                         usuarioId = "999";
                         usuarioNombre = "Usuario Sistema";
-                        console.log("⚠️ Usando datos de usuario por defecto");
-                    }
+}
                 });
-                
+
                 // Obtener datos de la sucursal actual desde BD local
                 var sucursalId = "1";
                 var sucursalNombre = "Local Pruebas";
-                
+
                 // Obtener datos reales de la sucursal
                 $.ajax({
                     url: "ajax/obtener-sucursal-actual.ajax.php",
@@ -463,24 +424,22 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
                         if(respuesta.success) {
                             sucursalId = respuesta.sucursal.id;
                             sucursalNombre = respuesta.sucursal.nombre;
-                            console.log("🏢 Datos de sucursal obtenidos:", sucursalId, sucursalNombre);
-                        }
+}
                     },
                     error: function() {
-                        console.log("⚠️ Error obteniendo datos de sucursal, usando valores por defecto");
-                    }
+}
                 });
-                
+
                 // Obtener datos del producto y transportador desde stockSeleccionado
                 var descripcionProducto = "";
                 var transportadorNombre = "";
                 var transportadorId = "0";
                 var numeroDespacho = "";
-                
+
                 if (typeof stockSeleccionado === "object" && stockSeleccionado !== null) {
                     descripcionProducto = stockSeleccionado.descripcion || "";
                     transportadorNombre = stockSeleccionado.transportador || "";
-                    
+
                     if (stockSeleccionado.detalles) {
                         var detalles = stockSeleccionado.detalles;
                         if (detalles.transportador_id) {
@@ -491,7 +450,7 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
                         }
                     }
                 }
-                
+
                 // Hacer petición AJAX para registrar la descarga
                 $.ajax({
                     url: "ajax/registro-descargas-simple.ajax.php",
@@ -513,16 +472,13 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
                     dataType: "json",
                     success: function(respuestaRegistro) {
                         if(respuestaRegistro.success) {
-                            console.log("✅ Descarga registrada en la tabla:", codigoProducto);
-                        } else {
-                            console.error("❌ Error al registrar descarga:", respuestaRegistro.error);
-                        }
+} else {
+}
                     },
                     error: function(xhr, status, error) {
-                        console.error("❌ Error AJAX al registrar descarga:", error);
-                    }
+}
                 });
-                
+
                 swal({
                     type: "success",
                     title: "¡Descarga Exitosa!",
@@ -533,7 +489,8 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
                     if(result.value) {
                         $("#modalDescargaDirecta").modal("hide");
                         // Recargar la página o actualizar la tabla
-                        location.reload(); 
+                        location.reload();
+
                     }
                 });
             } else {
@@ -547,8 +504,7 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            console.error("Error AJAX:", textStatus, errorThrown, jqXHR.responseText);
-            swal({
+swal({
                 type: "error",
                 title: "Error de conexión",
                 text: "No se pudo procesar la descarga. Intente nuevamente.",
@@ -562,24 +518,19 @@ $(document).on("submit", "#formDescargaDirecta", function(e) {
 // Event listener para botón de eliminar stock
 $(document).on("click", ".btnEliminarStock", function(e) {
     e.preventDefault();
-    
+
     var codigo = $(this).data('codigo');
     var descripcion = $(this).data('descripcion');
     var cantidad = $(this).data('cantidad');
     var transportador = $(this).data('transportador');
-    
-    console.log("🗑️ DEBUG: Iniciando eliminación de stock:", {
-        codigo, descripcion, cantidad, transportador
-    });
-    
-    // Llenar modal de eliminación
+// Llenar modal de eliminación
     $("#eliminarCodigo").text(codigo);
     $("#eliminarDescripcion").text(descripcion);
     $("#eliminarTransportador").text(transportador);
     $("#eliminarCantidad").text(cantidad);
     $("#eliminarCodigoProducto").val(codigo);
     $("#motivoEliminacion").val("");
-    
+
     // Mostrar modal
     $("#modalEliminarStock").modal("show");
 });
@@ -587,10 +538,10 @@ $(document).on("click", ".btnEliminarStock", function(e) {
 // Event listener para confirmar eliminación
 $(document).on("click", "#btnConfirmarEliminarStock", function(e) {
     e.preventDefault();
-    
+
     var codigoProducto = $("#eliminarCodigoProducto").val();
     var motivo = $("#motivoEliminacion").val();
-    
+
     if(!motivo.trim()) {
         swal({
             type: "error",
@@ -601,17 +552,12 @@ $(document).on("click", "#btnConfirmarEliminarStock", function(e) {
         });
         return;
     }
-    
-    console.log("🗑️ DEBUG: Confirmando eliminación:", {
-        codigoProducto, motivo
-    });
-    
-    // Enviar datos por AJAX
+// Enviar datos por AJAX
     var datos = new FormData();
     datos.append("eliminarStockTransito", true);
     datos.append("codigoProducto", codigoProducto);
     datos.append("motivoEliminacion", motivo);
-    
+
     $.ajax({
         url: "ajax/stock-transito.ajax.php",
         method: "POST",
@@ -632,7 +578,8 @@ $(document).on("click", "#btnConfirmarEliminarStock", function(e) {
                     if(result.value) {
                         $("#modalEliminarStock").modal("hide");
                         // Recargar la página para actualizar la lista
-                        location.reload(); 
+                        location.reload();
+
                     }
                 });
             } else {
@@ -646,8 +593,7 @@ $(document).on("click", "#btnConfirmarEliminarStock", function(e) {
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            console.error("Error AJAX:", textStatus, errorThrown, jqXHR.responseText);
-            swal({
+swal({
                 type: "error",
                 title: "Error de conexión",
                 text: "No se pudo procesar la eliminación. Intente nuevamente.",
@@ -657,19 +603,11 @@ $(document).on("click", "#btnConfirmarEliminarStock", function(e) {
         }
     });
 });
-
-
-
-
-
-
 /*=============================================
 REGISTRAR DESCARGA OPTIMIZADA - NUEVA VERSIÓN
 =============================================*/
 function registrarDescargaOptimizada(codigoProducto, cantidad, observaciones) {
-    console.log("🚀 Iniciando registro optimizado:", codigoProducto);
-    
-    // Datos por defecto que funcionan (basados en probar-registro-desde-sucursal.php)
+// Datos por defecto que funcionan (basados en probar-registro-desde-sucursal.php)
     var datosRegistro = {
         accion: "registrar_descarga",
         codigo_producto: codigoProducto,
@@ -684,7 +622,7 @@ function registrarDescargaOptimizada(codigoProducto, cantidad, observaciones) {
         numero_despacho: "",
         observaciones: observaciones || "Registro desde JavaScript - " + new Date().toLocaleString()
     };
-    
+
     // Obtener datos reales de sucursal (si está disponible)
     $.ajax({
         url: "ajax/obtener-sucursal-actual-sin-sesion.ajax.php",
@@ -696,18 +634,13 @@ function registrarDescargaOptimizada(codigoProducto, cantidad, observaciones) {
             if(respuesta.success && respuesta.sucursal) {
                 datosRegistro.sucursal_id = respuesta.sucursal.id;
                 datosRegistro.sucursal_nombre = respuesta.sucursal.nombre;
-                console.log("✅ Datos de sucursal obtenidos:", respuesta.sucursal.nombre);
-                console.log("✅ URL Base:", respuesta.sucursal.url_base);
-                console.log("✅ URL API:", respuesta.sucursal.url_api);
-            } else {
-                console.log("⚠️ Usando datos de sucursal por defecto");
-            }
+} else {
+}
         },
         error: function() {
-            console.log("⚠️ Error obteniendo sucursal, usando datos por defecto");
-        }
+}
     });
-    
+
     // Obtener datos reales de usuario (si está disponible)
     $.ajax({
         url: "ajax/obtener-usuario-actual-sin-sesion.ajax.php",
@@ -718,31 +651,21 @@ function registrarDescargaOptimizada(codigoProducto, cantidad, observaciones) {
             if(respuesta.success && respuesta.usuario) {
                 datosRegistro.usuario_id = respuesta.usuario.id;
                 datosRegistro.usuario_nombre = respuesta.usuario.nombre;
-                console.log("✅ Datos de usuario obtenidos:", respuesta.usuario.nombre);
-            } else {
-                console.log("⚠️ Usando datos de usuario por defecto");
-            }
+} else {
+}
         },
         error: function() {
-            console.log("⚠️ Error obteniendo usuario, usando datos por defecto");
-        }
+}
     });
-    
-    console.log("📤 Enviando datos:", datosRegistro);
-    
-    // Enviar registro por AJAX
+// Enviar registro por AJAX
     $.ajax({
         url: "ajax/registro-descargas-simple.ajax.php",
         method: "POST",
         data: datosRegistro,
         dataType: "json",
         success: function(respuesta) {
-            console.log("📥 Respuesta recibida:", respuesta);
-            
-            if(respuesta.success) {
-                console.log("✅ Descarga registrada exitosamente");
-                
-                // Mostrar mensaje de éxito
+if(respuesta.success) {
+// Mostrar mensaje de éxito
                 swal({
                     type: "success",
                     title: "¡Éxito!",
@@ -750,11 +673,9 @@ function registrarDescargaOptimizada(codigoProducto, cantidad, observaciones) {
                     showConfirmButton: false,
                     timer: 2000
                 });
-                
+
             } else {
-                console.error("❌ Error al registrar descarga:", respuesta.error);
-                
-                // Mostrar mensaje de error
+// Mostrar mensaje de error
                 swal({
                     type: "error",
                     title: "Error",
@@ -764,11 +685,7 @@ function registrarDescargaOptimizada(codigoProducto, cantidad, observaciones) {
             }
         },
         error: function(xhr, status, error) {
-            console.error("❌ Error AJAX al registrar descarga:", error);
-            console.error("📋 Status:", status);
-            console.error("📋 Response:", xhr.responseText);
-            
-            // Mostrar mensaje de error
+// Mostrar mensaje de error
             swal({
                 type: "error",
                 title: "Error de Conexión",

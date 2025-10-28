@@ -1,46 +1,46 @@
 $(document).ready(function() {
-    
+
     // Variables globales
     var clientesCentrales = [];
     var sucursalesDisponibles = [];
-    
+
     // Inicializar la interfaz
     inicializarInterfaz();
-    
+
     // Cargar estadísticas
     cargarEstadisticas();
-    
+
     // Cargar sucursales disponibles
     cargarSucursalesDisponibles();
-    
+
     // Cargar clientes centrales
     cargarClientesCentrales();
-    
+
     // Event listeners
     $(document).on("click", "#btnNuevoClienteCentral", function() {
         abrirModalCliente();
     });
-    
+
     $(document).on("click", "#btnSincronizarTodosClientes", function() {
         sincronizarTodosClientes();
     });
-    
+
     $(document).on("click", ".btnEditarCliente", function() {
         var idCliente = $(this).data("id");
         editarCliente(idCliente);
     });
-    
+
     $(document).on("click", ".btnEliminarCliente", function() {
         var idCliente = $(this).data("id");
         var nombreCliente = $(this).data("nombre");
         eliminarCliente(idCliente, nombreCliente);
     });
-    
+
     $(document).on("click", "#btnConfirmarEliminacionCliente", function() {
         var idCliente = $("#idClienteEliminar").val();
         confirmarEliminacionCliente(idCliente);
     });
-    
+
     // Validación en tiempo real
     $(document).on("input", "#documentoCliente", function() {
         var documento = $(this).val();
@@ -48,25 +48,24 @@ $(document).ready(function() {
             verificarDuplicadoCliente();
         }
     });
-    
+
     $(document).on("input", "#emailCliente", function() {
         var email = $(this).val();
         if (email.length > 0) {
             verificarDuplicadoCliente();
         }
     });
-    
+
     // Submit del formulario
     $(document).on("submit", "#formClienteCentral", function(e) {
         e.preventDefault();
         guardarCliente();
     });
-    
+
     // Función para inicializar la interfaz
     function inicializarInterfaz() {
-        console.log("Interfaz de clientes centrales inicializada");
-    }
-    
+}
+
     // Función para cargar estadísticas
     function cargarEstadisticas() {
         // Aquí puedes cargar estadísticas del sistema
@@ -84,11 +83,10 @@ $(document).ready(function() {
                 }
             },
             error: function() {
-                console.error("Error cargando estadísticas");
-            }
+}
         });
     }
-    
+
     // Función para cargar sucursales disponibles
     function cargarSucursalesDisponibles() {
         $.ajax({
@@ -99,15 +97,13 @@ $(document).ready(function() {
             success: function(respuesta) {
                 if (respuesta.success) {
                     sucursalesDisponibles = respuesta.sucursales;
-                    console.log("Sucursales disponibles cargadas:", sucursalesDisponibles);
-                }
+}
             },
             error: function() {
-                console.error("Error cargando sucursales disponibles");
-            }
+}
         });
     }
-    
+
     // Función para cargar clientes centrales
     function cargarClientesCentrales() {
         $.ajax({
@@ -122,15 +118,14 @@ $(document).ready(function() {
                 }
             },
             error: function() {
-                console.error("Error cargando clientes centrales");
-            }
+}
         });
     }
-    
+
     // Función para mostrar clientes centrales en la tabla
     function mostrarClientesCentrales(clientes) {
         var html = "";
-        
+
         clientes.forEach(function(cliente, index) {
             var sucursalesAsignadas = cliente.sucursales_asignadas ? cliente.sucursales_asignadas.split(',') : [];
             var sucursalesNombres = sucursalesAsignadas.map(function(id) {
@@ -139,7 +134,7 @@ $(document).ready(function() {
                 });
                 return sucursal ? sucursal.nombre : id;
             }).join(', ');
-            
+
             html += `
                 <tr>
                     <td>${index + 1}</td>
@@ -164,9 +159,9 @@ $(document).ready(function() {
                 </tr>
             `;
         });
-        
+
         $("#tbodyClientesCentral").html(html);
-        
+
         // Inicializar DataTable si no está inicializado
         if (!$.fn.DataTable.isDataTable('#tablaClientesCentral')) {
             $('#tablaClientesCentral').DataTable({
@@ -197,13 +192,13 @@ $(document).ready(function() {
             });
         }
     }
-    
+
     // Función para abrir modal de cliente
     function abrirModalCliente(cliente = null) {
         $("#formClienteCentral")[0].reset();
         $("#esEdicionCliente").val("0");
         $("#idClienteCentral").val("");
-        
+
         if (cliente) {
             // Modo edición
             $("#tituloModalCliente").text("Editar Cliente Central");
@@ -215,7 +210,7 @@ $(document).ready(function() {
             $("#telefonoCliente").val(cliente.telefono);
             $("#direccionCliente").val(cliente.direccion);
             $("#fechaNacimientoCliente").val(cliente.fecha_nacimiento);
-            
+
             // Cargar sucursales asignadas
             cargarSucursalesAsignadas(cliente.sucursales_asignadas);
         } else {
@@ -225,15 +220,15 @@ $(document).ready(function() {
             $("#fechaNacimientoCliente").val(fechaActual);
             cargarSucursalesAsignadas("");
         }
-        
+
         $("#modalClienteCentral").modal("show");
     }
-    
+
     // Función para cargar sucursales asignadas
     function cargarSucursalesAsignadas(sucursalesAsignadas) {
         var html = "";
         var sucursalesArray = sucursalesAsignadas ? sucursalesAsignadas.split(',') : [];
-        
+
         sucursalesDisponibles.forEach(function(sucursal) {
             var checked = sucursalesArray.includes(sucursal.id.toString()) ? 'checked' : '';
             html += `
@@ -247,20 +242,20 @@ $(document).ready(function() {
                 </div>
             `;
         });
-        
+
         $("#sucursalesAsignadasCliente").html(html);
     }
-    
+
     // Función para verificar duplicado de cliente
     function verificarDuplicadoCliente() {
         var documento = $("#documentoCliente").val();
         var email = $("#emailCliente").val();
         var esEdicion = $("#esEdicionCliente").val() == "1";
-        
+
         if (documento.length < 6 && (!email || email.length == 0)) {
             return;
         }
-        
+
         $.ajax({
             url: "ajax/clientes-central.ajax.php",
             method: "POST",
@@ -280,28 +275,27 @@ $(document).ready(function() {
                 }
             },
             error: function() {
-                console.error("Error verificando duplicado");
-            }
+}
         });
     }
-    
+
     // Función para mostrar error de duplicado
     function mostrarErrorDuplicado(respuesta) {
         var mensaje = `Este ${respuesta.campo} ya existe en el cliente: ${respuesta.cliente.nombre} (Sucursal: ${respuesta.cliente.sucursal_origen})`;
-        
+
         if (respuesta.campo == 'documento') {
             $("#errorDocumento").text(mensaje).show();
         } else if (respuesta.campo == 'email') {
             $("#errorEmail").text(mensaje).show();
         }
     }
-    
+
     // Función para limpiar errores de duplicado
     function limpiarErroresDuplicado() {
         $("#errorDocumento").hide();
         $("#errorEmail").hide();
     }
-    
+
     // Función para guardar cliente
     function guardarCliente() {
         var formData = {
@@ -315,13 +309,13 @@ $(document).ready(function() {
             es_edicion: $("#esEdicionCliente").val(),
             id_central: $("#idClienteCentral").val()
         };
-        
+
         // Validar campos requeridos
         if (!formData.nombre || !formData.documento) {
             alert("Por favor completa todos los campos requeridos");
             return;
         }
-        
+
         $.ajax({
             url: "ajax/clientes-central.ajax.php",
             method: "POST",
@@ -345,7 +339,7 @@ $(document).ready(function() {
             }
         });
     }
-    
+
     // Función para obtener sucursales seleccionadas
     function obtenerSucursalesSeleccionadas() {
         var sucursales = [];
@@ -354,25 +348,25 @@ $(document).ready(function() {
         });
         return sucursales;
     }
-    
+
     // Función para editar cliente
     function editarCliente(idCliente) {
         var cliente = clientesCentrales.find(function(c) {
             return c.id_central == idCliente;
         });
-        
+
         if (cliente) {
             abrirModalCliente(cliente);
         }
     }
-    
+
     // Función para eliminar cliente
     function eliminarCliente(idCliente, nombreCliente) {
         $("#idClienteEliminar").val(idCliente);
         $("#nombreClienteEliminar").text(nombreCliente);
         $("#modalConfirmarEliminacionCliente").modal("show");
     }
-    
+
     // Función para confirmar eliminación
     function confirmarEliminacionCliente(idCliente) {
         $.ajax({
@@ -398,45 +392,36 @@ $(document).ready(function() {
             }
         });
     }
-    
+
     // Función para sincronizar todos los clientes
     function sincronizarTodosClientes() {
-        console.log("sincronizarTodosClientes llamada");
-        
-        if (!confirm("¿Estás seguro de importar todos los clientes desde las sucursales activas?\n\nEsta acción traerá los clientes de todas las sucursales al sistema central, evitando duplicados por documento.")) {
+if (!confirm("¿Estás seguro de importar todos los clientes desde las sucursales activas?\n\nEsta acción traerá los clientes de todas las sucursales al sistema central, evitando duplicados por documento.")) {
             return;
         }
-        
-        console.log("Confirmación aceptada, iniciando importación...");
-        iniciarImportacion();
+iniciarImportacion();
     }
-    
+
     // Función para iniciar la importación
     function iniciarImportacion() {
-        console.log("iniciarImportacion llamada");
-        
-        // Mostrar modal de progreso
+// Mostrar modal de progreso
         $("#estadoImportacion").text("Conectando a sucursales...");
         $("#clientesImportados").text("0");
         $("#clientesDuplicados").text("0");
         $("#progresoSucursales").html('<p class="text-center"><i class="fa fa-spinner fa-spin"></i> Iniciando importación...</p>');
         $("#modalFooterImportacion").hide();
         $("#modalProgresoImportacion").modal("show");
-        
-        console.log("Enviando AJAX...");
-        $.ajax({
+$.ajax({
             url: "ajax/clientes-central.ajax.php",
             method: "POST",
             data: { accion: "sincronizar_todos_clientes" },
             dataType: "json",
             success: function(respuesta) {
-                console.log("Respuesta AJAX:", respuesta);
-                if (respuesta.success) {
+if (respuesta.success) {
                     // Actualizar estadísticas
                     $("#estadoImportacion").text("✅ Importación completada");
                     $("#clientesImportados").text(respuesta.clientes_importados || 0);
                     $("#clientesDuplicados").text(respuesta.clientes_duplicados || 0);
-                    
+
                     // Mostrar resultados por sucursal
                     var html = "";
                     if (respuesta.resultados) {
@@ -445,17 +430,18 @@ $(document).ready(function() {
                             html += `
                                 <div class="alert alert-info">
                                     <strong>${resultado.sucursal}</strong><br>
-                                    ✅ Importados: ${resultado.clientes_importados} | 
+                                    ✅ Importados: ${resultado.clientes_importados} |
+
                                     ⚠️ Duplicados: ${resultado.clientes_duplicados}
                                 </div>
                             `;
                         }
                     }
                     $("#progresoSucursales").html(html);
-                    
+
                     // Mostrar botón de cerrar
                     $("#modalFooterImportacion").show();
-                    
+
                     // Actualizar tabla después de cerrar modal
                     setTimeout(function() {
                         cargarClientesCentrales();
@@ -468,33 +454,32 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr, status, error) {
-                console.error("Error AJAX:", xhr, status, error);
-                $("#estadoImportacion").text("❌ Error de conexión");
+$("#estadoImportacion").text("❌ Error de conexión");
                 $("#progresoSucursales").html('<div class="alert alert-danger">Error de conexión durante la importación</div>');
                 $("#modalFooterImportacion").show();
             }
         });
     }
-    
+
     // ========================================
     // NUEVOS EVENT LISTENERS PARA BOTONES
     // ========================================
-    
+
     // Botón Sincronización Bidireccional
     $(document).on("click", "#btnSincronizacionBidireccional", function() {
         abrirModalSincronizacionBidireccional();
     });
-    
+
     // Botón Copiar a Sucursal
     $(document).on("click", "#btnCopiarACentral", function() {
         abrirModalCopiarASucursal();
     });
-    
+
     // Botón Borrar Clientes
     $(document).on("click", "#btnBorrarClientes", function() {
         abrirModalBorrarClientes();
     });
-    
+
     // Cambio en select de origen para borrar
     $(document).on("change", "#selectOrigenBorrar", function() {
         var origen = $(this).val();
@@ -505,7 +490,7 @@ $(document).ready(function() {
             $("#divSucursalBorrar").hide();
         }
     });
-    
+
     // Cambio en select de dirección para copiar
     $(document).on("change", "#selectDireccionCopiar", function() {
         var direccion = $(this).val();
@@ -516,43 +501,43 @@ $(document).ready(function() {
             $("#divSucursalCopiar").hide();
         }
     });
-    
+
     // Confirmar Sincronización Bidireccional
     $(document).on("click", "#btnGuardarSincronizacionBidireccional", function() {
         guardarSincronizacionBidireccional();
     });
-    
+
     // Confirmar Copiar a Sucursal
     $(document).on("click", "#btnConfirmarCopiarASucursal", function() {
         confirmarCopiarASucursal();
     });
-    
+
     // Confirmar Borrar Clientes
     $(document).on("click", "#btnConfirmarBorrarClientes", function() {
         confirmarBorrarClientes();
     });
-    
+
     // ========================================
     // FUNCIONES PARA NUEVOS MODALES
     // ========================================
-    
+
     function abrirModalSincronizacionBidireccional() {
         cargarSucursalesBidireccional();
         $("#modalSincronizacionBidireccional").modal("show");
     }
-    
+
     function abrirModalCopiarASucursal() {
         $("#selectDireccionCopiar").val("");
         $("#divSucursalCopiar").hide();
         $("#modalCopiarASucursal").modal("show");
     }
-    
+
     function abrirModalBorrarClientes() {
         $("#selectOrigenBorrar").val("");
         $("#divSucursalBorrar").hide();
         $("#modalBorrarClientes").modal("show");
     }
-    
+
     function cargarSucursalesBidireccional() {
         $.ajax({
             url: "ajax/clientes-central.ajax.php",
@@ -584,7 +569,7 @@ $(document).ready(function() {
             }
         });
     }
-    
+
     function cargarSucursalesDestino() {
         $.ajax({
             url: "ajax/clientes-central.ajax.php",
@@ -609,7 +594,7 @@ $(document).ready(function() {
             }
         });
     }
-    
+
     function cargarSucursalesParaBorrar() {
         $.ajax({
             url: "ajax/clientes-central.ajax.php",
@@ -634,18 +619,18 @@ $(document).ready(function() {
             }
         });
     }
-    
+
     function guardarSincronizacionBidireccional() {
         var sucursalesSeleccionadas = [];
         $("#listaSucursalesBidireccional input[type='checkbox']:checked").each(function() {
             sucursalesSeleccionadas.push($(this).val());
         });
-        
+
         if (sucursalesSeleccionadas.length === 0) {
             swal("Advertencia", "Debes seleccionar al menos una sucursal", "warning");
             return;
         }
-        
+
         swal({
             title: "¿Confirmar configuración?",
             text: "Se configurará la sincronización bidireccional para " + sucursalesSeleccionadas.length + " sucursal(es)",
@@ -678,30 +663,30 @@ $(document).ready(function() {
             }
         });
     }
-    
+
     function confirmarCopiarASucursal() {
         var direccion = $("#selectDireccionCopiar").val();
         var sucursalId = $("#selectSucursalDestino").val();
-        
+
         if (!direccion) {
             swal("Advertencia", "Debes seleccionar una dirección de copia", "warning");
             return;
         }
-        
+
         if (!sucursalId) {
             swal("Advertencia", "Debes seleccionar una sucursal", "warning");
             return;
         }
-        
+
         var sucursalNombre = $("#selectSucursalDestino option:selected").text();
         var mensajeConfirmacion = "";
-        
+
         if (direccion === "central_a_sucursal") {
             mensajeConfirmacion = "Se copiarán todos los clientes centrales a: " + sucursalNombre;
         } else if (direccion === "sucursal_a_central") {
             mensajeConfirmacion = "Se copiarán todos los clientes de " + sucursalNombre + " a la central";
         }
-        
+
         swal({
             title: "¿Confirmar copia?",
             text: mensajeConfirmacion,
@@ -732,7 +717,7 @@ $(document).ready(function() {
                             mensaje += "• Nuevos clientes: " + respuesta.copiados + "\n";
                             mensaje += "• Duplicados (omitidos): " + respuesta.duplicados + "\n";
                             mensaje += "• Total procesados: " + respuesta.total;
-                            
+
                             swal("Éxito", mensaje, "success");
                             $("#modalCopiarASucursal").modal("hide");
                             cargarClientesCentrales(); // Recargar la tabla
@@ -747,21 +732,21 @@ $(document).ready(function() {
             }
         });
     }
-    
+
     function confirmarBorrarClientes() {
         var origen = $("#selectOrigenBorrar").val();
         var sucursalId = $("#selectSucursalBorrar").val();
-        
+
         if (!origen) {
             swal("Advertencia", "Debes seleccionar un origen", "warning");
             return;
         }
-        
+
         if (origen === "sucursal" && !sucursalId) {
             swal("Advertencia", "Debes seleccionar una sucursal", "warning");
             return;
         }
-        
+
         var mensaje = "";
         if (origen === "central") {
             mensaje = "Se eliminarán TODOS los clientes centrales. Esta acción es irreversible.";
@@ -769,7 +754,7 @@ $(document).ready(function() {
             var sucursalNombre = $("#selectSucursalBorrar option:selected").text();
             mensaje = "Se eliminarán todos los clientes de: " + sucursalNombre + ". Esta acción es irreversible.";
         }
-        
+
         swal({
             title: "¡PELIGRO!",
             text: mensaje,
@@ -799,7 +784,7 @@ $(document).ready(function() {
                                 mensaje += "📊 Estadísticas:\n";
                                 mensaje += "• Clientes eliminados: " + respuesta.eliminados;
                             }
-                            
+
                             swal("Éxito", mensaje, "success");
                             $("#modalBorrarClientes").modal("hide");
                             cargarClientesCentrales(); // Recargar la tabla

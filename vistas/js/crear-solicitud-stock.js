@@ -43,7 +43,7 @@ $(document).ready(function() {
     // ✅ VALIDAR TIPO DE SOLICITUD EN TIEMPO REAL
     $('input[name="tipo_solicitud"]').change(function() {
         $('#errorTipoSolicitud').hide();
-        
+
         if($(this).val() === 'remision') {
             $('.campoRemision').slideDown();
         } else {
@@ -74,13 +74,15 @@ $(document).ready(function() {
     // ✅ VALIDAR Y CREAR SOLICITUD
     $('#btnCrearSolicitudFinal').click(function(e) {
         e.preventDefault();
-        
+
         // ✅ VALIDAR TIPO DE SOLICITUD OBLIGATORIO
         if(!$('input[name="tipo_solicitud"]:checked').length) {
             $('#errorTipoSolicitud').show();
             mostrarModalValidacion(
-                'Tipo de Solicitud Requerido', 
-                'Debe seleccionar un tipo de solicitud antes de continuar. Por favor, elija entre "Por Stock" o "Por Remisión".', 
+                'Tipo de Solicitud Requerido',
+
+                'Debe seleccionar un tipo de solicitud antes de continuar. Por favor, elija entre "Por Stock" o "Por Remisión".',
+
                 'warning'
             );
             $('html, body').animate({
@@ -92,8 +94,10 @@ $(document).ready(function() {
         // ✅ VALIDAR QUE HAYA PRODUCTOS
         if(productosSeleccionados.length === 0) {
             mostrarModalValidacion(
-                'Productos Requeridos', 
-                'Debe agregar al menos un producto a la solicitud antes de continuar.', 
+                'Productos Requeridos',
+
+                'Debe agregar al menos un producto a la solicitud antes de continuar.',
+
                 'warning'
             );
             return false;
@@ -130,17 +134,17 @@ $(document).ready(function() {
     $(document).on('change', '.cantidad-producto', function() {
         var index = $(this).data('index');
         var nuevaCantidad = parseInt($(this).val());
-        
+
         if(isNaN(nuevaCantidad) || nuevaCantidad < 1) {
             $(this).val(productosSeleccionados[index].cantidad);
             return;
         }
-        
+
         if(nuevaCantidad > 9999) {
             $(this).val(9999);
             nuevaCantidad = 9999;
         }
-        
+
         productosSeleccionados[index].cantidad = nuevaCantidad;
         actualizarContadorProductos();
     });
@@ -154,13 +158,15 @@ $(document).ready(function() {
 CREAR SOLICITUD - VERSION CORREGIDA
 =============================================*/
 function crearSolicitud() {
-    
+
     // ✅ VALIDAR ANTES DE ENVIAR
     if(!$('input[name="tipo_solicitud"]:checked').length) {
         $('#errorTipoSolicitud').show();
         mostrarModalValidacion(
-            'Tipo de Solicitud Requerido', 
-            'Debe seleccionar un tipo de solicitud antes de continuar. Por favor, elija entre "Por Stock" o "Por Remisión".', 
+            'Tipo de Solicitud Requerido',
+
+            'Debe seleccionar un tipo de solicitud antes de continuar. Por favor, elija entre "Por Stock" o "Por Remisión".',
+
             'warning'
         );
         return false;
@@ -168,56 +174,50 @@ function crearSolicitud() {
 
     if(productosSeleccionados.length === 0) {
         mostrarModalValidacion(
-            'Productos Requeridos', 
-            'Debe agregar al menos un producto a la solicitud antes de continuar.', 
+            'Productos Requeridos',
+
+            'Debe agregar al menos un producto a la solicitud antes de continuar.',
+
             'warning'
         );
         return false;
     }
-    
+
     // ✅ DEBUG: Ver datos antes de enviar
-    console.log("=== DEBUG CREAR SOLICITUD ===");
-    console.log("Productos seleccionados:", productosSeleccionados);
-    console.log("Tipo de solicitud:", $('input[name="tipo_solicitud"]:checked').val());
-    
-    // ✅ ACTUALIZAR CAMPO HIDDEN CON JSON DE PRODUCTOS
+// ✅ ACTUALIZAR CAMPO HIDDEN CON JSON DE PRODUCTOS
     $('#productosJsonInput').val(JSON.stringify(productosSeleccionados));
-    console.log("JSON enviado:", $('#productosJsonInput').val());
-    
-    // ✅ MOSTRAR LOADING
+// ✅ MOSTRAR LOADING
     $('#btnCrearSolicitudFinal').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Creando solicitud...');
-    
+
     // ✅ CREAR FormData MANUALMENTE PARA ASEGURAR QUE TODOS LOS DATOS SE ENVÍEN
     var formData = new FormData();
-    
+
     // ✅ AGREGAR TODOS LOS CAMPOS MANUALMENTE
     formData.append('productos_solicitados', JSON.stringify(productosSeleccionados));
     formData.append('tipo_solicitud', $('input[name="tipo_solicitud"]:checked').val());
-    
+
     // ✅ CAMPOS OPCIONALES
     var detalleAdicional = $('#detalleAdicional').val().trim();
     if(detalleAdicional) {
         formData.append('detalle_adicional', detalleAdicional);
     }
-    
+
     // ✅ CAMPOS DE REMISIÓN (si aplica)
     var codigoRemision = $('#codigoRemisionSeleccionada').val();
     var nombreClienteRemision = $('#nombreClienteRemision').val();
-    
+
     if(codigoRemision) {
         formData.append('codigo_remision', codigoRemision);
     }
-    
+
     if(nombreClienteRemision) {
         formData.append('nombre_cliente_remision', nombreClienteRemision);
     }
-    
+
     // ✅ DEBUG: Ver todos los datos que se envían
-    console.log("=== DATOS QUE SE ENVÍAN ===");
-    for (var pair of formData.entries()) {
-        console.log(pair[0] + ': ' + pair[1]);
-    }
-    
+for (var pair of formData.entries()) {
+}
+
     // ✅ ENVIAR VIA AJAX
     $.ajax({
         url: window.location.href, // Enviar a la misma página
@@ -226,19 +226,15 @@ function crearSolicitud() {
         processData: false,
         contentType: false,
         success: function(response) {
-            console.log("=== RESPUESTA DEL SERVIDOR ===");
-            console.log("Respuesta:", response);
-            
-            // ✅ RESETEAR BOTÓN PRIMERO
+
+// ✅ RESETEAR BOTÓN PRIMERO
             $('#btnCrearSolicitudFinal').prop('disabled', false).html('<i class="fa fa-save"></i> Crear Solicitud');
-            
+
             // ✅ BUSCAR SWEETALERT EN LA RESPUESTA
             if(response.indexOf('swal') > -1) {
-                
+
                 if(response.indexOf('success') > -1) {
-                    console.log("✅ Solicitud creada exitosamente");
-                    
-                    swal({
+swal({
                         title: '¡Solicitud creada!',
                         text: 'La solicitud se ha creado correctamente',
                         type: 'success',
@@ -247,23 +243,19 @@ function crearSolicitud() {
                     }).then(function(result) {
                         window.location.href = 'solicitudes-stock';
                     });
-                    
+
                 } else if(response.indexOf('error') > -1) {
-                    console.log("❌ Error en la solicitud");
-                    
-                    swal({
+swal({
                         title: 'Error',
                         text: 'Error al crear la solicitud. Revise los datos.',
                         type: 'error',
                         confirmButtonText: 'Cerrar'
                     });
                 }
-                
+
             } else {
-                console.log("⚠️ Respuesta sin SweetAlert - posible problema");
-                console.log("Primeros 200 caracteres:", response.substring(0, 200));
-                
-                // ✅ MOSTRAR PARTE DE LA RESPUESTA PARA DEBUG
+
+// ✅ MOSTRAR PARTE DE LA RESPUESTA PARA DEBUG
                 if(response.trim() === '') {
                     mostrarAlerta('error', 'Respuesta vacía del servidor. Verifique los logs.');
                 } else {
@@ -281,13 +273,8 @@ function crearSolicitud() {
             }
         },
         error: function(xhr, status, error) {
-            console.log("=== ERROR DE AJAX ===");
-            console.log("Status:", status);
-            console.log("Error:", error);
-            console.log("Response:", xhr.responseText);
-            
-            $('#btnCrearSolicitudFinal').prop('disabled', false).html('<i class="fa fa-save"></i> Crear Solicitud');
-            
+$('#btnCrearSolicitudFinal').prop('disabled', false).html('<i class="fa fa-save"></i> Crear Solicitud');
+
             swal({
                 title: 'Error de conexión',
                 text: 'Error de conexión: ' + error,
@@ -302,7 +289,7 @@ function crearSolicitud() {
 AGREGAR PRODUCTO DESDE CATÁLOGO
 =============================================*/
 $(document).on('click', '.btnAgregarProducto', function() {
-    
+
     var idProducto = $(this).attr('idProducto');
     var codigoProducto = $(this).attr('codigoProducto');
     var descripcionProducto = $(this).attr('descripcionProducto');
@@ -311,7 +298,7 @@ $(document).on('click', '.btnAgregarProducto', function() {
     $('#nombreProductoModal').text(descripcionProducto);
     $('#cantidadProductoModal').val(1);
     $('#observacionProductoModal').val('');
-    
+
     // Guardar datos temporales
     $('#modalCantidadProducto').data('producto', {
         id: idProducto,
@@ -326,7 +313,7 @@ $(document).on('click', '.btnAgregarProducto', function() {
 AGREGAR PRODUCTO A LA LISTA
 =============================================*/
 function agregarProductoALista() {
-    
+
     var producto = $('#modalCantidadProducto').data('producto');
     var cantidad = parseInt($('#cantidadProductoModal').val());
     var observacion = $('#observacionProductoModal').val().trim();
@@ -337,7 +324,7 @@ function agregarProductoALista() {
         $('#cantidadProductoModal').focus();
         return;
     }
-    
+
     if(cantidad > 9999) {
         mostrarAlerta('error', 'La cantidad máxima es 9,999');
         $('#cantidadProductoModal').val(9999).focus();
@@ -376,7 +363,7 @@ function agregarProductoALista() {
 BUSCAR REMISIONES
 =============================================*/
 function buscarRemisiones(busqueda) {
-    
+
     $.ajax({
         url: 'ajax/solicitudes-stock.ajax.php',
         type: 'POST',
@@ -404,9 +391,9 @@ function buscarRemisiones(busqueda) {
 MOSTRAR RESULTADOS DE REMISIÓN
 =============================================*/
 function mostrarResultadosRemision(ventas) {
-    
+
     var html = '';
-    
+
     if(ventas.length === 0) {
         html = '<div class="list-group-item text-center text-muted">' +
                '<i class="fa fa-search"></i> No se encontraron remisiones' +
@@ -415,17 +402,18 @@ function mostrarResultadosRemision(ventas) {
         ventas.forEach(function(venta) {
             var cliente = venta.nombre_cliente || 'Cliente no especificado';
             var fecha = venta.fecha ? new Date(venta.fecha).toLocaleDateString() : 'Sin fecha';
-            
+
             html += '<a href="#" class="list-group-item seleccionar-remision" ' +
                    'data-codigo="' + venta.codigo + '" ' +
                    'data-cliente="' + cliente + '">' +
                    '<strong>Remisión: ' + venta.codigo + '</strong><br>' +
-                   '<small>Cliente: ' + cliente + ' | Total: $' + 
+                   '<small>Cliente: ' + cliente + ' | Total: $' +
+
                    parseFloat(venta.total || 0).toLocaleString() + ' | Fecha: ' + fecha + '</small>' +
                    '</a>';
         });
     }
-    
+
     $('#resultadosRemision').html(html).show();
 }
 
@@ -434,18 +422,18 @@ SELECCIONAR REMISIÓN
 =============================================*/
 $(document).on('click', '.seleccionar-remision', function(e) {
     e.preventDefault();
-    
+
     var codigo = $(this).data('codigo');
     var cliente = $(this).data('cliente');
-    
+
     // Solo actualizar campos informativos
     $('#buscarRemision').val('Remisión: ' + codigo + ' - ' + cliente);
     $('#codigoRemisionSeleccionada').val(codigo);
     $('#nombreClienteRemision').val(cliente);
-    
+
     // Ocultar resultados
     $('#resultadosRemision').hide();
-    
+
     mostrarAlerta('info', 'Remisión seleccionada como referencia. Agregue manualmente los productos que necesita solicitar.');
 });
 
@@ -453,9 +441,9 @@ $(document).on('click', '.seleccionar-remision', function(e) {
 ACTUALIZAR LISTA DE PRODUCTOS SELECCIONADOS
 =============================================*/
 function actualizarListaProductosSeleccionados() {
-    
+
     var html = '';
-    
+
     if(productosSeleccionados.length === 0) {
         html = '<tr id="sinProductos">' +
                '<td colspan="3" class="text-center text-muted">' +
@@ -482,7 +470,7 @@ function actualizarListaProductosSeleccionados() {
                    '</tr>';
         });
     }
-    
+
     $('#productosSeleccionados').html(html);
 }
 
@@ -490,9 +478,9 @@ function actualizarListaProductosSeleccionados() {
 ELIMINAR PRODUCTO DE LA LISTA
 =============================================*/
 function eliminarProducto(index) {
-    
+
     productosSeleccionados.splice(index, 1);
-    
+
     actualizarListaProductosSeleccionados();
     actualizarContadorProductos();
     habilitarBotonCrear();
@@ -542,7 +530,7 @@ MOSTRAR ALERTA
 function mostrarAlerta(tipo, mensaje) {
     var icono = 'fa-info-circle';
     var clase = 'alert-info';
-    
+
     switch(tipo) {
         case 'success':
             icono = 'fa-check-circle';
@@ -557,20 +545,20 @@ function mostrarAlerta(tipo, mensaje) {
             clase = 'alert-danger';
             break;
     }
-    
+
     var alerta = '<div class="alert ' + clase + ' alert-dismissible" role="alert">' +
                 '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
                 '<span aria-hidden="true">&times;</span>' +
                 '</button>' +
                 '<i class="fa ' + icono + '"></i> ' + mensaje +
                 '</div>';
-    
+
     // Remover alertas existentes
     $('.alert').remove();
-    
+
     // Agregar nueva alerta
     $('.content-wrapper').prepend(alerta);
-    
+
     // Auto-remover después de 5 segundos
     setTimeout(function() {
         $('.alert').fadeOut();
@@ -583,7 +571,7 @@ MOSTRAR MODAL DE VALIDACIÓN
 function mostrarModalValidacion(titulo, mensaje, tipo = 'warning') {
     var icono = 'fa-warning';
     var claseBoton = 'btn-warning';
-    
+
     switch(tipo) {
         case 'error':
             icono = 'fa-times-circle';
@@ -598,7 +586,7 @@ function mostrarModalValidacion(titulo, mensaje, tipo = 'warning') {
             claseBoton = 'btn-success';
             break;
     }
-    
+
     var modalHtml = `
         <div class="modal fade" id="modalValidacion" tabindex="-1" role="dialog">
             <div class="modal-dialog" role="document">
@@ -623,13 +611,13 @@ function mostrarModalValidacion(titulo, mensaje, tipo = 'warning') {
             </div>
         </div>
     `;
-    
+
     // Remover modal existente si hay uno
     $('#modalValidacion').remove();
-    
+
     // Agregar modal al body
     $('body').append(modalHtml);
-    
+
     // Mostrar modal
     $('#modalValidacion').modal('show');
 }
@@ -640,7 +628,7 @@ VALIDACIONES DE INPUT
 $(document).on('input', '#cantidadProductoModal', function() {
     var valor = $(this).val().replace(/[^0-9]/g, '');
     $(this).val(valor);
-    
+
     if(parseInt(valor) > 9999) {
         $(this).val(9999);
     }
@@ -653,7 +641,7 @@ function actualizarEstadoBotonesAgregar() {
     $('.btnAgregarProducto').each(function() {
         var codigoProducto = $(this).attr('codigoProducto');
         var yaSeleccionado = productosSeleccionados.find(p => p.codigo === codigoProducto);
-        
+
         if(yaSeleccionado) {
             $(this).prop('disabled', true)
                    .removeClass('btn-success')

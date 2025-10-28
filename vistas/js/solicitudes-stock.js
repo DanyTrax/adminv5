@@ -7,7 +7,7 @@ var productosSeleccionados = [];
 CARGAR CUANDO EL DOM ESTÁ LISTO
 =============================================*/
 $(document).ready(function() {
-    
+
     // Inicializar DataTable principal
     if($('.tablaSolicitudesStock').length > 0) {
         $('.tablaSolicitudesStock').DataTable({
@@ -64,12 +64,12 @@ $(document).ready(function() {
     // ✅ EVITAR ENVÍO AUTOMÁTICO DEL FORMULARIO
     $('.formularioSolicitudStock').submit(function(e) {
         e.preventDefault(); // ✅ SIEMPRE PREVENIR ENVÍO AUTOMÁTICO
-        
+
         if(productosSeleccionados.length === 0) {
             mostrarAlerta('warning', 'Debe seleccionar al menos un producto');
             return false;
         }
-        
+
         // ✅ CONFIRMAR ANTES DE CREAR SOLICITUD
         swal({
             title: '¿Crear esta solicitud?',
@@ -85,7 +85,7 @@ $(document).ready(function() {
                 crearSolicitudAjax();
             }
         });
-        
+
         return false;
     });
 
@@ -108,16 +108,16 @@ $(document).ready(function() {
 CREAR SOLICITUD VIA AJAX (SIN RECARGAR PÁGINA)
 =============================================*/
 function crearSolicitudAjax() {
-    
+
     // Actualizar campo hidden con productos
     $('#productosJsonInput').val(JSON.stringify(productosSeleccionados));
-    
+
     // Crear FormData
     var formData = new FormData($('.formularioSolicitudStock')[0]);
-    
+
     // Mostrar loading
     var loadingAlert = mostrarAlerta('info', 'Creando solicitud, por favor espere...');
-    
+
     $.ajax({
         url: 'index.php?ruta=solicitudes-stock',
         type: 'POST',
@@ -128,17 +128,16 @@ function crearSolicitudAjax() {
             // ✅ CERRAR MODAL Y LIMPIAR FORMULARIO
             $('#modalSolicitarStock').modal('hide');
             limpiarFormularioSolicitud();
-            
+
             // ✅ RECARGAR TABLA SIN RECARGAR PÁGINA
             if($('.tablaSolicitudesStock').length > 0) {
                 $('.tablaSolicitudesStock').DataTable().ajax.reload();
             }
-            
+
             mostrarAlerta('success', '¡Solicitud creada correctamente!');
         },
         error: function(xhr, status, error) {
-            console.log('Error al crear solicitud:', error);
-            mostrarAlerta('error', 'Error al crear la solicitud. Intente nuevamente.');
+mostrarAlerta('error', 'Error al crear la solicitud. Intente nuevamente.');
         }
     });
 }
@@ -167,7 +166,7 @@ var configuracionIdioma = {
 AGREGAR PRODUCTO DESDE CATÁLOGO
 =============================================*/
 $(document).on('click', '.btnAgregarProducto', function() {
-    
+
     var idProducto = $(this).attr('idProducto');
     var codigoProducto = $(this).attr('codigoProducto');
     var descripcionProducto = $(this).attr('descripcionProducto');
@@ -176,7 +175,7 @@ $(document).on('click', '.btnAgregarProducto', function() {
     $('#nombreProductoModal').text(descripcionProducto);
     $('#cantidadProductoModal').val(1).removeAttr('max');
     $('#observacionProductoModal').val('');
-    
+
     // Guardar datos temporales
     $('#modalCantidadProducto').data('producto', {
         id: idProducto,
@@ -191,7 +190,7 @@ $(document).on('click', '.btnAgregarProducto', function() {
 AGREGAR PRODUCTO A LA LISTA
 =============================================*/
 function agregarProductoALista() {
-    
+
     var producto = $('#modalCantidadProducto').data('producto');
     var cantidad = parseInt($('#cantidadProductoModal').val());
     var observacion = $('#observacionProductoModal').val().trim();
@@ -202,7 +201,7 @@ function agregarProductoALista() {
         $('#cantidadProductoModal').focus();
         return;
     }
-    
+
     if(cantidad > 9999) {
         mostrarAlerta('error', 'La cantidad máxima es 9,999');
         $('#cantidadProductoModal').val(9999).focus();
@@ -242,7 +241,7 @@ function agregarProductoALista() {
 BUSCAR REMISIONES (SOLO PARA REFERENCIA)
 =============================================*/
 function buscarRemisiones(busqueda) {
-    
+
     $.ajax({
         url: 'ajax/solicitudes-stock.ajax.php',
         type: 'POST',
@@ -270,9 +269,9 @@ function buscarRemisiones(busqueda) {
 MOSTRAR RESULTADOS DE REMISIÓN
 =============================================*/
 function mostrarResultadosRemision(ventas) {
-    
+
     var html = '';
-    
+
     if(ventas.length === 0) {
         html = '<div class="list-group-item text-center text-muted">' +
                '<i class="fa fa-search"></i> No se encontraron remisiones' +
@@ -281,17 +280,18 @@ function mostrarResultadosRemision(ventas) {
         ventas.forEach(function(venta) {
             var cliente = venta.nombre_cliente || 'Cliente no especificado';
             var fecha = venta.fecha ? new Date(venta.fecha).toLocaleDateString() : 'Sin fecha';
-            
+
             html += '<a href="#" class="list-group-item seleccionar-remision" ' +
                    'data-codigo="' + venta.codigo + '" ' +
                    'data-cliente="' + cliente + '">' +
                    '<strong>Remisión: ' + venta.codigo + '</strong><br>' +
-                   '<small>Cliente: ' + cliente + ' | Total: $' + 
+                   '<small>Cliente: ' + cliente + ' | Total: $' +
+
                    parseFloat(venta.total || 0).toLocaleString() + ' | Fecha: ' + fecha + '</small>' +
                    '</a>';
         });
     }
-    
+
     $('#resultadosRemision').html(html).show();
 }
 
@@ -300,18 +300,18 @@ SELECCIONAR REMISIÓN - SOLO INFORMATIVO
 =============================================*/
 $(document).on('click', '.seleccionar-remision', function(e) {
     e.preventDefault();
-    
+
     var codigo = $(this).data('codigo');
     var cliente = $(this).data('cliente');
-    
+
     // ✅ SOLO ACTUALIZAR CAMPOS INFORMATIVOS
     $('#buscarRemision').val('Remisión: ' + codigo + ' - ' + cliente);
     $('#codigoRemisionSeleccionada').val(codigo);
     $('#nombreClienteRemision').val(cliente);
-    
+
     // Ocultar resultados
     $('#resultadosRemision').hide();
-    
+
     // ✅ MENSAJE INFORMATIVO - NO CARGAR PRODUCTOS
     mostrarAlerta('info', 'Remisión seleccionada como referencia. Agregue manualmente los productos que necesita solicitar.');
 });
@@ -320,9 +320,9 @@ $(document).on('click', '.seleccionar-remision', function(e) {
 ACTUALIZAR LISTA DE PRODUCTOS SELECCIONADOS
 =============================================*/
 function actualizarListaProductosSeleccionados() {
-    
+
     var html = '';
-    
+
     if(productosSeleccionados.length === 0) {
         html = '<tr id="sinProductos">' +
                '<td colspan="3" class="text-center text-muted">' +
@@ -347,7 +347,7 @@ function actualizarListaProductosSeleccionados() {
                    '</tr>';
         });
     }
-    
+
     $('#productosSeleccionados').html(html);
 }
 
@@ -355,13 +355,13 @@ function actualizarListaProductosSeleccionados() {
 ELIMINAR PRODUCTO DE LA LISTA
 =============================================*/
 function eliminarProducto(index) {
-    
+
     productosSeleccionados.splice(index, 1);
-    
+
     actualizarListaProductosSeleccionados();
     actualizarContadorProductos();
     habilitarBotonCrear();
-    
+
     mostrarAlerta('info', 'Producto eliminado de la solicitud');
 }
 
@@ -401,7 +401,7 @@ function limpiarFormularioSolicitud() {
     actualizarListaProductosSeleccionados();
     actualizarContadorProductos();
     habilitarBotonCrear();
-    
+
     $('#detalleAdicional').val('');
     $('input[name="tipo_solicitud"]').prop('checked', false);
     $('.campoRemision').hide();
@@ -423,7 +423,7 @@ MOSTRAR ALERTA
 function mostrarAlerta(tipo, mensaje) {
     var icono = 'fa-info-circle';
     var clase = 'alert-info';
-    
+
     switch(tipo) {
         case 'success':
             icono = 'fa-check-circle';
@@ -438,24 +438,24 @@ function mostrarAlerta(tipo, mensaje) {
             clase = 'alert-danger';
             break;
     }
-    
+
     var alerta = '<div class="alert ' + clase + ' alert-dismissible" role="alert">' +
                 '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
                 '<span aria-hidden="true">&times;</span>' +
                 '</button>' +
                 '<i class="fa ' + icono + '"></i> ' + mensaje +
                 '</div>';
-    
+
     // Remover alertas existentes
     $('.alert').remove();
-    
+
     // Agregar nueva alerta al contenedor principal
     if($('.content-wrapper').length > 0) {
         $('.content-wrapper').prepend(alerta);
     } else {
         $('body').prepend(alerta);
     }
-    
+
     // Auto-remover después de 5 segundos
     setTimeout(function() {
         $('.alert').fadeOut();
@@ -466,7 +466,7 @@ function mostrarAlerta(tipo, mensaje) {
 $(document).on('input', '#cantidadProductoModal', function() {
     var valor = $(this).val().replace(/[^0-9]/g, '');
     $(this).val(valor);
-    
+
     if(parseInt(valor) > 9999) {
         $(this).val(9999);
     }
@@ -492,15 +492,12 @@ $(document).on('keydown', '#cantidadProductoModal', function(e) {
 CREAR DESPACHO DESDE SOLICITUD
 =============================================*/
 $(document).on('click', '.btnCrearDespachoDesdeSolicitud', function() {
-    
+
     var idSolicitud = $(this).attr('idSolicitud');
     var numeroSolicitud = $(this).attr('numeroSolicitud');
-    
-    console.log("🚛 Crear despacho desde solicitud ID:", idSolicitud, "Número:", numeroSolicitud);
-    
-    // Mostrar loading
+// Mostrar loading
     $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
-    
+
     // Obtener detalles de la solicitud
     $.ajax({
         url: 'ajax/solicitudes-stock.ajax.php',
@@ -515,22 +512,16 @@ $(document).on('click', '.btnCrearDespachoDesdeSolicitud', function() {
                 // Redirigir a crear despacho con los datos de la solicitud
                 var solicitud = response.data;
                 var productos = JSON.parse(solicitud.productos_solicitados || '[]');
-                
+
                 // Crear URL con parámetros
                 var url = 'crear-despacho?desde_solicitud=1&id_solicitud=' + idSolicitud + '&numero_solicitud=' + encodeURIComponent(numeroSolicitud);
-                
-                console.log("🔍 ANTES DE MOSTRAR MODAL - URL:", url);
-                console.log("🔍 ANTES DE MOSTRAR MODAL - Productos:", productos);
-                
-                // Mostrar modal de selección de productos
-                console.log("🔍 LLAMANDO A mostrarModalSeleccionProductos...");
-                try {
+
+// Mostrar modal de selección de productos
+try {
                     mostrarModalSeleccionProductos(solicitud, productos, url);
-                    console.log("🔍 DESPUÉS DE LLAMAR A mostrarModalSeleccionProductos - ÉXITO");
-                } catch(error) {
-                    console.error("❌ ERROR al llamar mostrarModalSeleccionProductos:", error);
-                }
-                
+} catch(error) {
+}
+
             } else {
                 swal({
                     title: 'Error',
@@ -556,14 +547,11 @@ $(document).on('click', '.btnCrearDespachoDesdeSolicitud', function() {
         }
     });
 });
-
-
-
 /*=============================================
 MOSTRAR STOCK POR SUCURSALES
 =============================================*/
 function mostrarStockPorSucursales(idSolicitud, numeroSolicitud, productos) {
-    
+
     // Mostrar loading
     swal({
         title: "Consultando stock disponible...",
@@ -572,7 +560,7 @@ function mostrarStockPorSucursales(idSolicitud, numeroSolicitud, productos) {
         showConfirmButton: false,
         allowOutsideClick: false
     });
-    
+
     // Obtener stock de todas las sucursales
     $.ajax({
         url: 'ajax/stock-disponible-sucursales.ajax.php',
@@ -583,14 +571,10 @@ function mostrarStockPorSucursales(idSolicitud, numeroSolicitud, productos) {
         },
         dataType: 'json',
         success: function(response) {
-            console.log("Respuesta recibida:", response);
-            
-            if(response.success) {
-                console.log("Mostrando modal de selección de stock");
-                mostrarModalSeleccionStock(response.data, idSolicitud, numeroSolicitud);
+if(response.success) {
+mostrarModalSeleccionStock(response.data, idSolicitud, numeroSolicitud);
             } else {
-                console.log("Error en respuesta:", response.message);
-                swal({
+swal({
                     title: 'Error',
                     text: response.message || 'No se pudo consultar el stock disponible',
                     type: 'error',
@@ -599,8 +583,7 @@ function mostrarStockPorSucursales(idSolicitud, numeroSolicitud, productos) {
             }
         },
         error: function(xhr, status, error) {
-            console.log("Error AJAX:", xhr, status, error);
-            swal({
+swal({
                 title: 'Error',
                 text: 'Error de conexión al consultar stock disponible: ' + error,
                 type: 'error',
@@ -614,15 +597,9 @@ function mostrarStockPorSucursales(idSolicitud, numeroSolicitud, productos) {
 MOSTRAR MODAL DE SELECCIÓN DE STOCK
 =============================================*/
 function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
-    
-    console.log("Datos de stock recibidos:", stockData);
-    console.log("ID Solicitud:", idSolicitud);
-    console.log("Número Solicitud:", numeroSolicitud);
-    
-    // Verificar que stockData sea válido
+// Verificar que stockData sea válido
     if (!stockData || !Array.isArray(stockData) || stockData.length === 0) {
-        console.error("Error: stockData no es válido:", stockData);
-        swal({
+swal({
             title: 'Error',
             text: 'No se recibieron datos de stock válidos',
             type: 'error',
@@ -630,11 +607,11 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
         });
         return;
     }
-    
+
     // Obtener todas las sucursales únicas de todos los productos
     var sucursalesUnicas = [];
     var sucursalesMap = {};
-    
+
     stockData.forEach(function(producto) {
         if (producto.sucursales && Array.isArray(producto.sucursales)) {
             producto.sucursales.forEach(function(sucursal) {
@@ -645,15 +622,12 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
             });
         }
     });
-    
-    console.log("Sucursales únicas encontradas:", sucursalesUnicas);
-    
-    var html = '<div class="stock-seleccion-container">';
+var html = '<div class="stock-seleccion-container">';
     html += '<div class="alert alert-info">';
     html += '<h5><i class="fa fa-info-circle"></i> Stock Disponible por Sucursal</h5>';
     html += '<p>Para cada producto, se muestra el stock disponible en cada sucursal.</p>';
     html += '</div>';
-    
+
     html += '<div class="table-responsive" style="max-height: 500px; overflow-y: auto;">';
     html += '<table class="table table-bordered table-striped">';
     html += '<thead class="bg-primary">';
@@ -661,51 +635,51 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
     html += '<th style="width: 80px;">Código</th>';
     html += '<th style="width: 200px;">Producto</th>';
     html += '<th style="width: 80px;">Solicitado</th>';
-    
+
     // Agregar columnas para cada sucursal (más compactas)
     sucursalesUnicas.forEach(function(sucursal) {
         html += '<th style="width: 120px;">' + sucursal.nombre + '</th>';
     });
-    
+
     html += '<th style="width: 80px;">Estado</th>';
     html += '</tr>';
     html += '</thead>';
     html += '<tbody>';
-    
+
     // Procesar cada producto
     stockData.forEach(function(producto) {
         var cantidadSolicitada = producto.cantidad_solicitada || 0;
         var totalDisponible = 0;
-        
+
         // Calcular total disponible sumando stock de todas las sucursales
         if (producto.sucursales && Array.isArray(producto.sucursales)) {
             producto.sucursales.forEach(function(sucursal) {
                 totalDisponible += sucursal.stock_disponible || 0;
             });
         }
-        
+
         html += '<tr data-producto="' + producto.codigo + '">';
         html += '<td><strong>' + producto.codigo + '</strong></td>';
         html += '<td><small>' + producto.descripcion + '</small></td>';
         html += '<td><span class="badge badge-info">' + cantidadSolicitada + '</span></td>';
-        
+
         // Agregar columnas para cada sucursal
         sucursalesUnicas.forEach(function(sucursal) {
             var stockSucursal = 0;
             var puedeSatisfacer = false;
-            
+
             // Buscar el stock de esta sucursal para este producto
             if (producto.sucursales && Array.isArray(producto.sucursales)) {
                 var sucursalProducto = producto.sucursales.find(function(s) {
                     return s.id === sucursal.id;
                 });
-                
+
                 if (sucursalProducto) {
                     stockSucursal = sucursalProducto.stock_disponible || 0;
                     puedeSatisfacer = sucursalProducto.puede_satisfacer || false;
                 }
             }
-            
+
             html += '<td class="text-center">';
             html += '<span class="badge ' + (puedeSatisfacer ? 'badge-success' : 'badge-danger') + '" style="font-size: 11px;">';
             html += stockSucursal;
@@ -713,37 +687,37 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
             html += '<br><small class="text-muted" style="font-size: 10px;">' + (puedeSatisfacer ? '✓' : '✗') + '</small>';
             html += '</td>';
         });
-        
+
         // Estado del producto
         var estado = totalDisponible >= cantidadSolicitada ? 'Completo' : 'Parcial';
         var claseEstado = totalDisponible >= cantidadSolicitada ? 'badge-success' : 'badge-warning';
-        
+
         html += '<td class="text-center"><span class="badge ' + claseEstado + '" style="font-size: 11px;">' + estado + '</span></td>';
         html += '</tr>';
     });
-    
+
     html += '</tbody>';
     html += '</table>';
     html += '</div>';
-    
+
     // Resumen compacto
     html += '<div class="alert alert-info mt-2" style="padding: 10px;">';
     html += '<div class="row">';
-    
+
     var productosCompletos = 0;
     var productosParciales = 0;
     var productosSinStock = 0;
-    
+
     stockData.forEach(function(producto) {
         var cantidadSolicitada = producto.cantidad_solicitada || 0;
         var totalDisponible = 0;
-        
+
         if (producto.sucursales && Array.isArray(producto.sucursales)) {
             producto.sucursales.forEach(function(sucursal) {
                 totalDisponible += sucursal.stock_disponible || 0;
             });
         }
-        
+
         if (totalDisponible >= cantidadSolicitada) {
             productosCompletos++;
         } else if (totalDisponible > 0) {
@@ -752,7 +726,7 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
             productosSinStock++;
         }
     });
-    
+
     html += '<div class="col-md-4 text-center">';
     html += '<span class="badge badge-success" style="font-size: 12px;">Completos: ' + productosCompletos + '</span>';
     html += '</div>';
@@ -764,9 +738,9 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
     html += '</div>';
     html += '</div>';
     html += '</div>';
-    
+
     html += '</div>';
-    
+
     swal({
         title: 'Stock Disponible por Sucursal',
         html: html,
@@ -782,7 +756,7 @@ function mostrarModalSeleccionStock(stockData, idSolicitud, numeroSolicitud) {
                 actualizarTotalesProducto($(this).data('producto'));
                 actualizarResumen();
             });
-            
+
             // Actualizar resumen inicial
             actualizarResumen();
         }
@@ -799,21 +773,21 @@ ACTUALIZAR TOTALES POR PRODUCTO
 function actualizarTotalesProducto(codigoProducto) {
     var total = 0;
     var solicitado = 0;
-    
+
     // Obtener cantidad solicitada
     $('tr[data-producto="' + codigoProducto + '"]').find('.badge-info').each(function() {
         solicitado = parseInt($(this).text());
     });
-    
+
     // Sumar todas las cantidades seleccionadas
     $('input[data-producto="' + codigoProducto + '"]').each(function() {
         var cantidad = parseInt($(this).val()) || 0;
         total += cantidad;
     });
-    
+
     // Actualizar total seleccionado
     $('.total-seleccionado[data-producto="' + codigoProducto + '"]').text(total);
-    
+
     // Actualizar estado
     var estado = $('.estado-producto[data-producto="' + codigoProducto + '"]');
     if(total == solicitado) {
@@ -835,7 +809,7 @@ function actualizarResumen() {
     var productosParciales = 0;
     var productosPendientes = 0;
     var productosConExceso = 0;
-    
+
     $('.estado-producto').each(function() {
         var estado = $(this).text();
         if(estado == 'Completo') productosCompletos++;
@@ -843,7 +817,7 @@ function actualizarResumen() {
         else if(estado == 'Pendiente') productosPendientes++;
         else if(estado == 'Exceso') productosConExceso++;
     });
-    
+
     var html = '<ul class="mb-0">';
     html += '<li><strong>Productos completos:</strong> ' + productosCompletos + '</li>';
     html += '<li><strong>Productos parciales:</strong> ' + productosParciales + '</li>';
@@ -852,7 +826,7 @@ function actualizarResumen() {
         html += '<li><strong>Productos con exceso:</strong> ' + productosConExceso + '</li>';
     }
     html += '</ul>';
-    
+
     $('#resumen-seleccion').html(html);
 }
 
@@ -860,15 +834,15 @@ function actualizarResumen() {
 CREAR DESPACHOS POR SUCURSAL
 =============================================*/
 function crearDespachosPorSucursal(stockData, idSolicitud, numeroSolicitud) {
-    
+
     // Recopilar datos de despachos por sucursal
     var despachosData = {};
-    
+
     $('.stock-input').each(function() {
         var sucursal = $(this).data('sucursal');
         var producto = $(this).data('producto');
         var cantidad = parseInt($(this).val()) || 0;
-        
+
         if(cantidad > 0) {
             if(!despachosData[sucursal]) {
                 despachosData[sucursal] = {
@@ -876,7 +850,7 @@ function crearDespachosPorSucursal(stockData, idSolicitud, numeroSolicitud) {
                     productos: []
                 };
             }
-            
+
             // Buscar descripción del producto
             var descripcion = '';
             stockData.productos_solicitud.forEach(function(p) {
@@ -884,7 +858,7 @@ function crearDespachosPorSucursal(stockData, idSolicitud, numeroSolicitud) {
                     descripcion = p.descripcion;
                 }
             });
-            
+
             despachosData[sucursal].productos.push({
                 codigo: producto,
                 descripcion: descripcion,
@@ -892,7 +866,7 @@ function crearDespachosPorSucursal(stockData, idSolicitud, numeroSolicitud) {
             });
         }
     });
-    
+
     // Verificar que hay despachos para crear
     if(Object.keys(despachosData).length == 0) {
         swal({
@@ -903,7 +877,7 @@ function crearDespachosPorSucursal(stockData, idSolicitud, numeroSolicitud) {
         });
         return;
     }
-    
+
     // Mostrar loading
     swal({
         title: "Creando despachos...",
@@ -912,7 +886,7 @@ function crearDespachosPorSucursal(stockData, idSolicitud, numeroSolicitud) {
         showConfirmButton: false,
         allowOutsideClick: false
     });
-    
+
     // Enviar datos para crear despachos
     $.ajax({
         url: 'ajax/crear-despachos-sucursales.ajax.php',
@@ -949,12 +923,12 @@ function crearDespachosPorSucursal(stockData, idSolicitud, numeroSolicitud) {
 MOSTRAR RESULTADO DE DESPACHOS
 =============================================*/
 function mostrarResultadoDespachos(response) {
-    
+
     var html = '<div class="alert alert-success">';
     html += '<h5><i class="fa fa-check-circle"></i> Despachos Creados Exitosamente</h5>';
     html += '<p><strong>Total despachos creados:</strong> ' + response.total_despachos + '</p>';
     html += '</div>';
-    
+
     if(response.despachos_creados.length > 0) {
         html += '<div class="table-responsive">';
         html += '<table class="table table-bordered table-striped">';
@@ -962,7 +936,7 @@ function mostrarResultadoDespachos(response) {
         html += '<tr><th>Sucursal</th><th>Productos</th><th>Cantidad Total</th></tr>';
         html += '</thead>';
         html += '<tbody>';
-        
+
         response.despachos_creados.forEach(function(despacho) {
             html += '<tr>';
             html += '<td><strong>' + despacho.sucursal + '</strong></td>';
@@ -970,12 +944,12 @@ function mostrarResultadoDespachos(response) {
             html += '<td><span class="badge badge-success">' + despacho.cantidad_total + '</span></td>';
             html += '</tr>';
         });
-        
+
         html += '</tbody>';
         html += '</table>';
         html += '</div>';
     }
-    
+
     if(response.errores.length > 0) {
         html += '<div class="alert alert-danger">';
         html += '<h5><i class="fa fa-exclamation-triangle"></i> Errores Encontrados</h5>';
@@ -986,7 +960,7 @@ function mostrarResultadoDespachos(response) {
         html += '</ul>';
         html += '</div>';
     }
-    
+
     swal({
         title: 'Despachos Creados',
         html: html,
@@ -1003,13 +977,11 @@ function mostrarResultadoDespachos(response) {
 VER DETALLES DE SOLICITUD
 =============================================*/
 $(document).on('click', '.btnVerSolicitud', function() {
-    
+
     var idSolicitud = $(this).attr('idSolicitud');
-    console.log("✅ Ver solicitud ID:", idSolicitud);
-    
-    // ✅ MOSTRAR LOADING
+// ✅ MOSTRAR LOADING
     $(this).prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
-    
+
     // ✅ OBTENER DETALLES VIA AJAX
     $.ajax({
         url: 'ajax/solicitudes-stock.ajax.php',
@@ -1052,11 +1024,9 @@ $(document).on('click', '.btnVerSolicitud', function() {
 APROBAR SOLICITUD
 =============================================*/
 $(document).on('click', '.btnAprobarSolicitud', function() {
-    
+
     var idSolicitud = $(this).attr('idSolicitud');
-    console.log("✅ Aprobar solicitud ID:", idSolicitud);
-    
-    swal({
+swal({
         title: '¿Aprobar esta solicitud?',
         text: "La solicitud será marcada como aprobada y lista para procesar",
         type: 'question',
@@ -1076,11 +1046,9 @@ $(document).on('click', '.btnAprobarSolicitud', function() {
 CANCELAR SOLICITUD
 =============================================*/
 $(document).on('click', '.btnCancelarSolicitud', function() {
-    
+
     var idSolicitud = $(this).attr('idSolicitud');
-    console.log("✅ Cancelar solicitud ID:", idSolicitud);
-    
-    swal({
+swal({
         title: '¿Cancelar esta solicitud?',
         text: "La solicitud será marcada como cancelada",
         type: 'warning',
@@ -1107,11 +1075,9 @@ $(document).on('click', '.btnCancelarSolicitud', function() {
 ELIMINAR SOLICITUD
 =============================================*/
 $(document).on('click', '.btnEliminarSolicitud', function() {
-    
+
     var idSolicitud = $(this).attr('idSolicitud');
-    console.log("✅ Eliminar solicitud ID:", idSolicitud);
-    
-    swal({
+swal({
         title: '¿Eliminar esta solicitud?',
         text: "¡Esta acción no se puede deshacer!",
         type: 'error',
@@ -1131,7 +1097,7 @@ $(document).on('click', '.btnEliminarSolicitud', function() {
 FUNCIÓN PARA APROBAR SOLICITUD
 =============================================*/
 function aprobarSolicitud(idSolicitud) {
-    
+
     $.ajax({
         url: 'ajax/solicitudes-stock.ajax.php',
         type: 'POST',
@@ -1175,7 +1141,7 @@ function aprobarSolicitud(idSolicitud) {
 FUNCIÓN PARA CANCELAR SOLICITUD
 =============================================*/
 function cancelarSolicitud(idSolicitud, motivo) {
-    
+
     $.ajax({
         url: 'ajax/solicitudes-stock.ajax.php',
         type: 'POST',
@@ -1220,7 +1186,7 @@ function cancelarSolicitud(idSolicitud, motivo) {
 FUNCIÓN PARA ELIMINAR SOLICITUD
 =============================================*/
 function eliminarSolicitud(idSolicitud) {
-    
+
     $.ajax({
         url: 'ajax/solicitudes-stock.ajax.php',
         type: 'POST',
@@ -1264,14 +1230,10 @@ function eliminarSolicitud(idSolicitud) {
 MOSTRAR MODAL CON DETALLES DE SOLICITUD - VERSIÓN CORREGIDA
 =============================================*/
 function mostrarModalDetalleSolicitud(solicitud) {
-    
-    console.log("=== DATOS RECIBIDOS EN MODAL ===");
-    console.log(solicitud);
-    
-    // ✅ VERIFICAR QUE EXISTAN LOS ELEMENTOS DEL MODAL
+
+// ✅ VERIFICAR QUE EXISTAN LOS ELEMENTOS DEL MODAL
     if($('#modalVerSolicitud').length === 0) {
-        console.error("El modal #modalVerSolicitud no existe en el DOM");
-        swal({
+swal({
             title: 'Error',
             text: 'El modal de detalles no está disponible',
             type: 'error',
@@ -1279,45 +1241,45 @@ function mostrarModalDetalleSolicitud(solicitud) {
         });
         return;
     }
-    
+
     try {
-        
+
         // ✅ INFORMACIÓN GENERAL - con verificaciones
         if($('#numeroSolicitudModal').length) {
             $('#numeroSolicitudModal').text(solicitud.numero_solicitud || 'N/A');
         }
-        
+
         if($('#sucursalSolicitante').length) {
             $('#sucursalSolicitante').text(solicitud.nombre_sucursal_solicitante || 'N/A');
         }
-        
+
         if($('#usuarioSolicitante').length) {
             $('#usuarioSolicitante').text(solicitud.nombre_usuario_solicitante || 'N/A');
         }
-        
+
         if($('#fechaSolicitud').length) {
             $('#fechaSolicitud').text(formatearFecha(solicitud.fecha_solicitud) || 'N/A');
         }
-        
+
         if($('#tipoSolicitud').length) {
             $('#tipoSolicitud').text((solicitud.tipo_solicitud || 'N/A').toUpperCase());
         }
-        
+
         if($('#totalProductos').length) {
             $('#totalProductos').text((solicitud.total_productos || 0) + ' productos');
         }
-        
+
         // ✅ ESTADO CON COLOR
         if($('#estadoSolicitud').length) {
             var estadoTexto = (solicitud.estado || 'desconocido').charAt(0).toUpperCase() + (solicitud.estado || 'desconocido').slice(1);
             $('#estadoSolicitud').text(estadoTexto);
         }
-        
+
         // ✅ Cambiar color del icono según estado
         if($('#estadoIcon').length) {
             var $estadoIcon = $('#estadoIcon');
             $estadoIcon.removeClass('bg-red bg-green bg-yellow bg-gray');
-            
+
             switch(solicitud.estado) {
                 case 'pendiente':
                     $estadoIcon.addClass('bg-yellow').find('i').removeClass().addClass('fa fa-clock-o');
@@ -1332,7 +1294,7 @@ function mostrarModalDetalleSolicitud(solicitud) {
                     $estadoIcon.addClass('bg-gray').find('i').removeClass().addClass('fa fa-question');
             }
         }
-        
+
         // ✅ INFORMACIÓN DE REMISIÓN (si aplica)
         if(solicitud.tipo_solicitud === 'remision' && solicitud.codigo_remision) {
             $('#codigoRemision').text(solicitud.codigo_remision || 'N/A');
@@ -1341,7 +1303,7 @@ function mostrarModalDetalleSolicitud(solicitud) {
         } else {
             $('#infoRemision').hide();
         }
-        
+
         // ✅ DETALLE ADICIONAL (si aplica)
         if(solicitud.detalle_adicional && solicitud.detalle_adicional.trim() !== '') {
             $('#detalleAdicional').text(solicitud.detalle_adicional);
@@ -1349,27 +1311,23 @@ function mostrarModalDetalleSolicitud(solicitud) {
         } else {
             $('#detalleAdicionalContainer').hide();
         }
-        
+
         // ✅ CARGAR PRODUCTOS
         cargarProductosEnModal(solicitud.productos_solicitados);
-        
+
         // ✅ CARGAR HISTORIAL
         cargarHistorialEnModal(solicitud);
-        
+
         // ✅ CARGAR STOCK SUCURSALES
         cargarStockSucursalesEnModal(solicitud.productos_solicitados);
-        
+
         // ✅ CONFIGURAR BOTONES DE EXPORTACIÓN
         configurarBotonesExportacion(solicitud);
-        
+
         // ✅ MOSTRAR MODAL
         $('#modalVerSolicitud').modal('show');
-        
-        console.log("✅ Modal cargado correctamente");
-        
-    } catch(error) {
-        console.error("Error cargando datos en modal:", error);
-        swal({
+} catch(error) {
+swal({
             title: 'Error',
             text: 'Error al cargar los detalles de la solicitud',
             type: 'error',
@@ -1382,33 +1340,26 @@ function mostrarModalDetalleSolicitud(solicitud) {
 CARGAR PRODUCTOS EN EL MODAL - VERSIÓN CORREGIDA
 =============================================*/
 function cargarProductosEnModal(productosJson) {
-    
-    console.log("=== CARGANDO PRODUCTOS ===");
-    console.log("JSON recibido:", productosJson);
-    
-    try {
+
+try {
         var productos = [];
-        
+
         // ✅ PARSEAR JSON si es string
         if(typeof productosJson === 'string') {
             productos = JSON.parse(productosJson);
         } else if(Array.isArray(productosJson)) {
             productos = productosJson;
         } else {
-            console.error("Formato de productos no reconocido:", typeof productosJson);
-            productos = [];
+productos = [];
         }
-        
-        console.log("Productos parseados:", productos);
-        
-        var html = '';
+var html = '';
         var totalCantidad = 0;
-        
+
         if(productos && productos.length > 0) {
             productos.forEach(function(producto, index) {
                 var cantidad = parseInt(producto.cantidad) || 0;
                 totalCantidad += cantidad;
-                
+
                 html += '<tr>';
                 html += '<td class="text-center"><strong>' + (index + 1) + '</strong></td>';
                 html += '<td><code>' + (producto.codigo || 'N/A') + '</code></td>';
@@ -1428,15 +1379,11 @@ function cargarProductosEnModal(productosJson) {
         } else {
             html = '<tr><td colspan="5" class="text-center text-muted">No hay productos registrados</td></tr>';
         }
-        
+
         $('#productosModalBody').html(html);
         $('#totalCantidadProductos').text(totalCantidad);
-        
-        console.log("✅ Productos cargados en tabla");
-        
-    } catch(e) {
-        console.error('Error cargando productos:', e);
-        $('#productosModalBody').html('<tr><td colspan="5" class="text-center text-danger">Error cargando productos: ' + e.message + '</td></tr>');
+} catch(e) {
+$('#productosModalBody').html('<tr><td colspan="5" class="text-center text-danger">Error cargando productos: ' + e.message + '</td></tr>');
     }
 }
 
@@ -1444,24 +1391,21 @@ function cargarProductosEnModal(productosJson) {
 CARGAR HISTORIAL EN EL MODAL - VERSIÓN CORREGIDA
 =============================================*/
 function cargarHistorialEnModal(solicitud) {
-    
-    console.log("=== CARGANDO HISTORIAL ===");
-    
-    try {
+try {
         // ✅ CREACIÓN
         $('#fechaCreacion').html('<i class="fa fa-plus-circle"></i> ' + formatearFecha(solicitud.fecha_solicitud, true));
         $('#horaCreacion').text(formatearHora(solicitud.fecha_solicitud));
         $('#usuarioCreacion').text(solicitud.nombre_usuario_solicitante || 'N/A');
         $('#numeroCreacion').text(solicitud.numero_solicitud || 'N/A');
-        
+
         // ✅ APROBACIÓN/CANCELACIÓN
         if(solicitud.estado !== 'pendiente' && solicitud.fecha_aprobacion) {
             $('#timelineAprobacion').show();
-            
+
             var $labelAprobacion = $('#labelAprobacion');
             var $iconAprobacion = $('#iconAprobacion');
             var $accionAprobacion = $('#accionAprobacion');
-            
+
             if(solicitud.estado === 'aprobado') {
                 $labelAprobacion.removeClass('bg-red bg-yellow').addClass('bg-green')
                     .html('<i class="fa fa-check"></i> Aprobación');
@@ -1473,10 +1417,10 @@ function cargarHistorialEnModal(solicitud) {
                 $iconAprobacion.removeClass('fa-check bg-green').addClass('fa-times bg-red');
                 $accionAprobacion.text('Cancelada');
             }
-            
+
             $('#horaAprobacion').text(formatearHora(solicitud.fecha_aprobacion));
             $('#usuarioAprobacion').text(solicitud.nombre_usuario_aprobacion || 'Sistema');
-            
+
             // Mostrar motivo si es cancelación
             if(solicitud.estado === 'cancelado' && solicitud.motivo_cancelacion) {
                 $('#motivoAprobacion').text(solicitud.motivo_cancelacion);
@@ -1484,70 +1428,71 @@ function cargarHistorialEnModal(solicitud) {
             } else {
                 $('#motivoContainer').hide();
             }
-            
+
         } else {
             $('#timelineAprobacion').hide();
         }
-        
-        console.log("✅ Historial cargado");
-        
-    } catch(error) {
-        console.error("Error cargando historial:", error);
-    }
+} catch(error) {
+}
 }
 
 /*=============================================
 FUNCIONES AUXILIARES PARA FORMATEO - MEJORADAS
 =============================================*/
 function formatearFecha(fecha, conDia = false) {
-    
+
     if(!fecha) return 'Fecha no disponible';
-    
+
     try {
         var date = new Date(fecha);
-        
+
         // Verificar que la fecha sea válida
         if(isNaN(date.getTime())) {
             return fecha; // Devolver la fecha original si no se puede parsear
         }
-        
-        var opciones = { 
-            year: 'numeric', 
-            month: '2-digit', 
-            day: '2-digit' 
+
+        var opciones = {
+
+            year: 'numeric',
+
+            month: '2-digit',
+
+            day: '2-digit'
+
         };
-        
+
         if(conDia) {
             opciones.weekday = 'long';
         }
-        
+
         return date.toLocaleDateString('es-ES', opciones);
-        
+
     } catch(error) {
-        console.error('Error formateando fecha:', error);
-        return fecha;
+return fecha;
     }
 }
 
 function formatearHora(fecha) {
-    
+
     if(!fecha) return '--:--';
-    
+
     try {
         var date = new Date(fecha);
-        
+
         if(isNaN(date.getTime())) {
             return '--:--';
         }
-        
-        return date.toLocaleTimeString('es-ES', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
+
+        return date.toLocaleTimeString('es-ES', {
+
+            hour: '2-digit',
+
+            minute: '2-digit'
+
         });
-        
+
     } catch(error) {
-        console.error('Error formateando hora:', error);
-        return '--:--';
+return '--:--';
     }
 }
 
@@ -1555,15 +1500,12 @@ function formatearHora(fecha) {
 CONFIGURAR BOTONES DE EXPORTACIÓN - FUNCIONAL
 =============================================*/
 function configurarBotonesExportacion(solicitud) {
-    
-    console.log("✅ Configurando botones de exportación para solicitud:", solicitud.numero_solicitud);
-    
-    // ✅ BOTÓN PDF - Ahora funcional
+// ✅ BOTÓN PDF - Ahora funcional
     $('#btnExportarPDF').off('click').on('click', function(e) {
         e.preventDefault();
         exportarSolicitudPDF(solicitud);
     });
-    
+
     // ✅ BOTÓN EXCEL - Ahora funcional
     $('#btnExportarExcel').off('click').on('click', function(e) {
         e.preventDefault();
@@ -1575,16 +1517,13 @@ function configurarBotonesExportacion(solicitud) {
 EXPORTAR SOLICITUD A PDF - FUNCIONAL
 =============================================*/
 function exportarSolicitudPDF(solicitud) {
-    
-    console.log("🔄 Exportando a PDF solicitud:", solicitud.numero_solicitud);
-    
-    try {
+try {
         // ✅ CONSTRUIR URL PARA EL PDF
         var urlPDF = 'extensiones/tcpdf/pdf/solicitud-stock.php?id=' + solicitud.id;
-        
+
         // ✅ ABRIR EN NUEVA VENTANA
         var ventana = window.open(urlPDF, '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes');
-        
+
         if(!ventana || ventana.closed || typeof ventana.closed == 'undefined') {
             // Si la ventana no se abre (popup bloqueado)
             swal({
@@ -1608,9 +1547,7 @@ function exportarSolicitudPDF(solicitud) {
             });
         } else {
             // ✅ PDF abierto exitosamente
-            console.log("✅ PDF abierto en nueva ventana");
-            
-            // Mostrar notificación de éxito
+// Mostrar notificación de éxito
             swal({
                 title: '¡PDF Generado!',
                 text: 'El reporte se ha abierto en una nueva ventana',
@@ -1619,11 +1556,9 @@ function exportarSolicitudPDF(solicitud) {
                 showConfirmButton: false
             });
         }
-        
+
     } catch(error) {
-        console.error("❌ Error exportando PDF:", error);
-        
-        swal({
+swal({
             title: 'Error',
             text: 'Error al generar el PDF: ' + error.message,
             type: 'error',
@@ -1636,10 +1571,7 @@ function exportarSolicitudPDF(solicitud) {
 EXPORTAR SOLICITUD A EXCEL - FUNCIONAL CON SHEETJS
 =============================================*/
 function exportarSolicitudExcel(solicitud) {
-    
-    console.log("🔄 Exportando a Excel solicitud:", solicitud.numero_solicitud);
-    
-    try {
+try {
         // ✅ VERIFICAR QUE SHEETJS ESTÉ DISPONIBLE
         if(typeof XLSX === 'undefined') {
             swal({
@@ -1650,24 +1582,23 @@ function exportarSolicitudExcel(solicitud) {
             });
             return;
         }
-        
+
         // ✅ PROCESAR PRODUCTOS
         var productos = [];
         try {
             productos = JSON.parse(solicitud.productos_solicitados);
         } catch(e) {
-            console.warn("Error parseando productos:", e);
-            productos = [];
+productos = [];
         }
-        
+
         // ✅ CREAR DATOS PARA EXCEL
         var datosExcel = [];
-        
+
         // ENCABEZADO PRINCIPAL
         datosExcel.push(['SOLICITUD DE STOCK', '', '', '', '', '']);
         datosExcel.push([solicitud.numero_solicitud, '', '', '', '', '']);
         datosExcel.push(['']); // Línea vacía
-        
+
         // INFORMACIÓN GENERAL
         datosExcel.push(['INFORMACIÓN GENERAL', '', '', '', '', '']);
         datosExcel.push(['Sucursal:', solicitud.nombre_sucursal_solicitante, '', 'Estado:', solicitud.estado.toUpperCase(), '']);
@@ -1675,7 +1606,7 @@ function exportarSolicitudExcel(solicitud) {
         datosExcel.push(['Fecha:', formatearFecha(solicitud.fecha_solicitud), '', 'Total Cantidad:', solicitud.total_cantidad, '']);
         datosExcel.push(['Tipo:', solicitud.tipo_solicitud.toUpperCase(), '', 'Aprobado por:', solicitud.nombre_usuario_aprobacion || 'Sin aprobar', '']);
         datosExcel.push(['']); // Línea vacía
-        
+
         // INFORMACIÓN DE REMISIÓN (si aplica)
         if(solicitud.tipo_solicitud === 'remision' && solicitud.codigo_remision) {
             datosExcel.push(['INFORMACIÓN DE REMISIÓN', '', '', '', '', '']);
@@ -1683,18 +1614,18 @@ function exportarSolicitudExcel(solicitud) {
             datosExcel.push(['Cliente:', solicitud.nombre_cliente_remision || 'No especificado', '', '', '', '']);
             datosExcel.push(['']); // Línea vacía
         }
-        
+
         // DETALLE ADICIONAL (si existe)
         if(solicitud.detalle_adicional && solicitud.detalle_adicional.trim() !== '') {
             datosExcel.push(['DETALLE ADICIONAL', '', '', '', '', '']);
             datosExcel.push([solicitud.detalle_adicional, '', '', '', '', '']);
             datosExcel.push(['']); // Línea vacía
         }
-        
+
         // PRODUCTOS SOLICITADOS
         datosExcel.push(['PRODUCTOS SOLICITADOS', '', '', '', '', '']);
         datosExcel.push(['#', 'CÓDIGO', 'DESCRIPCIÓN', 'CANTIDAD', 'OBSERVACIONES', '']);
-        
+
         // Agregar productos
         if(productos && productos.length > 0) {
             productos.forEach(function(producto, index) {
@@ -1710,27 +1641,27 @@ function exportarSolicitudExcel(solicitud) {
         } else {
             datosExcel.push(['No hay productos registrados', '', '', '', '', '']);
         }
-        
+
         // TOTAL
         datosExcel.push(['']); // Línea vacía
         datosExcel.push(['TOTAL:', '', '', solicitud.total_cantidad, solicitud.total_productos + ' productos', '']);
-        
+
         // MOTIVO DE CANCELACIÓN (si aplica)
         if(solicitud.estado === 'cancelado' && solicitud.motivo_cancelacion) {
             datosExcel.push(['']); // Línea vacía
             datosExcel.push(['MOTIVO DE CANCELACIÓN', '', '', '', '', '']);
             datosExcel.push([solicitud.motivo_cancelacion, '', '', '', '', '']);
         }
-        
+
         // INFORMACIÓN DE GENERACIÓN
         datosExcel.push(['']); // Línea vacía
         datosExcel.push(['INFORMACIÓN DEL REPORTE', '', '', '', '', '']);
         datosExcel.push(['Generado por:', $('#usuarioSolicitante').text() || 'Usuario actual', '', 'Fecha:', new Date().toLocaleString('es-ES'), '']);
-        
+
         // ✅ CREAR LIBRO DE EXCEL
         var ws = XLSX.utils.aoa_to_sheet(datosExcel);
         var wb = XLSX.utils.book_new();
-        
+
         // ✅ CONFIGURAR ANCHOS DE COLUMNA
         ws['!cols'] = [
             {wch: 20}, // Columna A
@@ -1740,19 +1671,17 @@ function exportarSolicitudExcel(solicitud) {
             {wch: 30}, // Columna E
             {wch: 10}  // Columna F
         ];
-        
+
         // ✅ AGREGAR HOJA AL LIBRO
         XLSX.utils.book_append_sheet(wb, ws, "Solicitud " + solicitud.numero_solicitud);
-        
+
         // ✅ GENERAR Y DESCARGAR ARCHIVO
-        var nombreArchivo = 'Solicitud_' + solicitud.numero_solicitud + '_' + 
+        var nombreArchivo = 'Solicitud_' + solicitud.numero_solicitud + '_' +
+
                            new Date().toISOString().slice(0,10) + '.xlsx';
-        
+
         XLSX.writeFile(wb, nombreArchivo);
-        
-        console.log("✅ Excel generado:", nombreArchivo);
-        
-        // ✅ MOSTRAR CONFIRMACIÓN
+// ✅ MOSTRAR CONFIRMACIÓN
         swal({
             title: '¡Excel Generado!',
             text: 'El archivo ' + nombreArchivo + ' se ha descargado correctamente',
@@ -1760,11 +1689,9 @@ function exportarSolicitudExcel(solicitud) {
             timer: 3000,
             showConfirmButton: false
         });
-        
+
     } catch(error) {
-        console.error("❌ Error exportando Excel:", error);
-        
-        swal({
+swal({
             title: 'Error',
             text: 'Error al generar el Excel: ' + error.message,
             type: 'error',
@@ -1777,33 +1704,26 @@ function exportarSolicitudExcel(solicitud) {
 CARGAR STOCK SUCURSALES EN EL MODAL
 =============================================*/
 function cargarStockSucursalesEnModal(productosJson) {
-    
-    console.log("=== CARGANDO STOCK SUCURSALES ===");
-    console.log("Productos recibidos:", productosJson);
-    
-    try {
+
+try {
         var productos = [];
-        
+
         // Parsear JSON si es string
         if(typeof productosJson === 'string') {
             productos = JSON.parse(productosJson);
         } else if(Array.isArray(productosJson)) {
             productos = productosJson;
         } else {
-            console.error("Formato de productos no reconocido:", typeof productosJson);
-            productos = [];
+productos = [];
         }
-        
-        console.log("Productos parseados:", productos);
-        
-        if(!productos || productos.length === 0) {
+if(!productos || productos.length === 0) {
             $('#tbodyStockSucursales').html('<tr><td colspan="5" class="text-center text-muted">No hay productos para consultar</td></tr>');
             return;
         }
-        
+
         // Mostrar loading
         $('#tbodyStockSucursales').html('<tr><td colspan="5" class="text-center"><i class="fa fa-spinner fa-spin"></i> Consultando stock disponible...</td></tr>');
-        
+
         // Consultar stock en todas las sucursales
         $.ajax({
             url: 'ajax/stock-disponible-sucursales.ajax.php',
@@ -1814,23 +1734,19 @@ function cargarStockSucursalesEnModal(productosJson) {
             },
             dataType: 'json',
             success: function(response) {
-                console.log("Respuesta stock sucursales:", response);
-                
-                if(response.success) {
+if(response.success) {
                     mostrarStockSucursalesEnTabla(response.data);
                 } else {
                     $('#tbodyStockSucursales').html('<tr><td colspan="5" class="text-center text-danger">Error: ' + (response.message || 'No se pudo consultar el stock') + '</td></tr>');
                 }
             },
             error: function(xhr, status, error) {
-                console.error("Error AJAX consultando stock:", xhr, status, error);
-                $('#tbodyStockSucursales').html('<tr><td colspan="5" class="text-center text-danger">Error de conexión al consultar stock</td></tr>');
+$('#tbodyStockSucursales').html('<tr><td colspan="5" class="text-center text-danger">Error de conexión al consultar stock</td></tr>');
             }
         });
-        
+
     } catch(error) {
-        console.error("Error cargando stock sucursales:", error);
-        $('#tbodyStockSucursales').html('<tr><td colspan="5" class="text-center text-danger">Error al cargar stock de sucursales</td></tr>');
+$('#tbodyStockSucursales').html('<tr><td colspan="5" class="text-center text-danger">Error al cargar stock de sucursales</td></tr>');
     }
 }
 
@@ -1838,18 +1754,15 @@ function cargarStockSucursalesEnModal(productosJson) {
 MOSTRAR STOCK SUCURSALES EN TABLA
 =============================================*/
 function mostrarStockSucursalesEnTabla(stockData) {
-    
-    console.log("Mostrando stock en tabla:", stockData);
-    
-    if(!stockData || !Array.isArray(stockData) || stockData.length === 0) {
+if(!stockData || !Array.isArray(stockData) || stockData.length === 0) {
         $('#tbodyStockSucursales').html('<tr><td colspan="5" class="text-center text-muted">No hay datos de stock disponibles</td></tr>');
         return;
     }
-    
+
     // Obtener todas las sucursales únicas
     var sucursalesUnicas = [];
     var sucursalesMap = {};
-    
+
     stockData.forEach(function(producto) {
         if (producto.sucursales && Array.isArray(producto.sucursales)) {
             producto.sucursales.forEach(function(sucursal) {
@@ -1860,57 +1773,54 @@ function mostrarStockSucursalesEnTabla(stockData) {
             });
         }
     });
-    
+
     // Ordenar sucursales por nombre
     sucursalesUnicas.sort(function(a, b) {
         return a.nombre.localeCompare(b.nombre);
     });
-    
-    console.log("Sucursales encontradas:", sucursalesUnicas);
-    
-    // Actualizar header de la tabla con columnas de sucursales
+// Actualizar header de la tabla con columnas de sucursales
     var headerHtml = '<th style="width: 10px;">#</th>' +
                      '<th>Código</th>' +
                      '<th>Descripción</th>' +
                      '<th>Cantidad Solicitada</th>';
-    
+
     sucursalesUnicas.forEach(function(sucursal) {
         headerHtml += '<th class="text-center" style="min-width: 80px;">' + sucursal.nombre + '</th>';
     });
-    
+
     $('#sucursalesHeader').parent().html(headerHtml);
-    
+
     // Generar filas de productos
     var tbodyHtml = '';
-    
+
     stockData.forEach(function(producto, index) {
         var filaHtml = '<tr>';
         filaHtml += '<td class="text-center"><strong>' + (index + 1) + '</strong></td>';
         filaHtml += '<td><code>' + (producto.codigo || 'N/A') + '</code></td>';
         filaHtml += '<td>' + (producto.descripcion || 'N/A') + '</td>';
         filaHtml += '<td class="text-center"><span class="label label-primary">' + (producto.cantidad_solicitada || 0) + '</span></td>';
-        
+
         // Agregar stock de cada sucursal
         sucursalesUnicas.forEach(function(sucursal) {
             var stockSucursal = 0;
             var puedeSatisfacer = false;
-            
+
             // Buscar stock de esta sucursal para este producto
             if (producto.sucursales && Array.isArray(producto.sucursales)) {
                 var sucursalData = producto.sucursales.find(function(s) {
                     return s.id === sucursal.id;
                 });
-                
+
                 if (sucursalData) {
                     stockSucursal = sucursalData.stock_disponible || 0;
                     puedeSatisfacer = sucursalData.puede_satisfacer || false;
                 }
             }
-            
+
             // Determinar clase CSS según disponibilidad
             var stockClass = 'text-muted';
             var stockIcon = '';
-            
+
             if (stockSucursal > 0) {
                 if (puedeSatisfacer) {
                     stockClass = 'text-success';
@@ -1923,31 +1833,25 @@ function mostrarStockSucursalesEnTabla(stockData) {
                 stockClass = 'text-danger';
                 stockIcon = '<i class="fa fa-times-circle"></i> ';
             }
-            
-            filaHtml += '<td class="text-center ' + stockClass + '">' + 
+
+            filaHtml += '<td class="text-center ' + stockClass + '">' +
+
                        stockIcon + '<strong>' + stockSucursal + '</strong></td>';
         });
-        
+
         filaHtml += '</tr>';
         tbodyHtml += filaHtml;
     });
-    
+
     $('#tbodyStockSucursales').html(tbodyHtml);
-    
-    console.log("✅ Tabla de stock sucursales cargada correctamente");
 }
 
 /*=============================================
 MOSTRAR MODAL DE SELECCIÓN DE PRODUCTOS
 =============================================*/
 function mostrarModalSeleccionProductos(solicitud, productos, url) {
-    console.log("🔍 MOSTRAR MODAL SELECCIÓN - INICIO");
-    console.log("🔍 Solicitud:", solicitud);
-    console.log("🔍 Productos:", productos);
-    console.log("🔍 URL:", url);
-    
-    try {
-    
+try {
+
     // Crear HTML de la modal
     var modalHtml = `
         <div class="modal fade" id="modalSeleccionProductos" tabindex="-1" role="dialog">
@@ -1978,8 +1882,6 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
                                 </div>
                             </div>
                         </div>
-                        
-                        
                         <div class="table-responsive">
                             <table class="table table-striped table-hover">
                                 <thead>
@@ -1994,9 +1896,10 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         <div class="alert alert-warning" id="alertaProductos" style="display: none;">
-                            <i class="fa fa-exclamation-triangle"></i> 
+                            <i class="fa fa-exclamation-triangle"></i>
+
                             <span id="mensajeAlerta"></span>
                         </div>
                     </div>
@@ -2012,13 +1915,13 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
             </div>
         </div>
     `;
-    
+
     // Remover modal existente si existe
     $('#modalSeleccionProductos').remove();
-    
+
     // Agregar modal al DOM
     $('body').append(modalHtml);
-    
+
     // Llenar tabla de productos
     var tbodyHtml = '';
     productos.forEach(function(producto, index) {
@@ -2026,15 +1929,15 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
         var stockActual = 0;
         var stockClass = 'text-danger';
         var stockIcon = '<i class="fa fa-times-circle"></i> ';
-        
+
         if(window.inventarioLocal && window.inventarioLocal.length > 0) {
             var productoInventario = window.inventarioLocal.find(function(p) {
                 return p.codigo === producto.codigo;
             });
-            
+
             if(productoInventario) {
                 stockActual = productoInventario.stock || 0;
-                
+
                 if(stockActual >= producto.cantidad) {
                     stockClass = 'text-success';
                     stockIcon = '<i class="fa fa-check-circle"></i> ';
@@ -2044,7 +1947,7 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
                 }
             }
         }
-        
+
         tbodyHtml += `
             <tr>
                 <td><strong>${producto.codigo}</strong></td>
@@ -2058,39 +1961,33 @@ function mostrarModalSeleccionProductos(solicitud, productos, url) {
             </tr>
         `;
     });
-    
+
     $('#listaProductosSeleccion').html(tbodyHtml);
-    
+
     // Configurar eventos
     configurarEventosModalSeleccion(url);
-    
+
     // Mostrar modal
-    console.log("🔍 Mostrando modal de selección...");
-    $('#modalSeleccionProductos').modal('show');
-    console.log("🔍 Modal mostrada correctamente");
-    
-    } catch(error) {
-        console.error("❌ ERROR en mostrarModalSeleccionProductos:", error);
-    }
+$('#modalSeleccionProductos').modal('show');
+} catch(error) {
+}
 }
 
 /*=============================================
 CONFIGURAR EVENTOS DE LA MODAL DE SELECCIÓN
 =============================================*/
 function configurarEventosModalSeleccion(url) {
-    
+
     // Botón crear despacho
     $('#btnCrearDespachoSeleccion').on('click', function() {
-        console.log("🔍 BOTÓN CREAR DESPACHO CLICKEADO - INICIO");
-        
-        // Obtener productos desde la tabla de la modal
+// Obtener productos desde la tabla de la modal
         var productosSeleccionados = [];
         $('#listaProductosSeleccion tr').each(function(index) {
             if (index > 0) { // Saltar header
                 var $row = $(this);
                 var codigo = $row.find('td:first').text().trim();
                 var cantidad = $row.find('.badge').text().trim();
-                
+
                 if (codigo && cantidad) {
                     productosSeleccionados.push({
                         index: index - 1, // Ajustar índice
@@ -2099,17 +1996,10 @@ function configurarEventosModalSeleccion(url) {
                 }
             }
         });
-        
-        console.log("🔍 Productos seleccionados (todos):", productosSeleccionados);
-        
-        // Guardar productos seleccionados en localStorage
+// Guardar productos seleccionados en localStorage
         localStorage.setItem('productosSeleccionados', JSON.stringify(productosSeleccionados));
-        
-        console.log("🔍 Productos guardados en localStorage:", productosSeleccionados);
-        
-        // Cerrar modal y redirigir
-        console.log("🔍 Cerrando modal y redirigiendo a:", url);
-        $('#modalSeleccionProductos').modal('hide');
+// Cerrar modal y redirigir
+$('#modalSeleccionProductos').modal('hide');
         window.location.href = url;
     });
 }

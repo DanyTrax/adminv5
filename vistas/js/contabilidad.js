@@ -11,8 +11,6 @@ $(".tablas").on("click", ".btnEditarCotizacion", function () {
 	var idVenta = $(this).attr("idVenta");
 
 	window.location = "index.php?ruta=editar-cotizacion&idCotizacion=" + idVenta;
-
-
 })
 
 $(".tablas").on("click", ".btnEliminarCotizacion", function () {
@@ -55,17 +53,11 @@ $('#filter-formaPago-contabilidad').on('change', function () {
 		window.location = `index.php?ruta=contabilidad&formaPago=${val}`;
 	}
 })
-
-
-
-
 $(".tablas").on("click", ".btnEditarGasto", function () {
 
 	var idVenta = $(this).attr("idGasto");
 
 	window.location = "index.php?ruta=editar-gasto&id=" + idVenta;
-
-
 })
 
 $(".tablas").on("click", ".btnEliminarGasto", function () {
@@ -90,15 +82,11 @@ $(".tablas").on("click", ".btnEliminarGasto", function () {
 	})
 
 })
-
-
 $(".tablas").on("click", ".btnEditarEntrada", function () {
 
 	var idVenta = $(this).attr("idEntrada");
 
 	window.location = "index.php?ruta=editar-entrada&id=" + idVenta;
-
-
 });
 // CORRECCIÓN: Ahora busca la clase específica ".tablaEntradas"
 $(".tablaEntradas").on("click", ".btnEditarEntrada", function () {
@@ -208,7 +196,8 @@ $(document).ready(function() {
                     d.formaPago = $('.tablaContabilidad').attr('data-forma-pago');
                 }
             },
-            "language": { 
+            "language": {
+
                 "sProcessing":     "Procesando...",
                 "sLengthMenu":     "Mostrar _MENU_ registros",
                 "sZeroRecords":    "No se encontraron resultados",

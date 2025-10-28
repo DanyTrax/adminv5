@@ -9,13 +9,13 @@ var intervaloProgreso;
 CARGAR DATATABLE DE SUCURSALES
 =============================================*/
 $(document).ready(function() {
-    
+
     // Sincronizar sucursales al cargar la página (deshabilitado para evitar notificaciones molestas)
     // sincronizarSucursalesBidireccional();
-    
+
     // Cargar estado inicial de la sucursal
     cargarEstadoSucursalActual();
-    
+
     // Inicializar DataTable
     tablaSucursales = $('.tablaSucursales').DataTable({
         "ajax": {
@@ -64,7 +64,7 @@ $(document).ready(function() {
         "lengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]],
         "pageLength": 25
     });
-    
+
     // Auto-refrescar cada 2 minutos
     setInterval(function() {
         if (!procesoSincronizacion) {
@@ -78,34 +78,28 @@ $(document).ready(function() {
 SINCRONIZACIÓN BIDIRECCIONAL DE SUCURSALES
 =============================================*/
 function sincronizarSucursalesBidireccional() {
-    console.log("Iniciando sincronización bidireccional de sucursales...");
-    
-    $.ajax({
+$.ajax({
         url: "ajax/sucursales.ajax.php",
         method: "POST",
         data: { "accion": "sincronizar_bidireccional" },
         dataType: "json",
         success: function(respuesta) {
             if (respuesta.success) {
-                console.log("Sincronización bidireccional exitosa:", respuesta.message);
-                
-                // Si hay cambios, mostrar notificación
+// Si hay cambios, mostrar notificación
                 if (respuesta.cambios && respuesta.cambios.length > 0) {
                     mostrarNotificacionSincronizacion(respuesta.cambios);
                 }
-                
+
                 // Recargar datos después de la sincronización
                 cargarEstadoSucursalActual();
                 if (tablaSucursales) {
                     tablaSucursales.ajax.reload(null, false);
                 }
             } else {
-                console.error("Error en sincronización bidireccional:", respuesta.error);
-            }
+}
         },
         error: function(xhr, status, error) {
-            console.error("Error AJAX en sincronización bidireccional:", error);
-        }
+}
     });
 }
 
@@ -114,7 +108,7 @@ function mostrarNotificacionSincronizacion(cambios) {
     cambios.forEach(function(cambio) {
         mensaje += "• " + cambio + "\n";
     });
-    
+
     swal({
         type: "info",
         title: "Sincronización Completada",
@@ -128,24 +122,24 @@ function mostrarNotificacionSincronizacion(cambios) {
 CARGAR ESTADO DE SUCURSAL ACTUAL
 =============================================*/
 function cargarEstadoSucursalActual() {
-    
+
     $.ajax({
         url: "ajax/sucursales.ajax.php",
         method: "POST",
         data: { "accion": "verificar_estado" },
         dataType: "json",
         success: function(respuesta) {
-            
+
             if (respuesta.success) {
-                
+
                 var estado = respuesta.estado;
-                
+
                 if (estado.configurada) {
-                    
+
                     // Mostrar datos de la sucursal actual
                     $("#codigoActual").text(estado.datos.codigo_sucursal).removeClass("label-warning").addClass("label-primary");
                     $("#nombreActual").text(estado.datos.nombre);
-                    
+
                     if (estado.registrada) {
                         $("#estadoActual").text("Registrada").removeClass("label-warning").addClass("label-success");
                         $("#btnRegistrarEsta").hide();
@@ -153,9 +147,9 @@ function cargarEstadoSucursalActual() {
                         $("#estadoActual").text("No registrada").removeClass("label-success").addClass("label-warning");
                         $("#btnRegistrarEsta").show();
                     }
-                    
+
                 } else {
-                    
+
                     // No configurada
                     $("#codigoActual").text("No configurado").removeClass("label-primary").addClass("label-warning");
                     $("#nombreActual").text("No configurado");
@@ -165,8 +159,7 @@ function cargarEstadoSucursalActual() {
             }
         },
         error: function() {
-            console.error("Error al verificar estado de sucursal");
-        }
+}
     });
 }
 
@@ -174,7 +167,7 @@ function cargarEstadoSucursalActual() {
 EDITAR CONFIGURACIÓN LOCAL
 =============================================*/
 $(document).on("click", "#btnEditarSucursalLocal", function() {
-    
+
     // Cargar configuración actual
     $.ajax({
         url: "ajax/sucursales.ajax.php",
@@ -182,11 +175,11 @@ $(document).on("click", "#btnEditarSucursalLocal", function() {
         data: { "accion": "obtener_config_local" },
         dataType: "json",
         success: function(respuesta) {
-            
+
             if (respuesta.success && respuesta.data) {
-                
+
                 var datos = respuesta.data;
-                
+
                 // Llenar formulario con datos existentes
                 $("#codigoLocal").val(datos.codigo_sucursal);
                 $("#nombreLocal").val(datos.nombre);
@@ -196,26 +189,26 @@ $(document).on("click", "#btnEditarSucursalLocal", function() {
                 $("#urlBaseLocal").val(datos.url_base);
                 $("#urlApiLocal").val(datos.url_api);
                 $("#esPrincipal").prop('checked', datos.es_principal == 1);
-                
+
                 // Llenar campos de BD
                 $("#usuarioBdLocal").val(datos.usuario_bd || '');
                 $("#passwordBdLocal").val(datos.password_bd || '');
                 $("#nombreBdLocal").val(datos.nombre_bd || '');
                 $("#hostBdLocal").val(datos.host_bd || 'localhost');
                 $("#puertoBdLocal").val(datos.puerto_bd || 3306);
-                
+
             } else {
-                
+
                 // Limpiar formulario para nueva configuración
                 $("#formConfigurarLocal")[0].reset();
-                
+
                 // Detectar URL automáticamente
                 detectarURLAutomatica();
-                
+
                 // Generar código automático
                 generarCodigoAutomatico();
             }
-            
+
             $("#modalConfigurarLocal").modal("show");
         },
         error: function() {
@@ -236,17 +229,17 @@ $(document).on("click", "#btnGenerarCodigo", function() {
 });
 
 function generarCodigoAutomatico() {
-    
+
     $.ajax({
         url: "ajax/sucursales.ajax.php",
         method: "POST",
         data: { "accion": "generar_codigo" },
         dataType: "json",
         success: function(respuesta) {
-            
+
             if (respuesta.success) {
                 $("#codigoLocal").val(respuesta.codigo);
-                
+
                 // Mostrar notificación
                 $("#codigoLocal").parent().addClass("has-success");
                 setTimeout(function() {
@@ -255,8 +248,7 @@ function generarCodigoAutomatico() {
             }
         },
         error: function() {
-            console.error("Error al generar código automático");
-        }
+}
     });
 }
 
@@ -268,18 +260,18 @@ $(document).on("click", "#btnDetectarURL", function() {
 });
 
 function detectarURLAutomatica() {
-    
+
     $.ajax({
         url: "ajax/sucursales.ajax.php",
         method: "POST",
         data: { "accion": "detectar_url" },
         dataType: "json",
         success: function(respuesta) {
-            
+
             if (respuesta.success) {
                 $("#urlBaseLocal").val(respuesta.url_base);
                 $("#urlApiLocal").val(respuesta.url_api);
-                
+
                 // Mostrar notificación visual
                 $("#urlBaseLocal, #urlApiLocal").parent().addClass("has-success");
                 setTimeout(function() {
@@ -288,8 +280,7 @@ function detectarURLAutomatica() {
             }
         },
         error: function() {
-            console.error("Error al detectar URL automática");
-        }
+}
     });
 }
 
@@ -297,18 +288,18 @@ function detectarURLAutomatica() {
 AUTO-GENERAR URL API
 =============================================*/
 $(document).on("click", "#btnAutoAPI", function() {
-    
+
     var urlBase = $("#urlBaseLocal").val().trim();
-    
+
     if (urlBase) {
         var urlApi = urlBase;
         if (!urlApi.endsWith('/')) {
             urlApi += '/';
         }
         urlApi += 'api-transferencias/';
-        
+
         $("#urlApiLocal").val(urlApi);
-        
+
         // Mostrar notificación
         $("#urlApiLocal").parent().addClass("has-success");
         setTimeout(function() {
@@ -327,21 +318,22 @@ $(document).on("click", "#btnAutoAPI", function() {
 VALIDAR CÓDIGO EN TIEMPO REAL
 =============================================*/
 $(document).on("blur", "#codigoLocal", function() {
-    
+
     var codigo = $(this).val().trim();
-    
+
     if (codigo && codigo.length >= 3) {
-        
+
         $.ajax({
             url: "ajax/sucursales.ajax.php",
             method: "POST",
-            data: { 
+            data: {
+
                 "accion": "validar_codigo",
                 "codigo": codigo
             },
             dataType: "json",
             success: function(respuesta) {
-                
+
                 if (respuesta.disponible) {
                     $("#codigoLocal").parent().removeClass("has-error").addClass("has-success");
                 } else {
@@ -361,7 +353,7 @@ $(document).on("blur", "#codigoLocal", function() {
 REGISTRAR ESTA SUCURSAL
 =============================================*/
 $(document).on("click", "#btnRegistrarEsta", function() {
-    
+
     swal({
         title: "¿Registrar esta sucursal?",
         text: "Se agregará esta sucursal al directorio central",
@@ -372,22 +364,22 @@ $(document).on("click", "#btnRegistrarEsta", function() {
         cancelButtonText: "Cancelar",
         confirmButtonText: "Sí, registrar"
     }).then(function(result) {
-        
+
         if (result.value) {
-            
+
             // Mostrar loading
             $("#btnRegistrarEsta").html('<i class="fa fa-spinner fa-spin"></i> Registrando...');
             $("#btnRegistrarEsta").prop('disabled', true);
-            
+
             $.ajax({
                 url: "ajax/sucursales.ajax.php",
                 method: "POST",
                 data: { "accion": "registrar_esta" },
                 dataType: "json",
                 success: function(respuesta) {
-                    
+
                     if (respuesta.success) {
-                        
+
                         swal({
                             type: "success",
                             title: "¡Registrada!",
@@ -397,9 +389,9 @@ $(document).on("click", "#btnRegistrarEsta", function() {
                             cargarEstadoSucursalActual();
                             tablaSucursales.ajax.reload();
                         });
-                        
+
                     } else {
-                        
+
                         swal({
                             type: "error",
                             title: "Error",
@@ -424,28 +416,29 @@ $(document).on("click", "#btnRegistrarEsta", function() {
 });
 
 $(document).on("click", ".btnProbarConexion", function() {
-    
+
     var idSucursal = $(this).attr("idSucursal");
     var nombreSucursal = $(this).attr("nombreSucursal");
     var boton = $(this);
-    
+
     // Mostrar estado de carga
     boton.html('<i class="fa fa-spinner fa-spin"></i>');
     boton.prop('disabled', true);
-    
+
     $.ajax({
         url: "ajax/sucursales.ajax.php",
         method: "POST",
-        data: { 
+        data: {
+
             "accion": "probar_conexion",
             "idSucursal": idSucursal
         },
         dataType: "json",
         timeout: 15000, // 15 segundos timeout
         success: function(respuesta) {
-            
+
             if (respuesta.success) {
-                
+
                 // Mostrar información de la conexión a BD
                 var detalleRespuesta = "";
                 if (respuesta.sucursal) {
@@ -454,7 +447,7 @@ $(document).on("click", ".btnProbarConexion", function() {
                         detalleRespuesta += "<br><small>Host: " + respuesta.host + "</small>";
                     }
                 }
-                
+
                 swal({
                     type: "success",
                     title: "Conexión exitosa",
@@ -462,9 +455,9 @@ $(document).on("click", ".btnProbarConexion", function() {
                           "Tiempo de respuesta: " + (respuesta.tiempo_respuesta || 'N/A') +
                           detalleRespuesta
                 });
-                
+
             } else {
-                
+
                 swal({
                     type: "error",
                     title: "Conexión fallida",
@@ -474,9 +467,9 @@ $(document).on("click", ".btnProbarConexion", function() {
             }
         },
         error: function(xhr, status, error) {
-            
+
             var mensaje = "Error de comunicación";
-            
+
             if (status === "timeout") {
                 mensaje = "Timeout de conexión (más de 15 segundos)";
             } else if (xhr.status === 500) {
@@ -484,7 +477,7 @@ $(document).on("click", ".btnProbarConexion", function() {
             } else if (xhr.status === 404) {
                 mensaje = "API no encontrada en la sucursal";
             }
-            
+
             swal({
                 type: "error",
                 title: "Error de conexión",
@@ -504,31 +497,23 @@ $(document).on("click", ".btnProbarConexion", function() {
 EDITAR SUCURSAL
 =============================================*/
 $(document).on("click", ".btnEditarSucursal", function() {
-    
+
     var idSucursal = $(this).attr("idSucursal");
-    
+
     $.ajax({
         url: "ajax/sucursales.ajax.php",
         method: "POST",
         data: { "idSucursal": idSucursal },
         dataType: "json",
         success: function(respuesta) {
-            
+
             if (respuesta.success) {
-                
+
                 var datos = respuesta.data;
-                
+
                 // Debug temporal
-                console.log("DEBUG - Datos recibidos del AJAX:", datos);
-                console.log("DEBUG - Campos de conexión:", {
-                    usuario_bd: datos.usuario_bd,
-                    password_bd: datos.password_bd,
-                    nombre_bd: datos.nombre_bd,
-                    host_bd: datos.host_bd,
-                    puerto_bd: datos.puerto_bd
-                });
-                
-                // Limpiar y llenar formulario de edición
+
+// Limpiar y llenar formulario de edición
                 $("#editarId").val(datos.id);
                 $("#editarCodigo").val(datos.codigo_sucursal);
                 $("#editarNombre").val(datos.nombre);
@@ -537,27 +522,27 @@ $(document).on("click", ".btnEditarSucursal", function() {
                 $("#editarEmail").val(datos.email);
                 $("#editarUrlBase").val(datos.url_base);
                 $("#editarUrlApi").val(datos.url_api);
-                
+
                 // Campos de conexión BD - limpiar primero
                 $("#editarUsuarioBd").val('');
                 $("#editarPasswordBd").val('');
                 $("#editarNombreBd").val('');
                 $("#editarHostBd").val('');
                 $("#editarPuertoBd").val('');
-                
+
                 // Llenar con datos del AJAX
                 $("#editarUsuarioBd").val(datos.usuario_bd || '');
                 $("#editarPasswordBd").val(datos.password_bd || '');
                 $("#editarNombreBd").val(datos.nombre_bd || '');
                 $("#editarHostBd").val(datos.host_bd || 'localhost');
                 $("#editarPuertoBd").val(datos.puerto_bd || '3306');
-                
+
                 $("#editarActivo").prop('checked', datos.activo == 1);
-                
+
                 $("#modalEditarSucursal").modal("show");
-                
+
             } else {
-                
+
                 swal({
                     type: "error",
                     title: "Error",
@@ -579,13 +564,13 @@ $(document).on("click", ".btnEditarSucursal", function() {
 CAMBIAR ESTADO DE SUCURSAL
 =============================================*/
 $(document).on("click", ".btnCambiarEstado", function() {
-    
+
     var idSucursal = $(this).attr("idSucursal");
     var estadoActual = $(this).attr("estadoActual");
     var nombreSucursal = $(this).attr("nombreSucursal");
     var nuevoEstado = estadoActual == "1" ? "0" : "1";
     var textoAccion = nuevoEstado == "1" ? "activar" : "desactivar";
-    
+
     swal({
         title: "¿" + textoAccion.charAt(0).toUpperCase() + textoAccion.slice(1) + " sucursal?",
         text: "¿Está seguro de " + textoAccion + " " + nombreSucursal + "?",
@@ -596,22 +581,23 @@ $(document).on("click", ".btnCambiarEstado", function() {
         cancelButtonText: "Cancelar",
         confirmButtonText: "Sí, " + textoAccion
     }).then(function(result) {
-        
+
         if (result.value) {
-            
+
             $.ajax({
                 url: "ajax/sucursales.ajax.php",
                 method: "POST",
-                data: { 
+                data: {
+
                     "accion": "cambiar_estado",
                     "idSucursal": idSucursal,
                     "nuevoEstado": nuevoEstado
                 },
                 dataType: "json",
                 success: function(respuesta) {
-                    
+
                     if (respuesta.success) {
-                        
+
                         swal({
                             type: "success",
                             title: "Estado actualizado",
@@ -619,11 +605,11 @@ $(document).on("click", ".btnCambiarEstado", function() {
                             timer: 2000,
                             showConfirmButton: false
                         });
-                        
+
                         tablaSucursales.ajax.reload();
-                        
+
                     } else {
-                        
+
                         swal({
                             type: "error",
                             title: "Error",
@@ -647,10 +633,10 @@ $(document).on("click", ".btnCambiarEstado", function() {
 ELIMINAR SUCURSAL
 =============================================*/
 $(document).on("click", ".btnEliminarSucursal", function() {
-    
+
     var idSucursal = $(this).attr("idSucursal");
     var nombreSucursal = $(this).attr("nombreSucursal");
-    
+
     swal({
         title: "¿Eliminar sucursal?",
         text: "¿Está seguro de eliminar " + nombreSucursal + "? Esta acción no se puede deshacer.",
@@ -661,21 +647,22 @@ $(document).on("click", ".btnEliminarSucursal", function() {
         cancelButtonText: "Cancelar",
         confirmButtonText: "Sí, eliminar"
     }).then(function(result) {
-        
+
         if (result.value) {
-            
+
             $.ajax({
                 url: "ajax/sucursales.ajax.php",
                 method: "POST",
-                data: { 
+                data: {
+
                     "accion": "eliminar_sucursal",
                     "idSucursal": idSucursal
                 },
                 dataType: "json",
                 success: function(respuesta) {
-                    
+
                     if (respuesta.success) {
-                        
+
                         swal({
                             type: "success",
                             title: "Eliminada",
@@ -683,11 +670,11 @@ $(document).on("click", ".btnEliminarSucursal", function() {
                             timer: 2000,
                             showConfirmButton: false
                         });
-                        
+
                         tablaSucursales.ajax.reload();
-                        
+
                     } else {
-                        
+
                         swal({
                             type: "error",
                             title: "Error",
@@ -711,7 +698,7 @@ $(document).on("click", ".btnEliminarSucursal", function() {
 SINCRONIZAR CATÁLOGO MAESTRO
 =============================================*/
 $(document).on("click", "#btnSincronizarCatalogo", function() {
-    
+
     if (procesoSincronizacion) {
         swal({
             type: "info",
@@ -720,7 +707,7 @@ $(document).on("click", "#btnSincronizarCatalogo", function() {
         });
         return;
     }
-    
+
     swal({
         title: "¿Sincronizar catálogo maestro?",
         text: "Se distribuirá el catálogo maestro a todas las sucursales activas. Este proceso puede tomar varios minutos.",
@@ -731,7 +718,7 @@ $(document).on("click", "#btnSincronizarCatalogo", function() {
         cancelButtonText: "Cancelar",
         confirmButtonText: "Sí, sincronizar"
     }).then(function(result) {
-        
+
         if (result.value) {
             iniciarSincronizacionCatalogo();
         }
@@ -739,19 +726,19 @@ $(document).on("click", "#btnSincronizarCatalogo", function() {
 });
 
 function iniciarSincronizacionCatalogo() {
-    
+
     procesoSincronizacion = true;
-    
+
     // Cambiar estado del botón
     $("#btnSincronizarCatalogo")
         .html('<i class="fa fa-spinner fa-spin"></i> Sincronizando...')
         .prop('disabled', true)
         .removeClass('btn-success')
         .addClass('btn-warning');
-    
+
     // Mostrar modal de progreso
     mostrarModalProgreso();
-    
+
     $.ajax({
         url: "ajax/sucursales.ajax.php",
         method: "POST",
@@ -759,11 +746,11 @@ function iniciarSincronizacionCatalogo() {
         dataType: "json",
         timeout: 3600000, // 1 hora timeout para tu servidor de 8GB
         success: function(respuesta) {
-            
+
             ocultarModalProgreso();
-            
+
             if (respuesta.success) {
-                
+
                 swal({
                     type: "success",
                     title: "¡Sincronización completada!",
@@ -772,9 +759,9 @@ function iniciarSincronizacionCatalogo() {
                 }).then(function() {
                     tablaSucursales.ajax.reload();
                 });
-                
+
             } else {
-                
+
                 swal({
                     type: "warning",
                     title: "Sincronización completada con errores",
@@ -784,15 +771,15 @@ function iniciarSincronizacionCatalogo() {
             }
         },
         error: function(xhr, status, error) {
-            
+
             ocultarModalProgreso();
-            
+
             var mensaje = "Error de comunicación con el servidor";
-            
+
             if (status === "timeout") {
                 mensaje = "La sincronización tardó demasiado. Verifique manualmente el estado de las sucursales.";
             }
-            
+
             swal({
                 type: "error",
                 title: "Error en sincronización",
@@ -800,9 +787,9 @@ function iniciarSincronizacionCatalogo() {
             });
         },
         complete: function() {
-            
+
             procesoSincronizacion = false;
-            
+
             // Restaurar botón
             $("#btnSincronizarCatalogo")
                 .html('<i class="fa fa-refresh"></i> Sincronizar Catálogo Maestro')
@@ -817,7 +804,7 @@ function iniciarSincronizacionCatalogo() {
 MODAL DE PROGRESO DE SINCRONIZACIÓN
 =============================================*/
 function mostrarModalProgreso() {
-    
+
     var modalHTML = `
         <div class="modal fade" id="modalProgresoSync" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog">
@@ -845,7 +832,7 @@ function mostrarModalProgreso() {
             </div>
         </div>
     `;
-    
+
     $("body").append(modalHTML);
     $("#modalProgresoSync").modal("show");
 }
@@ -863,22 +850,22 @@ VALIDACIONES DE FORMULARIOS
 
 // Validación en tiempo real de URL Base
 $(document).on("blur", "#urlBaseLocal", function() {
-    
+
     var url = $(this).val().trim();
-    
+
     if (url) {
-        
+
         // Validar formato de URL
         var regex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
-        
+
         if (regex.test(url)) {
             $(this).parent().removeClass("has-error").addClass("has-success");
-            
+
             // Auto-completar protocolo si no existe
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
                 $(this).val('http://' + url);
             }
-            
+
         } else {
             $(this).parent().removeClass("has-success").addClass("has-error");
         }
@@ -887,12 +874,12 @@ $(document).on("blur", "#urlBaseLocal", function() {
 
 // Validación de email
 $(document).on("blur", "#emailLocal", function() {
-    
+
     var email = $(this).val().trim();
-    
+
     if (email) {
         var regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        
+
         if (regex.test(email)) {
             $(this).parent().removeClass("has-error").addClass("has-success");
         } else {
@@ -903,9 +890,9 @@ $(document).on("blur", "#emailLocal", function() {
 
 // Formatear teléfono
 $(document).on("input", "#telefonoLocal", function() {
-    
+
     var telefono = $(this).val().replace(/\D/g, '');
-    
+
     if (telefono.length >= 7) {
         // Formato colombiano: (000) 000-0000
         if (telefono.length === 10) {
@@ -921,11 +908,11 @@ ENVÍO DE FORMULARIOS
 
 // Formulario de configuración local
 $("#formConfigurarLocal").on("submit", function(e) {
-    
+
     e.preventDefault();
-    
+
     var formData = $(this).serialize();
-    
+
     swal({
         title: "¿Guardar configuración?",
         text: "Se actualizarán los datos de esta sucursal",
@@ -936,9 +923,9 @@ $("#formConfigurarLocal").on("submit", function(e) {
         cancelButtonText: "Cancelar",
         confirmButtonText: "Sí, guardar"
     }).then(function(result) {
-        
+
         if (result.value) {
-            
+
             // El formulario se enviará normalmente al controlador
             $("#formConfigurarLocal")[0].submit();
         }
@@ -947,11 +934,11 @@ $("#formConfigurarLocal").on("submit", function(e) {
 
 // Formulario de edición de sucursal
 $("#formEditarSucursal").on("submit", function(e) {
-    
+
     e.preventDefault();
-    
+
     var formData = $(this).serialize();
-    
+
     swal({
         title: "¿Actualizar sucursal?",
         text: "Se guardarán los cambios realizados",
@@ -962,9 +949,9 @@ $("#formEditarSucursal").on("submit", function(e) {
         cancelButtonText: "Cancelar",
         confirmButtonText: "Sí, actualizar"
     }).then(function(result) {
-        
+
         if (result.value) {
-            
+
             // El formulario se enviará normalmente al controlador
             $("#formEditarSucursal")[0].submit();
         }
@@ -978,20 +965,20 @@ UTILIDADES ADICIONALES
 // Función para formatear fechas
 function formatearFecha(fecha) {
     if (!fecha || fecha === '0000-00-00 00:00:00') return 'Nunca';
-    
+
     var date = new Date(fecha);
     return date.toLocaleDateString('es-CO') + ' ' + date.toLocaleTimeString('es-CO');
 }
 
 // Función para validar conexión de red
 function validarConexionRed() {
-    
+
     return navigator.onLine;
 }
 
 // Limpiar formularios al cerrar modales
 $("#modalConfigurarLocal, #modalEditarSucursal").on("hidden.bs.modal", function() {
-    
+
     $(this).find("form")[0].reset();
     $(this).find(".has-error, .has-success").removeClass("has-error has-success");
 });
@@ -1000,7 +987,7 @@ $("#modalConfigurarLocal, #modalEditarSucursal").on("hidden.bs.modal", function(
 CLONAR SUCURSAL
 =============================================*/
 $(document).on('click', '#btnClonarSucursal', function() {
-    
+
     swal({
         title: "¿Clonar Sucursal?",
         html: `
@@ -1039,4 +1026,4 @@ $(document).on('click', '#btnClonarSucursal', function() {
     });
 });
 
-//console.log("Módulo de Sucursales cargado correctamente - AdminV5");
+//

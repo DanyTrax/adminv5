@@ -6,38 +6,35 @@ OVERRIDE INMEDIATO PARA CORREGIR ERRORES DE CONSOLE
 window.actualizarContador = function(info) {
     // Validación defensiva inmediata
     if (!info || typeof info !== 'object' || info === undefined || info === null) {
-        console.log('actualizarContador: info es undefined o inválido - usando valores por defecto');
-        return; // Salir silenciosamente
+return; // Salir silenciosamente
     }
-    
+
     try {
         const recordsTotal = parseInt(info.recordsTotal) || 0;
         const recordsFiltered = parseInt(info.recordsFiltered) || recordsTotal;
-        
+
         // Solo proceder si hay datos válidos
         if (recordsTotal >= 0) {
-            console.log(`Contador actualizado correctamente: ${recordsTotal} productos`);
-        }
+}
     } catch (error) {
-        console.warn('Error en actualizarContador (ignorado):', error.message);
-    }
+}
 };
 
 // ✅ INTERCEPTOR DE setTimeout PROBLEMÁTICO
 (function() {
     var originalSetTimeout = window.setTimeout;
-    
+
     window.setTimeout = function(callback, delay) {
         if (typeof callback === 'function') {
             var wrappedCallback = function() {
                 try {
                     callback();
                 } catch (error) {
-                    if (error.message && (error.message.includes('recordsTotal') || 
+                    if (error.message && (error.message.includes('recordsTotal') ||
+
                                          error.message.includes('info is undefined') ||
                                          error.message.includes("can't access property"))) {
-                        console.warn('❌ Error de recordsTotal interceptado y SUPRIMIDO');
-                        return; // Suprimir el error
+return; // Suprimir el error
                     } else {
                         throw error; // Re-lanzar otros errores
                     }
@@ -53,12 +50,12 @@ window.actualizarContador = function(info) {
 window.addEventListener('error', function(event) {
     if (event.error && event.error.message) {
         const mensaje = event.error.message;
-        if (mensaje.includes('recordsTotal') || 
-            mensaje.includes('info is undefined') || 
+        if (mensaje.includes('recordsTotal') ||
+
+            mensaje.includes('info is undefined') ||
+
             mensaje.includes("can't access property")) {
-            
-            console.warn('🔇 Error de DataTable suprimido:', mensaje);
-            event.preventDefault();
+event.preventDefault();
             event.stopPropagation();
             return false; // Evitar que se muestre en consola
         }
@@ -67,34 +64,23 @@ window.addEventListener('error', function(event) {
 
 // ✅ VERIFICACIONES SEGURAS
 $(document).ready(function() {
-    console.log('🔧 Interceptores de error aplicados para DataTable');
-    
-    // Verificar si estamos en la página correcta
-    const enPaginaCatalogo = window.location.href.includes('catalogo-maestro') || 
+// Verificar si estamos en la página correcta
+    const enPaginaCatalogo = window.location.href.includes('catalogo-maestro') ||
+
                             (typeof RUTA_ACTUAL !== 'undefined' && RUTA_ACTUAL === 'catalogo-maestro');
-    
+
     if (enPaginaCatalogo) {
-        console.log('📋 Página de catálogo maestro detectada');
-        
-        // Dar tiempo para que se inicialice la página
+// Dar tiempo para que se inicialice la página
         setTimeout(function() {
             if ($('.tabla-catalogo-maestro').length === 0) {
-                console.log('ℹ️  Tabla .tabla-catalogo-maestro no encontrada (normal si no hay productos)');
-            } else {
-                console.log('✅ Tabla .tabla-catalogo-maestro encontrada');
-                
-                if (!$.fn.DataTable.isDataTable('.tabla-catalogo-maestro')) {
-                    console.log('⚠️  DataTable no inicializado, pero interceptores activos');
-                }
+} else {
+if (!$.fn.DataTable.isDataTable('.tabla-catalogo-maestro')) {
+}
             }
         }, 2000);
     } else {
-        console.log('ℹ️  No estás en página de catálogo maestro');
-    }
+}
 });
-
-console.log('✅ INTERCEPTORES DE ERROR ACTIVADOS - Los errores de DataTable serán suprimidos');
-
 /*=============================================
 FIN DEL OVERRIDE - CÓDIGO ORIGINAL CONTINÚA ABAJO
 =============================================*/
@@ -104,9 +90,8 @@ Sistema de Gestión Centralizada de Productos
 =============================================*/
 
 $(document).ready(function(){
-    //console.log('Catálogo Maestro JS - Sistema iniciado');
-    
-    // Inicializar componentes principales
+    //
+// Inicializar componentes principales
     inicializarDataTables();
     configurarEventosModales();
     configurarValidaciones();
@@ -117,15 +102,15 @@ CONFIGURAR DATATABLES PARA CATÁLOGO MAESTRO
 =============================================*/
 
 function inicializarDataTables() {
-    
+
     // Verificar si DataTable ya está inicializado
     if ($.fn.DataTable.isDataTable('.tabla-catalogo-maestro')) {
         $('.tabla-catalogo-maestro').DataTable().destroy();
     }
-    
+
     // Configurar DataTable para catálogo maestro
     $('.tabla-catalogo-maestro').DataTable({
-        
+
         // Configuración de idioma en español
         "language": {
             "sProcessing": "Procesando...",
@@ -151,18 +136,18 @@ function inicializarDataTables() {
                 "sSortDescending": ": Activar para ordenar la columna de manera descendente"
             }
         },
-        
+
         // Configuración de paginación
         "pageLength": 25,
         "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
-        
+
         // Configuración de responsive
         "responsive": true,
         "autoWidth": false,
-        
+
         // Configuración de ordenamiento
         "order": [[ 2, "asc" ]], // Ordenar por código por defecto
-        
+
         // Configuración de columnas
         "columnDefs": [
             {
@@ -236,35 +221,34 @@ function inicializarDataTables() {
                 "className": "text-center"
             }
         ],
-        
+
         // Configuración de scroll
         "scrollX": true,
         "scrollCollapse": true,
-        
+
         // Configuración de estado
         "stateSave": true,
         "stateDuration": 60 * 60 * 24,
-        
+
         // Configuración de procesamiento
         "processing": true,
         "serverSide": false,
-        
+
         // Configuración de búsqueda
         "search": {
             "regex": false,
             "smart": true
         },
-        
+
         // Callbacks
         "initComplete": function(settings, json) {
-            //console.log('DataTable del Catálogo Maestro inicializado correctamente');
-            
-            // Aplicar estilos
+            //
+// Aplicar estilos
             $('.dataTables_filter input').addClass('form-control form-control-sm');
             $('.dataTables_filter input').attr('placeholder', 'Buscar productos...');
             $('.dataTables_length select').addClass('form-control form-control-sm');
         },
-        
+
         "drawCallback": function(settings) {
             // Tooltip para botones
             $('[data-toggle="tooltip"]').tooltip();
@@ -277,10 +261,10 @@ GENERAR CÓDIGO AUTOMÁTICO
 =============================================*/
 
 function configurarEventosModales() {
-    
+
     // Generar código automático al abrir el modal de agregar
     $('#modalAgregarProductoMaestro').on('show.bs.modal', function () {
-        
+
         var datos = new FormData();
         datos.append("accion", "obtenerCodigo");
 
@@ -296,8 +280,7 @@ function configurarEventosModales() {
                 $("#nuevoCodigoMaestro").val(respuesta);
             },
             error: function(xhr, status, error) {
-                console.error("Error al obtener código:", error);
-                $("#nuevoCodigoMaestro").val("PROD0001");
+$("#nuevoCodigoMaestro").val("PROD0001");
             }
         });
     });
@@ -310,7 +293,7 @@ SUBIR IMAGEN - NUEVA
 $(".nuevaImagenMaestro").change(function(){
 
     var imagen = this.files[0];
-    
+
     if(imagen["type"] != "image/jpeg" && imagen["type"] != "image/png"){
 
         $(".nuevaImagenMaestro").val("");
@@ -352,7 +335,7 @@ SUBIR IMAGEN - EDITAR
 $('input[name="editarImagenMaestro"]').change(function(){
 
     var imagen = this.files[0];
-    
+
     if(imagen["type"] != "image/jpeg" && imagen["type"] != "image/png"){
 
         $('input[name="editarImagenMaestro"]').val("");
@@ -392,26 +375,25 @@ MOSTRAR/OCULTAR CONFIGURACIÓN DE DIVISIÓN - MEJORADO
 =============================================*/
 
 $(document).ready(function(){
-    
+
     // Configurar eventos para checkbox de agregar
     $(document).on('change', '#esDivisibleMaestro', function(){
-        
-        //console.log("Checkbox agregar cambiado:", $(this).prop("checked"));
-        
-        var divisionConfig = $("#divisionConfigMaestro");
-        
+
+        //
+var divisionConfig = $("#divisionConfigMaestro");
+
         if(divisionConfig.length === 0) {
-            //console.error("❌ Elemento #divisionConfigMaestro no encontrado");
-            return;
+            //
+return;
         }
-        
+
         if($(this).prop("checked")) {
-            //console.log("✅ Mostrando configuración de división - agregar");
-            divisionConfig.slideDown(300);
+            //
+divisionConfig.slideDown(300);
         } else {
-            //console.log("❌ Ocultando configuración de división - agregar");
-            divisionConfig.slideUp(300);
-            
+            //
+divisionConfig.slideUp(300);
+
             // Limpiar campos
             $("#codigoHijoMitad").val("");
             $("#codigoHijoTercio").val("");
@@ -419,31 +401,30 @@ $(document).ready(function(){
             $("input[name='buscarHijoMitad']").val("");
             $("input[name='buscarHijoTercio']").val("");
             $("input[name='buscarHijoCuarto']").val("");
-            
+
             // Ocultar resultados
             $("#resultadosMitad, #resultadosTercio, #resultadosCuarto").hide().empty();
         }
     });
-    
+
     // Configurar eventos para checkbox de editar
     $(document).on('change', '#editarEsDivisibleMaestro', function(){
 
-        //console.log("Checkbox editar cambiado:", $(this).prop("checked"));
+        //
+var divisionConfig = $("#divisionConfigEditarMaestro");
 
-        var divisionConfig = $("#divisionConfigEditarMaestro");
-        
         if(divisionConfig.length === 0) {
-            //console.error("❌ Elemento #divisionConfigEditarMaestro no encontrado");
-            return;
+            //
+return;
         }
-        
+
         if($(this).prop("checked")) {
-            //console.log("✅ Mostrando configuración de división - editar");
-            divisionConfig.slideDown(300);
+            //
+divisionConfig.slideDown(300);
         } else {
-            //console.log("❌ Ocultando configuración de división - editar");
-            divisionConfig.slideUp(300);
-            
+            //
+divisionConfig.slideUp(300);
+
             // Limpiar campos
             $("#editarCodigoHijoMitad").val("");
             $("#editarCodigoHijoTercio").val("");
@@ -451,7 +432,7 @@ $(document).ready(function(){
             $("#buscarEditarHijoMitad").val("");
             $("#buscarEditarHijoTercio").val("");
             $("#buscarEditarHijoCuarto").val("");
-            
+
             // Ocultar resultados
             $("#editarResultadosMitad, #editarResultadosTercio, #editarResultadosCuarto").hide().empty();
         }
@@ -463,12 +444,12 @@ BUSCAR PRODUCTOS PARA HIJOS (AJAX)
 =============================================*/
 
 function buscarProductosHijos(inputBusqueda, contenedorResultados, inputCodigo) {
-    
+
     $(inputBusqueda).on('input', function(){
         var termino = $(this).val();
-        
+
         if(termino.length > 2) {
-            
+
             var datos = new FormData();
             datos.append("accion", "buscarProductos");
             datos.append("termino", termino);
@@ -482,11 +463,11 @@ function buscarProductosHijos(inputBusqueda, contenedorResultados, inputCodigo) 
                 processData: false,
                 dataType: "json",
                 success: function(respuesta){
-                    
+
                     $(contenedorResultados).empty().show();
-                    
+
                     if(respuesta.length > 0) {
-                        
+
                         $.each(respuesta, function(index, producto){
                             $(contenedorResultados).append(
                                 '<a href="#" class="list-group-item seleccionar-producto" data-codigo="'+producto.codigo+'" data-descripcion="'+producto.descripcion+'" data-precio="'+producto.precio_venta+'">' +
@@ -494,34 +475,33 @@ function buscarProductosHijos(inputBusqueda, contenedorResultados, inputCodigo) 
                                 '</a>'
                             );
                         });
-                        
+
                     } else {
                         $(contenedorResultados).append('<div class="list-group-item">No se encontraron productos</div>');
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error("Error en búsqueda:", error);
-                    $(contenedorResultados).hide();
+$(contenedorResultados).hide();
                 }
             });
-            
+
         } else {
             $(contenedorResultados).hide();
         }
     });
-    
+
     // Seleccionar producto
     $(document).on('click', contenedorResultados + ' .seleccionar-producto', function(e){
         e.preventDefault();
-        
+
         var codigo = $(this).data('codigo');
         var descripcion = $(this).data('descripcion');
-        
+
         $(inputBusqueda).val(descripcion + ' ('+codigo+')');
         $(inputCodigo).val(codigo);
         $(contenedorResultados).hide();
     });
-    
+
     // Ocultar resultados al hacer click fuera
     $(document).on('click', function(e) {
         if (!$(e.target).closest(inputBusqueda).length && !$(e.target).closest(contenedorResultados).length) {
@@ -532,12 +512,12 @@ function buscarProductosHijos(inputBusqueda, contenedorResultados, inputCodigo) 
 
 // Aplicar búsqueda a todos los campos de hijos
 $(document).ready(function(){
-    
+
     // Modal agregar
     buscarProductosHijos('input[name="buscarHijoMitad"]', '#resultadosMitad', '#codigoHijoMitad');
     buscarProductosHijos('input[name="buscarHijoTercio"]', '#resultadosTercio', '#codigoHijoTercio');
     buscarProductosHijos('input[name="buscarHijoCuarto"]', '#resultadosCuarto', '#codigoHijoCuarto');
-    
+
     // Modal editar
     buscarProductosHijos('#buscarEditarHijoMitad', '#editarResultadosMitad', '#editarCodigoHijoMitad');
     buscarProductosHijos('#buscarEditarHijoTercio', '#editarResultadosTercio', '#editarCodigoHijoTercio');
@@ -549,57 +529,51 @@ PROCESAR CAMPOS DE DIVISIÓN ANTES DE ENVIAR
 =============================================*/
 
 $(document).on("submit", "form", function(e) {
-    
+
     // Solo para el formulario de editar producto maestro
     if($(this).find("#idProductoMaestro").length > 0) {
 
-        //console.log("=== PROCESANDO FORMULARIO EDITAR ===");
+        //
+var esDivisible = $("#editarEsDivisibleMaestro").prop("checked");
+        //
+if(!esDivisible) {
 
-        var esDivisible = $("#editarEsDivisibleMaestro").prop("checked");
-        //console.log("Es divisible:", esDivisible);
-
-        if(!esDivisible) {
-            
             // Si NO es divisible, limpiar todos los campos
             $("#editarCodigoHijoMitad").val("");
             $("#editarCodigoHijoTercio").val("");
             $("#editarCodigoHijoCuarto").val("");
-            
-            //console.log("Limpiando todos los campos de división");
-            
-        } else {
-            
+
+            //
+} else {
+
             // Si ES divisible, procesar campos individualmente
             var mitad = $("#editarCodigoHijoMitad").val();
             var tercio = $("#editarCodigoHijoTercio").val();
             var cuarto = $("#editarCodigoHijoCuarto").val();
-            
-            /*console.log("Valores antes de procesar:");
-            console.log("- Mitad: '" + mitad + "'");
-            console.log("- Tercio: '" + tercio + "'");
-            console.log("- Cuarto: '" + cuarto + "'");
-            */
+
+            /*
+*/
             // ✅ ASEGURAR QUE LOS CAMPOS VACÍOS SE ENVÍEN COMO CADENA VACÍA
             if(!mitad || mitad.trim() === "") {
                 $("#editarCodigoHijoMitad").val("");
-                //console.log("Campo mitad limpiado");
-            }
-            
+                //
+}
+
             if(!tercio || tercio.trim() === "") {
                 $("#editarCodigoHijoTercio").val("");
-                //console.log("Campo tercio limpiado");
-            }
-            
+                //
+}
+
             if(!cuarto || cuarto.trim() === "") {
                 $("#editarCodigoHijoCuarto").val("");
-                //console.log("Campo cuarto limpiado");
-            }
+                //
+}
         }
-        //console.log("Valores finales a enviar:");
-        //console.log("- Mitad: '" + $("#editarCodigoHijoMitad").val() + "'");
-        //console.log("- Tercio: '" + $("#editarCodigoHijoTercio").val() + "'");
-        //console.log("- Cuarto: '" + $("#editarCodigoHijoCuarto").val() + "'");
-    }
+        //
+//
+//
+//
+}
 });
 
 /*=============================================
@@ -609,9 +583,8 @@ EDITAR PRODUCTO MAESTRO - CORREGIDO LIMPIEZA
 $(document).on("click", ".btnEditarProductoMaestro", function(){
 
     var idProductoMaestro = $(this).attr("idProductoMaestro");
-    //console.log("Editando producto ID:", idProductoMaestro);
-
-    var datos = new FormData();
+    //
+var datos = new FormData();
     datos.append("idProductoMaestro", idProductoMaestro);
 
     $.ajax({
@@ -623,11 +596,10 @@ $(document).on("click", ".btnEditarProductoMaestro", function(){
         processData: false,
         dataType: "json",
         success: function(respuesta){
-            
-            //console.log("Respuesta del servidor:", respuesta);
-            
-            if(respuesta && typeof respuesta === 'object') {
-                
+
+            //
+if(respuesta && typeof respuesta === 'object') {
+
                 // Llenar campos básicos
                 $("#idProductoMaestro").val(respuesta["id"] || "");
                 $("#editarCodigoMaestro").val(respuesta["codigo"] || "");
@@ -641,27 +613,25 @@ $(document).on("click", ".btnEditarProductoMaestro", function(){
                 } else {
                     $(".previsualizarMaestroEditar").attr("src", "vistas/img/productos/default/anonymous.png");
                 }
-                
+
                 $("#imagenActualMaestro").val(respuesta["imagen"] || "");
 
                 // ✅ CONFIGURAR DIVISIÓN - LIMPIEZA CORRECTA
-                //console.log("Es divisible:", respuesta["es_divisible"]);
-                
-                if(respuesta["es_divisible"] == "1" || respuesta["es_divisible"] == 1) {
-                    
-                    //console.log("✅ Producto ES divisible");
-                    
-                    // Marcar checkbox
+                //
+if(respuesta["es_divisible"] == "1" || respuesta["es_divisible"] == 1) {
+
+                    //
+// Marcar checkbox
                     $("#editarEsDivisibleMaestro").prop("checked", true);
-                    
+
                     // Mostrar configuración de división
                     $("#divisionConfigEditarMaestro").show();
-                    
+
                     // Cargar códigos hijos existentes
                     $("#editarCodigoHijoMitad").val(respuesta["codigo_hijo_mitad"] || "");
                     $("#editarCodigoHijoTercio").val(respuesta["codigo_hijo_tercio"] || "");
                     $("#editarCodigoHijoCuarto").val(respuesta["codigo_hijo_cuarto"] || "");
-                    
+
                     // Cargar descripciones en campos de búsqueda
                     if(respuesta["codigo_hijo_mitad"]) {
                         cargarDescripcionHijo("mitad", respuesta["codigo_hijo_mitad"], "#buscarEditarHijoMitad");
@@ -672,17 +642,16 @@ $(document).on("click", ".btnEditarProductoMaestro", function(){
                     if(respuesta["codigo_hijo_cuarto"]) {
                         cargarDescripcionHijo("cuarto", respuesta["codigo_hijo_cuarto"], "#buscarEditarHijoCuarto");
                     }
-                    
+
                 } else {
-                    
-                    //console.log("❌ Producto NO es divisible - limpiando campos");
-                    
-                    // Desmarcar checkbox
+
+                    //
+// Desmarcar checkbox
                     $("#editarEsDivisibleMaestro").prop("checked", false);
-                    
+
                     // Ocultar configuración de división
                     $("#divisionConfigEditarMaestro").hide();
-                    
+
                     // ✅ LIMPIAR COMPLETAMENTE LOS CAMPOS DE HIJOS
                     $("#editarCodigoHijoMitad").val("");
                     $("#editarCodigoHijoTercio").val("");
@@ -690,16 +659,16 @@ $(document).on("click", ".btnEditarProductoMaestro", function(){
                     $("#buscarEditarHijoMitad").val("");
                     $("#buscarEditarHijoTercio").val("");
                     $("#buscarEditarHijoCuarto").val("");
-                    
+
                     // Ocultar resultados de búsqueda
                     $("#editarResultadosMitad").hide().empty();
-                    $("#editarResultadosTercio").hide().empty(); 
+                    $("#editarResultadosTercio").hide().empty();
+
                     $("#editarResultadosCuarto").hide().empty();
                 }
-                
+
             } else {
-                console.error("Respuesta no válida:", respuesta);
-                swal({
+swal({
                     type: "error",
                     title: "Error",
                     text: "No se pudo cargar la información del producto"
@@ -708,8 +677,7 @@ $(document).on("click", ".btnEditarProductoMaestro", function(){
 
         },
         error: function(xhr, status, error) {
-            console.error("Error AJAX:", error);
-            swal({
+swal({
                 type: "error",
                 title: "Error",
                 text: "No se pudo cargar la información del producto"
@@ -723,16 +691,15 @@ FUNCIÓN PARA CARGAR DESCRIPCIÓN DE PRODUCTOS HIJOS
 =============================================*/
 
 function cargarDescripcionHijo(tipo, codigo, campoInput) {
-    
+
     if(!codigo || codigo === "" || codigo === null) {
-        //console.log("No hay código para tipo:", tipo);
-        $(campoInput).val("");
+        //
+$(campoInput).val("");
         return;
     }
-    
-    //console.log("Cargando descripción para " + tipo + " con código:", codigo);
-    
-    var datos = new FormData();
+
+    //
+var datos = new FormData();
     datos.append("accion", "obtenerDescripcion");
     datos.append("codigo", codigo);
 
@@ -745,20 +712,19 @@ function cargarDescripcionHijo(tipo, codigo, campoInput) {
         processData: false,
         dataType: "json",
         success: function(respuesta){
-            
+
             if(respuesta && respuesta.descripcion) {
                 var textoCompleto = respuesta.descripcion + " (" + codigo + ")";
                 $(campoInput).val(textoCompleto);
-                //console.log("✅ Descripción cargada para " + tipo + ":", textoCompleto);
-            } else {
+                //
+} else {
                 // Si no encuentra descripción, solo mostrar el código
                 $(campoInput).val("Código: " + codigo);
-                //console.log("⚠️ Solo código para " + tipo + ":", codigo);
-            }
+                //
+}
         },
         error: function(xhr, status, error) {
-            console.error("Error al cargar descripción para " + tipo + ":", error);
-            $(campoInput).val("Código: " + codigo);
+$(campoInput).val("Código: " + codigo);
         }
     });
 }
@@ -800,7 +766,7 @@ $("#nuevoCodigoMaestro").change(function(){
     var codigoProducto = $(this).val();
 
     if(codigoProducto.length > 0){
-        
+
         var datos = new FormData();
         datos.append("validarCodigo", codigoProducto);
 
@@ -813,15 +779,14 @@ $("#nuevoCodigoMaestro").change(function(){
             processData: false,
             dataType: "json",
             success:function(respuesta){
-                
+
                 if(respuesta){
                     $("#nuevoCodigoMaestro").parent().after('<div class="alert alert-warning">Este código ya existe en el catálogo maestro</div>');
                     $("#nuevoCodigoMaestro").val("");
                 }
             },
             error: function(xhr, status, error) {
-                console.error("Error al validar código:", error);
-            }
+}
         });
     }
 });
@@ -834,7 +799,7 @@ $(document).on("click", ".btnSincronizarProducto", function(){
 
     var codigoMaestro = $(this).attr("codigoMaestro");
     var btnElement = $(this);
-    
+
     // Cambiar estado del botón
     btnElement.html('<i class="fa fa-spinner fa-spin"></i>').prop('disabled', true);
 
@@ -851,10 +816,10 @@ $(document).on("click", ".btnSincronizarProducto", function(){
         processData: false,
         dataType: "json",
         success: function(respuesta){
-            
+
             // Restaurar botón
             btnElement.html('<i class="fa fa-refresh"></i>').prop('disabled', false);
-            
+
             if(respuesta.success){
                 swal({
                     type: "success",
@@ -873,9 +838,7 @@ $(document).on("click", ".btnSincronizarProducto", function(){
         error: function(xhr, status, error) {
             // Restaurar botón
             btnElement.html('<i class="fa fa-refresh"></i>').prop('disabled', false);
-            
-            console.error("Error en sincronización:", error);
-            swal({
+swal({
                 type: "error",
                 title: "Error",
                 text: "No se pudo sincronizar el producto"
@@ -891,7 +854,7 @@ SINCRONIZACIÓN MASIVA
 $("#btnSincronizarTodosProductos").click(function(){
 
     var btnElement = $(this);
-    
+
     swal({
         title: '¿Sincronizar todos los productos?',
         text: "Esta acción sincronizará todos los productos del catálogo maestro con los productos locales. Puede tomar varios minutos.",
@@ -904,10 +867,10 @@ $("#btnSincronizarTodosProductos").click(function(){
     }).then(function(result){
 
         if(result.value){
-            
+
             // Cambiar estado del botón
             btnElement.html('<i class="fa fa-spinner fa-spin"></i> Sincronizando...').prop('disabled', true);
-            
+
             var datos = new FormData();
             datos.append("accion", "sincronizarTodos");
 
@@ -920,10 +883,10 @@ $("#btnSincronizarTodosProductos").click(function(){
                 processData: false,
                 dataType: "json",
                 success: function(respuesta){
-                    
+
                     // Restaurar botón
                     btnElement.html('<i class="fa fa-refresh"></i> Sincronizar Todos').prop('disabled', false);
-                    
+
                     if(respuesta.success){
                         swal({
                             type: "success",
@@ -943,9 +906,7 @@ $("#btnSincronizarTodosProductos").click(function(){
                 error: function(xhr, status, error) {
                     // Restaurar botón
                     btnElement.html('<i class="fa fa-refresh"></i> Sincronizar Todos').prop('disabled', false);
-                    
-                    console.error("Error en sincronización masiva:", error);
-                    swal({
+swal({
                         type: "error",
                         title: "Error",
                         text: "No se pudo completar la sincronización masiva"
@@ -966,9 +927,9 @@ $("#btnImportarExcel").click(function(){
 
 $("#formImportarExcel").on("submit", function(e){
     e.preventDefault();
-    
+
     var archivo = $("#archivoExcel")[0].files[0];
-    
+
     if(!archivo){
         swal({
             type: "warning",
@@ -977,7 +938,7 @@ $("#formImportarExcel").on("submit", function(e){
         });
         return;
     }
-    
+
     var extension = archivo.name.split('.').pop().toLowerCase();
     if(!['xls', 'xlsx', 'csv'].includes(extension)){
         swal({
@@ -987,7 +948,7 @@ $("#formImportarExcel").on("submit", function(e){
         });
         return;
     }
-    
+
     if(archivo.size > 5000000){ // 5MB
         swal({
             type: "error",
@@ -996,16 +957,16 @@ $("#formImportarExcel").on("submit", function(e){
         });
         return;
     }
-    
+
     // Mostrar progreso
     $("#modalImportarExcel .progress").show();
     $("#btnProcesarImportacion").html('<i class="fa fa-spinner fa-spin"></i> Procesando...').prop('disabled', true);
-    
+
     // Enviar archivo
     var formData = new FormData();
     formData.append("importarExcel", "true");
     formData.append("archivoExcel", archivo);
-    
+
     $.ajax({
         url: "index.php?ruta=catalogo-maestro",
         method: "POST",
@@ -1026,15 +987,15 @@ $("#formImportarExcel").on("submit", function(e){
             return myXhr;
         },
         success: function(respuesta){
-            
+
             // Restaurar botón
             $("#btnProcesarImportacion").html('<i class="fa fa-upload"></i> Procesar Importación').prop('disabled', false);
             $("#modalImportarExcel .progress").hide();
             $("#modalImportarExcel .progress-bar").css('width', '0%').attr('aria-valuenow', 0).text('0%');
-            
+
             // Cerrar modal y recargar página
             $("#modalImportarExcel").modal("hide");
-            
+
             // La respuesta del controlador incluye el script SweetAlert
             // No necesitamos procesar JSON aquí
             setTimeout(function() {
@@ -1045,9 +1006,7 @@ $("#formImportarExcel").on("submit", function(e){
             // Restaurar botón
             $("#btnProcesarImportacion").html('<i class="fa fa-upload"></i> Procesar Importación').prop('disabled', false);
             $("#modalImportarExcel .progress").hide();
-            
-            console.error("Error en importación:", error);
-            swal({
+swal({
                 type: "error",
                 title: "Error al importar",
                 text: "No se pudo procesar el archivo de importación"
@@ -1061,7 +1020,7 @@ CONFIGURAR VALIDACIONES
 =============================================*/
 
 function configurarValidaciones() {
-    
+
     // Validación de precios (solo números)
     $('input[name="nuevoPrecioVentaMaestro"], input[name="editarPrecioVentaMaestro"]').on('input', function(){
         var precio = parseFloat($(this).val());
@@ -1069,7 +1028,7 @@ function configurarValidaciones() {
             $(this).val(0);
         }
     });
-    
+
     // Validación de códigos (solo alfanuméricos)
     $('#nuevoCodigoMaestro, #editarCodigoMaestro').on('input', function(){
         var codigo = $(this).val();
@@ -1079,7 +1038,7 @@ function configurarValidaciones() {
             $(this).val(codigoLimpio);
         }
     });
-    
+
     // Validación de descripción (no vacía)
     $('#nuevaDescripcionMaestro, #editarDescripcionMaestro').on('blur', function(){
         var descripcion = $(this).val().trim();
@@ -1093,7 +1052,7 @@ function configurarValidaciones() {
             $(this).next('.invalid-feedback').remove();
         }
     });
-    
+
     // Validación de categoría
     $('#nuevaCategoriaMaestro, #editarCategoriaMaestro').on('change', function(){
         if($(this).val() === '' || $(this).val() === '0') {
@@ -1109,24 +1068,24 @@ FILTROS AVANZADOS
 =============================================*/
 
 $(document).ready(function(){
-    
+
     // Configurar filtro por categoría
     $('#filtroCategoria').on('change', function() {
         var categoria = $(this).val();
         var table = $('.tabla-catalogo-maestro').DataTable();
-        
+
         if (categoria === '' || categoria === '0') {
             table.column(4).search('').draw();
         } else {
             table.column(4).search(categoria).draw();
         }
     });
-    
+
     // Configurar filtro por productos divisibles
     $('#filtroDivisible').on('change', function() {
         var divisible = $(this).val();
         var table = $('.tabla-catalogo-maestro').DataTable();
-        
+
         if (divisible === '') {
             table.column(6).search('').draw();
         } else {
@@ -1134,24 +1093,24 @@ $(document).ready(function(){
             table.column(6).search(textoFiltro).draw();
         }
     });
-    
+
     // Limpiar todos los filtros
     $('#limpiarFiltros').on('click', function() {
         $('#filtroCategoria').val('');
         $('#filtroDivisible').val('');
         $('.tabla-catalogo-maestro').DataTable().search('').columns().search('').draw();
-        
+
         // Limpiar campos de búsqueda personalizados
         $('#buscarCodigo').val('');
         $('#buscarDescripcion').val('');
     });
-    
+
     // Buscar por código específico
     $('#buscarCodigo').on('keyup', function() {
         var codigo = $(this).val();
         $('.tabla-catalogo-maestro').DataTable().column(2).search(codigo).draw();
     });
-    
+
     // Buscar por descripción específica
     $('#buscarDescripcion').on('keyup', function() {
         var descripcion = $(this).val();
@@ -1164,19 +1123,18 @@ LIMPIAR CAMPOS AL CERRAR MODALES - CORREGIDO
 =============================================*/
 
 $('#modalAgregarProductoMaestro').on('hidden.bs.modal', function () {
-    
-    //console.log("Limpiando modal agregar");
-    
-    // Resetear formulario
+
+    //
+// Resetear formulario
     $(this).find('form')[0].reset();
-    
+
     // Limpiar imagen
     $(".previsualizarMaestro").attr("src", "vistas/img/productos/default/anonymous.png");
-    
+
     // ✅ RESETEAR DIVISIÓN CORRECTAMENTE
     $("#esDivisibleMaestro").prop("checked", false);
     $("#divisionConfigMaestro").hide();
-    
+
     // Limpiar campos de división
     $("#codigoHijoMitad").val("");
     $("#codigoHijoTercio").val("");
@@ -1184,34 +1142,33 @@ $('#modalAgregarProductoMaestro').on('hidden.bs.modal', function () {
     $("input[name='buscarHijoMitad']").val("");
     $("input[name='buscarHijoTercio']").val("");
     $("input[name='buscarHijoCuarto']").val("");
-    
+
     // Ocultar resultados de búsqueda
     $("#resultadosMitad").hide().empty();
     $("#resultadosTercio").hide().empty();
     $("#resultadosCuarto").hide().empty();
-    
+
     // Remover alertas y validaciones
     $(".alert").remove();
     $(this).find('.form-control').removeClass('is-invalid is-valid');
     $(this).find('.invalid-feedback').remove();
-    
-    //console.log("Modal agregar limpiado completamente");
+
+    //
 });
 
 $('#modalEditarProductoMaestro').on('hidden.bs.modal', function () {
-    
-    //console.log("Limpiando modal editar");
-    
-    // Resetear formulario
+
+    //
+// Resetear formulario
     $(this).find('form')[0].reset();
-    
+
     // Limpiar imagen
     $(".previsualizarMaestroEditar").attr("src", "vistas/img/productos/default/anonymous.png");
-    
+
     // ✅ RESETEAR DIVISIÓN CORRECTAMENTE
     $("#editarEsDivisibleMaestro").prop("checked", false);
     $("#divisionConfigEditarMaestro").hide();
-    
+
     // Limpiar campos de división
     $("#editarCodigoHijoMitad").val("");
     $("#editarCodigoHijoTercio").val("");
@@ -1219,12 +1176,12 @@ $('#modalEditarProductoMaestro').on('hidden.bs.modal', function () {
     $("#buscarEditarHijoMitad").val("");
     $("#buscarEditarHijoTercio").val("");
     $("#buscarEditarHijoCuarto").val("");
-    
+
     // Ocultar resultados de búsqueda
     $("#editarResultadosMitad").hide().empty();
     $("#editarResultadosTercio").hide().empty();
     $("#editarResultadosCuarto").hide().empty();
-    
+
     // Limpiar campos específicos
     $("#idProductoMaestro").val("");
     $("#editarCodigoMaestro").val("");
@@ -1232,13 +1189,13 @@ $('#modalEditarProductoMaestro').on('hidden.bs.modal', function () {
     $("#editarPrecioVentaMaestro").val("");
     $("#editarCategoriaMaestro").val("");
     $("#imagenActualMaestro").val("");
-    
+
     // Remover alertas y validaciones
     $(".alert").remove();
     $(this).find('.form-control').removeClass('is-invalid is-valid');
     $(this).find('.invalid-feedback').remove();
-    
-    //console.log("Modal editar limpiado completamente");
+
+    //
 });
 
 /*=============================================
@@ -1246,17 +1203,17 @@ LIMPIAR MODAL EDITAR
 =============================================*/
 
 $('#modalEditarProductoMaestro').on('hidden.bs.modal', function () {
-    
+
     // Resetear formulario
     $(this).find('form')[0].reset();
-    
+
     // Limpiar imagen
     $(".previsualizarMaestroEditar").attr("src", "vistas/img/productos/default/anonymous.png");
-    
+
     // Ocultar configuración de división
     $("#divisionConfigEditarMaestro").hide();
     $("#editarEsDivisibleMaestro").prop("checked", false);
-    
+
     // Limpiar campos de división
     $("#editarCodigoHijoMitad").val("");
     $("#editarCodigoHijoTercio").val("");
@@ -1264,19 +1221,19 @@ $('#modalEditarProductoMaestro').on('hidden.bs.modal', function () {
     $("#buscarEditarHijoMitad").val("");
     $("#buscarEditarHijoTercio").val("");
     $("#buscarEditarHijoCuarto").val("");
-    
+
     // Ocultar resultados de búsqueda
     $("#editarResultadosMitad").hide().empty();
     $("#editarResultadosTercio").hide().empty();
     $("#editarResultadosCuarto").hide().empty();
-    
+
     // Remover alertas
     $(".alert").remove();
-    
+
     // Limpiar validaciones visuales
     $(this).find('.form-control').removeClass('is-invalid is-valid');
     $(this).find('.invalid-feedback').remove();
-    
+
     // Limpiar campos específicos
     $("#idProductoMaestro").val("");
     $("#editarCodigoMaestro").val("");
@@ -1285,7 +1242,7 @@ $('#modalEditarProductoMaestro').on('hidden.bs.modal', function () {
     $("#editarCategoriaMaestro").val("");
     $("#imagenActualMaestro").val("");
 
-   //console.log("Modal editar limpiado completamente");
+   //
 });
 
 /*=============================================
@@ -1293,28 +1250,28 @@ LIMPIAR MODAL IMPORTAR EXCEL
 =============================================*/
 
 $('#modalImportarExcel').on('hidden.bs.modal', function () {
-    
+
     // Resetear formulario
     $(this).find('form')[0].reset();
-    
+
     // Limpiar input de archivo
     $("#archivoExcel").val("");
-    
+
     // Limpiar preview si existe
     $("#previewImportacion").empty().hide();
-    
+
     // Remover alertas
     $(".alert").remove();
-    
+
     // Limpiar validaciones visuales
     $(this).find('.form-control').removeClass('is-invalid is-valid');
     $(this).find('.invalid-feedback').remove();
-    
+
     // Resetear progreso si existe
     $(".progress-bar").css('width', '0%').attr('aria-valuenow', 0);
     $(".progress").hide();
 
-    //console.log("Modal importar limpiado completamente");
+    //
 });
 
 /*=============================================
@@ -1331,27 +1288,33 @@ function formatearPrecio(precio) {
 
 // Función para validar archivo antes de subir
 function validarArchivo(archivo, tiposPermitidos, tamañoMaximo) {
-    
+
     if (!archivo) {
         return { valido: false, mensaje: "No se seleccionó ningún archivo" };
     }
-    
+
     var extension = archivo.name.split('.').pop().toLowerCase();
     if (!tiposPermitidos.includes(extension)) {
-        return { 
-            valido: false, 
-            mensaje: "Formato no válido. Permitidos: " + tiposPermitidos.join(', ') 
+        return {
+
+            valido: false,
+
+            mensaje: "Formato no válido. Permitidos: " + tiposPermitidos.join(', ')
+
         };
     }
-    
+
     if (archivo.size > tamañoMaximo) {
         var tamañoMB = Math.round(tamañoMaximo / 1024 / 1024);
-        return { 
-            valido: false, 
-            mensaje: "El archivo no debe pesar más de " + tamañoMB + "MB" 
+        return {
+
+            valido: false,
+
+            mensaje: "El archivo no debe pesar más de " + tamañoMB + "MB"
+
         };
     }
-    
+
     return { valido: true, mensaje: "Archivo válido" };
 }
 
@@ -1362,8 +1325,10 @@ function actualizarContador() {
         var info = table.page.info();
         $('#contadorProductos').html(`
             <small class="text-muted">
-                <i class="fa fa-cubes"></i> 
-                Total: ${info.recordsTotal} productos | 
+                <i class="fa fa-cubes"></i>
+
+                Total: ${info.recordsTotal} productos |
+
                 Mostrando: ${info.recordsDisplay}
             </small>
         `);
@@ -1385,15 +1350,15 @@ TOOLTIP Y COMPONENTES UI
 =============================================*/
 
 $(document).ready(function(){
-    
+
     // Inicializar tooltips
     $('[data-toggle="tooltip"]').tooltip();
-    
+
     // Configurar tooltips dinámicos para elementos que se agregan después
     $(document).on('mouseenter', '[data-toggle="tooltip"]:not([data-original-title])', function() {
         $(this).tooltip();
     });
-    
+
     // Auto-ocultar alertas después de 5 segundos
     $(document).on('shown.bs.alert', '.alert', function() {
         var alert = $(this);
@@ -1401,20 +1366,20 @@ $(document).ready(function(){
             alert.fadeOut('slow');
         }, 5000);
     });
-    
+
     // Confirmar antes de salir si hay cambios sin guardar
     var formModificado = false;
-    
+
     // Detectar cambios en formularios
     $('#modalAgregarProductoMaestro form, #modalEditarProductoMaestro form').on('change input', function() {
         formModificado = true;
     });
-    
+
     // Resetear flag cuando se guarda
     $(document).on('submit', 'form', function() {
         formModificado = false;
     });
-    
+
     // Advertir antes de cerrar modal con cambios
     $('.modal').on('hide.bs.modal', function(e) {
         if (formModificado) {
@@ -1432,14 +1397,7 @@ MANEJO DE ERRORES AJAX GLOBAL
 =============================================*/
 
 $(document).ajaxError(function(event, xhr, settings, thrownError) {
-    
-    console.error("Error AJAX en catálogo maestro:", {
-        status: xhr.status,
-        error: thrownError,
-        url: settings.url
-    });
-    
-    // Si hay error 500 o similar, mostrar mensaje genérico
+// Si hay error 500 o similar, mostrar mensaje genérico
     if (xhr.status >= 500) {
         swal({
             type: "error",
@@ -1447,7 +1405,7 @@ $(document).ajaxError(function(event, xhr, settings, thrownError) {
             text: "Ha ocurrido un error interno. Por favor contacte al administrador."
         });
     }
-    
+
     // Si hay error 404
     if (xhr.status === 404) {
         swal({
@@ -1456,7 +1414,7 @@ $(document).ajaxError(function(event, xhr, settings, thrownError) {
             text: "La página o archivo solicitado no existe."
         });
     }
-    
+
     // Restaurar botones que puedan estar en estado de carga
     $('.btn').each(function() {
         if ($(this).prop('disabled') && $(this).html().includes('spinner')) {
@@ -1474,28 +1432,24 @@ INICIALIZACIÓN FINAL
 =============================================*/
 
 $(document).ready(function(){
-    
-    //console.log('Catálogo Maestro JS - Cargado completamente');
-    
-    // Verificar que todos los componentes estén inicializados
+
+    //
+// Verificar que todos los componentes estén inicializados
     setTimeout(function() {
-        
+
         // Verificar DataTable
         if (!$.fn.DataTable.isDataTable('.tabla-catalogo-maestro')) {
-            console.warn('DataTable no se inicializó correctamente');
-        }
-        
+}
+
         // Verificar modales
         if ($('.modal').length === 0) {
-            console.warn('No se encontraron modales en la página');
-        }
-        
+}
+
         // Actualizar contador inicial
         actualizarContador();
-        
-        //console.log('Catálogo Maestro - Sistema completamente inicializado');
-        
-    }, 1000);
+
+        //
+}, 1000);
 });
 
 /*=============================================
@@ -1503,27 +1457,10 @@ DEBUG - VERIFICAR ELEMENTOS HTML
 =============================================*/
 
 function verificarElementosHTML() {
-  /*  
-    console.log("=== VERIFICANDO ELEMENTOS HTML ===");
-    
-    // Elementos del modal agregar
-    console.log("Modal agregar:");
-    console.log("- esDivisibleMaestro:", $("#esDivisibleMaestro").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- divisionConfigMaestro:", $("#divisionConfigMaestro").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- codigoHijoMitad:", $("#codigoHijoMitad").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- codigoHijoTercio:", $("#codigoHijoTercio").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- codigoHijoCuarto:", $("#codigoHijoCuarto").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    
-    // Elementos del modal editar
-    console.log("Modal editar:");
-    console.log("- editarEsDivisibleMaestro:", $("#editarEsDivisibleMaestro").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- divisionConfigEditarMaestro:", $("#divisionConfigEditarMaestro").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- editarCodigoHijoMitad:", $("#editarCodigoHijoMitad").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- editarCodigoHijoTercio:", $("#editarCodigoHijoTercio").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    console.log("- editarCodigoHijoCuarto:", $("#editarCodigoHijoCuarto").length > 0 ? "✅ EXISTS" : "❌ MISSING");
-    
-    console.log("=== FIN VERIFICACIÓN ===");
-    */
+  /*
+// Elementos del modal agregar
+// Elementos del modal editar
+*/
 }
 
 /*=============================================
@@ -1531,59 +1468,49 @@ DEBUG Y LIMPIEZA ANTES DE ENVIAR FORMULARIO
 =============================================*/
 
 $(document).on("submit", "form", function(e) {
-    
+
     // Solo para el formulario de editar producto maestro
     if($(this).find("#idProductoMaestro").length > 0) {
-        
-        //console.log("=== PROCESANDO FORMULARIO EDITAR ===");
-        
-        var esDivisible = $("#editarEsDivisibleMaestro").prop("checked");
-        //console.log("Es divisible:", esDivisible);
-        
-        if(!esDivisible) {
-            
+
+        //
+var esDivisible = $("#editarEsDivisibleMaestro").prop("checked");
+        //
+if(!esDivisible) {
+
             // Si NO es divisible, limpiar todos los campos
             $("#editarCodigoHijoMitad").val("");
             $("#editarCodigoHijoTercio").val("");
             $("#editarCodigoHijoCuarto").val("");
-            
-            //console.log("Limpiando todos los campos de división");
-            
-        } else {
-            
+
+            //
+} else {
+
             // Si ES divisible, verificar campos individualmente
             var buscarMitad = $("#buscarEditarHijoMitad").val();
             var buscarTercio = $("#buscarEditarHijoTercio").val();
             var buscarCuarto = $("#buscarEditarHijoCuarto").val();
-            
-            /*console.log("Valores en campos de búsqueda:");
-            console.log("- Mitad: '" + buscarMitad + "'");
-            console.log("- Tercio: '" + buscarTercio + "'");
-            console.log("- Cuarto: '" + buscarCuarto + "'");
-            */
-            
+
+            /*
+*/
+
             // ✅ SI EL CAMPO DE BÚSQUEDA ESTÁ VACÍO, LIMPIAR EL HIDDEN
             if(!buscarMitad || buscarMitad.trim() === "") {
                 $("#editarCodigoHijoMitad").val("");
-                //console.log("🧹 Campo mitad limpiado");
-            }
-            
+                //
+}
+
             if(!buscarTercio || buscarTercio.trim() === "") {
                 $("#editarCodigoHijoTercio").val("");
-                //console.log("🧹 Campo tercio limpiado");
-            }
-            
+                //
+}
+
             if(!buscarCuarto || buscarCuarto.trim() === "") {
                 $("#editarCodigoHijoCuarto").val("");
-                //console.log("🧹 Campo cuarto limpiado");
-            }
+                //
+}
         }
         /*
-        console.log("Valores finales en campos hidden:");
-        console.log("- Mitad hidden: '" + $("#editarCodigoHijoMitad").val() + "'");
-        console.log("- Tercio hidden: '" + $("#editarCodigoHijoTercio").val() + "'");
-        console.log("- Cuarto hidden: '" + $("#editarCodigoHijoCuarto").val() + "'");
-        */
+*/
         // ✅ FORZAR QUE LOS CAMPOS VACÍOS SE ENVÍEN
         if($("#editarCodigoHijoMitad").val() === "") {
             $("#editarCodigoHijoMitad").val("EMPTY_FIELD");
@@ -1595,11 +1522,7 @@ $(document).on("submit", "form", function(e) {
             $("#editarCodigoHijoCuarto").val("EMPTY_FIELD");
         }
         /*
-        console.log("Valores finales para envío:");
-        console.log("- Mitad: '" + $("#editarCodigoHijoMitad").val() + "'");
-        console.log("- Tercio: '" + $("#editarCodigoHijoTercio").val() + "'");
-        console.log("- Cuarto: '" + $("#editarCodigoHijoCuarto").val() + "'");
-        */
+*/
     }
 });
 
@@ -1609,4 +1532,4 @@ $(document).ready(function(){
 });
 
 // Mensaje final para debug
-//console.log('Archivo catalogo-maestro.js cargado - Versión: 1.0 - Compatible con danytrax/adminv5');
+//

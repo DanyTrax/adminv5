@@ -36,13 +36,11 @@ $('.tablaDespachos').DataTable({
 VER DETALLES DE DESPACHO
 =============================================*/
 $(document).on("click", ".btnVerDespacho", function(){
-    
+
     var idDespacho = $(this).attr("idDespacho");
-    console.log("👁️ Ver detalles del despacho ID:", idDespacho);
-    
-    var datos = new FormData();
+var datos = new FormData();
     datos.append("idDespacho", idDespacho);
-    
+
     $.ajax({
         url: "ajax/despachos.ajax.php",
         method: "POST",
@@ -52,10 +50,7 @@ $(document).on("click", ".btnVerDespacho", function(){
         processData: false,
         dataType: "json",
         success: function(respuesta) {
-            
-            console.log("📦 Respuesta del servidor:", respuesta);
-            
-            if(respuesta.success && respuesta.data) {
+if(respuesta.success && respuesta.data) {
                 mostrarDetallesDespacho(respuesta.data);
             } else {
                 swal({
@@ -67,8 +62,7 @@ $(document).on("click", ".btnVerDespacho", function(){
             }
         },
         error: function(xhr, status, error) {
-            console.error("Error AJAX:", error);
-            swal({
+swal({
                 title: "Error de conexión",
                 text: "No se pudo conectar con el servidor",
                 type: "error",
@@ -82,10 +76,7 @@ $(document).on("click", ".btnVerDespacho", function(){
 MOSTRAR DETALLES DEL DESPACHO EN MODAL
 =============================================*/
 function mostrarDetallesDespacho(despacho) {
-    
-    console.log("📦 Mostrando detalles del despacho:", despacho);
-    
-    // INFORMACIÓN BÁSICA
+// INFORMACIÓN BÁSICA
     $("#numeroDespachoModal").text(despacho.numero_despacho);
     $("#sucursalOrigenDespacho").text(despacho.sucursal_origen || despacho.nombre_sucursal_origen || 'Sin especificar');
     $("#usuarioCreadorDespacho").text(despacho.nombre_usuario_creador);
@@ -93,10 +84,10 @@ function mostrarDetallesDespacho(despacho) {
     $("#estadoDespacho").text(despacho.estado.toUpperCase());
     $("#totalProductosDespacho").text(despacho.total_productos + ' productos');
     $("#transportadorDespacho").text(despacho.nombre_transportador || 'Sin asignar');
-    
+
     // CONFIGURAR ICONO DE ESTADO
     configurarIconoEstado(despacho.estado);
-    
+
     // DETALLE ADICIONAL
     if(despacho.detalle_adicional && despacho.detalle_adicional.trim() !== '') {
         $("#detalleAdicionalDespacho").text(despacho.detalle_adicional);
@@ -104,19 +95,19 @@ function mostrarDetallesDespacho(despacho) {
     } else {
         $("#detalleAdicionalDespachoContainer").hide();
     }
-    
+
     // CARGAR PRODUCTOS
     cargarProductosDespacho(despacho.productos_despacho);
-    
+
     // CARGAR TIMELINE
     cargarTimelineDespacho(despacho);
-    
+
     // CONFIGURAR BOTONES DE ACCIÓN
     configurarBotonesModalDespacho(despacho);
-    
+
     // CONFIGURAR BOTONES DE EXPORTACIÓN
     configurarBotonesExportacion(despacho.id);
-    
+
     // MOSTRAR MODAL
     $("#modalVerDespacho").modal("show");
 }
@@ -125,22 +116,21 @@ function mostrarDetallesDespacho(despacho) {
 CARGAR PRODUCTOS EN LA TABLA
 =============================================*/
 function cargarProductosDespacho(productosJson) {
-    
+
     var productos = [];
     try {
         productos = JSON.parse(productosJson);
     } catch(e) {
-        console.error("Error parsing productos:", e);
-        productos = [];
+productos = [];
     }
-    
+
     var html = '';
     var totalCantidad = 0;
-    
+
     if(productos.length > 0) {
         productos.forEach(function(producto, index) {
             totalCantidad += parseInt(producto.cantidad);
-            
+
             html += `
                 <tr>
                     <td class="text-center">${index + 1}</td>
@@ -160,7 +150,7 @@ function cargarProductosDespacho(productosJson) {
             </tr>
         `;
     }
-    
+
     $("#productosDespachoBody").html(html);
     $("#totalCantidadDespacho").text(totalCantidad);
 }
@@ -169,14 +159,9 @@ function cargarProductosDespacho(productosJson) {
 CARGAR TIMELINE DEL DESPACHO - VERSIÓN MEJORADA
 =============================================*/
 function cargarTimelineDespacho(despacho) {
-    
+
     var html = '';
-    
-    console.log("📅 Cargando timeline para despacho:", despacho.numero_despacho);
-    console.log("📅 Estado actual:", despacho.estado);
-    console.log("📅 Datos del despacho:", despacho);
-    
-    // 1. CREACIÓN
+// 1. CREACIÓN
     html += `
         <div class="time-label">
             <span class="bg-blue">
@@ -196,21 +181,22 @@ function cargarTimelineDespacho(despacho) {
                     Despacho <strong>${despacho.numero_despacho}</strong> creado desde <strong>${despacho.sucursal_origen}</strong>.
                     <br>
                     <small class="text-muted">
-                        <i class="fa fa-cubes"></i> ${despacho.total_productos} productos • 
+                        <i class="fa fa-cubes"></i> ${despacho.total_productos} productos •
+
                         <i class="fa fa-calculator"></i> ${despacho.total_cantidad} unidades
                     </small>
                 </div>
             </div>
         </div>
     `;
-    
+
     // 2. ACEPTACIÓN / EN TRÁNSITO
     if(despacho.estado === 'en_transito' || despacho.estado === 'entregado') {
-        
+
         // Usar fecha_actualizacion si no existe fecha_aceptacion específica
         var fechaAceptacion = despacho.fecha_aceptacion || despacho.fecha_actualizacion;
         var usuarioAceptacion = despacho.nombre_transportador || despacho.usuario_aceptacion || 'Sistema';
-        
+
         if(fechaAceptacion && fechaAceptacion !== despacho.fecha_creacion) {
             html += `
                 <div class="time-label">
@@ -236,11 +222,11 @@ function cargarTimelineDespacho(despacho) {
             `;
         }
     }
-    
+
     // 3. ENTREGA (si aplica)
     if(despacho.estado === 'entregado') {
         var fechaEntrega = despacho.fecha_entrega || despacho.fecha_actualizacion;
-        
+
         html += `
             <div class="time-label">
                 <span class="bg-gray">
@@ -263,12 +249,12 @@ function cargarTimelineDespacho(despacho) {
             </div>
         `;
     }
-    
+
     // 4. CANCELACIÓN
     if(despacho.estado === 'cancelado') {
         var fechaCancelacion = despacho.fecha_cancelacion || despacho.fecha_actualizacion;
         var usuarioCancelacion = despacho.usuario_cancelacion || despacho.nombre_usuario_creador || 'Sistema';
-        
+
         html += `
             <div class="time-label">
                 <span class="bg-red">
@@ -298,7 +284,7 @@ function cargarTimelineDespacho(despacho) {
             </div>
         `;
     }
-    
+
     // 5. ESTADO ACTUAL (si no está finalizado)
     if(despacho.estado === 'pendiente') {
         html += `
@@ -340,24 +326,22 @@ function cargarTimelineDespacho(despacho) {
             </div>
         `;
     }
-    
+
     // 6. FIN TIMELINE
     html += `
         <div>
             <i class="fa fa-clock-o bg-gray"></i>
         </div>
     `;
-    
+
     $("#timelineDespacho").html(html);
-    
-    console.log("✅ Timeline cargado exitosamente");
 }
 
 /*=============================================
 CONFIGURAR ICONO DE ESTADO
 =============================================*/
 function configurarIconoEstado(estado) {
-    
+
     var $icono = $("#estadoIconDespacho");
     var configuraciones = {
         'pendiente': { icon: 'fa-clock-o', color: 'bg-yellow' },
@@ -365,9 +349,9 @@ function configurarIconoEstado(estado) {
         'entregado': { icon: 'fa-check', color: 'bg-green' },
         'cancelado': { icon: 'fa-ban', color: 'bg-red' }
     };
-    
+
     var config = configuraciones[estado] || { icon: 'fa-question', color: 'bg-gray' };
-    
+
     $icono.removeClass().addClass('info-box-icon ' + config.color);
     $icono.find('i').removeClass().addClass('fa ' + config.icon);
 }
@@ -376,65 +360,53 @@ function configurarIconoEstado(estado) {
 CONFIGURAR BOTONES DEL MODAL SEGÚN ESTADO Y PERFIL
 =============================================*/
 function configurarBotonesModalDespacho(despacho) {
-    
+
     var html = '';
     var perfilUsuario = window.perfilUsuario || "Usuario";
-    console.log("🔍 Verificando perfil para botones:", perfilUsuario, "Estado:", despacho.estado);
-    
-    // BOTÓN ACEPTAR (solo para pendientes y solo Transportador/Administrador)
+// BOTÓN ACEPTAR (solo para pendientes y solo Transportador/Administrador)
     if(despacho.estado === 'pendiente' && (perfilUsuario === 'Transportador' || perfilUsuario === 'Administrador')) {
-        console.log("✅ Mostrando botón Aceptar");
-        html += `
+html += `
             <button type="button" class="btn btn-success" onclick="aceptarDespachoModal(${despacho.id})">
                 <i class="fa fa-check"></i> Aceptar Despacho
             </button>
         `;
     } else {
-        console.log("❌ Ocultando botón Aceptar - Perfil:", perfilUsuario, "Estado:", despacho.estado);
-    }
-    
+}
+
     // BOTÓN CANCELAR (solo para pendientes y solo Administrador/Transportador)
     if(despacho.estado === 'pendiente' && (perfilUsuario === 'Administrador' || perfilUsuario === 'Transportador')) {
-        console.log("✅ Mostrando botón Cancelar");
-        html += `
+html += `
             <button type="button" class="btn btn-warning" onclick="cancelarDespachoModal(${despacho.id}, '${despacho.estado}')">
                 <i class="fa fa-ban"></i> Cancelar
             </button>
         `;
     } else {
-        console.log("❌ Ocultando botón Cancelar - Perfil:", perfilUsuario, "Estado:", despacho.estado);
-    }
-    
+}
+
     // BOTÓN EDITAR (solo pendientes y solo Administrador/Especial/Contador)
     if(despacho.estado === 'pendiente' && (perfilUsuario === 'Administrador' || perfilUsuario === 'Especial' || perfilUsuario === 'Contador')) {
-        console.log("✅ Mostrando botón Editar");
-        html += `
+html += `
             <button type="button" class="btn btn-info" onclick="editarDespacho(${despacho.id})">
                 <i class="fa fa-edit"></i> Editar
             </button>
         `;
     } else {
-        console.log("❌ Ocultando botón Editar - Perfil:", perfilUsuario, "Estado:", despacho.estado);
-    }
-    
+}
+
     // BOTÓN ELIMINAR (pendientes solo para Administrador/Especial/Contador, cualquier estado solo para administradores)
     var puedeEliminar = (despacho.estado === 'pendiente' && (perfilUsuario === 'Administrador' || perfilUsuario === 'Especial' || perfilUsuario === 'Contador')) || perfilUsuario === 'Administrador';
-    console.log("🔍 Puede eliminar:", puedeEliminar, "Perfil:", perfilUsuario, "Estado:", despacho.estado);
-    
-    if(puedeEliminar) {
-        console.log("✅ Mostrando botón Eliminar");
-        var textoEliminar = despacho.estado === 'pendiente' ? 'Eliminar' : 'Eliminar (Admin)';
+if(puedeEliminar) {
+var textoEliminar = despacho.estado === 'pendiente' ? 'Eliminar' : 'Eliminar (Admin)';
         var claseBoton = despacho.estado === 'pendiente' ? 'btn-danger' : 'btn-warning';
-        
+
         html += `
             <button type="button" class="btn ${claseBoton}" onclick="eliminarDespachoModal(${despacho.id}, '${despacho.numero_despacho}', '${despacho.estado}')">
                 <i class="fa fa-trash"></i> ${textoEliminar}
             </button>
         `;
     } else {
-        console.log("❌ Ocultando botón Eliminar - Perfil:", perfilUsuario, "Estado:", despacho.estado);
-    }
-    
+}
+
     $("#botonesAccionDespacho").html(html);
 }
 
@@ -448,10 +420,7 @@ $(document).on("click", ".btnAceptarDespacho", function(e){
 });
 
 function aceptarDespachoDirecto(idDespacho) {
-    
-    console.log("✅ Aceptando despacho desde tabla ID:", idDespacho);
-    
-    swal({
+swal({
         title: "¿Aceptar despacho?",
         text: "Al aceptar este despacho, los productos se descontarán del stock local y se agregarán al stock en tránsito.",
         type: "warning",
@@ -461,7 +430,7 @@ function aceptarDespachoDirecto(idDespacho) {
         confirmButtonText: "Sí, aceptar",
         cancelButtonText: "Cancelar"
     }).then(function(result) {
-        
+
         if(result.value) {
             ejecutarAceptarDespacho(idDespacho);
         }
@@ -472,11 +441,8 @@ function aceptarDespachoDirecto(idDespacho) {
 ACEPTAR DESPACHO DESDE MODAL
 =============================================*/
 function aceptarDespachoModal(idDespacho) {
-    
-    console.log("✅ Aceptando despacho desde modal ID:", idDespacho);
-    
-    $("#modalVerDespacho").modal("hide");
-    
+$("#modalVerDespacho").modal("hide");
+
     swal({
         title: "¿Aceptar despacho?",
         text: "Al aceptar este despacho, los productos se descontarán del stock local y se agregarán al stock en tránsito.",
@@ -487,7 +453,7 @@ function aceptarDespachoModal(idDespacho) {
         confirmButtonText: "Sí, aceptar",
         cancelButtonText: "Cancelar"
     }).then(function(result) {
-        
+
         if(result.value) {
             ejecutarAceptarDespacho(idDespacho);
         }
@@ -498,13 +464,10 @@ function aceptarDespachoModal(idDespacho) {
 EJECUTAR ACEPTACIÓN DE DESPACHO
 =============================================*/
 function ejecutarAceptarDespacho(idDespacho) {
-    
+
     var datos = new FormData();
     datos.append("aceptarDespacho", idDespacho);
-    
-    console.log("🔄 Enviando petición de aceptación...");
-    
-    $.ajax({
+$.ajax({
         url: "ajax/despachos.ajax.php",
         method: "POST",
         data: datos,
@@ -513,10 +476,7 @@ function ejecutarAceptarDespacho(idDespacho) {
         processData: false,
         dataType: "json",
         success: function(respuesta) {
-            
-            console.log("📨 Respuesta de aceptación:", respuesta);
-            
-            if(respuesta.success) {
+if(respuesta.success) {
                 swal({
                     title: "¡Despacho aceptado!",
                     text: respuesta.message,
@@ -535,8 +495,7 @@ function ejecutarAceptarDespacho(idDespacho) {
             }
         },
         error: function(xhr, status, error) {
-            console.error("❌ Error AJAX aceptar:", error);
-            swal({
+swal({
                 title: "Error de conexión",
                 text: "No se pudo aceptar el despacho",
                 type: "error",
@@ -557,10 +516,7 @@ $(document).on("click", ".btnCancelarDespacho", function(e){
 });
 
 function cancelarDespachoDirecto(idDespacho, estadoDespacho) {
-    
-    console.log("❌ Cancelando despacho desde tabla ID:", idDespacho);
-    
-    swal({
+swal({
         title: "¿Cancelar despacho?",
         text: "Ingrese el motivo de la cancelación:",
         type: "warning",
@@ -577,7 +533,7 @@ function cancelarDespachoDirecto(idDespacho, estadoDespacho) {
             }
         }
     }).then(function(result) {
-        
+
         if(result.value) {
             ejecutarCancelarDespacho(idDespacho, result.value);
         }
@@ -588,11 +544,8 @@ function cancelarDespachoDirecto(idDespacho, estadoDespacho) {
 CANCELAR DESPACHO DESDE MODAL
 =============================================*/
 function cancelarDespachoModal(idDespacho, estadoDespacho) {
-    
-    console.log("❌ Cancelando despacho desde modal ID:", idDespacho);
-    
-    $("#modalVerDespacho").modal("hide");
-    
+$("#modalVerDespacho").modal("hide");
+
     swal({
         title: "¿Cancelar despacho?",
         text: "Ingrese el motivo de la cancelación:",
@@ -610,7 +563,7 @@ function cancelarDespachoModal(idDespacho, estadoDespacho) {
             }
         }
     }).then(function(result) {
-        
+
         if(result.value) {
             ejecutarCancelarDespacho(idDespacho, result.value);
         }
@@ -621,14 +574,11 @@ function cancelarDespachoModal(idDespacho, estadoDespacho) {
 EJECUTAR CANCELACIÓN DE DESPACHO
 =============================================*/
 function ejecutarCancelarDespacho(idDespacho, motivo) {
-    
+
     var datos = new FormData();
     datos.append("cancelarDespacho", idDespacho);
     datos.append("motivoCancelacion", motivo);
-    
-    console.log("🔄 Enviando petición de cancelación...");
-    
-    $.ajax({
+$.ajax({
         url: "ajax/despachos.ajax.php",
         method: "POST",
         data: datos,
@@ -637,35 +587,26 @@ function ejecutarCancelarDespacho(idDespacho, motivo) {
         processData: false,
         dataType: "json",
         success: function(respuesta) {
-            
-            console.log("📨 Respuesta de cancelación:", respuesta);
-            
-            if(respuesta.success) {
-                console.log("✅ Despacho cancelado exitosamente. Estado actualizado:", respuesta.estado_actualizado);
-                swal({
+if(respuesta.success) {
+swal({
                     title: "¡Despacho cancelado!",
                     text: respuesta.message,
                     type: "success",
                     confirmButtonText: "Cerrar"
                 }).then(function() {
-                    console.log("✅ Despacho cancelado exitosamente");
-                    console.log("🔄 Iniciando recarga de datos...");
-                    
-                    // Método 1: Recarga simple de DataTable
+
+// Método 1: Recarga simple de DataTable
                     if($.fn.DataTable.isDataTable('.tablaDespachos')) {
-                        console.log("🔄 Recargando DataTable...");
-                        $('.tablaDespachos').DataTable().ajax.reload(null, false);
+$('.tablaDespachos').DataTable().ajax.reload(null, false);
                     }
-                    
+
                     // Método 2: Recarga de página después de un breve delay
                     setTimeout(function() {
-                        console.log("🔄 Recargando página completa...");
-                        window.location.reload();
+window.location.reload();
                     }, 1500);
                 });
             } else {
-                console.error("❌ Error al cancelar despacho:", respuesta.error);
-                swal({
+swal({
                     title: "Error",
                     text: respuesta.error || "No se pudo cancelar el despacho",
                     type: "error",
@@ -674,8 +615,7 @@ function ejecutarCancelarDespacho(idDespacho, motivo) {
             }
         },
         error: function(xhr, status, error) {
-            console.error("❌ Error AJAX cancelar:", error);
-            swal({
+swal({
                 title: "Error de conexión",
                 text: "No se pudo cancelar el despacho",
                 type: "error",
@@ -697,19 +637,16 @@ $(document).on("click", ".btnEliminarDespacho", function(e){
 });
 
 function eliminarDespachoDirecto(idDespacho, numeroDespacho, estadoDespacho) {
-    
-    console.log("🗑️ Eliminando despacho desde tabla ID:", idDespacho, "Estado:", estadoDespacho);
-    
-    var titulo = "¿Eliminar despacho " + numeroDespacho + "?";
+var titulo = "¿Eliminar despacho " + numeroDespacho + "?";
     var texto = "¡Esta acción no se puede deshacer!";
     var tipo = "warning";
-    
+
     // Si es un despacho que no está pendiente, mostrar advertencia especial
     if(estadoDespacho && estadoDespacho !== 'pendiente') {
         texto = "⚠️ ADVERTENCIA: Este despacho está en estado '" + estadoDespacho + "'. ¡Esta acción no se puede deshacer!";
         tipo = "error";
     }
-    
+
     swal({
         title: titulo,
         text: texto,
@@ -720,7 +657,7 @@ function eliminarDespachoDirecto(idDespacho, numeroDespacho, estadoDespacho) {
         confirmButtonText: "Sí, eliminar",
         cancelButtonText: "Cancelar"
     }).then(function(result) {
-        
+
         if(result.value) {
             ejecutarEliminarDespacho(idDespacho);
         }
@@ -731,21 +668,18 @@ function eliminarDespachoDirecto(idDespacho, numeroDespacho, estadoDespacho) {
 ELIMINAR DESPACHO DESDE MODAL
 =============================================*/
 function eliminarDespachoModal(idDespacho, numeroDespacho, estadoDespacho) {
-    
-    console.log("🗑️ Eliminando despacho desde modal ID:", idDespacho, "Estado:", estadoDespacho);
-    
-    $("#modalVerDespacho").modal("hide");
-    
+$("#modalVerDespacho").modal("hide");
+
     var titulo = "¿Eliminar despacho " + numeroDespacho + "?";
     var texto = "¡Esta acción no se puede deshacer!";
     var tipo = "warning";
-    
+
     // Si es un despacho que no está pendiente, mostrar advertencia especial
     if(estadoDespacho && estadoDespacho !== 'pendiente') {
         texto = "⚠️ ADVERTENCIA: Este despacho está en estado '" + estadoDespacho + "'. ¡Esta acción no se puede deshacer!";
         tipo = "error";
     }
-    
+
     swal({
         title: titulo,
         text: texto,
@@ -756,7 +690,7 @@ function eliminarDespachoModal(idDespacho, numeroDespacho, estadoDespacho) {
         confirmButtonText: "Sí, eliminar",
         cancelButtonText: "Cancelar"
     }).then(function(result) {
-        
+
         if(result.value) {
             ejecutarEliminarDespacho(idDespacho);
         }
@@ -767,13 +701,10 @@ function eliminarDespachoModal(idDespacho, numeroDespacho, estadoDespacho) {
 EJECUTAR ELIMINACIÓN DE DESPACHO
 =============================================*/
 function ejecutarEliminarDespacho(idDespacho) {
-    
+
     var datos = new FormData();
     datos.append("eliminarDespacho", idDespacho);
-    
-    console.log("🔄 Enviando petición de eliminación...");
-    
-    $.ajax({
+$.ajax({
         url: "ajax/despachos.ajax.php",
         method: "POST",
         data: datos,
@@ -782,10 +713,7 @@ function ejecutarEliminarDespacho(idDespacho) {
         processData: false,
         dataType: "json",
         success: function(respuesta) {
-            
-            console.log("📨 Respuesta de eliminación:", respuesta);
-            
-            if(respuesta.success) {
+if(respuesta.success) {
                 swal({
                     title: "¡Despacho eliminado!",
                     text: respuesta.message,
@@ -804,8 +732,7 @@ function ejecutarEliminarDespacho(idDespacho) {
             }
         },
         error: function(xhr, status, error) {
-            console.error("❌ Error AJAX eliminar:", error);
-            swal({
+swal({
                 title: "Error de conexión",
                 text: "No se pudo eliminar el despacho",
                 type: "error",
@@ -819,21 +746,20 @@ function ejecutarEliminarDespacho(idDespacho) {
 EDITAR DESPACHO
 =============================================*/
 function editarDespacho(idDespacho) {
-    console.log("✏️ Redirigiendo a editar despacho ID:", idDespacho);
-    window.location = "crear-despacho?editar=" + idDespacho;
+window.location = "crear-despacho?editar=" + idDespacho;
 }
 
 /*=============================================
 FILTROS RÁPIDOS POR ESTADO
 =============================================*/
 $(document).on("click", ".btnFiltroEstado", function(){
-    
+
     var estado = $(this).attr("data-estado");
-    
+
     // Actualizar botones activos
     $(".btnFiltroEstado").removeClass("active");
     $(this).addClass("active");
-    
+
     // Aplicar filtro a DataTable
     if(estado === "" || estado === "todos") {
         $('.tablaDespachos').DataTable().columns(4).search("").draw();
@@ -845,7 +771,7 @@ $(document).on("click", ".btnFiltroEstado", function(){
             'entregado': 'ENTREGADO',
             'cancelado': 'CANCELADO'
         };
-        
+
         var textoBuscar = estadoTexto[estado] || estado;
         $('.tablaDespachos').DataTable().columns(4).search(textoBuscar).draw();
     }
@@ -856,22 +782,22 @@ FUNCIONES AUXILIARES
 =============================================*/
 function formatearFecha(fecha) {
     if(!fecha) return 'Sin fecha';
-    
+
     var date = new Date(fecha);
     var dia = String(date.getDate()).padStart(2, '0');
     var mes = String(date.getMonth() + 1).padStart(2, '0');
     var año = date.getFullYear();
-    
+
     return dia + '/' + mes + '/' + año;
 }
 
 function formatearHora(fecha) {
     if(!fecha) return 'Sin hora';
-    
+
     var date = new Date(fecha);
     var horas = String(date.getHours()).padStart(2, '0');
     var minutos = String(date.getMinutes()).padStart(2, '0');
-    
+
     return horas + ':' + minutos;
 }
 
@@ -879,26 +805,21 @@ function formatearHora(fecha) {
 INICIALIZACIÓN
 =============================================*/
 $(document).ready(function() {
-    
+
     // Activar tooltips
     $('[data-toggle="tooltip"]').tooltip();
-    
+
     // Recargar tabla cada 60 segundos
     setInterval(function() {
         $('.tablaDespachos').DataTable().ajax.reload(null, false);
     }, 60000);
-    
-    console.log("✅ Sistema de despachos inicializado correctamente");
 });
 
 /*=============================================
 CONFIGURAR BOTONES DE EXPORTACIÓN
 =============================================*/
 function configurarBotonesExportacion(idDespacho) {
-    
-    console.log("📄 Configurando botones de exportación para despacho ID:", idDespacho);
-    
-    // Asignar ID del despacho a los botones
+// Asignar ID del despacho a los botones
     $(".btnExportarPDF").attr("idDespacho", idDespacho);
     $(".btnExportarExcel").attr("idDespacho", idDespacho);
 }
@@ -907,11 +828,9 @@ function configurarBotonesExportacion(idDespacho) {
 EXPORTAR DESPACHO A PDF
 =============================================*/
 $(document).on("click", ".btnExportarPDF", function(){
-    
+
     var idDespacho = $(this).attr("idDespacho");
-    console.log("📄 Exportando despacho a PDF ID:", idDespacho);
-    
-    if(!idDespacho) {
+if(!idDespacho) {
         swal({
             title: "Error",
             text: "No se pudo identificar el despacho",
@@ -920,7 +839,7 @@ $(document).on("click", ".btnExportarPDF", function(){
         });
         return;
     }
-    
+
     // Mostrar loading
     swal({
         title: "Generando PDF...",
@@ -929,11 +848,11 @@ $(document).on("click", ".btnExportarPDF", function(){
         showConfirmButton: false,
         allowOutsideClick: false
     });
-    
+
     var datos = new FormData();
     datos.append("accion", "exportar_pdf");
     datos.append("idDespacho", idDespacho);
-    
+
     $.ajax({
         url: "ajax/exportar-despacho-detalle.ajax.php",
         method: "POST",
@@ -943,13 +862,10 @@ $(document).on("click", ".btnExportarPDF", function(){
         processData: false,
         dataType: "json",
         success: function(respuesta) {
-            
-            console.log("📄 Respuesta exportación PDF:", respuesta);
-            
-            if(respuesta.success) {
+if(respuesta.success) {
                 // Cerrar loading
                 swal.close();
-                
+
                 // Crear enlace de descarga
                 var link = document.createElement('a');
                 link.href = respuesta.url;
@@ -957,14 +873,14 @@ $(document).on("click", ".btnExportarPDF", function(){
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                
+
                 swal({
                     title: "¡PDF Generado!",
                     text: "El documento se ha descargado correctamente",
                     type: "success",
                     confirmButtonText: "Cerrar"
                 });
-                
+
             } else {
                 swal({
                     title: "Error",
@@ -975,8 +891,7 @@ $(document).on("click", ".btnExportarPDF", function(){
             }
         },
         error: function(xhr, status, error) {
-            console.error("Error AJAX PDF:", error);
-            swal({
+swal({
                 title: "Error de conexión",
                 text: "No se pudo conectar con el servidor",
                 type: "error",
@@ -990,11 +905,9 @@ $(document).on("click", ".btnExportarPDF", function(){
 EXPORTAR DESPACHO A EXCEL
 =============================================*/
 $(document).on("click", ".btnExportarExcel", function(){
-    
+
     var idDespacho = $(this).attr("idDespacho");
-    console.log("📊 Exportando despacho a Excel ID:", idDespacho);
-    
-    if(!idDespacho) {
+if(!idDespacho) {
         swal({
             title: "Error",
             text: "No se pudo identificar el despacho",
@@ -1003,7 +916,7 @@ $(document).on("click", ".btnExportarExcel", function(){
         });
         return;
     }
-    
+
     // Mostrar loading
     swal({
         title: "Generando Excel...",
@@ -1012,11 +925,11 @@ $(document).on("click", ".btnExportarExcel", function(){
         showConfirmButton: false,
         allowOutsideClick: false
     });
-    
+
     var datos = new FormData();
     datos.append("accion", "exportar_excel");
     datos.append("idDespacho", idDespacho);
-    
+
     $.ajax({
         url: "ajax/exportar-despacho-detalle.ajax.php",
         method: "POST",
@@ -1026,13 +939,10 @@ $(document).on("click", ".btnExportarExcel", function(){
         processData: false,
         dataType: "json",
         success: function(respuesta) {
-            
-            console.log("📊 Respuesta exportación Excel:", respuesta);
-            
-            if(respuesta.success) {
+if(respuesta.success) {
                 // Cerrar loading
                 swal.close();
-                
+
                 // Crear enlace de descarga
                 var link = document.createElement('a');
                 link.href = respuesta.url;
@@ -1040,14 +950,14 @@ $(document).on("click", ".btnExportarExcel", function(){
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                
+
                 swal({
                     title: "¡Excel Generado!",
                     text: "El documento se ha descargado correctamente",
                     type: "success",
                     confirmButtonText: "Cerrar"
                 });
-                
+
             } else {
                 swal({
                     title: "Error",
@@ -1058,8 +968,7 @@ $(document).on("click", ".btnExportarExcel", function(){
             }
         },
         error: function(xhr, status, error) {
-            console.error("Error AJAX Excel:", error);
-            swal({
+swal({
                 title: "Error de conexión",
                 text: "No se pudo conectar con el servidor",
                 type: "error",
@@ -1073,13 +982,11 @@ $(document).on("click", ".btnExportarExcel", function(){
 VER DETALLES DE DESPACHO DE TRANSPORTADOR
 =============================================*/
 $(document).on("click", ".btnVerDetalleDespacho", function(){
-    
+
     var idDespacho = $(this).attr("data-id");
-    console.log("👁️ Ver detalles del despacho de transportador ID:", idDespacho);
-    
-    var datos = new FormData();
+var datos = new FormData();
     datos.append("idDespacho", idDespacho);
-    
+
     $.ajax({
         url: "ajax/despachos.ajax.php",
         method: "POST",
@@ -1089,10 +996,7 @@ $(document).on("click", ".btnVerDetalleDespacho", function(){
         processData: false,
         dataType: "json",
         success: function(respuesta) {
-            
-            console.log("📦 Respuesta del servidor:", respuesta);
-            
-            if(respuesta.success && respuesta.data) {
+if(respuesta.success && respuesta.data) {
                 mostrarDetallesDespacho(respuesta.data);
             } else {
                 swal({
@@ -1104,8 +1008,7 @@ $(document).on("click", ".btnVerDetalleDespacho", function(){
             }
         },
         error: function(xhr, status, error) {
-            console.error("Error AJAX:", error);
-            swal({
+swal({
                 title: "Error de conexión",
                 text: "No se pudo conectar con el servidor",
                 type: "error",

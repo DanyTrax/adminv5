@@ -7,21 +7,16 @@ var dataTableInicializado = false;
 
 // Función global para inicializar DataTable manualmente
 window.inicializarTablaRegistro = function() {
-    console.log("🔄 Inicializando DataTable manualmente...");
-    inicializarDataTable();
+inicializarDataTable();
 };
 
 $(document).ready(function() {
-    console.log("✅ Módulo Registro de Descargas Simple cargado");
-    
-    // Cargar estadísticas
+// Cargar estadísticas
     cargarEstadisticas();
-    
+
     // NO inicializar DataTable automáticamente
     // Se inicializará manualmente cuando sea necesario
-    console.log("⚠️ DataTable NO se inicializa automáticamente");
-    
-    // Configurar filtros
+// Configurar filtros
     configurarFiltros();
 });
 
@@ -34,49 +29,38 @@ function cargarEstadisticas() {
         },
         dataType: "json",
         success: function(respuesta) {
-            console.log("✅ Estadísticas cargadas:", respuesta);
-        },
+},
         error: function() {
-            console.error("❌ Error al cargar estadísticas");
-        }
+}
     });
 }
 
 function inicializarDataTable() {
-    console.log("🔄 Inicializando DataTable...");
-    
-    // Verificar si ya se inicializó
+// Verificar si ya se inicializó
     if (dataTableInicializado) {
-        console.log("⚠️ DataTable ya fue inicializado, saltando...");
-        return;
+return;
     }
-    
+
     // Verificar si el elemento existe
     if ($("#tabla-registro-descargas").length === 0) {
-        console.log("❌ Elemento #tabla-registro-descargas no encontrado");
-        return;
+return;
     }
-    
+
     // FORZAR LIMPIEZA COMPLETA
-    console.log("🧹 Forzando limpieza completa...");
-    
-    // Verificar si ya existe DataTable y destruirlo
+// Verificar si ya existe DataTable y destruirlo
     if ($.fn.DataTable.isDataTable("#tabla-registro-descargas")) {
-        console.log("🔄 DataTable existe, destruyendo...");
-        try {
+try {
             $("#tabla-registro-descargas").DataTable().destroy();
-            console.log("✅ DataTable destruido");
-        } catch (e) {
-            console.log("⚠️ Error al destruir:", e.message);
-        }
+} catch (e) {
+}
     }
-    
+
     // Limpiar completamente el DOM
     $("#tabla-registro-descargas").removeClass("dataTable");
     $("#tabla-registro-descargas").find(".dataTables_wrapper").remove();
     $("#tabla-registro-descargas").unwrap();
     $("#tabla-registro-descargas").empty();
-    
+
     // Recrear estructura básica
     $("#tabla-registro-descargas").html(`
         <thead>
@@ -97,10 +81,7 @@ function inicializarDataTable() {
             <!-- Los datos se cargarán via AJAX -->
         </tbody>
     `);
-    
-    console.log("🔄 Creando DataTable nuevo...");
-    
-    $("#tabla-registro-descargas").DataTable({
+$("#tabla-registro-descargas").DataTable({
         "processing": true,
         "serverSide": true,
         "ajax": {
@@ -133,30 +114,27 @@ function inicializarDataTable() {
         "responsive": true,
         "autoWidth": false,
         "error": function(xhr, error, thrown) {
-            console.error("❌ Error en DataTable:", error, thrown);
-            console.error("❌ Respuesta del servidor:", xhr.responseText);
-        }
+
+}
     });
-    
+
     // Marcar como inicializado
     dataTableInicializado = true;
-    console.log("✅ DataTable inicializado");
 }
 
 function configurarFiltros() {
     // Botón inicializar tabla
     $("#btn-inicializar-tabla").click(function() {
-        console.log("🔄 Botón inicializar tabla clickeado");
-        inicializarDataTable();
+inicializarDataTable();
     });
-    
+
     // Botón filtrar
     $("#btn-filtrar").click(function() {
         if ($.fn.DataTable.isDataTable("#tabla-registro-descargas")) {
             $("#tabla-registro-descargas").DataTable().ajax.reload();
         }
     });
-    
+
     // Botón limpiar
     $("#btn-limpiar").click(function() {
         $("#filtro-producto").val("");
@@ -167,7 +145,7 @@ function configurarFiltros() {
             $("#tabla-registro-descargas").DataTable().ajax.reload();
         }
     });
-    
+
     // Botón exportar
     $("#btn-exportar").click(function() {
         // TODO: Implementar exportación
