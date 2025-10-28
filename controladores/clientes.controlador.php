@@ -27,7 +27,7 @@ class ControladorClientes
 			$validacionDocumento = preg_match('/^[0-9]+$/', $_POST["nuevoDocumentoId"]);
 			$validacionEmail = preg_match('/^[@\.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoEmail"]);
 			$validacionTelefono = preg_match('/^[0-9]{7,10}$/', $_POST["nuevoTelefono"]);
-			$validacionDireccion = preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@]+$/', $_POST["nuevaDireccion"]);
+			$validacionDireccion = preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@–—]+$/', $_POST["nuevaDireccion"]);
 
 			error_log("=== DEBUG CLIENTES - RESULTADOS VALIDACIÓN ===");
 			error_log("Nombre válido: " . ($validacionNombre ? "SÍ" : "NO"));
@@ -134,7 +134,7 @@ class ControladorClientes
 				preg_match('/^[0-9]+$/', $_POST["editarDocumentoId"]) &&
 				preg_match('/^[@\.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarEmail"]) &&
 				preg_match('/^[0-9]{7,10}$/', $_POST["editarTelefono"]) &&
-				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@]+$/', $_POST["editarDireccion"])
+				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@–—]+$/', $_POST["editarDireccion"])
 			) {
 
 				$tabla = "clientes";
