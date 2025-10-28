@@ -61,6 +61,12 @@ class ControladorClientes
 					// Verificar si viene de crear venta
 					if (isset($_POST["origen"]) && $_POST["origen"] == "crear-venta") {
 						
+						// Obtener el ID del cliente recién creado
+						$stmt = Conexion::conectar()->prepare("SELECT id, nombre, documento FROM clientes WHERE documento = :documento ORDER BY id DESC LIMIT 1");
+						$stmt->bindParam(":documento", $_POST["nuevoDocumentoId"], PDO::PARAM_INT);
+						$stmt->execute();
+						$clienteCreado = $stmt->fetch();
+						
 						echo '<script>
 						
 						swal({
@@ -71,9 +77,11 @@ class ControladorClientes
 							  }).then(function(result){
 										if (result.value) {
 
-										// Cerrar modal y recargar página para actualizar lista de clientes
+										// Cerrar modal
 										$("#modalAgregarCliente").modal("hide");
-										location.reload();
+										
+										// Actualizar lista de clientes y seleccionar el nuevo cliente
+										actualizarListaClientes(' . json_encode($clienteCreado) . ');
 
 										}
 									})

@@ -923,3 +923,26 @@ function number_format(number, decimals, dec_point, thousands_sep) {
     }
     return s.join(dec);
 }
+
+/*=============================================
+ACTUALIZAR LISTA DE CLIENTES DESPUÉS DE CREAR UNO NUEVO
+=============================================*/
+function actualizarListaClientes(clienteCreado) {
+    console.log("🔄 Actualizando lista de clientes con:", clienteCreado);
+    
+    // Crear nueva opción para el cliente
+    var nuevaOpcion = $('<option></option>')
+        .attr('value', clienteCreado.id)
+        .text(clienteCreado.nombre + ' - ' + clienteCreado.documento);
+    
+    // Agregar la nueva opción al select de clientes
+    $('#seleccionarCliente').append(nuevaOpcion);
+    
+    // Seleccionar automáticamente el cliente recién creado
+    $('#seleccionarCliente').val(clienteCreado.id);
+    
+    // Trigger del evento change para actualizar la interfaz
+    $('#seleccionarCliente').trigger('change');
+    
+    console.log("✅ Cliente agregado y seleccionado:", clienteCreado.nombre);
+}
