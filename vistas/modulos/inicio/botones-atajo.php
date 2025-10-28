@@ -160,7 +160,7 @@ $modulos_disponibles = [
         "color" => "bg-orange",
         "perfiles" => ["Administrador", "Vendedor", "Contador"]
     ],
-    "registro-descargas-simple" => [
+    "registro-descargas-funcional" => [
         "icono" => "fa-download",
         "titulo" => "Registro Descargas",
         "descripcion" => "Registro de descargas",
@@ -184,10 +184,9 @@ foreach ($modulos_disponibles as $ruta => $modulo) {
 $categorias = [
     "Ventas" => ["ventas", "crear-venta", "clientes"],
     "Inventario" => ["productos", "categorias", "salidas-inventario", "entradas", "crear-entradas"],
-    "Logística" => ["despachos", "crear-despacho", "stock-transito", "solicitudes-stock", "crear-solicitud-stock"],
+    "Logística" => ["despachos", "crear-despacho", "stock-transito", "solicitudes-stock", "crear-solicitud-stock", "registro-descargas-funcional"],
     "Administración" => ["usuarios", "sucursales", "usuarios-central", "clientes-central", "categorias-central"],
-    "Reportes" => ["reportes", "reporte-detallado", "medios-pago", "contabilidad"],
-    "Sistema" => ["registro-descargas-simple"]
+    "Reportes" => ["reportes", "reporte-detallado", "medios-pago", "contabilidad"]
 ];
 
 ?>

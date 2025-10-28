@@ -171,7 +171,6 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "editar-despacho" => ["Administrador", "Vendedor", "Contador"],
         "eliminar-despacho" => ["Administrador", "Vendedor", "Contador"],
         "stock-transito" => ["Administrador", "Vendedor", "Contador", "Transportador"],
-        "registro-descargas-simple" => ["Administrador", "Vendedor", "Contador", "Transportador"],
         "registro-descargas-funcional" => ["Administrador", "Vendedor", "Contador", "Transportador"],
         "salir" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"]
       ];
@@ -220,7 +219,6 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
   <script src="<?php echo $url; ?>vistas/js/despachos.js"></script>
   <script src="<?php echo $url; ?>vistas/js/crear-despacho.js"></script>
   <!-- <script src="<?php echo $url; ?>vistas/js/stock-transito.js"></script> --> <!-- Comentado: se usa stock-transito-unificado.js -->
-  <script src="<?php echo $url; ?>vistas/js/registro-descargas-simple.js"></script>
 </html>
 </body>
 
