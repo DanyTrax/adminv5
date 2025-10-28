@@ -15,11 +15,11 @@ class ControladorClientes
 		if (isset($_POST["nuevoCliente"])) {
 
 			if (
-				preg_match('/^[.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoCliente"]) &&
+				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)]+$/', $_POST["nuevoCliente"]) &&
 				preg_match('/^[0-9]+$/', $_POST["nuevoDocumentoId"]) &&
 				preg_match('/^[@\.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoEmail"]) &&
-				preg_match('/^[()\-0-9 ]+$/', $_POST["nuevoTelefono"]) &&
-				preg_match('/^[#\.\-a-zA-Z0-9 ]+$/', $_POST["nuevaDireccion"])
+				preg_match('/^[0-9]{7,10}$/', $_POST["nuevoTelefono"]) &&
+				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@]+$/', $_POST["nuevaDireccion"])
 			) {
 
 				$tabla = "clientes";
@@ -108,11 +108,11 @@ class ControladorClientes
 		if (isset($_POST["editarCliente"])) {
 
 			if (
-				preg_match('/^[.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarCliente"]) &&
+				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)]+$/', $_POST["editarCliente"]) &&
 				preg_match('/^[0-9]+$/', $_POST["editarDocumentoId"]) &&
 				preg_match('/^[@\.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarEmail"]) &&
-				preg_match('/^[()\-0-9 ]+$/', $_POST["editarTelefono"]) &&
-				preg_match('/^[#\.\-a-zA-Z0-9 ]+$/', $_POST["editarDireccion"])
+				preg_match('/^[0-9]{7,10}$/', $_POST["editarTelefono"]) &&
+				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@]+$/', $_POST["editarDireccion"])
 			) {
 
 				$tabla = "clientes";
