@@ -221,6 +221,10 @@ class ControladorPersonalizacionColores {
                 background-color: {$configuracion['navbar_hover_color']} !important;
             }
             
+            .sidebar-toggle:hover {
+                background-color: {$configuracion['navbar_hover_color']} !important;
+            }
+            
             /* Barra Lateral */
             .main-sidebar {
                 background-color: {$configuracion['sidebar_color']} !important;
