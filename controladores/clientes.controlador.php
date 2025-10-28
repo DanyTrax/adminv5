@@ -24,7 +24,7 @@ class ControladorClientes
 
 			// Validaciones individuales con debug
 			$validacionNombre = preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)]+$/', $_POST["nuevoCliente"]);
-			$validacionDocumento = preg_match('/^[0-9]+$/', $_POST["nuevoDocumentoId"]);
+			$validacionDocumento = preg_match('/^[0-9]{1,11}$/', $_POST["nuevoDocumentoId"]);
 			$validacionEmail = preg_match('/^[@\.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoEmail"]);
 			$validacionTelefono = preg_match('/^[0-9]{7,10}$/', $_POST["nuevoTelefono"]);
 			$validacionDireccion = preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@–—]+$/', $_POST["nuevaDireccion"]);
@@ -131,7 +131,7 @@ class ControladorClientes
 
 			if (
 				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)]+$/', $_POST["editarCliente"]) &&
-				preg_match('/^[0-9]+$/', $_POST["editarDocumentoId"]) &&
+				preg_match('/^[0-9]{1,11}$/', $_POST["editarDocumentoId"]) &&
 				preg_match('/^[@\.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarEmail"]) &&
 				preg_match('/^[0-9]{7,10}$/', $_POST["editarTelefono"]) &&
 				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@–—]+$/', $_POST["editarDireccion"])

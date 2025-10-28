@@ -189,7 +189,7 @@ MODAL AGREGAR CLIENTE
 
                 <span class="input-group-addon"><i class="fa fa-key"></i></span>
 
-                <input type="number" min="0" class="form-control input-lg" name="nuevoDocumentoId" placeholder="Ingresar documento" required>
+                <input type="text" class="form-control input-lg" name="nuevoDocumentoId" placeholder="NIT o Documento (máximo 11 dígitos)" maxlength="11" pattern="[0-9]{1,11}" required>
 
               </div>
 

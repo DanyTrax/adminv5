@@ -59,6 +59,54 @@ $(".tablas").on("click", ".btnEliminarCliente", function(){
 })
 
 /*=============================================
+VALIDACIÓN DE DOCUMENTO - SOLO NÚMEROS, MÁXIMO 11 DÍGITOS
+=============================================*/
+$(document).on('input', 'input[name="nuevoDocumentoId"]', function() {
+    // Remover cualquier carácter que no sea número
+    var valor = $(this).val().replace(/[^0-9]/g, '');
+    
+    // Limitar a 11 dígitos máximo
+    if (valor.length > 11) {
+        valor = valor.substring(0, 11);
+    }
+    
+    $(this).val(valor);
+    
+    // Validar longitud
+    if (valor.length < 1) {
+        $(this).css('border-color', '#f39c12');
+    } else if (valor.length > 11) {
+        $(this).css('border-color', '#e74c3c');
+    } else {
+        $(this).css('border-color', '#27ae60');
+    }
+});
+
+/*=============================================
+VALIDACIÓN DE DOCUMENTO EN MODAL EDITAR
+=============================================*/
+$(document).on('input', 'input[name="editarDocumentoId"]', function() {
+    // Remover cualquier carácter que no sea número
+    var valor = $(this).val().replace(/[^0-9]/g, '');
+    
+    // Limitar a 11 dígitos máximo
+    if (valor.length > 11) {
+        valor = valor.substring(0, 11);
+    }
+    
+    $(this).val(valor);
+    
+    // Validar longitud
+    if (valor.length < 1) {
+        $(this).css('border-color', '#f39c12');
+    } else if (valor.length > 11) {
+        $(this).css('border-color', '#e74c3c');
+    } else {
+        $(this).css('border-color', '#27ae60');
+    }
+});
+
+/*=============================================
 VALIDACIÓN DE TELÉFONO - SOLO NÚMEROS
 =============================================*/
 $(document).on('input', 'input[name="nuevoTelefono"]', function() {
