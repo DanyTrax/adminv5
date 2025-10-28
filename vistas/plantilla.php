@@ -172,7 +172,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "eliminar-despacho" => ["Administrador", "Vendedor", "Contador"],
         "stock-transito" => ["Administrador", "Vendedor", "Contador", "Transportador"],
         "registro-descargas-funcional" => ["Administrador", "Vendedor", "Contador", "Transportador"],
-        "personalizacion-colores" => ["Administrador"],
+        "personalizacion-colores-simplificado" => ["Administrador"],
         "salir" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"]
       ];
 

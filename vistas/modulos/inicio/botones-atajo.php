@@ -125,7 +125,7 @@ $modulos_disponibles = [
         "color" => "bg-orange",
         "perfiles" => ["Administrador"]
     ],
-    "personalizacion-colores" => [
+    "personalizacion-colores-simplificado" => [
         "icono" => "fa-paint-brush",
         "titulo" => "Personalización",
         "descripcion" => "Personalizar colores del sistema",
@@ -192,7 +192,7 @@ $categorias = [
     "Ventas" => ["ventas", "crear-venta", "clientes"],
     "Inventario" => ["productos", "categorias", "salidas-inventario", "entradas", "crear-entradas"],
     "Logística" => ["despachos", "crear-despacho", "stock-transito", "solicitudes-stock", "crear-solicitud-stock", "registro-descargas-funcional"],
-    "Administración" => ["usuarios", "sucursales", "usuarios-central", "clientes-central", "categorias-central", "personalizacion-colores"],
+    "Administración" => ["usuarios", "sucursales", "usuarios-central", "clientes-central", "categorias-central", "personalizacion-colores-simplificado"],
     "Reportes" => ["reportes", "reporte-detallado", "medios-pago", "contabilidad"]
 ];
 
