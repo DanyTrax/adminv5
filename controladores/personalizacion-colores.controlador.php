@@ -266,11 +266,11 @@ class ControladorPersonalizacionColores {
             }
             
             .logo-mini img {
-                content: url('{$configuracion['logo_mini_imagen']}') !important;
+                content: url('{$configuracion['logo_mini_imagen'] ?? 'vistas/img/plantilla/icono-blanco.png'}') !important;
             }
             
             .logo-lg img {
-                content: url('{$configuracion['logo_lg_imagen']}') !important;
+                content: url('{$configuracion['logo_lg_imagen'] ?? 'vistas/img/plantilla/logo-blanco-lineal.png'}') !important;
             }
             
             .logo-mini {
@@ -318,7 +318,7 @@ class ControladorPersonalizacionColores {
             }
             
             .login-logo img {
-                content: url('{$configuracion['login_logo_imagen']}') !important;
+                content: url('{$configuracion['login_logo_imagen'] ?? 'vistas/img/plantilla/Infinito1.png'}') !important;
             }
             
             .login-logo {
@@ -336,7 +336,7 @@ class ControladorPersonalizacionColores {
             
             /* Favicon */
             link[rel=\"icon\"] {
-                href: '{$configuracion['favicon_imagen']}' !important;
+                href: '{$configuracion['favicon_imagen'] ?? 'vistas/img/plantilla/icono-negro.png'}' !important;
             }
         </style>
         ";
