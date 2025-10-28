@@ -4,14 +4,14 @@ CREAR TABLA PERSONALIZACIÓN DE COLORES EN BD CENTRAL
 =============================================*/
 
 // Configuración de conexión a la base de datos central
-$host = 'localhost'; // o la IP de tu servidor
-$dbname = 'epicosie_central'; // nombre de tu BD central
-$username = 'epicosie_central'; // usuario de tu BD central
-$password = 'tu_password_aqui'; // contraseña de tu BD central
+$host = 'localhost';
+$dbname = 'epicosie_central';
+$username = 'epicosie_central';
+$password = '=Nf?M#6A\'QU&.6c';
 
 try {
     // Conectar a la base de datos central con charset específico
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     
@@ -49,7 +49,7 @@ try {
         usuario_creador INT,
         INDEX idx_activo (activo),
         INDEX idx_usuario_creador (usuario_creador)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ";
     
     $pdo->exec($sql);
