@@ -686,11 +686,54 @@ class ControladorStockTransito {
     /*=============================================
     REGISTRAR EN HISTÓRICO DE TRÁNSITO
     =============================================*/
-    // FUNCIÓN ELIMINADA: registrarHistoricoTransito
-    // El módulo "Histórico de Movimientos" fue eliminado completamente según solicitud del usuario
+    /*=============================================
+    REGISTRAR HISTÓRICO DE TRÁNSITO
+    =============================================*/
     static public function registrarHistoricoTransito($codigo, $descripcion, $cantidad, $tipoMovimiento, $transportadorId, $nombreTransportador, $sucursalOrigen, $sucursalDestino, $usuarioOrigen, $nombreUsuarioOrigen, $usuarioDestino, $nombreUsuarioDestino, $idDespacho, $numeroDespacho, $idSolicitudDescarga, $observaciones) {
-        // Función deshabilitada - módulo histórico eliminado
-        return true;
+        
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            
+            $conexionCentral = ConexionCentral::conectar();
+            
+            // Solo registrar descargas en la tabla de registro de descargas
+            if(in_array($tipoMovimiento, ['descarga', 'descarga_consolidada', 'descarga_directa', 'descarga_forzada'])) {
+                
+                $stmt = $conexionCentral->prepare("
+                    INSERT INTO registro_descargas_stock_transito (
+                        codigo_producto,
+                        descripcion_producto,
+                        cantidad_descargada,
+                        usuario_nombre,
+                        transportador_nombre,
+                        sucursal_nombre,
+                        numero_despacho,
+                        observaciones,
+                        fecha_descarga,
+                        created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                ");
+                
+                $stmt->execute([
+                    $codigo,
+                    $descripcion,
+                    $cantidad,
+                    $nombreUsuarioDestino ?? $nombreUsuarioOrigen ?? "Usuario",
+                    $nombreTransportador ?? "Sin transportador",
+                    $sucursalDestino ?? $sucursalOrigen ?? "Sucursal",
+                    $numeroDespacho ?? "Sin despacho",
+                    $observaciones ?? "Descarga registrada"
+                ]);
+                
+                error_log("✅ REGISTRO DE DESCARGA CREADO - Código: $codigo, Cantidad: $cantidad, Usuario: " . ($nombreUsuarioDestino ?? $nombreUsuarioOrigen ?? "Usuario"));
+            }
+            
+            return true;
+            
+        } catch(Exception $e) {
+            error_log("❌ Error registrando histórico: " . $e->getMessage());
+            return false;
+        }
     }
 
     /*=============================================
