@@ -1,157 +1,136 @@
 <?php
 
+session_start();
+
 require_once __DIR__ . "/../../../modelos/conexion.php";
 require_once __DIR__ . "/../../../api-transferencias/conexion-central.php";
 require_once __DIR__ . "/../../../controladores/despachos.controlador.php";
 
-class ExcelDespachoDetalle {
-    
-    private $despacho;
-    private $productos;
-    
-    public function __construct($idDespacho) {
-        // Obtener datos del despacho
-        $this->despacho = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
-        
-        if (!$this->despacho) {
-            throw new Exception("Despacho no encontrado");
-        }
-        
-        // Decodificar productos
-        $this->productos = json_decode($this->despacho["productos_despacho"], true);
-    }
-    
-    public function generarExcel() {
-        
-        // Configurar headers para Excel
-        header('Content-Type: application/vnd.ms-excel');
-        header('Content-Disposition: attachment; filename="Despacho_' . $this->despacho["numero_despacho"] . '_' . date('Y-m-d_H-i-s') . '.xls"');
-        header('Cache-Control: max-age=0');
-        
-        // Iniciar output
-        echo '<html>';
-        echo '<head>';
-        echo '<meta charset="UTF-8">';
-        echo '<style>';
-        echo 'table { border-collapse: collapse; width: 100%; }';
-        echo 'th, td { border: 1px solid #000; padding: 8px; text-align: left; }';
-        echo 'th { background-color: #4682B4; color: white; font-weight: bold; }';
-        echo '.header { background-color: #E6E6FA; font-weight: bold; }';
-        echo '.total { background-color: #DCDCDC; font-weight: bold; }';
-        echo '</style>';
-        echo '</head>';
-        echo '<body>';
-        
-        // TÍTULO PRINCIPAL
-        echo '<h2 style="text-align: center; color: #4682B4;">DETALLE DEL DESPACHO</h2>';
-        echo '<h3 style="text-align: center;">Número: ' . htmlspecialchars($this->despacho["numero_despacho"]) . '</h3>';
-        echo '<br>';
-        
-        // INFORMACIÓN GENERAL
-        echo '<table>';
-        echo '<tr><th colspan="4" style="text-align: center; background-color: #4682B4; color: white;">INFORMACIÓN GENERAL</th></tr>';
-        
-        $info = [
-            'Sucursal Origen' => $this->despacho["sucursal_origen"] ?? 'Sin especificar',
-            'Creado por' => $this->despacho["nombre_usuario_creador"] ?? 'Sin especificar',
-            'Fecha de Creación' => date('d/m/Y H:i', strtotime($this->despacho["fecha_creacion"])),
-            'Estado' => strtoupper($this->despacho["estado"]),
-            'Transportador' => $this->despacho["nombre_transportador"] ?? 'Sin asignar',
-            'Total Productos' => $this->despacho["total_productos"] . ' productos',
-            'Total Cantidad' => number_format($this->despacho["total_cantidad"]) . ' unidades'
-        ];
-        
-        foreach ($info as $label => $value) {
-            echo '<tr>';
-            echo '<td class="header" style="width: 30%;">' . htmlspecialchars($label) . '</td>';
-            echo '<td style="width: 70%;">' . htmlspecialchars($value) . '</td>';
-            echo '</tr>';
-        }
-        
-        echo '</table>';
-        echo '<br><br>';
-        
-        // TABLA DE PRODUCTOS
-        echo '<table>';
-        echo '<tr><th colspan="5" style="text-align: center; background-color: #4682B4; color: white;">PRODUCTOS A DESPACHAR</th></tr>';
-        
-        // Headers de productos
-        echo '<tr>';
-        echo '<th style="width: 8%;">#</th>';
-        echo '<th style="width: 15%;">Código</th>';
-        echo '<th style="width: 40%;">Descripción del Producto</th>';
-        echo '<th style="width: 12%;">Cantidad</th>';
-        echo '<th style="width: 25%;">Observaciones</th>';
-        echo '</tr>';
-        
-        // Datos de productos
-        $contador = 1;
-        $totalCantidad = 0;
-        
-        foreach ($this->productos as $producto) {
-            echo '<tr>';
-            echo '<td style="text-align: center;">' . $contador . '</td>';
-            echo '<td>' . htmlspecialchars($producto['codigo']) . '</td>';
-            echo '<td>' . htmlspecialchars($producto['descripcion']) . '</td>';
-            echo '<td style="text-align: center;">' . number_format($producto['cantidad']) . '</td>';
-            echo '<td>' . htmlspecialchars($producto['observaciones'] ?? '') . '</td>';
-            echo '</tr>';
-            
-            $totalCantidad += $producto['cantidad'];
-            $contador++;
-        }
-        
-        // Fila de totales
-        echo '<tr class="total">';
-        echo '<td colspan="3" style="text-align: right; font-weight: bold;">TOTAL:</td>';
-        echo '<td style="text-align: center; font-weight: bold;">' . number_format($totalCantidad) . '</td>';
-        echo '<td></td>';
-        echo '</tr>';
-        
-        echo '</table>';
-        
-        // DETALLE ADICIONAL (si existe)
-        if (!empty($this->despacho["detalle_adicional"])) {
-            echo '<br><br>';
-            echo '<table>';
-            echo '<tr><th style="text-align: center; background-color: #4682B4; color: white;">DETALLE ADICIONAL</th></tr>';
-            echo '<tr>';
-            echo '<td>' . nl2br(htmlspecialchars($this->despacho["detalle_adicional"])) . '</td>';
-            echo '</tr>';
-            echo '</table>';
-        }
-        
-        // INFORMACIÓN DEL DOCUMENTO
-        echo '<br><br>';
-        echo '<table>';
-        echo '<tr>';
-        echo '<td style="text-align: center; font-size: 10px; color: #666;">';
-        echo 'Documento generado el: ' . date('d/m/Y H:i:s') . '<br>';
-        echo 'Sistema de Gestión - Despacho ' . htmlspecialchars($this->despacho["numero_despacho"]);
-        echo '</td>';
-        echo '</tr>';
-        echo '</table>';
-        
-        echo '</body>';
-        echo '</html>';
-    }
+// Verificar que la sesión esté iniciada correctamente
+if (!isset($_SESSION['perfil'])) {
+    echo "Error: Sesión no iniciada";
+    exit;
 }
 
-// Función para generar Excel
-function generarExcelDespacho($idDespacho) {
-    
-    try {
-        $excel = new ExcelDespachoDetalle($idDespacho);
-        $excel->generarExcel();
-        
-    } catch (Exception $e) {
-        echo "Error al generar Excel: " . $e->getMessage();
-    }
+// Obtener ID del despacho
+$idDespacho = isset($_GET['id']) ? $_GET['id'] : null;
+
+if (!$idDespacho || !is_numeric($idDespacho)) {
+    echo "Error: ID de despacho inválido";
+    exit;
 }
 
-// Si se llama directamente
-if (isset($_GET['id']) && is_numeric($_GET['id'])) {
-    generarExcelDespacho($_GET['id']);
+try {
+    // Obtener datos del despacho
+    $despacho = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
+    
+    if (!$despacho) {
+        echo "Error: Despacho no encontrado";
+        exit;
+    }
+    
+    // Decodificar productos
+    $productos = json_decode($despacho["productos_despacho"], true);
+    
+    if (!$productos || !is_array($productos)) {
+        echo "Error: No se pudieron obtener los productos del despacho";
+        exit;
+    }
+    
+    // Configurar nombre del archivo
+    $nombreArchivo = 'Despacho_' . $despacho["numero_despacho"] . '_' . date('Y-m-d_H-i-s') . '.xls';
+    
+    // Configurar headers para Excel (igual que el sistema actual)
+    header('Expires: 0');
+    header('Cache-control: private');
+    header("Content-type: application/vnd.ms-excel; charset=utf-8");
+    header("Cache-Control: cache, must-revalidate");
+    header('Content-Description: File Transfer');
+    header('Last-Modified: ' . date('D, d M Y H:i:s'));
+    header("Pragma: public");
+    header('Content-Disposition:; filename="' . $nombreArchivo . '"');
+    header("Content-Transfer-Encoding: binary");
+    
+    // Generar contenido Excel usando el mismo método que el sistema
+    echo utf8_decode("<table border='1'>");
+    
+    // TÍTULO PRINCIPAL
+    echo utf8_decode("<tr><td colspan='5' style='font-weight:bold; text-align:center; font-size:16px; background-color:#4682B4; color:white;'>DETALLE DEL DESPACHO</td></tr>");
+    echo utf8_decode("<tr><td colspan='5' style='font-weight:bold; text-align:center; font-size:14px;'>Número: " . $despacho["numero_despacho"] . "</td></tr>");
+    echo utf8_decode("<tr><td colspan='5'></td></tr>"); // Línea vacía
+    
+    // INFORMACIÓN GENERAL
+    echo utf8_decode("<tr><td colspan='5' style='font-weight:bold; text-align:center; background-color:#E6E6FA;'>INFORMACIÓN GENERAL</td></tr>");
+    
+    $info = [
+        'Sucursal Origen' => $despacho["sucursal_origen"] ?? 'Sin especificar',
+        'Creado por' => $despacho["nombre_usuario_creador"] ?? 'Sin especificar',
+        'Fecha de Creación' => date('d/m/Y H:i', strtotime($despacho["fecha_creacion"])),
+        'Estado' => strtoupper($despacho["estado"]),
+        'Transportador' => $despacho["nombre_transportador"] ?? 'Sin asignar',
+        'Total Productos' => $despacho["total_productos"] . ' productos',
+        'Total Cantidad' => number_format($despacho["total_cantidad"]) . ' unidades'
+    ];
+    
+    foreach ($info as $label => $value) {
+        echo utf8_decode("<tr><td style='font-weight:bold; background-color:#F0F0F0;'>" . $label . "</td><td colspan='4'>" . $value . "</td></tr>");
+    }
+    
+    echo utf8_decode("<tr><td colspan='5'></td></tr>"); // Línea vacía
+    
+    // TABLA DE PRODUCTOS
+    echo utf8_decode("<tr><td colspan='5' style='font-weight:bold; text-align:center; background-color:#E6E6FA;'>PRODUCTOS A DESPACHAR</td></tr>");
+    
+    // Headers de productos
+    echo utf8_decode("<tr>");
+    echo utf8_decode("<td style='font-weight:bold; background-color:#4682B4; color:white; text-align:center;'>#</td>");
+    echo utf8_decode("<td style='font-weight:bold; background-color:#4682B4; color:white; text-align:center;'>Código</td>");
+    echo utf8_decode("<td style='font-weight:bold; background-color:#4682B4; color:white; text-align:center;'>Descripción del Producto</td>");
+    echo utf8_decode("<td style='font-weight:bold; background-color:#4682B4; color:white; text-align:center;'>Cantidad</td>");
+    echo utf8_decode("<td style='font-weight:bold; background-color:#4682B4; color:white; text-align:center;'>Observaciones</td>");
+    echo utf8_decode("</tr>");
+    
+    // Datos de productos
+    $contador = 1;
+    $totalCantidad = 0;
+    
+    foreach ($productos as $producto) {
+        echo utf8_decode("<tr>");
+        echo utf8_decode("<td style='text-align:center;'>" . $contador . "</td>");
+        echo utf8_decode("<td>" . $producto['codigo'] . "</td>");
+        echo utf8_decode("<td>" . $producto['descripcion'] . "</td>");
+        echo utf8_decode("<td style='text-align:center;'>" . number_format($producto['cantidad']) . "</td>");
+        echo utf8_decode("<td>" . ($producto['observaciones'] ?? '') . "</td>");
+        echo utf8_decode("</tr>");
+        
+        $totalCantidad += $producto['cantidad'];
+        $contador++;
+    }
+    
+    // Fila de totales
+    echo utf8_decode("<tr>");
+    echo utf8_decode("<td colspan='3' style='font-weight:bold; text-align:right; background-color:#DCDCDC;'>TOTAL:</td>");
+    echo utf8_decode("<td style='font-weight:bold; text-align:center; background-color:#DCDCDC;'>" . number_format($totalCantidad) . "</td>");
+    echo utf8_decode("<td style='background-color:#DCDCDC;'></td>");
+    echo utf8_decode("</tr>");
+    
+    // DETALLE ADICIONAL (si existe)
+    if (!empty($despacho["detalle_adicional"])) {
+        echo utf8_decode("<tr><td colspan='5'></td></tr>"); // Línea vacía
+        echo utf8_decode("<tr><td colspan='5' style='font-weight:bold; text-align:center; background-color:#E6E6FA;'>DETALLE ADICIONAL</td></tr>");
+        echo utf8_decode("<tr><td colspan='5'>" . $despacho["detalle_adicional"] . "</td></tr>");
+    }
+    
+    // INFORMACIÓN DEL DOCUMENTO
+    echo utf8_decode("<tr><td colspan='5'></td></tr>"); // Línea vacía
+    echo utf8_decode("<tr><td colspan='5' style='text-align:center; font-size:10px; color:#666;'>");
+    echo utf8_decode("Documento generado el: " . date('d/m/Y H:i:s') . " | Sistema de Gestión - Despacho " . $despacho["numero_despacho"]);
+    echo utf8_decode("</td></tr>");
+    
+    echo utf8_decode("</table>");
+    
+} catch (Exception $e) {
+    echo "Error al generar Excel: " . $e->getMessage();
 }
 
 ?>

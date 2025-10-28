@@ -1,221 +1,218 @@
 <?php
 
-require_once __DIR__ . "/../../tcpdf/tcpdf.php";
+session_start();
+
+// Verificar que el usuario esté logueado
+if(!isset($_SESSION['id'])) {
+    die('Acceso denegado');
+}
+
+// Incluir conexiones y modelos necesarios
 require_once __DIR__ . "/../../../modelos/conexion.php";
 require_once __DIR__ . "/../../../api-transferencias/conexion-central.php";
 require_once __DIR__ . "/../../../controladores/despachos.controlador.php";
 
-class PDFDespachoDetalle extends TCPDF {
-    
-    private $despacho;
-    private $productos;
-    
-    public function __construct($idDespacho) {
-        parent::__construct(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-        
-        // Obtener datos del despacho
-        $this->despacho = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
-        
-        if (!$this->despacho) {
-            throw new Exception("Despacho no encontrado");
-        }
-        
-        // Decodificar productos
-        $this->productos = json_decode($this->despacho["productos_despacho"], true);
-        
-        // Configurar documento
-        $this->SetCreator('Sistema de Gestión');
-        $this->SetAuthor('Sistema de Gestión');
-        $this->SetTitle('Detalle del Despacho ' . $this->despacho["numero_despacho"]);
-        $this->SetSubject('Detalle del Despacho');
-        
-        // Configurar márgenes
-        $this->SetMargins(15, 20, 15);
-        $this->SetHeaderMargin(10);
-        $this->SetFooterMargin(10);
-        
-        // Configurar auto page break
-        $this->SetAutoPageBreak(TRUE, 20);
-        
-        // Agregar página
-        $this->AddPage();
-        
-        // Generar contenido
-        $this->generarContenido();
-    }
-    
-    private function generarContenido() {
-        
-        // HEADER DEL DOCUMENTO
-        $this->generarHeader();
-        
-        // INFORMACIÓN GENERAL
-        $this->generarInformacionGeneral();
-        
-        // TABLA DE PRODUCTOS
-        $this->generarTablaProductos();
-        
-        // DETALLE ADICIONAL
-        if (!empty($this->despacho["detalle_adicional"])) {
-            $this->generarDetalleAdicional();
-        }
-        
-        // FOOTER
-        $this->generarFooter();
-    }
-    
-    private function generarHeader() {
-        
-        // Logo y título principal
-        $this->SetFont('helvetica', 'B', 16);
-        $this->Cell(0, 10, 'DETALLE DEL DESPACHO', 0, 1, 'C');
-        
-        $this->SetFont('helvetica', 'B', 14);
-        $this->Cell(0, 8, 'Número: ' . $this->despacho["numero_despacho"], 0, 1, 'C');
-        
-        $this->Ln(5);
-        
-        // Línea separadora
-        $this->Line(15, $this->GetY(), 195, $this->GetY());
-        $this->Ln(5);
-    }
-    
-    private function generarInformacionGeneral() {
-        
-        $this->SetFont('helvetica', 'B', 12);
-        $this->Cell(0, 8, 'INFORMACIÓN GENERAL', 0, 1, 'L');
-        $this->Ln(2);
-        
-        // Crear tabla de información
-        $this->SetFont('helvetica', '', 10);
-        
-        $info = [
-            'Sucursal Origen' => $this->despacho["sucursal_origen"] ?? 'Sin especificar',
-            'Creado por' => $this->despacho["nombre_usuario_creador"] ?? 'Sin especificar',
-            'Fecha de Creación' => date('d/m/Y H:i', strtotime($this->despacho["fecha_creacion"])),
-            'Estado' => strtoupper($this->despacho["estado"]),
-            'Transportador' => $this->despacho["nombre_transportador"] ?? 'Sin asignar',
-            'Total Productos' => $this->despacho["total_productos"] . ' productos',
-            'Total Cantidad' => number_format($this->despacho["total_cantidad"]) . ' unidades'
-        ];
-        
-        $this->SetFillColor(240, 240, 240);
-        
-        foreach ($info as $label => $value) {
-            $this->Cell(60, 6, $label . ':', 1, 0, 'L', true);
-            $this->Cell(120, 6, $value, 1, 1, 'L');
-        }
-        
-        $this->Ln(5);
-    }
-    
-    private function generarTablaProductos() {
-        
-        $this->SetFont('helvetica', 'B', 12);
-        $this->Cell(0, 8, 'PRODUCTOS A DESPACHAR', 0, 1, 'L');
-        $this->Ln(2);
-        
-        // Headers de la tabla
-        $this->SetFont('helvetica', 'B', 9);
-        $this->SetFillColor(70, 130, 180);
-        $this->SetTextColor(255, 255, 255);
-        
-        $this->Cell(15, 8, '#', 1, 0, 'C', true);
-        $this->Cell(30, 8, 'Código', 1, 0, 'C', true);
-        $this->Cell(80, 8, 'Descripción', 1, 0, 'C', true);
-        $this->Cell(25, 8, 'Cantidad', 1, 0, 'C', true);
-        $this->Cell(45, 8, 'Observaciones', 1, 1, 'C', true);
-        
-        // Restaurar color de texto
-        $this->SetTextColor(0, 0, 0);
-        
-        // Datos de productos
-        $this->SetFont('helvetica', '', 8);
-        $this->SetFillColor(250, 250, 250);
-        
-        $contador = 1;
-        $totalCantidad = 0;
-        
-        foreach ($this->productos as $producto) {
-            $fill = ($contador % 2 == 0);
-            
-            $this->Cell(15, 6, $contador, 1, 0, 'C', $fill);
-            $this->Cell(30, 6, $producto['codigo'], 1, 0, 'C', $fill);
-            $this->Cell(80, 6, substr($producto['descripcion'], 0, 50) . (strlen($producto['descripcion']) > 50 ? '...' : ''), 1, 0, 'L', $fill);
-            $this->Cell(25, 6, number_format($producto['cantidad']), 1, 0, 'C', $fill);
-            $this->Cell(45, 6, substr($producto['observaciones'] ?? '', 0, 30) . (strlen($producto['observaciones'] ?? '') > 30 ? '...' : ''), 1, 1, 'L', $fill);
-            
-            $totalCantidad += $producto['cantidad'];
-            $contador++;
-        }
-        
-        // Fila de totales
-        $this->SetFont('helvetica', 'B', 9);
-        $this->SetFillColor(220, 220, 220);
-        
-        $this->Cell(125, 6, 'TOTAL:', 1, 0, 'R', true);
-        $this->Cell(25, 6, number_format($totalCantidad), 1, 0, 'C', true);
-        $this->Cell(45, 6, '', 1, 1, 'C', true);
-        
-        $this->Ln(5);
-    }
-    
-    private function generarDetalleAdicional() {
-        
-        $this->SetFont('helvetica', 'B', 12);
-        $this->Cell(0, 8, 'DETALLE ADICIONAL', 0, 1, 'L');
-        $this->Ln(2);
-        
-        $this->SetFont('helvetica', '', 10);
-        $this->MultiCell(0, 6, $this->despacho["detalle_adicional"], 1, 'L', false);
-        
-        $this->Ln(5);
-    }
-    
-    private function generarFooter() {
-        
-        // Línea separadora
-        $this->Line(15, $this->GetY(), 195, $this->GetY());
-        $this->Ln(5);
-        
-        // Información del documento
-        $this->SetFont('helvetica', '', 8);
-        $this->Cell(0, 5, 'Documento generado el: ' . date('d/m/Y H:i:s'), 0, 1, 'C');
-        $this->Cell(0, 5, 'Sistema de Gestión - Despacho ' . $this->despacho["numero_despacho"], 0, 1, 'C');
-    }
-    
-    // Sobrescribir Header para personalizar
-    public function Header() {
-        // Header vacío - usamos nuestro propio header en el contenido
-    }
-    
-    // Sobrescribir Footer para personalizar
-    public function Footer() {
-        // Footer vacío - usamos nuestro propio footer en el contenido
-    }
+// Obtener ID del despacho
+$idDespacho = isset($_GET['id']) ? $_GET['id'] : null;
+
+if (!$idDespacho || !is_numeric($idDespacho)) {
+    die('ID de despacho inválido');
 }
 
-// Función para generar PDF
-function generarPDFDespacho($idDespacho) {
+try {
+    // Obtener datos del despacho
+    $despacho = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
     
-    try {
-        $pdf = new PDFDespachoDetalle($idDespacho);
-        
-        // Nombre del archivo
-        $despacho = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
-        $nombreArchivo = 'Despacho_' . $despacho["numero_despacho"] . '_' . date('Y-m-d_H-i-s') . '.pdf';
-        
-        // Descargar el PDF
-        $pdf->Output($nombreArchivo, 'D');
-        
-    } catch (Exception $e) {
-        echo "Error al generar PDF: " . $e->getMessage();
+    if (!$despacho) {
+        die('Despacho no encontrado');
     }
-}
-
-// Si se llama directamente
-if (isset($_GET['id']) && is_numeric($_GET['id'])) {
-    generarPDFDespacho($_GET['id']);
+    
+    // Decodificar productos
+    $productos = json_decode($despacho["productos_despacho"], true);
+    
+    if (!$productos || !is_array($productos)) {
+        die('No se pudieron obtener los productos del despacho');
+    }
+    
+    // Obtener información del usuario actual
+    $stmtUsuario = Conexion::conectar()->prepare("
+        SELECT nombre, perfil FROM usuarios 
+        WHERE id = :id
+    ");
+    $stmtUsuario->bindParam(":id", $_SESSION['id'], PDO::PARAM_INT);
+    $stmtUsuario->execute();
+    $usuarioActual = $stmtUsuario->fetch();
+    
+    // Incluir TCPDF
+    require_once('tcpdf_include.php');
+    
+    // Crear instancia PDF
+    $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+    
+    // Configuración del PDF
+    $pdf->SetCreator('Sistema de Gestión');
+    $pdf->SetAuthor($usuarioActual['nombre']);
+    $pdf->SetTitle('Detalle del Despacho ' . $despacho["numero_despacho"]);
+    $pdf->SetSubject('Detalle del Despacho');
+    
+    // Quitar header y footer por defecto
+    $pdf->setPrintHeader(false);
+    $pdf->setPrintFooter(false);
+    
+    // Configurar márgenes
+    $pdf->SetMargins(15, 15, 15);
+    $pdf->SetAutoPageBreak(TRUE, 15);
+    
+    // Agregar página
+    $pdf->AddPage();
+    
+    // Definir colores
+    $colorPrimario = array(60, 141, 188); // Azul
+    $colorSecundario = array(243, 156, 18); // Naranja
+    $colorExito = array(0, 166, 90); // Verde
+    $colorPeligro = array(221, 75, 57); // Rojo
+    
+    // Color según estado
+    $colorEstado = $colorSecundario; // Por defecto amarillo
+    switch($despacho["estado"]) {
+        case 'aceptado':
+        case 'en_transito':
+            $colorEstado = $colorExito;
+            break;
+        case 'cancelado':
+            $colorEstado = $colorPeligro;
+            break;
+    }
+    
+    // ENCABEZADO PRINCIPAL
+    $pdf->SetFont('helvetica', 'B', 20);
+    $pdf->SetTextColor($colorPrimario[0], $colorPrimario[1], $colorPrimario[2]);
+    $pdf->Cell(0, 15, 'DETALLE DEL DESPACHO', 0, 1, 'C');
+    
+    // NÚMERO DE DESPACHO
+    $pdf->SetFont('helvetica', 'B', 16);
+    $pdf->SetTextColor($colorEstado[0], $colorEstado[1], $colorEstado[2]);
+    $pdf->Cell(0, 10, $despacho["numero_despacho"], 0, 1, 'C');
+    
+    $pdf->Ln(5);
+    
+    // INFORMACIÓN GENERAL
+    $pdf->SetFont('helvetica', 'B', 12);
+    $pdf->SetTextColor(0, 0, 0);
+    $pdf->Cell(0, 8, 'INFORMACIÓN GENERAL', 0, 1, 'L');
+    
+    // Línea debajo del título
+    $pdf->SetDrawColor($colorPrimario[0], $colorPrimario[1], $colorPrimario[2]);
+    $pdf->Line(15, $pdf->GetY(), 195, $pdf->GetY());
+    $pdf->Ln(3);
+    
+    // Tabla de información general
+    $pdf->SetFont('helvetica', '', 10);
+    $pdf->SetFillColor(240, 240, 240);
+    
+    $info = [
+        'Sucursal Origen' => $despacho["sucursal_origen"] ?? 'Sin especificar',
+        'Creado por' => $despacho["nombre_usuario_creador"] ?? 'Sin especificar',
+        'Fecha de Creación' => date('d/m/Y H:i', strtotime($despacho["fecha_creacion"])),
+        'Estado' => strtoupper($despacho["estado"]),
+        'Transportador' => $despacho["nombre_transportador"] ?? 'Sin asignar',
+        'Total Productos' => $despacho["total_productos"] . ' productos',
+        'Total Cantidad' => number_format($despacho["total_cantidad"]) . ' unidades'
+    ];
+    
+    foreach ($info as $label => $value) {
+        $pdf->Cell(60, 6, $label . ':', 1, 0, 'L', true);
+        $pdf->Cell(120, 6, $value, 1, 1, 'L');
+    }
+    
+    $pdf->Ln(5);
+    
+    // PRODUCTOS A DESPACHAR
+    $pdf->SetFont('helvetica', 'B', 12);
+    $pdf->Cell(0, 8, 'PRODUCTOS A DESPACHAR', 0, 1, 'L');
+    
+    // Línea debajo del título
+    $pdf->Line(15, $pdf->GetY(), 195, $pdf->GetY());
+    $pdf->Ln(3);
+    
+    // Headers de la tabla
+    $pdf->SetFont('helvetica', 'B', 9);
+    $pdf->SetFillColor($colorPrimario[0], $colorPrimario[1], $colorPrimario[2]);
+    $pdf->SetTextColor(255, 255, 255);
+    
+    $pdf->Cell(15, 8, '#', 1, 0, 'C', true);
+    $pdf->Cell(30, 8, 'Código', 1, 0, 'C', true);
+    $pdf->Cell(80, 8, 'Descripción', 1, 0, 'C', true);
+    $pdf->Cell(25, 8, 'Cantidad', 1, 0, 'C', true);
+    $pdf->Cell(45, 8, 'Observaciones', 1, 1, 'C', true);
+    
+    // Restaurar color de texto
+    $pdf->SetTextColor(0, 0, 0);
+    
+    // Datos de productos
+    $pdf->SetFont('helvetica', '', 8);
+    $pdf->SetFillColor(250, 250, 250);
+    
+    $contador = 1;
+    $totalCantidad = 0;
+    
+    foreach ($productos as $producto) {
+        $fill = ($contador % 2 == 0);
+        
+        $pdf->Cell(15, 6, $contador, 1, 0, 'C', $fill);
+        $pdf->Cell(30, 6, $producto['codigo'], 1, 0, 'C', $fill);
+        $pdf->Cell(80, 6, substr($producto['descripcion'], 0, 50) . (strlen($producto['descripcion']) > 50 ? '...' : ''), 1, 0, 'L', $fill);
+        $pdf->Cell(25, 6, number_format($producto['cantidad']), 1, 0, 'C', $fill);
+        $pdf->Cell(45, 6, substr($producto['observaciones'] ?? '', 0, 30) . (strlen($producto['observaciones'] ?? '') > 30 ? '...' : ''), 1, 1, 'L', $fill);
+        
+        $totalCantidad += $producto['cantidad'];
+        $contador++;
+    }
+    
+    // Fila de totales
+    $pdf->SetFont('helvetica', 'B', 9);
+    $pdf->SetFillColor(220, 220, 220);
+    
+    $pdf->Cell(125, 6, 'TOTAL:', 1, 0, 'R', true);
+    $pdf->Cell(25, 6, number_format($totalCantidad), 1, 0, 'C', true);
+    $pdf->Cell(45, 6, '', 1, 1, 'C', true);
+    
+    $pdf->Ln(5);
+    
+    // DETALLE ADICIONAL (si existe)
+    if (!empty($despacho["detalle_adicional"])) {
+        $pdf->SetFont('helvetica', 'B', 12);
+        $pdf->Cell(0, 8, 'DETALLE ADICIONAL', 0, 1, 'L');
+        
+        // Línea debajo del título
+        $pdf->Line(15, $pdf->GetY(), 195, $pdf->GetY());
+        $pdf->Ln(3);
+        
+        $pdf->SetFont('helvetica', '', 10);
+        $pdf->MultiCell(0, 6, $despacho["detalle_adicional"], 1, 'L', false);
+        
+        $pdf->Ln(5);
+    }
+    
+    // FOOTER
+    $pdf->SetDrawColor(200, 200, 200);
+    $pdf->Line(15, $pdf->GetY(), 195, $pdf->GetY());
+    $pdf->Ln(5);
+    
+    // Información del documento
+    $pdf->SetFont('helvetica', '', 8);
+    $pdf->Cell(0, 5, 'Documento generado el: ' . date('d/m/Y H:i:s'), 0, 1, 'C');
+    $pdf->Cell(0, 5, 'Generado por: ' . $usuarioActual['nombre'] . ' (' . $usuarioActual['perfil'] . ')', 0, 1, 'C');
+    $pdf->Cell(0, 5, 'Sistema de Gestión - Despacho ' . $despacho["numero_despacho"], 0, 1, 'C');
+    
+    // Generar y mostrar PDF
+    ob_end_clean();
+    
+    $nombreArchivo = 'Despacho_' . $despacho["numero_despacho"] . '_' . date('Y-m-d_H-i-s') . '.pdf';
+    $pdf->Output($nombreArchivo, 'I'); // 'I' para mostrar en navegador, 'D' para descargar
+    
+} catch (Exception $e) {
+    die('Error generando PDF: ' . $e->getMessage());
 }
 
 ?>
