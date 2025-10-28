@@ -17,7 +17,7 @@
                 <h3 class="box-title">Registro de Descargas</h3>
                 <div class="box-tools pull-right">
                     <?php
-                        $urlDescarga = "vistas/modulos/descargar-registro-descargas.php";
+                        $urlDescarga = "vistas/modulos/descargar-registro-descargas-funcional.php";
                         if (isset($_GET["fechaInicial"])) {
                             $urlDescarga .= "?fechaInicial=" . $_GET["fechaInicial"] . "&fechaFinal=" . $_GET["fechaFinal"];
                         }
