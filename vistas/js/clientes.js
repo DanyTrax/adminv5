@@ -57,3 +57,41 @@ $(".tablas").on("click", ".btnEliminarCliente", function(){
   })
 
 })
+
+/*=============================================
+VALIDACIÓN DE TELÉFONO - SOLO NÚMEROS
+=============================================*/
+$(document).on('input', 'input[name="nuevoTelefono"]', function() {
+    // Remover cualquier carácter que no sea número
+    var valor = $(this).val().replace(/[^0-9]/g, '');
+    $(this).val(valor);
+    
+    // Validar longitud
+    if (valor.length < 7) {
+        $(this).css('border-color', '#f39c12');
+    } else if (valor.length > 10) {
+        $(this).val(valor.substring(0, 10));
+        $(this).css('border-color', '#e74c3c');
+    } else {
+        $(this).css('border-color', '#27ae60');
+    }
+});
+
+/*=============================================
+VALIDACIÓN DE TELÉFONO EN MODAL EDITAR
+=============================================*/
+$(document).on('input', 'input[name="editarTelefono"]', function() {
+    // Remover cualquier carácter que no sea número
+    var valor = $(this).val().replace(/[^0-9]/g, '');
+    $(this).val(valor);
+    
+    // Validar longitud
+    if (valor.length < 7) {
+        $(this).css('border-color', '#f39c12');
+    } else if (valor.length > 10) {
+        $(this).val(valor.substring(0, 10));
+        $(this).css('border-color', '#e74c3c');
+    } else {
+        $(this).css('border-color', '#27ae60');
+    }
+});

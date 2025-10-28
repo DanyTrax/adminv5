@@ -217,7 +217,7 @@ MODAL AGREGAR CLIENTE
 
                 <span class="input-group-addon"><i class="fa fa-phone"></i></span>
 
-                <input type="text" class="form-control input-lg" name="nuevoTelefono" placeholder="Ingresar teléfono" data-inputmask="'mask':'(999) 999-9999'" data-mask required>
+                <input type="text" class="form-control input-lg" name="nuevoTelefono" placeholder="Ingresar teléfono (7-10 dígitos)" pattern="[0-9]{7,10}" minlength="7" maxlength="10" required>
 
               </div>
 
@@ -231,7 +231,7 @@ MODAL AGREGAR CLIENTE
 
                 <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
 
-                <input type="text" class="form-control input-lg" name="nuevaDireccion" placeholder="Ingresar dirección">
+                <input type="text" class="form-control input-lg" name="nuevaDireccion" placeholder="Ingresar dirección (acepta caracteres especiales)">
 
               </div>
 
