@@ -125,6 +125,13 @@ $modulos_disponibles = [
         "color" => "bg-orange",
         "perfiles" => ["Administrador"]
     ],
+    "personalizacion-colores" => [
+        "icono" => "fa-palette",
+        "titulo" => "Personalización",
+        "descripcion" => "Personalizar colores del sistema",
+        "color" => "bg-pink",
+        "perfiles" => ["Administrador"]
+    ],
     "despachos" => [
         "icono" => "fa-truck",
         "titulo" => "Despachos",
@@ -185,7 +192,7 @@ $categorias = [
     "Ventas" => ["ventas", "crear-venta", "clientes"],
     "Inventario" => ["productos", "categorias", "salidas-inventario", "entradas", "crear-entradas"],
     "Logística" => ["despachos", "crear-despacho", "stock-transito", "solicitudes-stock", "crear-solicitud-stock", "registro-descargas-funcional"],
-    "Administración" => ["usuarios", "sucursales", "usuarios-central", "clientes-central", "categorias-central"],
+    "Administración" => ["usuarios", "sucursales", "usuarios-central", "clientes-central", "categorias-central", "personalizacion-colores"],
     "Reportes" => ["reportes", "reporte-detallado", "medios-pago", "contabilidad"]
 ];
 
