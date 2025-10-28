@@ -34,6 +34,10 @@ class ControladorPersonalizacionColores {
                 'logo_mini_color',
                 'logo_lg_color',
                 'logo_background_color',
+                'logo_mini_imagen',
+                'logo_lg_imagen',
+                'login_logo_imagen',
+                'favicon_imagen',
                 'icon_color',
                 'sidebar_toggle_hover_color',
                 'dropdown_hover_color',
@@ -91,6 +95,10 @@ class ControladorPersonalizacionColores {
                 'logo_mini_color' => $_POST['logo_mini_color'],
                 'logo_lg_color' => $_POST['logo_lg_color'],
                 'logo_background_color' => $_POST['logo_background_color'],
+                'logo_mini_imagen' => $_POST['logo_mini_imagen'],
+                'logo_lg_imagen' => $_POST['logo_lg_imagen'],
+                'login_logo_imagen' => $_POST['login_logo_imagen'],
+                'favicon_imagen' => $_POST['favicon_imagen'],
                 'icon_color' => $_POST['icon_color'],
                 'sidebar_toggle_hover_color' => $_POST['sidebar_toggle_hover_color'],
                 'dropdown_hover_color' => $_POST['dropdown_hover_color'],
@@ -257,6 +265,14 @@ class ControladorPersonalizacionColores {
                 background-color: {$configuracion['logo_background_color']} !important;
             }
             
+            .logo-mini img {
+                content: url('{$configuracion['logo_mini_imagen']}') !important;
+            }
+            
+            .logo-lg img {
+                content: url('{$configuracion['logo_lg_imagen']}') !important;
+            }
+            
             .logo-mini {
                 color: {$configuracion['logo_mini_color']} !important;
             }
@@ -301,6 +317,10 @@ class ControladorPersonalizacionColores {
                 background: linear-gradient(135deg, {$configuracion['login_gradient_start']} 0%, {$configuracion['login_gradient_end']} 100%) !important;
             }
             
+            .login-logo img {
+                content: url('{$configuracion['login_logo_imagen']}') !important;
+            }
+            
             .login-logo {
                 color: {$configuracion['login_logo_color']} !important;
             }
@@ -312,6 +332,11 @@ class ControladorPersonalizacionColores {
             /* Register Page */
             .register-page {
                 background: linear-gradient(135deg, {$configuracion['login_gradient_start']} 0%, {$configuracion['login_gradient_end']} 100%) !important;
+            }
+            
+            /* Favicon */
+            link[rel=\"icon\"] {
+                href: '{$configuracion['favicon_imagen']}' !important;
             }
         </style>
         ";

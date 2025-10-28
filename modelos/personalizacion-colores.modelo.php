@@ -56,6 +56,10 @@ class ModeloPersonalizacionColores {
             'logo_mini_color' => '#ffffff',
             'logo_lg_color' => '#ffffff',
             'logo_background_color' => '#3c8dbc',
+            'logo_mini_imagen' => 'vistas/img/plantilla/icono-blanco.png',
+            'logo_lg_imagen' => 'vistas/img/plantilla/logo-blanco-lineal.png',
+            'login_logo_imagen' => 'vistas/img/plantilla/Infinito1.png',
+            'favicon_imagen' => 'vistas/img/plantilla/icono-negro.png',
             'icon_color' => '#3c8dbc',
             'sidebar_toggle_hover_color' => '#2c3e50',
             'dropdown_hover_color' => '#f5f5f5',
@@ -96,6 +100,10 @@ class ModeloPersonalizacionColores {
                     logo_mini_color,
                     logo_lg_color,
                     logo_background_color,
+                    logo_mini_imagen,
+                    logo_lg_imagen,
+                    login_logo_imagen,
+                    favicon_imagen,
                     icon_color,
                     sidebar_toggle_hover_color,
                     dropdown_hover_color,
@@ -110,7 +118,7 @@ class ModeloPersonalizacionColores {
                     login_text_color,
                     activo,
                     usuario_creador
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
             ");
             
             $resultado = $stmt->execute([
@@ -124,6 +132,10 @@ class ModeloPersonalizacionColores {
                 $datos['logo_mini_color'],
                 $datos['logo_lg_color'],
                 $datos['logo_background_color'],
+                $datos['logo_mini_imagen'],
+                $datos['logo_lg_imagen'],
+                $datos['login_logo_imagen'],
+                $datos['favicon_imagen'],
                 $datos['icon_color'],
                 $datos['sidebar_toggle_hover_color'],
                 $datos['dropdown_hover_color'],
