@@ -12,9 +12,9 @@ if(!isset($_SESSION['id'])) {
 }
 
 // Incluir conexiones y modelos necesarios
-require_once __DIR__ . "/../../../modelos/conexion.php";
-require_once __DIR__ . "/../../../api-transferencias/conexion-central.php";
-require_once __DIR__ . "/../../../controladores/despachos.controlador.php";
+require_once __DIR__ . "/../../modelos/conexion.php";
+require_once __DIR__ . "/../../api-transferencias/conexion-central.php";
+require_once __DIR__ . "/../../controladores/despachos.controlador.php";
 
 // Obtener ID del despacho
 $idDespacho = isset($_GET['id']) ? $_GET['id'] : null;

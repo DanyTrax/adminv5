@@ -22,13 +22,13 @@ try {
     // Incluir conexiones y modelos necesarios
     echo "🔍 Incluyendo archivos...<br>";
     
-    require_once __DIR__ . "/../../../modelos/conexion.php";
+    require_once __DIR__ . "/../../modelos/conexion.php";
     echo "✅ modelos/conexion.php incluido<br>";
     
-    require_once __DIR__ . "/../../../api-transferencias/conexion-central.php";
+    require_once __DIR__ . "/../../api-transferencias/conexion-central.php";
     echo "✅ api-transferencias/conexion-central.php incluido<br>";
     
-    require_once __DIR__ . "/../../../controladores/despachos.controlador.php";
+    require_once __DIR__ . "/../../controladores/despachos.controlador.php";
     echo "✅ controladores/despachos.controlador.php incluido<br>";
     
     echo "✅ Todos los archivos incluidos correctamente<br><br>";
