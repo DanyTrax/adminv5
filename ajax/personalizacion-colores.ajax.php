@@ -1,148 +1,210 @@
 <?php
 /*=============================================
-AJAX PERSONALIZACIÓN DE COLORES
+AJAX PERSONALIZACIÓN DE COLORES CON SUBIDA DE IMÁGENES
 =============================================*/
 
-session_start();
+require_once "../controladores/personalizacion-colores-simplificado-con-imagenes.controlador.php";
 
-require_once "../controladores/personalizacion-colores.controlador.php";
-require_once "../modelos/personalizacion-colores.modelo.php";
-
-if(isset($_POST["accion"])) {
+if (isset($_POST["accion"])) {
     
-    switch($_POST["accion"]) {
+    switch ($_POST["accion"]) {
         
-        case "obtenerConfiguracionActiva":
-            $configuracion = ControladorPersonalizacionColores::ctrMostrarConfiguracionActiva();
-            echo json_encode([
-                "success" => true,
-                "configuracion" => $configuracion
-            ]);
-            break;
+        case "subir_imagen":
             
-        case "actualizarConfiguracion":
-            if(isset($_POST["datos"])) {
-                $datos = json_decode($_POST["datos"], true);
+            if (isset($_FILES["imagen"]) && isset($_POST["tipo"])) {
                 
-                // Validar campos requeridos
-                $camposRequeridos = [
-                    'nombre_configuracion',
-                    'navbar_color',
-                    'navbar_text_color',
-                    'navbar_hover_color',
-                    'sidebar_color',
-                    'sidebar_text_color',
-                    'sidebar_hover_color',
-                    'logo_mini_color',
-                    'logo_lg_color',
-                    'logo_background_color',
-                    'icon_color',
-                    'sidebar_toggle_hover_color',
-                    'dropdown_hover_color',
-                    'button_primary_color',
-                    'button_primary_hover_color',
-                    'link_hover_color',
-                    'active_menu_color',
-                    'active_menu_text_color',
-                    'login_gradient_start',
-                    'login_gradient_end',
-                    'login_logo_color',
-                    'login_text_color'
-                ];
+                $tipo = $_POST["tipo"];
+                $archivo = $_FILES["imagen"];
                 
-                $valido = true;
-                $mensaje = "";
-                
-                foreach ($camposRequeridos as $campo) {
-                    if (empty($datos[$campo])) {
-                        $valido = false;
-                        $mensaje = "El campo '$campo' es requerido";
-                        break;
-                    }
+                // Validar tipo de archivo
+                $tiposPermitidos = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+                if (!in_array($archivo['type'], $tiposPermitidos)) {
+                    echo json_encode([
+                        'success' => false,
+                        'error' => 'Tipo de archivo no permitido. Solo se permiten: JPEG, PNG, GIF, WebP'
+                    ]);
+                    exit;
                 }
                 
-                if ($valido) {
-                    // Validar formato de colores hexadecimales
-                    $patronColor = '/^#[0-9A-Fa-f]{6}$/';
-                    foreach ($camposRequeridos as $campo) {
-                        if ($campo !== 'nombre_configuracion' && !preg_match($patronColor, $datos[$campo])) {
-                            $valido = false;
-                            $mensaje = "El campo '$campo' debe tener un formato de color hexadecimal válido (#RRGGBB)";
-                            break;
-                        }
-                    }
+                // Validar tamaño (máximo 5MB)
+                if ($archivo['size'] > 5 * 1024 * 1024) {
+                    echo json_encode([
+                        'success' => false,
+                        'error' => 'El archivo es demasiado grande. Máximo 5MB'
+                    ]);
+                    exit;
                 }
                 
-                if ($valido) {
-                    $resultado = ModeloPersonalizacionColores::mdlActualizarConfiguracion($datos);
-                    echo json_encode($resultado);
+                // Crear directorio si no existe
+                $directorio = "../vistas/img/personalizacion/";
+                if (!file_exists($directorio)) {
+                    mkdir($directorio, 0755, true);
+                }
+                
+                // Generar nombre único
+                $extension = pathinfo($archivo['name'], PATHINFO_EXTENSION);
+                $nombreArchivo = $tipo . '_' . time() . '.' . $extension;
+                $rutaCompleta = $directorio . $nombreArchivo;
+                
+                // Redimensionar y guardar imagen
+                if (redimensionarImagen($archivo['tmp_name'], $rutaCompleta, $tipo)) {
+                    
+                    // Actualizar la configuración en la base de datos
+                    $campoImagen = str_replace('-', '_', $tipo);
+                    $rutaRelativa = "vistas/img/personalizacion/" . $nombreArchivo;
+                    
+                    if (actualizarImagenEnBD($campoImagen, $rutaRelativa)) {
+                        echo json_encode([
+                            'success' => true,
+                            'ruta_imagen' => $rutaRelativa,
+                            'mensaje' => 'Imagen subida y aplicada correctamente'
+                        ]);
+                    } else {
+                        echo json_encode([
+                            'success' => false,
+                            'error' => 'Error al actualizar la configuración en la base de datos'
+                        ]);
+                    }
                 } else {
                     echo json_encode([
-                        "success" => false,
-                        "error" => $mensaje
+                        'success' => false,
+                        'error' => 'Error al procesar la imagen'
                     ]);
                 }
             } else {
                 echo json_encode([
-                    "success" => false,
-                    "error" => "No se recibieron datos"
+                    'success' => false,
+                    'error' => 'Datos incompletos'
                 ]);
             }
-            break;
-            
-        case "activarConfiguracion":
-            if(isset($_POST["id"])) {
-                $id = intval($_POST["id"]);
-                $resultado = ModeloPersonalizacionColores::mdlActivarConfiguracion($id);
-                echo json_encode($resultado);
-            } else {
-                echo json_encode([
-                    "success" => false,
-                    "error" => "ID de configuración requerido"
-                ]);
-            }
-            break;
-            
-        case "eliminarConfiguracion":
-            if(isset($_POST["id"])) {
-                $id = intval($_POST["id"]);
-                $resultado = ModeloPersonalizacionColores::mdlEliminarConfiguracion($id);
-                echo json_encode($resultado);
-            } else {
-                echo json_encode([
-                    "success" => false,
-                    "error" => "ID de configuración requerido"
-                ]);
-            }
-            break;
-            
-        case "obtenerTodasConfiguraciones":
-            $configuraciones = ControladorPersonalizacionColores::ctrObtenerTodasConfiguraciones();
-            echo json_encode([
-                "success" => true,
-                "configuraciones" => $configuraciones
-            ]);
-            break;
-            
-        case "aplicarEstilos":
-            $estilos = ControladorPersonalizacionColores::ctrAplicarConfiguracionEstilos();
-            echo json_encode([
-                "success" => true,
-                "estilos" => $estilos
-            ]);
             break;
             
         default:
             echo json_encode([
-                "success" => false,
-                "error" => "Acción no válida"
+                'success' => false,
+                'error' => 'Acción no válida'
             ]);
             break;
     }
 } else {
     echo json_encode([
-        "success" => false,
-        "error" => "No se especificó una acción"
+        'success' => false,
+        'error' => 'No se especificó ninguna acción'
     ]);
+}
+
+/*=============================================
+FUNCIÓN PARA REDIMENSIONAR IMAGEN
+=============================================*/
+function redimensionarImagen($archivoOrigen, $archivoDestino, $tipo) {
+    
+    // Obtener dimensiones de la imagen original
+    $infoImagen = getimagesize($archivoOrigen);
+    if (!$infoImagen) {
+        return false;
+    }
+    
+    $anchoOriginal = $infoImagen[0];
+    $altoOriginal = $infoImagen[1];
+    $tipoImagen = $infoImagen[2];
+    
+    // Definir dimensiones según el tipo
+    $dimensiones = [
+        'icono-pequeno' => [50, 50],
+        'logo-menu' => [200, 50],
+        'logo-login' => [200, 100]
+    ];
+    
+    if (!isset($dimensiones[$tipo])) {
+        return false;
+    }
+    
+    list($anchoDestino, $altoDestino) = $dimensiones[$tipo];
+    
+    // Crear imagen desde archivo
+    switch ($tipoImagen) {
+        case IMAGETYPE_JPEG:
+            $imagenOriginal = imagecreatefromjpeg($archivoOrigen);
+            break;
+        case IMAGETYPE_PNG:
+            $imagenOriginal = imagecreatefrompng($archivoOrigen);
+            break;
+        case IMAGETYPE_GIF:
+            $imagenOriginal = imagecreatefromgif($archivoOrigen);
+            break;
+        case IMAGETYPE_WEBP:
+            $imagenOriginal = imagecreatefromwebp($archivoOrigen);
+            break;
+        default:
+            return false;
+    }
+    
+    if (!$imagenOriginal) {
+        return false;
+    }
+    
+    // Crear imagen redimensionada
+    $imagenRedimensionada = imagecreatetruecolor($anchoDestino, $altoDestino);
+    
+    // Preservar transparencia para PNG
+    if ($tipoImagen == IMAGETYPE_PNG) {
+        imagealphablending($imagenRedimensionada, false);
+        imagesavealpha($imagenRedimensionada, true);
+        $transparente = imagecolorallocatealpha($imagenRedimensionada, 255, 255, 255, 127);
+        imagefill($imagenRedimensionada, 0, 0, $transparente);
+    }
+    
+    // Redimensionar
+    imagecopyresampled(
+        $imagenRedimensionada, $imagenOriginal,
+        0, 0, 0, 0,
+        $anchoDestino, $altoDestino,
+        $anchoOriginal, $altoOriginal
+    );
+    
+    // Guardar imagen
+    $resultado = false;
+    switch ($tipoImagen) {
+        case IMAGETYPE_JPEG:
+            $resultado = imagejpeg($imagenRedimensionada, $archivoDestino, 90);
+            break;
+        case IMAGETYPE_PNG:
+            $resultado = imagepng($imagenRedimensionada, $archivoDestino, 9);
+            break;
+        case IMAGETYPE_GIF:
+            $resultado = imagegif($imagenRedimensionada, $archivoDestino);
+            break;
+        case IMAGETYPE_WEBP:
+            $resultado = imagewebp($imagenRedimensionada, $archivoDestino, 90);
+            break;
+    }
+    
+    // Liberar memoria
+    imagedestroy($imagenOriginal);
+    imagedestroy($imagenRedimensionada);
+    
+    return $resultado;
+}
+
+/*=============================================
+FUNCIÓN PARA ACTUALIZAR IMAGEN EN BASE DE DATOS
+=============================================*/
+function actualizarImagenEnBD($campoImagen, $rutaImagen) {
+    
+    try {
+        require_once "../api-transferencias/conexion-central.php";
+        $conexion = ConexionCentral::conectar();
+        
+        // Actualizar la configuración activa
+        $sql = "UPDATE personalizacion_colores SET $campoImagen = ? WHERE activo = 1";
+        $stmt = $conexion->prepare($sql);
+        $resultado = $stmt->execute([$rutaImagen]);
+        
+        return $resultado;
+        
+    } catch (Exception $e) {
+        error_log("Error actualizando imagen en BD: " . $e->getMessage());
+        return false;
+    }
 }
 ?>
