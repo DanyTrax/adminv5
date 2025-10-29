@@ -58,8 +58,8 @@ class ControladorClientes
 
 				if ($respuesta == "ok") {
 
-					// Verificar si viene de crear venta
-					if (isset($_POST["origen"]) && $_POST["origen"] == "crear-venta") {
+					// Verificar si viene de crear venta o cotización
+					if (isset($_POST["origen"]) && ($_POST["origen"] == "crear-venta" || $_POST["origen"] == "crear-cotizacion")) {
 						
 						// Obtener el ID del cliente recién creado
 						$stmt = Conexion::conectar()->prepare("SELECT id, nombre, documento FROM clientes WHERE documento = :documento ORDER BY id DESC LIMIT 1");
@@ -67,13 +67,16 @@ class ControladorClientes
 						$stmt->execute();
 						$clienteCreado = $stmt->fetch();
 						
+						$textoBoton = $_POST["origen"] == "crear-venta" ? "Continuar con la venta" : "Continuar con la cotización";
+						$textoMensaje = $_POST["origen"] == "crear-venta" ? "venta" : "cotización";
+						
 						echo '<script>
 						
 						swal({
 							  type: "success",
 							  title: "El cliente ha sido guardado correctamente",
 							  showConfirmButton: true,
-							  confirmButtonText: "Continuar con la venta"
+							  confirmButtonText: "' . $textoBoton . '"
 							  }).then(function(result){
 										if (result.value) {
 

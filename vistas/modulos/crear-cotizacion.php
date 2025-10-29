@@ -53,19 +53,11 @@ if ($_SESSION["perfil"] == "Especial") {
                                 <div class="form-group">
                                     <div class="input-group">
                                         <span class="input-group-addon"><i class="fa fa-users"></i></span>
-                                        <select class="form-control" id="seleccionarCliente" name="seleccionarCliente" required>
-                                            <option value="">Seleccionar cliente</option>
-                                            <?php
-                                            $item = null;
-                                            $valor = null;
-                                            $categorias = ControladorClientes::ctrMostrarClientes($item, $valor);
-                                            foreach ($categorias as $key => $value) {
-                                                echo '<option value="' . $value["id"] . '">' . $value["nombre"] . '</option>';
-                                            }
-                                            ?>
-                                        </select>
+                                        <input type="text" class="form-control" id="buscarCliente" name="buscarCliente" placeholder="Buscar cliente por nombre o documento..." autocomplete="off" required>
+                                        <input type="hidden" id="idClienteSeleccionado" name="seleccionarCliente">
                                         <span class="input-group-addon"><button type="button" class="btn btn-default btn-xs" data-toggle="modal" data-target="#modalAgregarCliente" data-dismiss="modal">Agregar cliente</button></span>
                                     </div>
+                                    <div id="sugerenciasClientes" class="sugerencias-clientes" style="display: none;"></div>
                                 </div>
                                 <div class="form-group row nuevoProducto"></div>
                                 <input type="hidden" id="listaProductos" name="listaProductos">
@@ -165,6 +157,7 @@ MODAL AGREGAR CLIENTE
     <div class="modal-dialog">
         <div class="modal-content">
             <form role="form" method="post">
+                <input type="hidden" name="origen" value="crear-cotizacion">
                 <div class="modal-header" style="background:#3c8dbc; color:white">
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                     <h4 class="modal-title">Agregar cliente</h4>
@@ -180,25 +173,25 @@ MODAL AGREGAR CLIENTE
                         <div class="form-group">
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-key"></i></span>
-                                <input type="number" min="0" class="form-control input-lg" name="nuevoDocumentoId" placeholder="Ingresar documento" required>
+                                <input type="text" class="form-control input-lg" name="nuevoDocumentoId" placeholder="NIT o Documento (máximo 11 dígitos)" maxlength="11" pattern="[0-9]{1,11}" required>
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
-                                <input type="email" class="form-control input-lg" name="nuevoEmail" placeholder="Ingresar email" required>
+                                <input type="email" class="form-control input-lg" name="nuevoEmail" placeholder="Ingresar email">
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-phone"></i></span>
-                                <input type="text" class="form-control input-lg" name="nuevoTelefono" placeholder="Ingresar teléfono" data-inputmask="'mask':'(999) 999-9999'" data-mask required>
+                                <input type="text" class="form-control input-lg" name="nuevoTelefono" placeholder="Ingresar teléfono (7-10 dígitos)" pattern="[0-9]{7,10}" minlength="7" maxlength="10" required>
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="input-group">
                                 <span class="input-group-addon"><i class="fa fa-map-marker"></i></span>
-                                <input type="text" class="form-control input-lg" name="nuevaDireccion" placeholder="Ingresar dirección" required>
+                                <input type="text" class="form-control input-lg" name="nuevaDireccion" placeholder="Ingresar dirección (acepta caracteres especiales)">
                             </div>
                         </div>
                     </div>
@@ -215,3 +208,137 @@ MODAL AGREGAR CLIENTE
         </div>
     </div>
 </div>
+
+<style>
+/* Estilos para el autocompletado de clientes */
+.sugerencias-clientes {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sugerencia-cliente {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.sugerencia-cliente:hover {
+    background-color: #f5f5f5;
+}
+
+.sugerencia-cliente:last-child {
+    border-bottom: none;
+}
+
+.sugerencia-cliente .nombre {
+    font-weight: bold;
+    color: #333;
+}
+
+.sugerencia-cliente .documento {
+    color: #666;
+    font-size: 12px;
+}
+
+.sugerencia-cliente .email {
+    color: #999;
+    font-size: 11px;
+}
+</style>
+
+<script>
+// Autocompletado de clientes
+$(document).ready(function() {
+    let timeoutId;
+    
+    $('#buscarCliente').on('input', function() {
+        const query = $(this).val().trim();
+        
+        // Limpiar timeout anterior
+        clearTimeout(timeoutId);
+        
+        if (query.length >= 2) {
+            // Esperar 300ms antes de hacer la búsqueda
+            timeoutId = setTimeout(function() {
+                buscarClientes(query);
+            }, 300);
+        } else {
+            $('#sugerenciasClientes').hide();
+        }
+    });
+    
+    // Ocultar sugerencias al hacer clic fuera
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#buscarCliente, #sugerenciasClientes').length) {
+            $('#sugerenciasClientes').hide();
+        }
+    });
+    
+    function buscarClientes(query) {
+        $.ajax({
+            url: 'ajax/buscar-clientes.ajax.php',
+            type: 'POST',
+            data: { query: query },
+            success: function(response) {
+                try {
+                    const clientes = JSON.parse(response);
+                    mostrarSugerencias(clientes);
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error AJAX:', error);
+            }
+        });
+    }
+    
+    function mostrarSugerencias(clientes) {
+        const container = $('#sugerenciasClientes');
+        container.empty();
+        
+        if (clientes.length === 0) {
+            container.html('<div class="sugerencia-cliente">No se encontraron clientes</div>');
+        } else {
+            clientes.forEach(function(cliente) {
+                const sugerencia = $(`
+                    <div class="sugerencia-cliente" data-id="${cliente.id}" data-nombre="${cliente.nombre}">
+                        <div class="nombre">${cliente.nombre}</div>
+                        <div class="documento">Documento: ${cliente.documento}</div>
+                        ${cliente.email ? `<div class="email">${cliente.email}</div>` : ''}
+                    </div>
+                `);
+                container.append(sugerencia);
+            });
+        }
+        
+        container.show();
+    }
+    
+    // Seleccionar cliente
+    $(document).on('click', '.sugerencia-cliente', function() {
+        const id = $(this).data('id');
+        const nombre = $(this).data('nombre');
+        
+        $('#buscarCliente').val(nombre);
+        $('#idClienteSeleccionado').val(id);
+        $('#sugerenciasClientes').hide();
+    });
+    
+    // Función para actualizar lista de clientes (llamada desde el controlador)
+    window.actualizarListaClientes = function(cliente) {
+        $('#buscarCliente').val(cliente.nombre);
+        $('#idClienteSeleccionado').val(cliente.id);
+        $('#sugerenciasClientes').hide();
+    };
+});
+</script>
