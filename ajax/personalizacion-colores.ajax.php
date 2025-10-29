@@ -79,6 +79,26 @@ if (isset($_POST["accion"])) {
             }
             break;
             
+        case "obtener_configuracion":
+            
+            if (isset($_POST["id"])) {
+                
+                require_once "../controladores/personalizacion-colores-simplificado-funcional.controlador.php";
+                
+                $id = $_POST["id"];
+                $resultado = ControladorPersonalizacionColores::ctrObtenerConfiguracion($id);
+                
+                echo json_encode($resultado);
+                exit;
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'ID de configuración no proporcionado'
+                ]);
+                exit;
+            }
+            break;
+            
         default:
             echo json_encode([
                 'success' => false,
@@ -205,28 +225,6 @@ function actualizarImagenEnBD($campoImagen, $rutaImagen) {
     } catch (Exception $e) {
         error_log("Error actualizando imagen en BD: " . $e->getMessage());
         return false;
-    }
-}
-
-        case "obtener_configuracion":
-            
-            if (isset($_POST["id"])) {
-                
-                require_once "../controladores/personalizacion-colores-simplificado-funcional.controlador.php";
-                
-                $id = $_POST["id"];
-                $resultado = ControladorPersonalizacionColores::ctrObtenerConfiguracion($id);
-                
-                echo json_encode($resultado);
-                exit;
-            } else {
-                echo json_encode([
-                    'success' => false,
-                    'error' => 'ID de configuración no proporcionado'
-                ]);
-                exit;
-            }
-            break;
     }
 }
 ?>
