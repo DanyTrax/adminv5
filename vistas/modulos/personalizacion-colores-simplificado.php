@@ -189,6 +189,10 @@ if (isset($_GET['eliminar'])) {
                                         </td>
                                         <td><?= date('d/m/Y H:i', strtotime($config['fecha_actualizacion'])) ?></td>
                                         <td>
+                                            <button type="button" class="btn btn-primary btn-xs" onclick="editarConfiguracion(<?= $config['id'] ?>)">
+                                                <i class="fa fa-edit"></i> Editar
+                                            </button>
+                                            
                                             <?php if (!$config['activo']): ?>
                                                 <a href="personalizacion-colores-simplificado?activar=<?= $config['id'] ?>" class="btn btn-success btn-xs">
                                                     <i class="fa fa-check"></i> Activar
@@ -463,6 +467,106 @@ function actualizarVistaPrevia() {
         'background': 'linear-gradient(135deg, ' + gradientStart + ' 0%, ' + gradientEnd + ' 100%)'
     });
 }
+
+// Función para editar configuración
+function editarConfiguracion(id) {
+    // Obtener datos de la configuración mediante AJAX
+    $.ajax({
+        url: 'ajax/personalizacion-colores.ajax.php',
+        type: 'POST',
+        data: {
+            accion: 'obtener_configuracion',
+            id: id
+        },
+        success: function(response) {
+            try {
+                var data = JSON.parse(response);
+                if (data.success) {
+                    var config = data.configuracion;
+                    
+                    // Llenar el modal con los datos de la configuración
+                    $('#nombre_configuracion').val(config.nombre_configuracion);
+                    $('#login_gradient_start').val(config.login_gradient_start);
+                    $('#login_gradient_end').val(config.login_gradient_end);
+                    $('#navbar_color').val(config.navbar_color);
+                    $('#navbar_hover_color').val(config.navbar_hover_color);
+                    $('#sidebar_color').val(config.sidebar_color);
+                    $('#sidebar_hover_color').val(config.sidebar_hover_color);
+                    $('#sidebar_text_color').val(config.sidebar_text_color);
+                    
+                    // Actualizar los campos de texto de color
+                    $('.color-text').each(function() {
+                        var colorInput = $(this).closest('.input-group').find('input[type="color"]');
+                        $(this).val(colorInput.val());
+                    });
+                    
+                    // Actualizar vista previa
+                    actualizarVistaPrevia();
+                    
+                    // Agregar campo oculto para indicar que es edición
+                    $('#formNuevaConfiguracion').append('<input type="hidden" name="editar_configuracion" value="' + id + '">');
+                    
+                    // Cambiar el título del modal
+                    $('#modalNuevaConfiguracion .modal-title').html('<i class="fa fa-edit"></i> Editar Configuración de Colores');
+                    
+                    // Cambiar el texto del botón
+                    $('#formNuevaConfiguracion button[type="submit"]').html('<i class="fa fa-save"></i> Actualizar Configuración');
+                    
+                    // Mostrar el modal
+                    $('#modalNuevaConfiguracion').modal('show');
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+            } catch (e) {
+                console.error('Error parsing response:', e);
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: "Error al cargar la configuración",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error AJAX:', error);
+            swal({
+                type: "error",
+                title: "Error",
+                text: "Error de conexión: " + error,
+                showConfirmButton: true,
+                confirmButtonText: "Cerrar"
+            });
+        }
+    });
+}
+
+// Limpiar modal cuando se cierre
+$('#modalNuevaConfiguracion').on('hidden.bs.modal', function() {
+    // Remover campo oculto de edición
+    $('input[name="editar_configuracion"]').remove();
+    
+    // Restaurar título del modal
+    $('#modalNuevaConfiguracion .modal-title').html('<i class="fa fa-palette"></i> Nueva Configuración de Colores');
+    
+    // Restaurar texto del botón
+    $('#formNuevaConfiguracion button[type="submit"]').html('<i class="fa fa-save"></i> Guardar Configuración');
+    
+    // Limpiar formulario
+    $('#formNuevaConfiguracion')[0].reset();
+    
+    // Restaurar valores por defecto
+    $('#login_gradient_start').val('#3c8dbc');
+    $('#login_gradient_end').val('#2c3e50');
+    $('#navbar_color').val('#3c8dbc');
+    $('#navbar_hover_color').val('#2c3e50');
+    $('#sidebar_color').val('#222d32');
+    $('#sidebar_hover_color').val('#1a252f');
+    $('#sidebar_text_color').val('#b8c7ce');
+    
+    // Actualizar vista previa
+    actualizarVistaPrevia();
+});
 </script>
 
 <style>

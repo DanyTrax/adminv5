@@ -242,5 +242,103 @@ class ModeloPersonalizacionColores {
             ];
         }
     }
+    
+    /*=============================================
+    OBTENER CONFIGURACIÓN POR ID
+    =============================================*/
+    static public function mdlObtenerConfiguracion($id) {
+        
+        try {
+            $conexion = ConexionCentral::conectar();
+            
+            $stmt = $conexion->prepare("
+                SELECT * FROM personalizacion_colores 
+                WHERE id = ?
+            ");
+            
+            $stmt->execute([$id]);
+            $configuracion = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($configuracion) {
+                return [
+                    'success' => true,
+                    'configuracion' => $configuracion
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'error' => 'Configuración no encontrada'
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlObtenerConfiguracion: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error interno: ' . $e->getMessage()
+            ];
+        }
+    }
+    
+    /*=============================================
+    EDITAR CONFIGURACIÓN
+    =============================================*/
+    static public function mdlEditarConfiguracion($datos) {
+        
+        try {
+            $conexion = ConexionCentral::conectar();
+            
+            $stmt = $conexion->prepare("
+                UPDATE personalizacion_colores SET 
+                    nombre_configuracion = ?,
+                    login_gradient_start = ?,
+                    login_gradient_end = ?,
+                    navbar_color = ?,
+                    navbar_hover_color = ?,
+                    sidebar_color = ?,
+                    sidebar_hover_color = ?,
+                    sidebar_text_color = ?,
+                    icono_pequeno = ?,
+                    logo_menu = ?,
+                    logo_login = ?,
+                    fecha_actualizacion = NOW()
+                WHERE id = ?
+            ");
+            
+            $resultado = $stmt->execute([
+                $datos['nombre_configuracion'],
+                $datos['login_gradient_start'],
+                $datos['login_gradient_end'],
+                $datos['navbar_color'],
+                $datos['navbar_hover_color'],
+                $datos['sidebar_color'],
+                $datos['sidebar_hover_color'],
+                $datos['sidebar_text_color'],
+                $datos['icono_pequeno'],
+                $datos['logo_menu'],
+                $datos['logo_login'],
+                $datos['id']
+            ]);
+            
+            if ($resultado) {
+                return [
+                    'success' => true,
+                    'message' => 'Configuración actualizada exitosamente'
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'error' => 'Error al actualizar la configuración'
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlEditarConfiguracion: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => 'Error interno: ' . $e->getMessage()
+            ];
+        }
+    }
 }
 ?>

@@ -109,14 +109,24 @@ class ControladorPersonalizacionColores {
                 'logo_login' => $imagenes['logo_login']
             ];
             
-            $resultado = ModeloPersonalizacionColores::mdlActualizarConfiguracion($datos);
+            // Verificar si es edición o creación
+            if (isset($_POST['editar_configuracion'])) {
+                // Es edición
+                $datos['id'] = $_POST['editar_configuracion'];
+                $resultado = ModeloPersonalizacionColores::mdlEditarConfiguracion($datos);
+                $mensaje = "¡Configuración actualizada correctamente!";
+            } else {
+                // Es creación
+                $resultado = ModeloPersonalizacionColores::mdlActualizarConfiguracion($datos);
+                $mensaje = $resultado['message'];
+            }
             
             if ($resultado['success']) {
                 echo '<script>
                     swal({
                         type: "success",
                         title: "¡Configuración actualizada!",
-                        text: "' . $resultado['message'] . '",
+                        text: "' . $mensaje . '",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
                     }).then(function(result) {
@@ -336,6 +346,22 @@ class ControladorPersonalizacionColores {
                 });
             </script>';
         }
+    }
+    
+    /*=============================================
+    OBTENER CONFIGURACIÓN POR ID
+    =============================================*/
+    static public function ctrObtenerConfiguracion($id) {
+        
+        return ModeloPersonalizacionColores::mdlObtenerConfiguracion($id);
+    }
+    
+    /*=============================================
+    EDITAR CONFIGURACIÓN
+    =============================================*/
+    static public function ctrEditarConfiguracion($datos) {
+        
+        return ModeloPersonalizacionColores::mdlEditarConfiguracion($datos);
     }
     
     /*=============================================
