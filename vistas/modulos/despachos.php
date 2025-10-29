@@ -768,5 +768,4 @@ if($_SESSION["perfil"] == "Administrador") {
 <!-- Establecer perfil de usuario para JavaScript -->
 <script>
 window.perfilUsuario = "<?php echo $_SESSION['perfil']; ?>";
-console.log("Perfil de usuario establecido:", window.perfilUsuario);
 </script>

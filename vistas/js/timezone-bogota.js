@@ -5,18 +5,26 @@ CONFIGURACIÓN DE ZONA HORARIA PARA MOMENT.JS
 $(document).ready(function() {
     
     // Configurar moment.js para usar zona horaria de Bogotá
-    if (typeof moment !== 'undefined') {
+    if (typeof moment !== 'undefined' && typeof moment.tz !== 'undefined') {
         moment.tz.setDefault('America/Bogota');
     }
     
     // Función para obtener fecha actual en zona horaria de Bogotá
     function getCurrentDateBogota() {
-        return moment().tz('America/Bogota');
+        if (typeof moment.tz !== 'undefined') {
+            return moment().tz('America/Bogota');
+        } else {
+            return moment();
+        }
     }
     
     // Función para formatear fecha en zona horaria de Bogotá
     function formatDateBogota(date, format = 'YYYY-MM-DD') {
-        return moment(date).tz('America/Bogota').format(format);
+        if (typeof moment.tz !== 'undefined') {
+            return moment(date).tz('America/Bogota').format(format);
+        } else {
+            return moment(date).format(format);
+        }
     }
     
     // Función para obtener rango de fechas en zona horaria de Bogotá

@@ -72,7 +72,6 @@
 
 <script>
 $(document).ready(function() {
-    console.log("✅ Módulo Registro de Descargas Funcional cargado");
     
     // Inicializar DataTable
     if($('.tablaRegistroDescargas').length > 0) {
@@ -114,7 +113,6 @@ $(document).ready(function() {
                 { "width": "80px", "targets": 4 }  // Cantidad
             ],
             "initComplete": function() {
-                console.log("✅ DataTable inicializado correctamente");
             }
         });
     }

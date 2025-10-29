@@ -425,7 +425,6 @@
 <!-- ✅ JAVASCRIPT CORREGIDO Y SIMPLIFICADO -->
 <script>
 $(document).ready(function() {
-	console.log("🔔 Iniciando sistema de notificaciones...");
 	
 	<?php if($_SESSION["perfil"] == "Transportador" || $_SESSION["perfil"] == "Administrador"): ?>
 	
@@ -440,11 +439,6 @@ $(document).ready(function() {
 			dropdown: $('#notificacionesSolicitudes')
 		};
 		
-		console.log("🔍 Verificando elementos del DOM:");
-		console.log("- Contador:", elementos.contador.length > 0 ? "✅" : "❌");
-		console.log("- Header:", elementos.header.length > 0 ? "✅" : "❌");
-		console.log("- Lista:", elementos.lista.length > 0 ? "✅" : "❌");
-		console.log("- Dropdown:", elementos.dropdown.length > 0 ? "✅" : "❌");
 		
 		return elementos.contador.length > 0 && elementos.header.length > 0 && 
 			   elementos.lista.length > 0 && elementos.dropdown.length > 0;
@@ -453,15 +447,12 @@ $(document).ready(function() {
 	// ✅ CARGAR NOTIFICACIONES SOLO SI LOS ELEMENTOS EXISTEN
 	setTimeout(function() {
 		if(verificarElementos()) {
-			console.log("✅ Elementos verificados - iniciando carga de notificaciones");
 			cargarNotificacionesSeguras();
 		} else {
-			console.error("❌ Elementos del DOM no encontrados - reintentando en 3 segundos");
 			setTimeout(function() {
 				if(verificarElementos()) {
 					cargarNotificacionesSeguras();
 				} else {
-					console.error("❌ Elementos aún no disponibles - sistema de notificaciones deshabilitado");
 				}
 			}, 3000);
 		}
@@ -476,7 +467,6 @@ $(document).ready(function() {
 	
 	// Marcar como vistas cuando se abre el dropdown
 	$(document).on('show.bs.dropdown', '#notificacionesSolicitudes', function () {
-		console.log("👁️ Dropdown abierto");
 		marcarComoVistas();
 	});
 	
@@ -485,7 +475,6 @@ $(document).ready(function() {
 
 // ✅ FUNCIÓN PRINCIPAL SEGURA
 function cargarNotificacionesSeguras() {
-	console.log("🔄 Cargando notificaciones...");
 	
 	$.ajax({
 		url: 'ajax/notificaciones-solicitudes.ajax.php',
@@ -494,23 +483,19 @@ function cargarNotificacionesSeguras() {
 		dataType: 'json',
 		timeout: 10000,
 		success: function(response) {
-			console.log("📥 Respuesta recibida:", response);
 			
 			if(response && response.success && response.data) {
 				const contador = parseInt(response.data.contador) || 0;
 				const solicitudes = response.data.solicitudes || [];
 				
-				console.log("✅ Datos:", { contador, solicitudes: solicitudes.length });
 				
 				actualizarContadorSeguro(contador);
 				actualizarListaSegura(solicitudes);
 			} else {
-				console.warn("⚠️ Respuesta inválida");
 				manejarError("Respuesta inválida del servidor");
 			}
 		},
 		error: function(xhr, status, error) {
-			console.error("❌ Error AJAX:", { status, error, response: xhr.responseText });
 			manejarError("Error de conexión");
 		}
 	});
@@ -521,7 +506,6 @@ function actualizarContadorSeguro(contador) {
 	const $contador = $('#contadorSolicitudes');
 	
 	if(!$contador.length) {
-		console.error("❌ Contador no encontrado");
 		return;
 	}
 	
@@ -542,10 +526,8 @@ function actualizarContadorSeguro(contador) {
 		$contador.addClass('animated pulse');
 		setTimeout(() => $contador.removeClass('animated pulse'), 600);
 		
-		console.log("✅ Contador actualizado:", contador);
 	} else {
 		$contador.hide();
-		console.log("👻 Sin solicitudes - contador oculto");
 	}
 }
 
@@ -556,7 +538,6 @@ function actualizarListaSegura(solicitudes) {
 	const $lista = $('#listaSolicitudesNotificaciones');
 	
 	if(!$header.length || !$lista.length) {
-		console.error("❌ Elementos de lista no encontrados");
 		return;
 	}
 	
@@ -572,7 +553,6 @@ function actualizarListaSegura(solicitudes) {
 				</a>
 			</li>
 		`);
-		console.log("✅ Lista vacía mostrada");
 		return;
 	}
 	
@@ -625,7 +605,6 @@ function actualizarListaSegura(solicitudes) {
 	}
 	
 	$lista.html(html);
-	console.log("✅ Lista actualizada con estructura mejorada:", solicitudes.length, "solicitudes");
 }
 
 // ✅ MANEJAR ERRORES
@@ -657,22 +636,8 @@ function marcarComoVistas() {
 		method: 'POST',
 		data: { accion: 'marcar_como_vistas' },
 		success: function() {
-			console.log("👁️ Marcado como vistas");
 		}
 	});
 }
 
-// ✅ FUNCIÓN MANUAL PARA DEBUG
-function debugNotificacionesManual() {
-	console.log("🔍 DEBUG MANUAL");
-	
-	// Verificar elementos
-	console.log("Elementos:");
-	console.log("- #contadorSolicitudes:", $('#contadorSolicitudes').length);
-	console.log("- #headerNotificaciones:", $('#headerNotificaciones').length);
-	console.log("- #listaSolicitudesNotificaciones:", $('#listaSolicitudesNotificaciones').length);
-	
-	// Cargar notificaciones
-	cargarNotificacionesSeguras();
-}
 </script>

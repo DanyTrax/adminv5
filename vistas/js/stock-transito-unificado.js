@@ -128,9 +128,6 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
                 <tbody>
     `;
 
-    // Debug: Log de cronología original
-    console.log("🔍 CRONOLOGÍA ORIGINAL:", cronologia);
-    console.log("📊 Total elementos:", cronologia.length);
     
     // Filtrar elementos válidos de la cronología
     var cronologiaValida = cronologia.filter(function(entrada) {
@@ -145,14 +142,12 @@ $(document).on("click", ".btnVerDetalleStockTransito", function(e) {
                entrada.fecha !== 'undefined';
         
         if (!esValida) {
-            console.log("❌ Elemento inválido filtrado:", entrada);
+            // Elemento inválido filtrado
         }
         
         return esValida;
     });
     
-    console.log("✅ CRONOLOGÍA VÁLIDA:", cronologiaValida);
-    console.log("📊 Elementos válidos:", cronologiaValida.length);
 
     cronologiaValida.forEach(function(entrada, index) {
         var numeroDespacho = entrada.despacho || 'N/A';

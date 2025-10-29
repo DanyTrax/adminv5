@@ -426,7 +426,6 @@ $(document).ready(function() {
                 }
             },
             error: function() {
-                console.log('Error al actualizar contadores del menú');
             }
         });
     }
@@ -455,7 +454,6 @@ $(document).ready(function() {
                 <?php endif; ?>
             },
             error: function() {
-                console.log('Error al actualizar contadores de stock en tránsito');
             }
         });
     }
@@ -489,7 +487,6 @@ $(document).ready(function() {
                 }
             },
             error: function() {
-                console.log('Error al actualizar contadores de stock en tránsito');
             }
         });
     }
