@@ -296,20 +296,26 @@ $(document).ready(function() {
     });
     
     function buscarClientes(query) {
+        console.log('Buscando clientes con query:', query);
         $.ajax({
             url: 'ajax/buscar-clientes.ajax.php',
             type: 'POST',
-            data: { query: query },
+            data: { buscarCliente: query },
             success: function(response) {
+                console.log('Respuesta AJAX:', response);
                 try {
                     const clientes = JSON.parse(response);
+                    console.log('Clientes parseados:', clientes);
                     mostrarSugerencias(clientes);
                 } catch (e) {
                     console.error('Error parsing response:', e);
+                    console.error('Response was:', response);
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Error AJAX:', error);
+                console.error('Status:', status);
+                console.error('Response:', xhr.responseText);
             }
         });
     }
@@ -339,25 +345,32 @@ $(document).ready(function() {
         console.log('Sugerencias creadas:', container.find('.sugerencia-cliente').length);
     }
     
-    // Seleccionar cliente
+    // Seleccionar cliente - versión simplificada
     $(document).on('click', '.sugerencia-cliente', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
-        const id = $(this).data('id');
-        const nombre = $(this).data('nombre');
+        // Obtener datos directamente del elemento
+        const elemento = $(this);
+        const id = elemento.attr('data-id');
+        const nombre = elemento.attr('data-nombre');
         
         console.log('Cliente seleccionado:', { id: id, nombre: nombre });
         
+        // Establecer valores
         $('#buscarCliente').val(nombre);
         $('#idClienteSeleccionado').val(id);
+        
+        // Ocultar sugerencias
         $('#sugerenciasClientes').hide();
         
-        // Verificar que los valores se establecieron correctamente
-        console.log('Valores establecidos:', {
-            buscarCliente: $('#buscarCliente').val(),
-            idClienteSeleccionado: $('#idClienteSeleccionado').val()
-        });
+        // Verificar que los valores se establecieron
+        setTimeout(function() {
+            console.log('Valores verificados:', {
+                buscarCliente: $('#buscarCliente').val(),
+                idClienteSeleccionado: $('#idClienteSeleccionado').val()
+            });
+        }, 100);
     });
     
     // Función para actualizar lista de clientes (llamada desde el controlador)
