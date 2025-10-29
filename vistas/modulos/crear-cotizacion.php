@@ -50,7 +50,7 @@ if ($_SESSION["perfil"] == "Especial") {
                                         ?>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" style="position: relative;">
                                     <div class="input-group">
                                         <span class="input-group-addon"><i class="fa fa-users"></i></span>
                                         <input type="text" class="form-control" id="buscarCliente" name="buscarCliente" placeholder="Buscar cliente por nombre o documento..." autocomplete="off" required>
@@ -223,6 +223,7 @@ MODAL AGREGAR CLIENTE
     overflow-y: auto;
     z-index: 1000;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 0 0 4px 4px;
 }
 
 .sugerencia-cliente {
