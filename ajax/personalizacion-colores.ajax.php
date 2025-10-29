@@ -83,8 +83,7 @@ if (isset($_POST["accion"])) {
             
             if (isset($_POST["id"])) {
                 
-                require_once "../controladores/personalizacion-colores-simplificado-funcional.controlador.php";
-                
+                // Usar el controlador ya incluido en la línea 6
                 $id = $_POST["id"];
                 $resultado = ControladorPersonalizacionColores::ctrObtenerConfiguracion($id);
                 

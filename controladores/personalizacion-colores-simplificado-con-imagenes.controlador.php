@@ -404,5 +404,13 @@ class ControladorPersonalizacionColores {
         
         return $css;
     }
+    
+    /*=============================================
+    OBTENER CONFIGURACIÓN POR ID
+    =============================================*/
+    static public function ctrObtenerConfiguracion($id) {
+        
+        return ModeloPersonalizacionColores::mdlObtenerConfiguracion($id);
+    }
 }
 ?>
