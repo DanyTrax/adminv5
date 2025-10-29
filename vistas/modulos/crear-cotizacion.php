@@ -321,13 +321,18 @@ $(document).ready(function() {
     }
     
     function mostrarSugerencias(clientes) {
+        console.log('=== INICIO mostrarSugerencias ===');
+        console.log('Clientes recibidos:', clientes);
+        
         const container = $('#sugerenciasClientes');
         container.empty();
         
         if (clientes.length === 0) {
             container.html('<div class="sugerencia-cliente">No se encontraron clientes</div>');
         } else {
-            clientes.forEach(function(cliente) {
+            clientes.forEach(function(cliente, index) {
+                console.log(`Procesando cliente ${index}:`, cliente);
+                
                 // Crear el elemento HTML directamente con jQuery
                 const sugerencia = $('<div class="sugerencia-cliente"></div>')
                     .attr('data-id', cliente.id)
@@ -337,6 +342,12 @@ $(document).ready(function() {
                         <div class="documento">Documento: ${cliente.documento}</div>
                         ${cliente.email ? `<div class="email">${cliente.email}</div>` : ''}
                     `);
+                
+                console.log(`Sugerencia ${index} creada:`, {
+                    elemento: sugerencia[0],
+                    dataId: sugerencia.attr('data-id'),
+                    dataNombre: sugerencia.attr('data-nombre')
+                });
                 
                 container.append(sugerencia);
             });
@@ -350,11 +361,15 @@ $(document).ready(function() {
         // Debug: verificar que los atributos data están presentes
         container.find('.sugerencia-cliente').each(function(index) {
             const elemento = $(this);
-            console.log(`Sugerencia ${index}:`, {
+            console.log(`Sugerencia ${index} verificada:`, {
+                elemento: elemento[0],
                 id: elemento.attr('data-id'),
-                nombre: elemento.attr('data-nombre')
+                nombre: elemento.attr('data-nombre'),
+                outerHTML: elemento[0].outerHTML
             });
         });
+        
+        console.log('=== FIN mostrarSugerencias ===');
     }
     
     // Seleccionar cliente - versión simplificada
