@@ -978,6 +978,11 @@ $(document).ready(function() {
 
     // Función para mostrar sugerencias
     function mostrarSugerencias(clientes) {
+        // Solo ejecutar en páginas de ventas, no en crear-cotizacion
+        if (window.location.href.indexOf('crear-cotizacion') !== -1) {
+            return;
+        }
+        
         var $sugerencias = $('#sugerenciasClientes');
 
         if(clientes.length === 0) {

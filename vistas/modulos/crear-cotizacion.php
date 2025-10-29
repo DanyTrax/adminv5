@@ -296,43 +296,32 @@ $(document).ready(function() {
     });
     
     function buscarClientes(query) {
-        console.log('Buscando clientes con query:', query);
         $.ajax({
             url: 'ajax/buscar-clientes.ajax.php',
             type: 'POST',
             data: { buscarCliente: query },
             success: function(response) {
-                console.log('Respuesta AJAX:', response);
                 try {
                     const clientes = JSON.parse(response);
-                    console.log('Clientes parseados:', clientes);
                     mostrarSugerencias(clientes);
                 } catch (e) {
                     console.error('Error parsing response:', e);
-                    console.error('Response was:', response);
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Error AJAX:', error);
-                console.error('Status:', status);
-                console.error('Response:', xhr.responseText);
             }
         });
     }
     
     function mostrarSugerencias(clientes) {
-        console.log('=== INICIO mostrarSugerencias ===');
-        console.log('Clientes recibidos:', clientes);
-        
         const container = $('#sugerenciasClientes');
         container.empty();
         
         if (clientes.length === 0) {
             container.html('<div class="sugerencia-cliente">No se encontraron clientes</div>');
         } else {
-            clientes.forEach(function(cliente, index) {
-                console.log(`Procesando cliente ${index}:`, cliente);
-                
+            clientes.forEach(function(cliente) {
                 // Crear el elemento HTML directamente con jQuery
                 const sugerencia = $('<div class="sugerencia-cliente"></div>')
                     .attr('data-id', cliente.id)
@@ -343,60 +332,25 @@ $(document).ready(function() {
                         ${cliente.email ? `<div class="email">${cliente.email}</div>` : ''}
                     `);
                 
-                console.log(`Sugerencia ${index} creada:`, {
-                    elemento: sugerencia[0],
-                    dataId: sugerencia.attr('data-id'),
-                    dataNombre: sugerencia.attr('data-nombre')
-                });
-                
                 container.append(sugerencia);
             });
         }
         
         container.show();
-        
-        // Debug: verificar que los elementos se crearon correctamente
-        console.log('Sugerencias creadas:', container.find('.sugerencia-cliente').length);
-        
-        // Debug: verificar que los atributos data están presentes
-        container.find('.sugerencia-cliente').each(function(index) {
-            const elemento = $(this);
-            console.log(`Sugerencia ${index} verificada:`, {
-                elemento: elemento[0],
-                id: elemento.attr('data-id'),
-                nombre: elemento.attr('data-nombre'),
-                outerHTML: elemento[0].outerHTML
-            });
-        });
-        
-        console.log('=== FIN mostrarSugerencias ===');
     }
     
-    // Seleccionar cliente - versión mejorada con debug
+    // Seleccionar cliente
     $(document).on('click', '.sugerencia-cliente', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
-        console.log('=== INICIO CLICK EVENT ===');
-        console.log('Elemento clickeado:', this);
-        console.log('Elemento clickeado (jQuery):', $(this));
-        
         // Usar closest() para encontrar el elemento padre con los atributos data
         const elemento = $(this).closest('.sugerencia-cliente');
-        console.log('Elemento padre encontrado:', elemento);
-        console.log('Elemento padre HTML:', elemento[0] ? elemento[0].outerHTML : 'No encontrado');
-        
         const id = elemento.attr('data-id');
         const nombre = elemento.attr('data-nombre');
         
-        console.log('Atributos obtenidos:', { id: id, nombre: nombre });
-        console.log('Cliente seleccionado:', { id: id, nombre: nombre });
-        
         // Verificar que tenemos los valores
         if (!id || !nombre) {
-            console.error('ERROR: No se pudieron obtener los atributos data-id y data-nombre');
-            console.error('Elemento:', elemento);
-            console.error('Atributos disponibles:', elemento[0] ? elemento[0].attributes : 'No disponible');
             return;
         }
         
@@ -404,21 +358,8 @@ $(document).ready(function() {
         $('#buscarCliente').val(nombre);
         $('#idClienteSeleccionado').val(id);
         
-        console.log('Valores establecidos en campos:');
-        console.log('- buscarCliente:', $('#buscarCliente').val());
-        console.log('- idClienteSeleccionado:', $('#idClienteSeleccionado').val());
-        
         // Ocultar sugerencias
         $('#sugerenciasClientes').hide();
-        
-        // Verificar que los valores se establecieron
-        setTimeout(function() {
-            console.log('Valores verificados después de 100ms:', {
-                buscarCliente: $('#buscarCliente').val(),
-                idClienteSeleccionado: $('#idClienteSeleccionado').val()
-            });
-            console.log('=== FIN CLICK EVENT ===');
-        }, 100);
     });
     
     // Función para actualizar lista de clientes (llamada desde el controlador)
