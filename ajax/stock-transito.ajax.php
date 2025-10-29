@@ -296,7 +296,21 @@ if(isset($_POST["descargarStockDirecto"])) {
         // Obtener información de la sesión
         $usuarioId = $_SESSION["id"] ?? 1;
         $nombreUsuario = $_SESSION["nombre"] ?? "Usuario";
-        $sucursalDestino = $_SESSION["sucursal"] ?? "Sucursal";
+        
+        // Obtener nombre real de la sucursal desde BD local
+        $sucursalDestino = "Sucursal"; // Valor por defecto
+        try {
+            $stmt = Conexion::conectar()->prepare("
+                SELECT nombre FROM sucursal_local WHERE id = 1
+            ");
+            $stmt->execute();
+            $sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($sucursal && !empty($sucursal['nombre'])) {
+                $sucursalDestino = $sucursal['nombre'];
+            }
+        } catch(Exception $e) {
+            error_log("Error obteniendo nombre de sucursal: " . $e->getMessage());
+        }
         
         // Ejecutar descarga consolidada
         $resultado = ControladorStockTransito::ctrDescargarStockConsolidado(
