@@ -48,6 +48,10 @@ $url = $protocol . $host . $script_name;
   <!-- CSS DINÁMICO GLOBAL -->
   <?php include_once "css-dinamico-global.php"; ?>
 
+  <!-- Moment.js con zona horaria -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.43/moment-timezone-with-data.min.js"></script>
+
   <script src="<?php echo $url; ?>vistas/bower_components/jquery/dist/jquery.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/fastclick/lib/fastclick.js"></script>
@@ -213,6 +217,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
   <script src="<?php echo $url; ?>vistas/js/ventas.js"></script>
   <script src="<?php echo $url; ?>vistas/js/contabilidad.js"></script>
   <script src="<?php echo $url; ?>vistas/js/medios-pago.js"></script>
+  <script src="<?php echo $url; ?>vistas/js/timezone-bogota.js"></script>
   <script src="<?php echo $url; ?>vistas/js/salidas-inventario.js"></script>
   <script src="<?php echo $url; ?>vistas/js/filtros-fechas.js"></script>
   <script src="<?php echo $url; ?>vistas/js/sucursales.js"></script> 
