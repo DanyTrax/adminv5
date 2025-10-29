@@ -284,6 +284,17 @@ $(document).ready(function() {
         }
     });
     
+    // Manejar tecla Enter en el campo de búsqueda
+    $('#buscarCliente').on('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const primeraSugerencia = $('#sugerenciasClientes .sugerencia-cliente').first();
+            if (primeraSugerencia.length > 0) {
+                primeraSugerencia.click();
+            }
+        }
+    });
+    
     function buscarClientes(query) {
         $.ajax({
             url: 'ajax/buscar-clientes.ajax.php',
@@ -323,16 +334,30 @@ $(document).ready(function() {
         }
         
         container.show();
+        
+        // Debug: verificar que los elementos se crearon correctamente
+        console.log('Sugerencias creadas:', container.find('.sugerencia-cliente').length);
     }
     
     // Seleccionar cliente
-    $(document).on('click', '.sugerencia-cliente', function() {
+    $(document).on('click', '.sugerencia-cliente', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         const id = $(this).data('id');
         const nombre = $(this).data('nombre');
+        
+        console.log('Cliente seleccionado:', { id: id, nombre: nombre });
         
         $('#buscarCliente').val(nombre);
         $('#idClienteSeleccionado').val(id);
         $('#sugerenciasClientes').hide();
+        
+        // Verificar que los valores se establecieron correctamente
+        console.log('Valores establecidos:', {
+            buscarCliente: $('#buscarCliente').val(),
+            idClienteSeleccionado: $('#idClienteSeleccionado').val()
+        });
     });
     
     // Función para actualizar lista de clientes (llamada desde el controlador)
