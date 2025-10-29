@@ -372,31 +372,52 @@ $(document).ready(function() {
         console.log('=== FIN mostrarSugerencias ===');
     }
     
-    // Seleccionar cliente - versión simplificada
+    // Seleccionar cliente - versión mejorada con debug
     $(document).on('click', '.sugerencia-cliente', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
-        // Obtener datos directamente del elemento
-        const elemento = $(this);
+        console.log('=== INICIO CLICK EVENT ===');
+        console.log('Elemento clickeado:', this);
+        console.log('Elemento clickeado (jQuery):', $(this));
+        
+        // Usar closest() para encontrar el elemento padre con los atributos data
+        const elemento = $(this).closest('.sugerencia-cliente');
+        console.log('Elemento padre encontrado:', elemento);
+        console.log('Elemento padre HTML:', elemento[0] ? elemento[0].outerHTML : 'No encontrado');
+        
         const id = elemento.attr('data-id');
         const nombre = elemento.attr('data-nombre');
         
+        console.log('Atributos obtenidos:', { id: id, nombre: nombre });
         console.log('Cliente seleccionado:', { id: id, nombre: nombre });
+        
+        // Verificar que tenemos los valores
+        if (!id || !nombre) {
+            console.error('ERROR: No se pudieron obtener los atributos data-id y data-nombre');
+            console.error('Elemento:', elemento);
+            console.error('Atributos disponibles:', elemento[0] ? elemento[0].attributes : 'No disponible');
+            return;
+        }
         
         // Establecer valores
         $('#buscarCliente').val(nombre);
         $('#idClienteSeleccionado').val(id);
+        
+        console.log('Valores establecidos en campos:');
+        console.log('- buscarCliente:', $('#buscarCliente').val());
+        console.log('- idClienteSeleccionado:', $('#idClienteSeleccionado').val());
         
         // Ocultar sugerencias
         $('#sugerenciasClientes').hide();
         
         // Verificar que los valores se establecieron
         setTimeout(function() {
-            console.log('Valores verificados:', {
+            console.log('Valores verificados después de 100ms:', {
                 buscarCliente: $('#buscarCliente').val(),
                 idClienteSeleccionado: $('#idClienteSeleccionado').val()
             });
+            console.log('=== FIN CLICK EVENT ===');
         }, 100);
     });
     
