@@ -328,13 +328,16 @@ $(document).ready(function() {
             container.html('<div class="sugerencia-cliente">No se encontraron clientes</div>');
         } else {
             clientes.forEach(function(cliente) {
-                const sugerencia = $(`
-                    <div class="sugerencia-cliente" data-id="${cliente.id}" data-nombre="${cliente.nombre}">
+                // Crear el elemento HTML directamente con jQuery
+                const sugerencia = $('<div class="sugerencia-cliente"></div>')
+                    .attr('data-id', cliente.id)
+                    .attr('data-nombre', cliente.nombre)
+                    .html(`
                         <div class="nombre">${cliente.nombre}</div>
                         <div class="documento">Documento: ${cliente.documento}</div>
                         ${cliente.email ? `<div class="email">${cliente.email}</div>` : ''}
-                    </div>
-                `);
+                    `);
+                
                 container.append(sugerencia);
             });
         }
@@ -343,6 +346,15 @@ $(document).ready(function() {
         
         // Debug: verificar que los elementos se crearon correctamente
         console.log('Sugerencias creadas:', container.find('.sugerencia-cliente').length);
+        
+        // Debug: verificar que los atributos data están presentes
+        container.find('.sugerencia-cliente').each(function(index) {
+            const elemento = $(this);
+            console.log(`Sugerencia ${index}:`, {
+                id: elemento.attr('data-id'),
+                nombre: elemento.attr('data-nombre')
+            });
+        });
     }
     
     // Seleccionar cliente - versión simplificada
