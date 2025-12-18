@@ -82,7 +82,8 @@ static public function ctrIngresoUsuario()
 				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoNombre"]) &&
 				preg_match('/^[a-zA-Z0-9]+$/', $_POST["nuevoUsuario"]) &&
 				preg_match('/^[a-zA-Z0-9]+$/', $_POST["nuevoPassword"]) &&
-				preg_match('/^[a-zA-Z0-9]+$/', $_POST["nuevoEmpresa"])
+				!empty($_POST["nuevoEmpresa"]) &&
+				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ\s\-_\.]+$/', $_POST["nuevoEmpresa"])
 			) {
 
 				/*=============================================
@@ -196,7 +197,7 @@ static public function ctrIngresoUsuario()
 					swal({
 
 						type: "error",
-						title: "¡El usuario no puede ir vacío o llevar caracteres especiales!",
+						title: "¡Error en los datos! Verifique que todos los campos estén completos y que el usuario y contraseña solo contengan letras y números.",
 						showConfirmButton: true,
 						confirmButtonText: "Cerrar"
 
