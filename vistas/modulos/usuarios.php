@@ -12,7 +12,7 @@ if ($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor") {
 }
 
 // Obtener sucursales activas para el selector de empresa
-require_once "../modelos/sucursales.modelo.php";
+require_once __DIR__ . "/../../modelos/sucursales.modelo.php";
 $sucursalesActivas = ModeloSucursales::mdlObtenerSucursales(true);
 $listaSucursales = [];
 if ($sucursalesActivas['success'] && !empty($sucursalesActivas['data'])) {
