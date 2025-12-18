@@ -11,6 +11,14 @@ if ($_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor") {
   return;
 }
 
+// Obtener sucursales activas para el selector de empresa
+require_once "../modelos/sucursales.modelo.php";
+$sucursalesActivas = ModeloSucursales::mdlObtenerSucursales(true);
+$listaSucursales = [];
+if ($sucursalesActivas['success'] && !empty($sucursalesActivas['data'])) {
+    $listaSucursales = $sucursalesActivas['data'];
+}
+
 ?>
 <div class="content-wrapper">
 
@@ -182,13 +190,12 @@ MODAL AGREGAR USUARIO
 
                   <option value="">Selecciona la empresa</option>
                     
-                  <option value="Infinito">Infinito</option>
-                  
-                  <option value="acplasticos">AcPlasticos</option>
-
-                  <option value="Lema">Lema</option>
-
-                  <option value="Epico">Epico</option>
+                  <?php
+                  // Mostrar sucursales activas del Directorio de Sucursales Registradas
+                  foreach ($listaSucursales as $sucursal) {
+                    echo '<option value="' . htmlspecialchars($sucursal['nombre']) . '">' . htmlspecialchars($sucursal['nombre']) . '</option>';
+                  }
+                  ?>
 
                 </select>
 
@@ -367,13 +374,12 @@ MODAL EDITAR USUARIO
 
                   <option id="editarEmpresa"></option>
 
-                  <option value="Infinito">Infinito</option>
-                  
-                  <option value="acplasticos">AcPlasticos</option>
-
-                  <option value="Lema">Lema</option>
-
-                  <option value="Epico">Epico</option>
+                  <?php
+                  // Mostrar sucursales activas del Directorio de Sucursales Registradas
+                  foreach ($listaSucursales as $sucursal) {
+                    echo '<option value="' . htmlspecialchars($sucursal['nombre']) . '">' . htmlspecialchars($sucursal['nombre']) . '</option>';
+                  }
+                  ?>
 
                 </select>
 
