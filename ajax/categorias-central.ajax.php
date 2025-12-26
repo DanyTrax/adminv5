@@ -47,6 +47,27 @@ class AjaxCategoriasCentral {
     }
 
     /*=============================================
+    SINCRONIZAR BIDIRECCIONAL
+    =============================================*/
+    public function ajaxSincronizarBidireccional() {
+        
+        $respuesta = ControladorCategoriasCentral::ctrSincronizarBidireccional();
+        
+        echo json_encode($respuesta);
+    }
+
+    /*=============================================
+    OBTENER SUCURSALES ACTIVAS
+    =============================================*/
+    public function ajaxObtenerSucursalesActivas() {
+        
+        require_once __DIR__ . "/../modelos/sucursales.modelo.php";
+        $respuesta = ModeloSucursales::mdlObtenerSucursales(true);
+        
+        echo json_encode($respuesta);
+    }
+
+    /*=============================================
     OBTENER CATEGORÍAS CENTRALES
     =============================================*/
     public function ajaxObtenerCategoriasCentral() {
@@ -116,6 +137,22 @@ SINCRONIZAR CATEGORÍAS CON SUCURSALES
 else if (isset($_POST["accion"]) && $_POST["accion"] == "sincronizar") {
     $ajax = new AjaxCategoriasCentral();
     $ajax->ajaxSincronizarCategoriasSucursales();
+}
+
+/*=============================================
+SINCRONIZAR BIDIRECCIONAL
+=============================================*/
+else if (isset($_POST["accion"]) && $_POST["accion"] == "sincronizar_bidireccional") {
+    $ajax = new AjaxCategoriasCentral();
+    $ajax->ajaxSincronizarBidireccional();
+}
+
+/*=============================================
+OBTENER SUCURSALES ACTIVAS
+=============================================*/
+else if (isset($_POST["accion"]) && $_POST["accion"] == "obtener_sucursales") {
+    $ajax = new AjaxCategoriasCentral();
+    $ajax->ajaxObtenerSucursalesActivas();
 }
 
 /*=============================================

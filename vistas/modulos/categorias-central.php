@@ -206,37 +206,92 @@ MODAL CONFIRMAR ELIMINACIÓN
 MODAL SINCRONIZAR CATEGORÍAS
 ======================================-->
 <div id="modalSincronizarCategorias" class="modal fade" role="dialog">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header" style="background:#5cb85c; color:white">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">Sincronizar Categorías</h4>
+                <h4 class="modal-title"><i class="fa fa-refresh"></i> Sincronización Bidireccional de Categorías</h4>
             </div>
             <div class="modal-body">
                 <div class="box-body">
-                    <div class="text-center">
-                        <i class="fa fa-refresh fa-3x text-success" style="margin-bottom: 20px;"></i>
-                        <h4>¿Sincronizar Categorías con Sucursales?</h4>
-                        <p>Esta acción actualizará las categorías en todas las sucursales activas del sistema.</p>
-                        
-                        <div class="alert alert-info">
-                            <i class="fa fa-info-circle"></i>
-                            <strong>Información:</strong> Se sincronizarán todas las categorías activas con las sucursales configuradas.
+                    <!-- Selección de dirección -->
+                    <div class="form-group">
+                        <label><strong>Dirección de Sincronización:</strong></label>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="direccionSincronizacion" value="central_a_actual" checked>
+                                <i class="fa fa-arrow-down text-primary"></i> 
+                                <strong>Central → Sucursal Actual</strong>
+                                <small class="text-muted">(Sincronizar categorías centrales hacia esta sucursal)</small>
+                            </label>
                         </div>
-                        
-                        <div id="info-sincronizacion" style="display: none;">
-                            <div class="alert alert-warning">
-                                <i class="fa fa-clock-o"></i>
-                                <strong>Sincronizando...</strong> Por favor espera mientras se procesan las categorías.
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="direccionSincronizacion" value="actual_a_central">
+                                <i class="fa fa-arrow-up text-success"></i> 
+                                <strong>Sucursal Actual → Central</strong>
+                                <small class="text-muted">(Sincronizar categorías de esta sucursal hacia central)</small>
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="direccionSincronizacion" value="central_a_multiples">
+                                <i class="fa fa-arrow-down text-info"></i> 
+                                <strong>Central → Múltiples Sucursales</strong>
+                                <small class="text-muted">(Sincronizar categorías centrales hacia sucursales seleccionadas)</small>
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="direccionSincronizacion" value="multiples_a_central">
+                                <i class="fa fa-arrow-up text-warning"></i> 
+                                <strong>Múltiples Sucursales → Central</strong>
+                                <small class="text-muted">(Sincronizar categorías de sucursales seleccionadas hacia central)</small>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Selector de sucursales (solo para múltiples) -->
+                    <div id="selectorSucursales" style="display: none;">
+                        <div class="form-group">
+                            <label><strong>Seleccionar Sucursales:</strong></label>
+                            <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" id="seleccionarTodas">
+                                        <strong>Seleccionar Todas</strong>
+                                    </label>
+                                </div>
+                                <hr style="margin: 10px 0;">
+                                <div id="listaSucursales">
+                                    <div class="text-center text-muted">
+                                        <i class="fa fa-spinner fa-spin"></i> Cargando sucursales...
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div id="resultado-sincronizacion" style="display: none;">
-                            <div class="alert alert-success">
-                                <i class="fa fa-check-circle"></i>
-                                <strong>Sincronización Completada</strong>
-                                <div id="detalles-sincronizacion"></div>
-                            </div>
+                    </div>
+
+                    <!-- Información -->
+                    <div class="alert alert-info" id="infoSincronizacion">
+                        <i class="fa fa-info-circle"></i>
+                        <strong>Información:</strong> <span id="textoInfo">Se sincronizarán las categorías centrales hacia la sucursal actual.</span>
+                    </div>
+                    
+                    <!-- Estado de sincronización -->
+                    <div id="info-sincronizacion" style="display: none;">
+                        <div class="alert alert-warning">
+                            <i class="fa fa-clock-o fa-spin"></i>
+                            <strong>Sincronizando...</strong> Por favor espera mientras se procesan las categorías.
+                        </div>
+                    </div>
+                    
+                    <!-- Resultado -->
+                    <div id="resultado-sincronizacion" style="display: none;">
+                        <div class="alert alert-success">
+                            <i class="fa fa-check-circle"></i>
+                            <strong>Sincronización Completada</strong>
+                            <div id="detalles-sincronizacion"></div>
                         </div>
                     </div>
                 </div>
@@ -244,7 +299,7 @@ MODAL SINCRONIZAR CATEGORÍAS
             <div class="modal-footer">
                 <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-success" id="btnConfirmarSincronizacion">
-                    <i class="fa fa-refresh"></i> Sí, Sincronizar
+                    <i class="fa fa-refresh"></i> Iniciar Sincronización
                 </button>
             </div>
         </div>

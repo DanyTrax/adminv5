@@ -58,6 +58,23 @@ if ($('.btnSincronizarCategorias').length === 0) {
         ejecutarSincronizacion();
     });
 
+    // Cambiar dirección de sincronización
+    $(document).on('change', 'input[name="direccionSincronizacion"]', function() {
+        actualizarTextoInfo();
+    });
+
+    // Seleccionar todas las sucursales
+    $(document).on('change', '#seleccionarTodas', function() {
+        $('.checkbox-sucursal').prop('checked', $(this).prop('checked'));
+    });
+
+    // Actualizar checkbox "Seleccionar todas"
+    $(document).on('change', '.checkbox-sucursal', function() {
+        var total = $('.checkbox-sucursal').length;
+        var seleccionadas = $('.checkbox-sucursal:checked').length;
+        $('#seleccionarTodas').prop('checked', total === seleccionadas);
+    });
+
     // Delegación de eventos para botones dinámicos
     $(document).on('click', '.btnEditarCategoriaCentral', function() {
         var idCategoria = $(this).attr('idCategoria');
@@ -263,39 +280,179 @@ if ($('.btnSincronizarCategorias').length === 0) {
     MOSTRAR MODAL SINCRONIZACIÓN
     =============================================*/
     function mostrarModalSincronizacion() {
-// Resetear modal
+        // Resetear modal
         $('#info-sincronizacion').hide();
         $('#resultado-sincronizacion').hide();
-        $('#btnConfirmarSincronizacion').show().html('<i class="fa fa-refresh"></i> Sí, Sincronizar');
+        $('#selectorSucursales').hide();
+        $('#btnConfirmarSincronizacion').show().html('<i class="fa fa-refresh"></i> Iniciar Sincronización');
+        $('input[name="direccionSincronizacion"]').prop('checked', false);
+        $('input[name="direccionSincronizacion"][value="central_a_actual"]').prop('checked', true);
+        actualizarTextoInfo();
+        cargarSucursales();
 
         // Mostrar modal
         $('#modalSincronizarCategorias').modal('show');
     }
 
     /*=============================================
+    ACTUALIZAR TEXTO DE INFORMACIÓN
+    =============================================*/
+    function actualizarTextoInfo() {
+        var direccion = $('input[name="direccionSincronizacion"]:checked').val();
+        var texto = '';
+        
+        switch(direccion) {
+            case 'central_a_actual':
+                texto = 'Se sincronizarán las categorías centrales hacia la sucursal actual. Las categorías existentes en la sucursal serán reemplazadas.';
+                break;
+            case 'actual_a_central':
+                texto = 'Se sincronizarán las categorías de la sucursal actual hacia la base de datos central. Las categorías existentes en central serán reemplazadas.';
+                break;
+            case 'central_a_multiples':
+                texto = 'Se sincronizarán las categorías centrales hacia las sucursales seleccionadas. Las categorías existentes en cada sucursal serán reemplazadas.';
+                break;
+            case 'multiples_a_central':
+                texto = 'Se sincronizarán las categorías de las sucursales seleccionadas hacia la base de datos central. Se crearán categorías únicas combinando todas las sucursales.';
+                break;
+        }
+        
+        $('#textoInfo').text(texto);
+        
+        // Mostrar/ocultar selector de sucursales
+        if (direccion === 'central_a_multiples' || direccion === 'multiples_a_central') {
+            $('#selectorSucursales').show();
+        } else {
+            $('#selectorSucursales').hide();
+        }
+    }
+
+    /*=============================================
+    CARGAR SUCURSALES
+    =============================================*/
+    function cargarSucursales() {
+        $.ajax({
+            url: "ajax/categorias-central.ajax.php",
+            method: "POST",
+            data: {
+                accion: "obtener_sucursales"
+            },
+            dataType: "json",
+            success: function(respuesta) {
+                if (respuesta.success && respuesta.data) {
+                    mostrarSucursales(respuesta.data);
+                } else {
+                    $('#listaSucursales').html('<div class="text-danger"><i class="fa fa-exclamation-circle"></i> Error al cargar sucursales</div>');
+                }
+            },
+            error: function() {
+                $('#listaSucursales').html('<div class="text-danger"><i class="fa fa-exclamation-circle"></i> Error al cargar sucursales</div>');
+            }
+        });
+    }
+
+    /*=============================================
+    MOSTRAR SUCURSALES
+    =============================================*/
+    function mostrarSucursales(sucursales) {
+        var html = '';
+        
+        if (sucursales.length === 0) {
+            html = '<div class="text-muted">No hay sucursales activas disponibles</div>';
+        } else {
+            sucursales.forEach(function(sucursal) {
+                html += '<div class="checkbox">' +
+                    '<label>' +
+                    '<input type="checkbox" class="checkbox-sucursal" value="' + sucursal.id + '" data-nombre="' + sucursal.nombre + '"> ' +
+                    sucursal.nombre +
+                    '</label>' +
+                    '</div>';
+            });
+        }
+        
+        $('#listaSucursales').html(html);
+    }
+
+    /*=============================================
     EJECUTAR SINCRONIZACIÓN
     =============================================*/
     function ejecutarSincronizacion() {
-// Mostrar loading en modal
+        var direccion = $('input[name="direccionSincronizacion"]:checked').val();
+        
+        if (!direccion) {
+            mostrarSweetAlert('error', 'Error', 'Debe seleccionar una dirección de sincronización');
+            return;
+        }
+        
+        // Validar sucursales si es necesario
+        if (direccion === 'central_a_multiples' || direccion === 'multiples_a_central') {
+            var sucursalesSeleccionadas = [];
+            $('.checkbox-sucursal:checked').each(function() {
+                sucursalesSeleccionadas.push($(this).val());
+            });
+            
+            if (sucursalesSeleccionadas.length === 0) {
+                mostrarSweetAlert('error', 'Error', 'Debe seleccionar al menos una sucursal');
+                return;
+            }
+        }
+        
+        // Mostrar loading en modal
         $('#info-sincronizacion').show();
         $('#btnConfirmarSincronizacion').hide();
-$.ajax({
-                    url: "ajax/categorias-original.ajax.php",
-                    method: "POST",
-                    data: {
-                        accion: "sincronizar"
-                    },
+        
+        // Preparar datos
+        var datos = {
+            accion: "sincronizar_bidireccional",
+            direccion: direccion
+        };
+        
+        if (direccion === 'central_a_multiples' || direccion === 'multiples_a_central') {
+            datos.sucursales = sucursalesSeleccionadas;
+        }
+        
+        $.ajax({
+            url: "ajax/categorias-central.ajax.php",
+            method: "POST",
+            data: datos,
             dataType: "json",
-            timeout: 30000, // 30 segundos timeout
+            timeout: 60000, // 60 segundos timeout
             success: function(respuesta) {
-if (respuesta && respuesta.success) {
+                if (respuesta && respuesta.success) {
                     // Mostrar resultado exitoso
                     $('#info-sincronizacion').hide();
                     $('#resultado-sincronizacion').show();
-                    $('#detalles-sincronizacion').html(
-                        '<p>' + respuesta.message + '</p>' +
-                        '<p><strong>Sucursales sincronizadas:</strong> ' + respuesta.sucursales_sincronizadas + '/' + respuesta.total_sucursales + '</p>'
-                    );
+                    
+                    var detalles = '<p>' + respuesta.message + '</p>';
+                    
+                    if (respuesta.categorias_sincronizadas !== undefined) {
+                        detalles += '<p><strong>Categorías sincronizadas:</strong> ' + respuesta.categorias_sincronizadas;
+                        if (respuesta.total_categorias !== undefined) {
+                            detalles += ' / ' + respuesta.total_categorias;
+                        }
+                        detalles += '</p>';
+                    }
+                    
+                    if (respuesta.sucursales_sincronizadas !== undefined) {
+                        detalles += '<p><strong>Sucursales sincronizadas:</strong> ' + respuesta.sucursales_sincronizadas;
+                        if (respuesta.total_sucursales !== undefined) {
+                            detalles += ' / ' + respuesta.total_sucursales;
+                        }
+                        detalles += '</p>';
+                    }
+                    
+                    if (respuesta.sucursales_procesadas !== undefined) {
+                        detalles += '<p><strong>Sucursales procesadas:</strong> ' + respuesta.sucursales_procesadas + '</p>';
+                    }
+                    
+                    if (respuesta.errores && respuesta.errores.length > 0) {
+                        detalles += '<div class="alert alert-warning" style="margin-top: 10px;"><strong>Errores:</strong><ul>';
+                        respuesta.errores.forEach(function(error) {
+                            detalles += '<li>' + error + '</li>';
+                        });
+                        detalles += '</ul></div>';
+                    }
+                    
+                    $('#detalles-sincronizacion').html(detalles);
 
                     // Cambiar botón a "Cerrar"
                     $('#btnConfirmarSincronizacion').show().html('<i class="fa fa-check"></i> Cerrar').removeClass('btn-success').addClass('btn-primary');
@@ -303,17 +460,17 @@ if (respuesta && respuesta.success) {
                     // Recargar categorías
                     cargarCategorias();
 
-                    // Auto-cerrar después de 3 segundos
+                    // Auto-cerrar después de 5 segundos
                     setTimeout(function() {
                         $('#modalSincronizarCategorias').modal('hide');
-                    }, 3000);
+                    }, 5000);
 
                 } else {
-mostrarErrorSincronizacion(respuesta ? respuesta.message : "Respuesta inválida");
+                    mostrarErrorSincronizacion(respuesta ? respuesta.message : "Respuesta inválida");
                 }
             },
             error: function(xhr, status, error) {
-let mensajeError = "Error al sincronizar categorías";
+                var mensajeError = "Error al sincronizar categorías";
                 if (xhr.status === 0) {
                     mensajeError = "Error de conexión. Verifica tu conexión a internet.";
                 } else if (xhr.status === 404) {

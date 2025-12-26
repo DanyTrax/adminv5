@@ -106,6 +106,55 @@ class ControladorCategoriasCentral {
     }
 
     /*=============================================
+    SINCRONIZAR BIDIRECCIONAL
+    =============================================*/
+    static public function ctrSincronizarBidireccional() {
+        
+        if (!isset($_POST["direccion"])) {
+            return [
+                'success' => false,
+                'message' => 'Dirección de sincronización no especificada'
+            ];
+        }
+        
+        $direccion = $_POST["direccion"];
+        
+        switch ($direccion) {
+            case 'central_a_actual':
+                return ModeloCategoriasCentral::mdlSincronizarCentralASucursalActual();
+                
+            case 'actual_a_central':
+                return ModeloCategoriasCentral::mdlSincronizarSucursalActualACentral();
+                
+            case 'central_a_multiples':
+                if (!isset($_POST["sucursales"]) || empty($_POST["sucursales"])) {
+                    return [
+                        'success' => false,
+                        'message' => 'Debe seleccionar al menos una sucursal'
+                    ];
+                }
+                $idsSucursales = is_array($_POST["sucursales"]) ? $_POST["sucursales"] : json_decode($_POST["sucursales"], true);
+                return ModeloCategoriasCentral::mdlSincronizarCentralAMultiplesSucursales($idsSucursales);
+                
+            case 'multiples_a_central':
+                if (!isset($_POST["sucursales"]) || empty($_POST["sucursales"])) {
+                    return [
+                        'success' => false,
+                        'message' => 'Debe seleccionar al menos una sucursal'
+                    ];
+                }
+                $idsSucursales = is_array($_POST["sucursales"]) ? $_POST["sucursales"] : json_decode($_POST["sucursales"], true);
+                return ModeloCategoriasCentral::mdlSincronizarMultiplesSucursalesACentral($idsSucursales);
+                
+            default:
+                return [
+                    'success' => false,
+                    'message' => 'Dirección de sincronización inválida'
+                ];
+        }
+    }
+
+    /*=============================================
     OBTENER CATEGORÍAS CENTRALES
     =============================================*/
     static public function ctrObtenerCategoriasCentral($soloActivas = false) {

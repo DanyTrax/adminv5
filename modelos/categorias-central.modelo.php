@@ -356,5 +356,313 @@ class ModeloCategoriasCentral {
             return false;
         }
     }
+
+    /*=============================================
+    SINCRONIZAR CENTRAL → SUCURSAL ACTUAL
+    =============================================*/
+    static public function mdlSincronizarCentralASucursalActual() {
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/conexion.php";
+            
+            $pdoCentral = ConexionCentral::conectar();
+            $pdoLocal = Conexion::conectar();
+            
+            // Obtener categorías centrales
+            $stmt = $pdoCentral->prepare("SELECT * FROM categorias ORDER BY categoria");
+            $stmt->execute();
+            $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (empty($categorias)) {
+                return [
+                    'success' => false,
+                    'message' => 'No hay categorías en la base de datos central'
+                ];
+            }
+            
+            // Limpiar categorías existentes en la sucursal actual
+            $stmt = $pdoLocal->prepare("DELETE FROM categorias");
+            $stmt->execute();
+            
+            // Insertar categorías centrales en la sucursal actual
+            $stmt = $pdoLocal->prepare("INSERT INTO categorias (id, categoria, fecha) VALUES (?, ?, NOW())");
+            $insertadas = 0;
+            
+            foreach ($categorias as $categoria) {
+                try {
+                    $stmt->execute([$categoria['id'], $categoria['categoria']]);
+                    $insertadas++;
+                } catch (Exception $e) {
+                    // Si falla por ID duplicado, intentar sin ID
+                    try {
+                        $stmtSinId = $pdoLocal->prepare("INSERT INTO categorias (categoria, fecha) VALUES (?, NOW())");
+                        $stmtSinId->execute([$categoria['categoria']]);
+                        $insertadas++;
+                    } catch (Exception $e2) {
+                        error_log("Error insertando categoría {$categoria['categoria']}: " . $e2->getMessage());
+                    }
+                }
+            }
+            
+            return [
+                'success' => true,
+                'message' => "Sincronización completada. {$insertadas} categorías sincronizadas hacia la sucursal actual.",
+                'categorias_sincronizadas' => $insertadas,
+                'total_categorias' => count($categorias)
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlSincronizarCentralASucursalActual: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error al sincronizar: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /*=============================================
+    SINCRONIZAR SUCURSAL ACTUAL → CENTRAL
+    =============================================*/
+    static public function mdlSincronizarSucursalActualACentral() {
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            require_once __DIR__ . "/conexion.php";
+            
+            $pdoCentral = ConexionCentral::conectar();
+            $pdoLocal = Conexion::conectar();
+            
+            // Obtener categorías de la sucursal actual
+            $stmt = $pdoLocal->prepare("SELECT * FROM categorias ORDER BY categoria");
+            $stmt->execute();
+            $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (empty($categorias)) {
+                return [
+                    'success' => false,
+                    'message' => 'No hay categorías en la sucursal actual'
+                ];
+            }
+            
+            // Limpiar categorías existentes en la central
+            $stmt = $pdoCentral->prepare("DELETE FROM categorias");
+            $stmt->execute();
+            
+            // Insertar categorías de la sucursal actual en la central
+            $stmt = $pdoCentral->prepare("INSERT INTO categorias (id, categoria, fecha) VALUES (?, ?, NOW())");
+            $insertadas = 0;
+            
+            foreach ($categorias as $categoria) {
+                try {
+                    $stmt->execute([$categoria['id'], $categoria['categoria']]);
+                    $insertadas++;
+                } catch (Exception $e) {
+                    // Si falla por ID duplicado, intentar sin ID
+                    try {
+                        $stmtSinId = $pdoCentral->prepare("INSERT INTO categorias (categoria, fecha) VALUES (?, NOW())");
+                        $stmtSinId->execute([$categoria['categoria']]);
+                        $insertadas++;
+                    } catch (Exception $e2) {
+                        error_log("Error insertando categoría {$categoria['categoria']}: " . $e2->getMessage());
+                    }
+                }
+            }
+            
+            return [
+                'success' => true,
+                'message' => "Sincronización completada. {$insertadas} categorías sincronizadas desde la sucursal actual hacia central.",
+                'categorias_sincronizadas' => $insertadas,
+                'total_categorias' => count($categorias)
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlSincronizarSucursalActualACentral: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error al sincronizar: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /*=============================================
+    SINCRONIZAR CENTRAL → MÚLTIPLES SUCURSALES
+    =============================================*/
+    static public function mdlSincronizarCentralAMultiplesSucursales($idsSucursales) {
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            $pdoCentral = ConexionCentral::conectar();
+            
+            // Obtener categorías centrales
+            $stmt = $pdoCentral->prepare("SELECT * FROM categorias ORDER BY categoria");
+            $stmt->execute();
+            $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (empty($categorias)) {
+                return [
+                    'success' => false,
+                    'message' => 'No hay categorías en la base de datos central'
+                ];
+            }
+            
+            // Obtener sucursales seleccionadas
+            $placeholders = str_repeat('?,', count($idsSucursales) - 1) . '?';
+            $stmt = $pdoCentral->prepare("SELECT * FROM sucursales WHERE id IN ($placeholders) AND activo = 1");
+            $stmt->execute($idsSucursales);
+            $sucursales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (empty($sucursales)) {
+                return [
+                    'success' => false,
+                    'message' => 'No se encontraron sucursales activas seleccionadas'
+                ];
+            }
+            
+            $sucursalesSincronizadas = 0;
+            $errores = [];
+            
+            foreach ($sucursales as $sucursal) {
+                try {
+                    // Conectar a la sucursal
+                    $dsn = "mysql:host={$sucursal['host_bd']};port={$sucursal['puerto_bd']};dbname={$sucursal['nombre_bd']}";
+                    $pdoSucursal = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd']);
+                    $pdoSucursal->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    
+                    // Limpiar categorías existentes en la sucursal
+                    $stmt = $pdoSucursal->prepare("DELETE FROM categorias");
+                    $stmt->execute();
+                    
+                    // Insertar categorías centrales en la sucursal
+                    $stmt = $pdoSucursal->prepare("INSERT INTO categorias (id, categoria, fecha) VALUES (?, ?, NOW())");
+                    
+                    foreach ($categorias as $categoria) {
+                        try {
+                            $stmt->execute([$categoria['id'], $categoria['categoria']]);
+                        } catch (Exception $e) {
+                            // Si falla por ID duplicado, intentar sin ID
+                            try {
+                                $stmtSinId = $pdoSucursal->prepare("INSERT INTO categorias (categoria, fecha) VALUES (?, NOW())");
+                                $stmtSinId->execute([$categoria['categoria']]);
+                            } catch (Exception $e2) {
+                                error_log("Error insertando categoría {$categoria['categoria']} en sucursal {$sucursal['nombre']}: " . $e2->getMessage());
+                            }
+                        }
+                    }
+                    
+                    $sucursalesSincronizadas++;
+                    
+                } catch (Exception $e) {
+                    $errores[] = "Error en sucursal {$sucursal['nombre']}: " . $e->getMessage();
+                }
+            }
+            
+            return [
+                'success' => true,
+                'message' => "Sincronización completada. {$sucursalesSincronizadas} sucursales actualizadas.",
+                'sucursales_sincronizadas' => $sucursalesSincronizadas,
+                'total_sucursales' => count($sucursales),
+                'errores' => $errores
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlSincronizarCentralAMultiplesSucursales: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error al sincronizar: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /*=============================================
+    SINCRONIZAR MÚLTIPLES SUCURSALES → CENTRAL
+    =============================================*/
+    static public function mdlSincronizarMultiplesSucursalesACentral($idsSucursales) {
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            $pdoCentral = ConexionCentral::conectar();
+            
+            // Obtener sucursales seleccionadas
+            $placeholders = str_repeat('?,', count($idsSucursales) - 1) . '?';
+            $stmt = $pdoCentral->prepare("SELECT * FROM sucursales WHERE id IN ($placeholders) AND activo = 1");
+            $stmt->execute($idsSucursales);
+            $sucursales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (empty($sucursales)) {
+                return [
+                    'success' => false,
+                    'message' => 'No se encontraron sucursales activas seleccionadas'
+                ];
+            }
+            
+            $categoriasUnicas = [];
+            $sucursalesProcesadas = 0;
+            $errores = [];
+            
+            foreach ($sucursales as $sucursal) {
+                try {
+                    // Conectar a la sucursal
+                    $dsn = "mysql:host={$sucursal['host_bd']};port={$sucursal['puerto_bd']};dbname={$sucursal['nombre_bd']}";
+                    $pdoSucursal = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd']);
+                    $pdoSucursal->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    
+                    // Obtener categorías de la sucursal
+                    $stmt = $pdoSucursal->prepare("SELECT DISTINCT categoria FROM categorias ORDER BY categoria");
+                    $stmt->execute();
+                    $categoriasSucursal = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    // Agregar categorías únicas
+                    foreach ($categoriasSucursal as $categoria) {
+                        $nombreCategoria = trim($categoria['categoria']);
+                        if (!empty($nombreCategoria) && !in_array($nombreCategoria, $categoriasUnicas)) {
+                            $categoriasUnicas[] = $nombreCategoria;
+                        }
+                    }
+                    
+                    $sucursalesProcesadas++;
+                    
+                } catch (Exception $e) {
+                    $errores[] = "Error en sucursal {$sucursal['nombre']}: " . $e->getMessage();
+                }
+            }
+            
+            if (empty($categoriasUnicas)) {
+                return [
+                    'success' => false,
+                    'message' => 'No se encontraron categorías en las sucursales seleccionadas'
+                ];
+            }
+            
+            // Limpiar categorías existentes en la central
+            $stmt = $pdoCentral->prepare("DELETE FROM categorias");
+            $stmt->execute();
+            
+            // Insertar categorías únicas en la central
+            $stmt = $pdoCentral->prepare("INSERT INTO categorias (categoria, fecha) VALUES (?, NOW())");
+            $insertadas = 0;
+            
+            foreach ($categoriasUnicas as $categoria) {
+                try {
+                    $stmt->execute([$categoria]);
+                    $insertadas++;
+                } catch (Exception $e) {
+                    error_log("Error insertando categoría {$categoria}: " . $e->getMessage());
+                }
+            }
+            
+            return [
+                'success' => true,
+                'message' => "Sincronización completada. {$insertadas} categorías únicas sincronizadas desde {$sucursalesProcesadas} sucursales hacia central.",
+                'categorias_sincronizadas' => $insertadas,
+                'sucursales_procesadas' => $sucursalesProcesadas,
+                'total_sucursales' => count($sucursales),
+                'errores' => $errores
+            ];
+            
+        } catch (Exception $e) {
+            error_log("Error en mdlSincronizarMultiplesSucursalesACentral: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Error al sincronizar: ' . $e->getMessage()
+            ];
+        }
+    }
 }
 ?>
