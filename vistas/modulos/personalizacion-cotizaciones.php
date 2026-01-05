@@ -29,6 +29,7 @@ if (!$configuracionActual) {
         'header_color_fondo' => '#873173',
         'header_color_texto' => '#FFFFFF',
         'header_font_size' => 14,
+        'body_font_size' => 13,
         'footer_direccion' => 'Carrera 27 # 10-65 Local 116',
         'footer_telefono' => 'Tel: 601 569 9557',
         'footer_movil' => 'Móvil: 322 744 5631',
