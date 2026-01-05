@@ -162,39 +162,49 @@ class ModeloPersonalizacionCotizaciones {
                     id_sucursal,
                     nombre_sucursal,
                     header_logo,
+                    logo_width,
+                    logo_align_vertical,
+                    logo_align_horizontal,
                     header_nombre_empresa,
                     header_nit,
                     header_regimen,
                     header_servicios,
                     header_color_fondo,
                     header_color_texto,
+                    header_font_size,
                     footer_direccion,
                     footer_telefono,
                     footer_movil,
                     footer_correo,
                     footer_color_fondo,
                     footer_color_texto,
+                    footer_font_size,
                     activo,
                     usuario_creador
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
             ");
             
             $resultado = $stmt->execute([
                 $datos['id_sucursal'] ?? null,
                 $nombreSucursal,
                 $datos['header_logo'] ?? 'vistas/img/cotizacion/Infinito1.png',
+                $datos['logo_width'] ?? 80,
+                $datos['logo_align_vertical'] ?? 'center',
+                $datos['logo_align_horizontal'] ?? 'center',
                 $datos['header_nombre_empresa'] ?? 'ACPLASTICOS',
                 $datos['header_nit'] ?? '',
                 $datos['header_regimen'] ?? '',
                 $datos['header_servicios'] ?? '',
                 $datos['header_color_fondo'] ?? '#873173',
                 $datos['header_color_texto'] ?? '#FFFFFF',
+                $datos['header_font_size'] ?? 14,
                 $datos['footer_direccion'] ?? '',
                 $datos['footer_telefono'] ?? '',
                 $datos['footer_movil'] ?? '',
                 $datos['footer_correo'] ?? '',
                 $datos['footer_color_fondo'] ?? '#873173',
                 $datos['footer_color_texto'] ?? '#FFFFFF',
+                $datos['footer_font_size'] ?? 16,
                 $datos['usuario_creador'] ?? 1
             ]);
             
@@ -239,18 +249,23 @@ class ModeloPersonalizacionCotizaciones {
                     id_sucursal = ?,
                     nombre_sucursal = ?,
                     header_logo = ?,
+                    logo_width = ?,
+                    logo_align_vertical = ?,
+                    logo_align_horizontal = ?,
                     header_nombre_empresa = ?,
                     header_nit = ?,
                     header_regimen = ?,
                     header_servicios = ?,
                     header_color_fondo = ?,
                     header_color_texto = ?,
+                    header_font_size = ?,
                     footer_direccion = ?,
                     footer_telefono = ?,
                     footer_movil = ?,
                     footer_correo = ?,
                     footer_color_fondo = ?,
-                    footer_color_texto = ?
+                    footer_color_texto = ?,
+                    footer_font_size = ?
                 WHERE id = ?
             ");
             
@@ -258,18 +273,23 @@ class ModeloPersonalizacionCotizaciones {
                 $datos['id_sucursal'] ?? null,
                 $nombreSucursal,
                 $datos['header_logo'] ?? 'vistas/img/cotizacion/Infinito1.png',
+                $datos['logo_width'] ?? 80,
+                $datos['logo_align_vertical'] ?? 'center',
+                $datos['logo_align_horizontal'] ?? 'center',
                 $datos['header_nombre_empresa'] ?? 'ACPLASTICOS',
                 $datos['header_nit'] ?? '',
                 $datos['header_regimen'] ?? '',
                 $datos['header_servicios'] ?? '',
                 $datos['header_color_fondo'] ?? '#873173',
                 $datos['header_color_texto'] ?? '#FFFFFF',
+                $datos['header_font_size'] ?? 14,
                 $datos['footer_direccion'] ?? '',
                 $datos['footer_telefono'] ?? '',
                 $datos['footer_movil'] ?? '',
                 $datos['footer_correo'] ?? '',
                 $datos['footer_color_fondo'] ?? '#873173',
                 $datos['footer_color_texto'] ?? '#FFFFFF',
+                $datos['footer_font_size'] ?? 16,
                 $datos['id']
             ]);
             

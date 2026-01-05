@@ -19,18 +19,23 @@ $configuracionActual = ControladorPersonalizacionCotizaciones::ctrMostrarConfigu
 if (!$configuracionActual) {
     $configuracionActual = [
         'header_logo' => 'vistas/img/cotizacion/Infinito1.png',
+        'logo_width' => 80,
+        'logo_align_vertical' => 'center',
+        'logo_align_horizontal' => 'center',
         'header_nombre_empresa' => 'ACPLASTICOS',
         'header_nit' => 'NIT: 901.718.358-2',
         'header_regimen' => 'IVA E ICA RÉGIMEN COMÚN',
         'header_servicios' => "AVISOS\nLETRAS EN 3D\nTOMA UNO\nTRABAJOS ESPECIALES",
         'header_color_fondo' => '#873173',
         'header_color_texto' => '#FFFFFF',
+        'header_font_size' => 14,
         'footer_direccion' => 'Carrera 27 # 10-65 Local 116',
         'footer_telefono' => 'Tel: 601 569 9557',
         'footer_movil' => 'Móvil: 322 744 5631',
         'footer_correo' => 'Correo: ventas1@acplasticos.com',
         'footer_color_fondo' => '#873173',
-        'footer_color_texto' => '#FFFFFF'
+        'footer_color_texto' => '#FFFFFF',
+        'footer_font_size' => 16
     ];
 }
 
@@ -206,7 +211,7 @@ if (isset($_GET['eliminar'])) {
                         <div class="row">
                             <div class="col-md-12">
                                 <h4><i class="fa fa-footer"></i> Vista Previa del Footer</h4>
-                                <div class="footer-preview" style="background: <?= $configuracionActual['footer_color_fondo'] ?>; padding: 15px; border-radius: 5px; color: <?= $configuracionActual['footer_color_texto'] ?>; margin-bottom: 20px; text-align: center;">
+                                <div class="footer-preview" style="background: <?= $configuracionActual['footer_color_fondo'] ?>; padding: 15px; border-radius: 5px; color: <?= $configuracionActual['footer_color_texto'] ?>; margin-bottom: 20px; text-align: center; font-size: <?= ($configuracionActual['footer_font_size'] ?? 16) ?>px;">
                                     <p style="margin: 5px 0;"><strong><?= htmlspecialchars($configuracionActual['footer_direccion']) ?></strong></p>
                                     <p style="margin: 5px 0;"><?= htmlspecialchars($configuracionActual['footer_telefono']) ?> <?= htmlspecialchars($configuracionActual['footer_movil']) ?></p>
                                     <p style="margin: 5px 0;"><?= htmlspecialchars($configuracionActual['footer_correo']) ?></p>
@@ -344,18 +349,73 @@ if (isset($_GET['eliminar'])) {
                     </div>
                     
                     <h4><i class="fa fa-header"></i> Header</h4>
+                    
+                    <!-- Logo con subida de imagen -->
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="nuevoHeaderLogo">Logo (Ruta):</label>
-                                <input type="text" class="form-control" id="nuevoHeaderLogo" name="nuevoHeaderLogo" value="vistas/img/cotizacion/Infinito1.png" required>
-                                <small class="help-block">Ruta de la imagen del logo</small>
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <i class="fa fa-info-circle"></i> <strong>Instrucciones:</strong> Haz clic en la imagen del logo para cambiarla desde tu equipo.
+                            </div>
+                            <div class="form-group" style="position: relative;">
+                                <label>Logo del Header:</label>
+                                <div class="image-upload-container" style="text-align: center; margin-bottom: 20px;">
+                                    <div class="image-preview-box" id="preview-logo-cotizacion" style="border: 2px dashed #ddd; padding: 20px; border-radius: 5px; cursor: pointer; background-color: #f9f9f9; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s ease;" onclick="abrirSelectorImagen('logo-cotizacion')">
+                                        <img src="<?= $configuracionActual['header_logo'] ?>" style="max-width: 150px; max-height: 80px; margin-bottom: 10px;">
+                                        <div style="color: #666; font-size: 12px;">
+                                            <i class="fa fa-camera" style="font-size: 16px; margin-bottom: 5px; display: block;"></i>
+                                            <strong>Logo Cotización</strong><br>
+                                            <small>Haz clic para cambiar</small>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="file-logo-cotizacion" accept="image/*" style="display: none;" onchange="subirImagen('logo-cotizacion', this)">
+                                    <input type="hidden" id="nuevoHeaderLogo" name="nuevoHeaderLogo" value="<?= $configuracionActual['header_logo'] ?>">
+                                </div>
                             </div>
                         </div>
+                    </div>
+                    
+                    <!-- Configuración del Logo -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="nuevoLogoWidth">Tamaño del Logo (%):</label>
+                                <input type="number" class="form-control" id="nuevoLogoWidth" name="nuevoLogoWidth" value="80" min="10" max="100" required>
+                                <small class="help-block">Porcentaje de ancho (10-100%)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="nuevoLogoAlignVertical">Alineación Vertical:</label>
+                                <select class="form-control" id="nuevoLogoAlignVertical" name="nuevoLogoAlignVertical">
+                                    <option value="top">Arriba</option>
+                                    <option value="center" selected>Centro</option>
+                                    <option value="bottom">Abajo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="nuevoLogoAlignHorizontal">Alineación Horizontal:</label>
+                                <select class="form-control" id="nuevoLogoAlignHorizontal" name="nuevoLogoAlignHorizontal">
+                                    <option value="left">Izquierda</option>
+                                    <option value="center" selected>Centro</option>
+                                    <option value="right">Derecha</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="nuevoHeaderNombreEmpresa">Nombre de Empresa:</label>
                                 <input type="text" class="form-control" id="nuevoHeaderNombreEmpresa" name="nuevoHeaderNombreEmpresa" value="ACPLASTICOS" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nuevoHeaderFontSize">Tamaño de Texto Header (px):</label>
+                                <input type="number" class="form-control" id="nuevoHeaderFontSize" name="nuevoHeaderFontSize" value="14" min="8" max="24" required>
                             </div>
                         </div>
                     </div>
@@ -441,7 +501,7 @@ TRABAJOS ESPECIALES</textarea>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label for="nuevoFooterColorFondo">Color de Fondo Footer:</label>
                                 <div class="input-group">
@@ -452,7 +512,7 @@ TRABAJOS ESPECIALES</textarea>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label for="nuevoFooterColorTexto">Color de Texto Footer:</label>
                                 <div class="input-group">
@@ -461,6 +521,12 @@ TRABAJOS ESPECIALES</textarea>
                                         <input type="text" class="form-control color-text" value="#FFFFFF" readonly style="width: 100px;">
                                     </span>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="nuevoFooterFontSize">Tamaño de Texto Footer (px):</label>
+                                <input type="number" class="form-control" id="nuevoFooterFontSize" name="nuevoFooterFontSize" value="16" min="8" max="24" required>
                             </div>
                         </div>
                     </div>
@@ -502,17 +568,73 @@ TRABAJOS ESPECIALES</textarea>
                     </div>
                     
                     <h4><i class="fa fa-header"></i> Header</h4>
+                    
+                    <!-- Logo con subida de imagen -->
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="editarHeaderLogo">Logo (Ruta):</label>
-                                <input type="text" class="form-control" id="editarHeaderLogo" name="editarHeaderLogo" required>
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <i class="fa fa-info-circle"></i> <strong>Instrucciones:</strong> Haz clic en la imagen del logo para cambiarla desde tu equipo.
+                            </div>
+                            <div class="form-group" style="position: relative;">
+                                <label>Logo del Header:</label>
+                                <div class="image-upload-container" style="text-align: center; margin-bottom: 20px;">
+                                    <div class="image-preview-box" id="preview-logo-cotizacion-editar" style="border: 2px dashed #ddd; padding: 20px; border-radius: 5px; cursor: pointer; background-color: #f9f9f9; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s ease;" onclick="abrirSelectorImagen('logo-cotizacion-editar')">
+                                        <img id="img-logo-cotizacion-editar" src="" style="max-width: 150px; max-height: 80px; margin-bottom: 10px;">
+                                        <div style="color: #666; font-size: 12px;">
+                                            <i class="fa fa-camera" style="font-size: 16px; margin-bottom: 5px; display: block;"></i>
+                                            <strong>Logo Cotización</strong><br>
+                                            <small>Haz clic para cambiar</small>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="file-logo-cotizacion-editar" accept="image/*" style="display: none;" onchange="subirImagen('logo-cotizacion-editar', this)">
+                                    <input type="hidden" id="editarHeaderLogo" name="editarHeaderLogo">
+                                </div>
                             </div>
                         </div>
+                    </div>
+                    
+                    <!-- Configuración del Logo -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="editarLogoWidth">Tamaño del Logo (%):</label>
+                                <input type="number" class="form-control" id="editarLogoWidth" name="editarLogoWidth" value="80" min="10" max="100" required>
+                                <small class="help-block">Porcentaje de ancho (10-100%)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="editarLogoAlignVertical">Alineación Vertical:</label>
+                                <select class="form-control" id="editarLogoAlignVertical" name="editarLogoAlignVertical">
+                                    <option value="top">Arriba</option>
+                                    <option value="center" selected>Centro</option>
+                                    <option value="bottom">Abajo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="editarLogoAlignHorizontal">Alineación Horizontal:</label>
+                                <select class="form-control" id="editarLogoAlignHorizontal" name="editarLogoAlignHorizontal">
+                                    <option value="left">Izquierda</option>
+                                    <option value="center" selected>Centro</option>
+                                    <option value="right">Derecha</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="editarHeaderNombreEmpresa">Nombre de Empresa:</label>
                                 <input type="text" class="form-control" id="editarHeaderNombreEmpresa" name="editarHeaderNombreEmpresa" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editarHeaderFontSize">Tamaño de Texto Header (px):</label>
+                                <input type="number" class="form-control" id="editarHeaderFontSize" name="editarHeaderFontSize" value="14" min="8" max="24" required>
                             </div>
                         </div>
                     </div>
@@ -595,7 +717,7 @@ TRABAJOS ESPECIALES</textarea>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label for="editarFooterColorFondo">Color de Fondo Footer:</label>
                                 <div class="input-group">
@@ -606,7 +728,7 @@ TRABAJOS ESPECIALES</textarea>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label for="editarFooterColorTexto">Color de Texto Footer:</label>
                                 <div class="input-group">
@@ -615,6 +737,12 @@ TRABAJOS ESPECIALES</textarea>
                                         <input type="text" class="form-control color-text" readonly style="width: 100px;">
                                     </span>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="editarFooterFontSize">Tamaño de Texto Footer (px):</label>
+                                <input type="number" class="form-control" id="editarFooterFontSize" name="editarFooterFontSize" value="16" min="8" max="24" required>
                             </div>
                         </div>
                     </div>
@@ -669,18 +797,24 @@ function editarConfiguracion(id) {
                 $('#editarId').val(config.id);
                 $('#editarIdSucursal').val(config.id_sucursal || '');
                 $('#editarHeaderLogo').val(config.header_logo);
+                $('#img-logo-cotizacion-editar').attr('src', config.header_logo);
+                $('#editarLogoWidth').val(config.logo_width || 80);
+                $('#editarLogoAlignVertical').val(config.logo_align_vertical || 'center');
+                $('#editarLogoAlignHorizontal').val(config.logo_align_horizontal || 'center');
                 $('#editarHeaderNombreEmpresa').val(config.header_nombre_empresa);
                 $('#editarHeaderNit').val(config.header_nit);
                 $('#editarHeaderRegimen').val(config.header_regimen);
                 $('#editarHeaderServicios').val(config.header_servicios);
                 $('#editarHeaderColorFondo').val(config.header_color_fondo);
                 $('#editarHeaderColorTexto').val(config.header_color_texto);
+                $('#editarHeaderFontSize').val(config.header_font_size || 14);
                 $('#editarFooterDireccion').val(config.footer_direccion);
                 $('#editarFooterTelefono').val(config.footer_telefono);
                 $('#editarFooterMovil').val(config.footer_movil);
                 $('#editarFooterCorreo').val(config.footer_correo);
                 $('#editarFooterColorFondo').val(config.footer_color_fondo);
                 $('#editarFooterColorTexto').val(config.footer_color_texto);
+                $('#editarFooterFontSize').val(config.footer_font_size || 16);
                 
                 // Actualizar textos de color
                 $('#editarHeaderColorFondo').closest('.input-group').find('.color-text').val(config.header_color_fondo);
@@ -694,6 +828,82 @@ function editarConfiguracion(id) {
                 type: "error",
                 title: "Error",
                 text: "No se pudo cargar la configuración",
+                showConfirmButton: true,
+                confirmButtonText: "Cerrar"
+            });
+        }
+    });
+}
+
+// Función para abrir selector de imagen
+function abrirSelectorImagen(tipo) {
+    var fileInputId = 'file-' + tipo;
+    $('#' + fileInputId).click();
+}
+
+// Función para subir imagen
+function subirImagen(tipo, input) {
+    var archivo = input.files[0];
+    if (!archivo) {
+        return;
+    }
+    
+    var formData = new FormData();
+    formData.append('imagen', archivo);
+    formData.append('tipo', tipo);
+    formData.append('accion', 'subir_imagen');
+    
+    var previewBox = tipo.includes('editar') ? 
+        $('#preview-logo-cotizacion-editar') : 
+        $('#preview-logo-cotizacion');
+    
+    // Mostrar loading
+    previewBox.find('img').attr('src', 'vistas/img/plantilla/loading.gif');
+    
+    $.ajax({
+        url: 'ajax/personalizacion-cotizaciones.ajax.php',
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        dataType: 'json',
+        success: function(data) {
+            if (data.success) {
+                // Actualizar imagen en preview
+                var img = previewBox.find('img');
+                if (img.length) {
+                    img.attr('src', data.ruta_imagen + '?t=' + new Date().getTime());
+                }
+                
+                // Actualizar campo hidden
+                if (tipo.includes('editar')) {
+                    $('#editarHeaderLogo').val(data.ruta_imagen);
+                } else {
+                    $('#nuevoHeaderLogo').val(data.ruta_imagen);
+                }
+                
+                swal({
+                    type: "success",
+                    title: "¡Imagen actualizada!",
+                    text: data.mensaje,
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            } else {
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: data.error || "Error al subir la imagen",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        },
+        error: function() {
+            swal({
+                type: "error",
+                title: "Error",
+                text: "Error al subir la imagen",
                 showConfirmButton: true,
                 confirmButtonText: "Cerrar"
             });

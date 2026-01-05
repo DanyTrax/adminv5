@@ -76,11 +76,19 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 		grid-template-columns: repeat(4, 1fr);
 		justify-content: space-around;
 		align-items: center;
-		font-size:14px;
+		font-size: <?= ($configCotizacion['header_font_size'] ?? 14) ?>px;
 	}
 
 	.header img {
-		width: 80%;
+		width: <?= ($configCotizacion['logo_width'] ?? 80) ?>%;
+		object-fit: contain;
+		max-height: 60px;
+	}
+	
+	.header > div:first-child {
+		display: flex;
+		align-items: <?= $configCotizacion['logo_align_vertical'] ?? 'center' ?>;
+		justify-content: <?= $configCotizacion['logo_align_horizontal'] ?? 'center' ?>;
 	}
 
 	footer {
@@ -115,7 +123,7 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 		align-items: center;
 		justify-content: center;
 		flex-direction: column;
-		font-size: 16px;
+		font-size: <?= ($configCotizacion['footer_font_size'] ?? 16) ?>px;
 	}
 
 	footer p {

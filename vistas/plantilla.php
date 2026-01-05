@@ -182,6 +182,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "personalizacion-colores-simplificado" => ["Administrador"],
         "personalizacion-cotizaciones" => ["Administrador"],
         "crear-tabla-personalizacion-cotizaciones" => ["Administrador"],
+        "agregar-campos-logo-texto-cotizaciones" => ["Administrador"],
         "salir" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"]
       ];
 

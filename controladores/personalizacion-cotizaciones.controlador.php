@@ -30,18 +30,23 @@ class ControladorPersonalizacionCotizaciones {
             $datos = [
                 "id_sucursal" => !empty($_POST["nuevoIdSucursal"]) ? (int)$_POST["nuevoIdSucursal"] : null,
                 "header_logo" => $_POST["nuevoHeaderLogo"] ?? 'vistas/img/cotizacion/Infinito1.png',
+                "logo_width" => !empty($_POST["nuevoLogoWidth"]) ? (int)$_POST["nuevoLogoWidth"] : 80,
+                "logo_align_vertical" => $_POST["nuevoLogoAlignVertical"] ?? 'center',
+                "logo_align_horizontal" => $_POST["nuevoLogoAlignHorizontal"] ?? 'center',
                 "header_nombre_empresa" => $_POST["nuevoHeaderNombreEmpresa"] ?? '',
                 "header_nit" => $_POST["nuevoHeaderNit"] ?? '',
                 "header_regimen" => $_POST["nuevoHeaderRegimen"] ?? '',
                 "header_servicios" => $_POST["nuevoHeaderServicios"] ?? '',
                 "header_color_fondo" => $_POST["nuevoHeaderColorFondo"] ?? '#873173',
                 "header_color_texto" => $_POST["nuevoHeaderColorTexto"] ?? '#FFFFFF',
+                "header_font_size" => !empty($_POST["nuevoHeaderFontSize"]) ? (int)$_POST["nuevoHeaderFontSize"] : 14,
                 "footer_direccion" => $_POST["nuevoFooterDireccion"] ?? '',
                 "footer_telefono" => $_POST["nuevoFooterTelefono"] ?? '',
                 "footer_movil" => $_POST["nuevoFooterMovil"] ?? '',
                 "footer_correo" => $_POST["nuevoFooterCorreo"] ?? '',
                 "footer_color_fondo" => $_POST["nuevoFooterColorFondo"] ?? '#873173',
                 "footer_color_texto" => $_POST["nuevoFooterColorTexto"] ?? '#FFFFFF',
+                "footer_font_size" => !empty($_POST["nuevoFooterFontSize"]) ? (int)$_POST["nuevoFooterFontSize"] : 16,
                 "usuario_creador" => $_SESSION["id"] ?? 1
             ];
             
