@@ -130,18 +130,33 @@ function redimensionarImagen($archivoOrigen, $archivoDestino, $tipo) {
     $altoOriginal = $infoImagen[1];
     $tipoImagen = $infoImagen[2];
     
-    // Definir dimensiones según el tipo
-    $dimensiones = [
-        'icono-pequeno' => [50, 50],
-        'logo-menu' => [200, 50],
-        'logo-login' => [200, 100]
+    // Definir dimensiones máximas según el tipo (manteniendo proporción)
+    $dimensionesMaximas = [
+        'icono-pequeno' => ['max_ancho' => 50, 'max_alto' => 50],
+        'logo-menu' => ['max_ancho' => 200, 'max_alto' => 50],
+        'logo-login' => ['max_ancho' => 300, 'max_alto' => 150] // Aumentado para mejor proporción
     ];
     
-    if (!isset($dimensiones[$tipo])) {
+    if (!isset($dimensionesMaximas[$tipo])) {
         return false;
     }
     
-    list($anchoDestino, $altoDestino) = $dimensiones[$tipo];
+    $maxAncho = $dimensionesMaximas[$tipo]['max_ancho'];
+    $maxAlto = $dimensionesMaximas[$tipo]['max_alto'];
+    
+    // Calcular dimensiones manteniendo la proporción original
+    $proporcionOriginal = $anchoOriginal / $altoOriginal;
+    $proporcionMaxima = $maxAncho / $maxAlto;
+    
+    if ($proporcionOriginal > $proporcionMaxima) {
+        // La imagen es más ancha, limitar por ancho
+        $anchoDestino = $maxAncho;
+        $altoDestino = (int)($maxAncho / $proporcionOriginal);
+    } else {
+        // La imagen es más alta, limitar por alto
+        $altoDestino = $maxAlto;
+        $anchoDestino = (int)($maxAlto * $proporcionOriginal);
+    }
     
     // Crear imagen desde archivo
     switch ($tipoImagen) {
@@ -174,9 +189,13 @@ function redimensionarImagen($archivoOrigen, $archivoDestino, $tipo) {
         imagesavealpha($imagenRedimensionada, true);
         $transparente = imagecolorallocatealpha($imagenRedimensionada, 255, 255, 255, 127);
         imagefill($imagenRedimensionada, 0, 0, $transparente);
+    } else {
+        // Para otros formatos, usar fondo blanco
+        $blanco = imagecolorallocate($imagenRedimensionada, 255, 255, 255);
+        imagefill($imagenRedimensionada, 0, 0, $blanco);
     }
     
-    // Redimensionar
+    // Redimensionar manteniendo proporción
     imagecopyresampled(
         $imagenRedimensionada, $imagenOriginal,
         0, 0, 0, 0,
