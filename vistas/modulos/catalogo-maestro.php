@@ -278,7 +278,7 @@ MODAL AGREGAR PRODUCTO MAESTRO
               
                 <span class="input-group-addon"><i class="fa fa-arrow-up"></i></span> 
 
-                <input type="number" class="form-control input-lg" name="nuevoPrecioVentaMaestro" min="0" step="any" placeholder="Precio de venta" required>
+                <input type="text" class="form-control input-lg" name="nuevoPrecioVentaMaestro" id="nuevoPrecioVentaMaestro" pattern="[0-9]+" placeholder="Precio de venta (solo números enteros)" required>
 
               </div>
 
@@ -490,7 +490,7 @@ MODAL EDITAR PRODUCTO MAESTRO
               
                 <span class="input-group-addon"><i class="fa fa-arrow-up"></i></span> 
 
-                <input type="number" class="form-control input-lg" name="editarPrecioVentaMaestro" id="editarPrecioVentaMaestro" min="0" step="1" required>
+                <input type="text" class="form-control input-lg" name="editarPrecioVentaMaestro" id="editarPrecioVentaMaestro" pattern="[0-9]+" placeholder="Precio de venta (solo números enteros)" required>
 
               </div>
 

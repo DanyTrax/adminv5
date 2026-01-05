@@ -56,11 +56,14 @@ public function ctrCrearProductoMaestro() {
         }
         
         // Preparar datos
+        // Convertir precio a entero (sin decimales)
+        $precioVenta = isset($_POST["nuevoPrecioVentaMaestro"]) ? round(floatval($_POST["nuevoPrecioVentaMaestro"])) : 0;
+        
         $datos = array(
             "codigo" => $_POST["nuevoCodigoMaestro"],
             "descripcion" => $_POST["nuevaDescripcionMaestro"],
             "id_categoria" => $_POST["nuevaCategoriaMaestro"],
-            "precio_venta" => $_POST["nuevoPrecioVentaMaestro"],
+            "precio_venta" => $precioVenta,
             "imagen" => $ruta,
             "es_divisible" => isset($_POST["esDivisibleMaestro"]) ? 1 : 0,
             "codigo_hijo_mitad" => $_POST["codigoHijoMitad"] ?? "",
@@ -141,11 +144,14 @@ public function ctrEditarProductoMaestro() {
         error_log("Código cuarto: '" . $codigoHijoCuarto . "' (length: " . strlen($codigoHijoCuarto) . ")");
         
         // Preparar datos
+        // Convertir precio a entero (sin decimales)
+        $precioVenta = isset($_POST["editarPrecioVentaMaestro"]) ? round(floatval($_POST["editarPrecioVentaMaestro"])) : 0;
+        
         $datos = array(
             "id" => $_POST["idProductoMaestro"],
             "descripcion" => $_POST["editarDescripcionMaestro"],
             "id_categoria" => $_POST["editarCategoriaMaestro"],
-            "precio_venta" => $_POST["editarPrecioVentaMaestro"],
+            "precio_venta" => $precioVenta,
             "imagen" => $ruta,
             "es_divisible" => $esDivisible,
             "codigo_hijo_mitad" => $codigoHijoMitad,

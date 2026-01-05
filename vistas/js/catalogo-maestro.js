@@ -604,9 +604,16 @@ if(respuesta && typeof respuesta === 'object') {
                 $("#idProductoMaestro").val(respuesta["id"] || "");
                 $("#editarCodigoMaestro").val(respuesta["codigo"] || "");
                 $("#editarDescripcionMaestro").val(respuesta["descripcion"] || "");
-                // Redondear precio a entero sin decimales
-                var precioRedondeado = respuesta["precio_venta"] ? Math.round(parseFloat(respuesta["precio_venta"])) : "";
-                $("#editarPrecioVentaMaestro").val(precioRedondeado);
+                // Redondear precio a entero sin decimales y sin formato
+                var precio = respuesta["precio_venta"];
+                if(precio) {
+                    // Convertir a número, redondear y quitar decimales
+                    var precioRedondeado = Math.round(parseFloat(precio));
+                    // Asegurar que sea un número entero sin decimales
+                    $("#editarPrecioVentaMaestro").val(precioRedondeado.toString().replace(/\./g, ''));
+                } else {
+                    $("#editarPrecioVentaMaestro").val("");
+                }
                 $("#editarCategoriaMaestro").val(respuesta["id_categoria"] || "");
 
                 // Configurar imagen
@@ -1023,11 +1030,20 @@ CONFIGURAR VALIDACIONES
 
 function configurarValidaciones() {
 
-    // Validación de precios (solo números)
+    // Validación de precios (solo números enteros, sin decimales)
     $('input[name="nuevoPrecioVentaMaestro"], input[name="editarPrecioVentaMaestro"]').on('input', function(){
-        var precio = parseFloat($(this).val());
-        if(precio < 0 || isNaN(precio)) {
-            $(this).val(0);
+        var valor = $(this).val();
+        // Remover cualquier carácter que no sea número
+        var valorLimpio = valor.replace(/[^0-9]/g, '');
+        
+        // Si el valor cambió, actualizarlo
+        if(valor !== valorLimpio) {
+            $(this).val(valorLimpio);
+        }
+        
+        // Si está vacío o es 0, permitir (se validará con required)
+        if(valorLimpio === '' || valorLimpio === '0') {
+            return;
         }
     });
 
