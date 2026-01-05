@@ -178,10 +178,10 @@ if (isset($_GET['eliminar'])) {
                         <div class="row">
                             <div class="col-md-12">
                                 <h4><i class="fa fa-header"></i> Vista Previa del Header</h4>
-                                <div class="header-preview" style="background: <?= $configuracionActual['header_color_fondo'] ?>; padding: 15px; border-radius: 5px; color: <?= $configuracionActual['header_color_texto'] ?>; margin-bottom: 20px;">
-                                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; align-items: center;">
-                                        <div style="text-align: center;">
-                                            <img src="<?= $configuracionActual['header_logo'] ?>" style="max-width: 80px; max-height: 60px;" alt="Logo">
+                                <div class="header-preview" style="background: <?= $configuracionActual['header_color_fondo'] ?>; padding: 15px; border-radius: 5px; color: <?= $configuracionActual['header_color_texto'] ?>; margin-bottom: 20px; font-size: <?= ($configuracionActual['header_font_size'] ?? 14) ?>px;">
+                                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; align-items: <?= $configuracionActual['logo_align_vertical'] ?? 'center' ?>; justify-items: <?= $configuracionActual['logo_align_horizontal'] ?? 'center' ?>;">
+                                        <div style="text-align: <?= $configuracionActual['logo_align_horizontal'] ?? 'center' ?>; display: flex; align-items: <?= $configuracionActual['logo_align_vertical'] ?? 'center' ?>; justify-content: <?= $configuracionActual['logo_align_horizontal'] ?? 'center' ?>;">
+                                            <img src="<?= $configuracionActual['header_logo'] ?>" style="width: <?= ($configuracionActual['logo_width'] ?? 80) ?>%; max-height: 60px; object-fit: contain;" alt="Logo">
                                         </div>
                                         <div>
                                             <div><strong><?= htmlspecialchars($configuracionActual['header_nombre_empresa']) ?></strong></div>
