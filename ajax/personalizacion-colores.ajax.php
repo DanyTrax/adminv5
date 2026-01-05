@@ -53,7 +53,10 @@ if (isset($_POST["accion"])) {
                     $campoImagen = str_replace('-', '_', $tipo);
                     $rutaRelativa = "vistas/img/personalizacion/" . $nombreArchivo;
                     
-                    if (actualizarImagenEnBD($campoImagen, $rutaRelativa)) {
+                    // Obtener ID de sucursal actual
+                    $idSucursal = obtenerIdSucursalActual();
+                    
+                    if (actualizarImagenEnBD($campoImagen, $rutaRelativa, $idSucursal)) {
                         echo json_encode([
                             'success' => true,
                             'ruta_imagen' => $rutaRelativa,
@@ -206,18 +209,115 @@ function redimensionarImagen($archivoOrigen, $archivoDestino, $tipo) {
 }
 
 /*=============================================
-FUNCIÓN PARA ACTUALIZAR IMAGEN EN BASE DE DATOS
+OBTENER ID SUCURSAL ACTUAL
 =============================================*/
-function actualizarImagenEnBD($campoImagen, $rutaImagen) {
+function obtenerIdSucursalActual() {
+    
+    try {
+        // Obtener código de sucursal desde BD local
+        require_once "../modelos/conexion.php";
+        $conexionLocal = Conexion::conectar();
+        
+        $stmt = $conexionLocal->prepare("SELECT codigo_sucursal FROM sucursal_local LIMIT 1");
+        $stmt->execute();
+        $sucursalLocal = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$sucursalLocal || empty($sucursalLocal['codigo_sucursal'])) {
+            return null;
+        }
+        
+        $codigoSucursal = $sucursalLocal['codigo_sucursal'];
+        
+        // Obtener ID de sucursal desde BD central
+        require_once "../api-transferencias/conexion-central.php";
+        $conexionCentral = ConexionCentral::conectar();
+        $stmt = $conexionCentral->prepare("SELECT id FROM sucursales WHERE codigo_sucursal = ? AND activo = 1 LIMIT 1");
+        $stmt->execute([$codigoSucursal]);
+        $sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $sucursal ? (int)$sucursal['id'] : null;
+        
+    } catch (Exception $e) {
+        error_log("Error en obtenerIdSucursalActual: " . $e->getMessage());
+        return null;
+    }
+}
+
+/*=============================================
+FUNCIÓN PARA ACTUALIZAR IMAGEN EN BASE DE DATOS (POR SUCURSAL)
+=============================================*/
+function actualizarImagenEnBD($campoImagen, $rutaImagen, $idSucursal = null) {
     
     try {
         require_once "../api-transferencias/conexion-central.php";
         $conexion = ConexionCentral::conectar();
         
-        // Actualizar la configuración activa
-        $sql = "UPDATE personalizacion_colores SET $campoImagen = ? WHERE activo = 1";
-        $stmt = $conexion->prepare($sql);
-        $resultado = $stmt->execute([$rutaImagen]);
+        // Actualizar solo la configuración activa de la sucursal actual (o global si idSucursal es null)
+        if ($idSucursal !== null) {
+            // Buscar configuración activa de la sucursal específica
+            $sql = "UPDATE personalizacion_colores SET $campoImagen = ? WHERE activo = 1 AND id_sucursal = ?";
+            $stmt = $conexion->prepare($sql);
+            $resultado = $stmt->execute([$rutaImagen, $idSucursal]);
+            
+            // Si no se actualizó ninguna fila, puede que no haya configuración específica de la sucursal
+            // En ese caso, crear una nueva configuración activa para esta sucursal
+            if ($resultado && $stmt->rowCount() == 0) {
+                // Obtener la configuración global activa como base
+                $stmt = $conexion->prepare("SELECT * FROM personalizacion_colores WHERE activo = 1 AND id_sucursal IS NULL LIMIT 1");
+                $stmt->execute();
+                $configGlobal = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($configGlobal) {
+                    // Desactivar todas las configuraciones de esta sucursal
+                    $stmt = $conexion->prepare("UPDATE personalizacion_colores SET activo = 0 WHERE id_sucursal = ?");
+                    $stmt->execute([$idSucursal]);
+                    
+                    // Crear nueva configuración para esta sucursal basada en la global
+                    $stmt = $conexion->prepare("
+                        INSERT INTO personalizacion_colores (
+                            nombre_configuracion,
+                            login_gradient_start,
+                            login_gradient_end,
+                            navbar_color,
+                            navbar_hover_color,
+                            sidebar_color,
+                            sidebar_hover_color,
+                            sidebar_text_color,
+                            icono_pequeno,
+                            logo_menu,
+                            logo_login,
+                            activo,
+                            id_sucursal,
+                            usuario_creador
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+                    ");
+                    
+                    // Actualizar el campo de imagen correspondiente
+                    $datos = [
+                        $configGlobal['nombre_configuracion'] . ' - ' . date('Y-m-d H:i:s'),
+                        $configGlobal['login_gradient_start'],
+                        $configGlobal['login_gradient_end'],
+                        $configGlobal['navbar_color'],
+                        $configGlobal['navbar_hover_color'],
+                        $configGlobal['sidebar_color'],
+                        $configGlobal['sidebar_hover_color'],
+                        $configGlobal['sidebar_text_color'],
+                        $campoImagen == 'icono_pequeno' ? $rutaImagen : $configGlobal['icono_pequeno'],
+                        $campoImagen == 'logo_menu' ? $rutaImagen : $configGlobal['logo_menu'],
+                        $campoImagen == 'logo_login' ? $rutaImagen : $configGlobal['logo_login'],
+                        $idSucursal,
+                        $_SESSION['id'] ?? 1
+                    ];
+                    
+                    $resultado = $stmt->execute($datos);
+                }
+            }
+        } else {
+            // Actualizar configuración global activa
+            $sql = "UPDATE personalizacion_colores SET $campoImagen = ? WHERE activo = 1 AND id_sucursal IS NULL";
+            $stmt = $conexion->prepare($sql);
+            $resultado = $stmt->execute([$rutaImagen]);
+        }
         
         return $resultado;
         
