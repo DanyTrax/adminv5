@@ -41,14 +41,54 @@ $todasConfiguraciones = ControladorPersonalizacionCotizaciones::ctrObtenerTodasC
 if (isset($_POST['nuevoHeaderNombreEmpresa'])) {
     $resultado = ControladorPersonalizacionCotizaciones::ctrCrearConfiguracion();
     if ($resultado['success']) {
-        echo "<script>window.location.href = 'personalizacion-cotizaciones" . ($idSucursalSeleccionada ? '?sucursal=' . $idSucursalSeleccionada : '') . "';</script>";
+        echo "<script>
+            swal({
+                type: 'success',
+                title: '¡Configuración creada!',
+                text: '" . $resultado['mensaje'] . "',
+                showConfirmButton: true,
+                confirmButtonText: 'Aceptar'
+            }).then(function() {
+                window.location.href = 'personalizacion-cotizaciones" . ($idSucursalSeleccionada ? '?sucursal=' . $idSucursalSeleccionada : '') . "';
+            });
+        </script>";
+    } else {
+        echo "<script>
+            swal({
+                type: 'error',
+                title: 'Error',
+                text: '" . ($resultado['mensaje'] ?? 'Error al crear la configuración') . "',
+                showConfirmButton: true,
+                confirmButtonText: 'Cerrar'
+            });
+        </script>";
     }
 }
 
 if (isset($_POST['editarId'])) {
     $resultado = ControladorPersonalizacionCotizaciones::ctrActualizarConfiguracion();
     if ($resultado['success']) {
-        echo "<script>window.location.href = 'personalizacion-cotizaciones" . ($idSucursalSeleccionada ? '?sucursal=' . $idSucursalSeleccionada : '') . "';</script>";
+        echo "<script>
+            swal({
+                type: 'success',
+                title: '¡Configuración actualizada!',
+                text: '" . $resultado['mensaje'] . "',
+                showConfirmButton: true,
+                confirmButtonText: 'Aceptar'
+            }).then(function() {
+                window.location.href = 'personalizacion-cotizaciones" . ($idSucursalSeleccionada ? '?sucursal=' . $idSucursalSeleccionada : '') . "';
+            });
+        </script>";
+    } else {
+        echo "<script>
+            swal({
+                type: 'error',
+                title: 'Error',
+                text: '" . ($resultado['mensaje'] ?? 'Error al actualizar la configuración') . "',
+                showConfirmButton: true,
+                confirmButtonText: 'Cerrar'
+            });
+        </script>";
     }
 }
 

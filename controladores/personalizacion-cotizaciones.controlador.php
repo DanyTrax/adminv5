@@ -25,7 +25,7 @@ class ControladorPersonalizacionCotizaciones {
     =============================================*/
     static public function ctrCrearConfiguracion() {
         
-        if (isset($_POST["nuevoNombreConfiguracion"])) {
+        if (isset($_POST["nuevoHeaderNombreEmpresa"])) {
             
             $datos = [
                 "id_sucursal" => !empty($_POST["nuevoIdSucursal"]) ? (int)$_POST["nuevoIdSucursal"] : null,
