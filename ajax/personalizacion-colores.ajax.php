@@ -3,7 +3,7 @@
 AJAX PERSONALIZACIÓN DE COLORES CON SUBIDA DE IMÁGENES
 =============================================*/
 
-require_once "../controladores/personalizacion-colores-simplificado-con-imagenes.controlador.php";
+require_once "../controladores/personalizacion-colores-simplificado-funcional.controlador.php";
 
 if (isset($_POST["accion"])) {
     

@@ -76,6 +76,12 @@ class ControladorPersonalizacionColores {
                 }
             }
             
+            // Obtener ID de sucursal (puede ser null para configuración global)
+            $idSucursal = null;
+            if (isset($_POST['id_sucursal']) && $_POST['id_sucursal'] !== '' && $_POST['id_sucursal'] !== 'null') {
+                $idSucursal = (int)$_POST['id_sucursal'];
+            }
+            
             // Procesar imágenes
             $imagenes = [
                 'icono_pequeno' => 'vistas/img/plantilla/icono-blanco.png',
@@ -106,7 +112,8 @@ class ControladorPersonalizacionColores {
                 'sidebar_text_color' => $_POST['sidebar_text_color'],
                 'icono_pequeno' => $imagenes['icono_pequeno'],
                 'logo_menu' => $imagenes['logo_menu'],
-                'logo_login' => $imagenes['logo_login']
+                'logo_login' => $imagenes['logo_login'],
+                'id_sucursal' => $idSucursal
             ];
             
             // Verificar si es edición o creación
@@ -275,9 +282,9 @@ class ControladorPersonalizacionColores {
     /*=============================================
     OBTENER TODAS LAS CONFIGURACIONES
     =============================================*/
-    static public function ctrObtenerTodasConfiguraciones() {
+    static public function ctrObtenerTodasConfiguraciones($idSucursal = null) {
         
-        return ModeloPersonalizacionColores::mdlObtenerTodasConfiguraciones();
+        return ModeloPersonalizacionColores::mdlObtenerTodasConfiguraciones($idSucursal);
     }
     
     /*=============================================
@@ -365,10 +372,11 @@ class ControladorPersonalizacionColores {
     }
     
     /*=============================================
-    APLICAR CONFIGURACIÓN A ESTILOS
+    APLICAR CONFIGURACIÓN A ESTILOS (USA SUCURSAL ACTUAL AUTOMÁTICAMENTE)
     =============================================*/
     static public function ctrAplicarConfiguracionEstilos() {
         
+        // Obtener configuración activa de la sucursal actual (o global si no hay específica)
         $configuracion = self::ctrMostrarConfiguracionActiva();
         
         $css = "
