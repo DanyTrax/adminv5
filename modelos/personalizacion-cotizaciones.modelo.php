@@ -131,6 +131,12 @@ class ModeloPersonalizacionCotizaciones {
         try {
             $conexion = ConexionCentral::conectar();
             
+            // Verificar que la tabla existe
+            $stmt = $conexion->query("SHOW TABLES LIKE 'personalizacion_cotizaciones'");
+            if ($stmt->rowCount() == 0) {
+                throw new Exception("La tabla 'personalizacion_cotizaciones' no existe. Ejecute primero el script de creación en: crear-tabla-personalizacion-cotizaciones");
+            }
+            
             // Desactivar otras configuraciones de la misma sucursal
             if (isset($datos['id_sucursal']) && $datos['id_sucursal'] !== null) {
                 $stmt = $conexion->prepare("UPDATE personalizacion_cotizaciones SET activo = 0 WHERE id_sucursal = ?");
