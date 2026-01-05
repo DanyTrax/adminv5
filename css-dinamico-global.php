@@ -4,14 +4,11 @@ SISTEMA DE CSS DINÁMICO GLOBAL
 =============================================*/
 
 require_once "api-transferencias/conexion-central.php";
+require_once "modelos/personalizacion-colores-simplificado.modelo.php";
 
 try {
-    $conexion = ConexionCentral::conectar();
-    
-    // Obtener configuración activa
-    $stmt = $conexion->prepare("SELECT * FROM personalizacion_colores WHERE activo = 1 LIMIT 1");
-    $stmt->execute();
-    $config = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Obtener configuración activa de la sucursal actual (o global)
+    $config = ModeloPersonalizacionColores::mdlObtenerConfiguracionActiva();
     
     if (!$config) {
         // Configuración por defecto si no existe
@@ -70,21 +67,7 @@ try {
             background-color: {$config['navbar_hover_color']} !important;
         }
         
-        /* Imágenes dinámicas */
-        .logo-mini img,
-        .logo-mini .img-responsive {
-            content: url('{$config['icono_pequeno']}') !important;
-        }
-        
-        .logo-lg img,
-        .logo-lg .img-responsive {
-            content: url('{$config['logo_menu']}') !important;
-        }
-        
-        .login-logo img,
-        .login-logo .img-responsive {
-            content: url('{$config['logo_login']}') !important;
-        }
+        /* Imágenes dinámicas - Se actualizan con JavaScript */
         
         /* Login Page */
         .login-page {
@@ -119,6 +102,58 @@ try {
             border-color: {$config['navbar_color']} !important;
         }
     </style>
+    <script>
+    // Actualizar imágenes dinámicamente cuando el DOM esté listo
+    (function() {
+        var configImagenes = {
+            icono_pequeno: '{$config['icono_pequeno']}',
+            logo_menu: '{$config['logo_menu']}',
+            logo_login: '{$config['logo_login']}'
+        };
+        
+        function actualizarImagenes() {
+            // Actualizar logo mini
+            var logoMini = document.querySelector('.logo-mini img');
+            if (logoMini) {
+                logoMini.src = configImagenes.icono_pequeno;
+            }
+            
+            // Actualizar logo grande
+            var logoLg = document.querySelector('.logo-lg img');
+            if (logoLg) {
+                logoLg.src = configImagenes.logo_menu;
+            }
+            
+            // Actualizar logo login
+            var loginLogo = document.querySelector('.login-logo img');
+            if (loginLogo) {
+                loginLogo.src = configImagenes.logo_login;
+            }
+        }
+        
+        // Ejecutar cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', actualizarImagenes);
+        } else {
+            actualizarImagenes();
+        }
+        
+        // También ejecutar después de un pequeño delay para asegurar que jQuery esté cargado
+        if (typeof jQuery !== 'undefined') {
+            jQuery(document).ready(function($) {
+                actualizarImagenes();
+                
+                // Actualizar también con jQuery por si acaso
+                $('.logo-mini img').attr('src', configImagenes.icono_pequeno);
+                $('.logo-lg img').attr('src', configImagenes.logo_menu);
+                $('.login-logo img').attr('src', configImagenes.logo_login);
+            });
+        } else {
+            // Si jQuery no está disponible, esperar un poco más
+            setTimeout(actualizarImagenes, 500);
+        }
+    })();
+    </script>
     ";
     
     echo $css;

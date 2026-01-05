@@ -411,18 +411,7 @@ class ControladorPersonalizacionColores {
                 background-color: {$configuracion['sidebar_hover_color']} !important;
             }
             
-            /* Imágenes */
-            .logo-mini img {
-                content: url('{$configuracion['icono_pequeno']}') !important;
-            }
-            
-            .logo-lg img {
-                content: url('{$configuracion['logo_menu']}') !important;
-            }
-            
-            .login-logo img {
-                content: url('{$configuracion['logo_login']}') !important;
-            }
+            /* Imágenes - Usar JavaScript para actualizar src directamente */
             
             /* Login Page */
             .login-page {
@@ -434,6 +423,25 @@ class ControladorPersonalizacionColores {
                 background: linear-gradient(135deg, {$configuracion['login_gradient_start']} 0%, {$configuracion['login_gradient_end']} 100%) !important;
             }
         </style>
+        <script>
+        // Actualizar imágenes dinámicamente
+        $(document).ready(function() {
+            var configImagenes = {
+                icono_pequeno: '{$configuracion['icono_pequeno']}',
+                logo_menu: '{$configuracion['logo_menu']}',
+                logo_login: '{$configuracion['logo_login']}'
+            };
+            
+            // Actualizar logo mini
+            $('.logo-mini img').attr('src', configImagenes.icono_pequeno);
+            
+            // Actualizar logo grande
+            $('.logo-lg img').attr('src', configImagenes.logo_menu);
+            
+            // Actualizar logo login
+            $('.login-logo img').attr('src', configImagenes.logo_login);
+        });
+        </script>
         ";
         
         return $css;

@@ -728,11 +728,21 @@ function subirImagen(tipo, input) {
                 var data = JSON.parse(response);
                 if (data.success) {
                     // Actualizar la imagen en la vista previa
+                    var rutaImagen = data.ruta_imagen + '?t=' + new Date().getTime();
                     var img = previewBox.querySelector('img');
                     if (img) {
-                        img.src = data.ruta_imagen + '?t=' + new Date().getTime();
+                        img.src = rutaImagen;
                     } else {
-                        previewBox.innerHTML = '<img src="' + data.ruta_imagen + '?t=' + new Date().getTime() + '" style="max-width: ' + (tipo === 'icono-pequeno' ? '50px' : '100px') + '; max-height: ' + (tipo === 'icono-pequeno' ? '50px' : '50px') + '; margin-bottom: 10px;"><div style="color: #666; font-size: 12px;"><i class="fa fa-check text-success" style="font-size: 16px; margin-bottom: 5px; display: block;"></i><strong>' + (tipo === 'icono-pequeno' ? 'Icono Pequeño' : tipo === 'logo-menu' ? 'Logo Menú' : 'Logo Login') + '</strong><br><small>Imagen actualizada</small></div>';
+                        previewBox.innerHTML = '<img src="' + rutaImagen + '" style="max-width: ' + (tipo === 'icono-pequeno' ? '50px' : '100px') + '; max-height: ' + (tipo === 'icono-pequeno' ? '50px' : '50px') + '; margin-bottom: 10px;"><div style="color: #666; font-size: 12px;"><i class="fa fa-check text-success" style="font-size: 16px; margin-bottom: 5px; display: block;"></i><strong>' + (tipo === 'icono-pequeno' ? 'Icono Pequeño' : tipo === 'logo-menu' ? 'Logo Menú' : 'Logo Login') + '</strong><br><small>Imagen actualizada</small></div>';
+                    }
+                    
+                    // Actualizar imágenes en la página inmediatamente
+                    if (tipo === 'icono-pequeno') {
+                        $('.logo-mini img').attr('src', rutaImagen);
+                    } else if (tipo === 'logo-menu') {
+                        $('.logo-lg img').attr('src', rutaImagen);
+                    } else if (tipo === 'logo-login') {
+                        $('.login-logo img').attr('src', rutaImagen);
                     }
                     
                     // Mostrar mensaje de éxito
@@ -744,7 +754,7 @@ function subirImagen(tipo, input) {
                         confirmButtonText: "Cerrar"
                     });
                     
-                    // Recargar la página después de 2 segundos para aplicar los cambios
+                    // Recargar la página después de 2 segundos para aplicar los cambios completamente
                     setTimeout(function() {
                         window.location.reload();
                     }, 2000);
