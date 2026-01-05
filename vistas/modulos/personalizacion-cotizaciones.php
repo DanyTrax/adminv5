@@ -422,6 +422,13 @@ if (isset($_GET['eliminar'])) {
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
+                                <label for="nuevoBodyFontSize">Tamaño de Texto Body (px):</label>
+                                <input type="number" class="form-control" id="nuevoBodyFontSize" name="nuevoBodyFontSize" value="13" min="8" max="20" required>
+                                <small class="help-block">Tamaño del texto del contenido de la cotización</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
                                 <label for="nuevoHeaderNit">NIT:</label>
                                 <input type="text" class="form-control" id="nuevoHeaderNit" name="nuevoHeaderNit" value="NIT: 901.718.358-2">
                             </div>
@@ -808,6 +815,7 @@ function editarConfiguracion(id) {
                 $('#editarHeaderColorFondo').val(config.header_color_fondo);
                 $('#editarHeaderColorTexto').val(config.header_color_texto);
                 $('#editarHeaderFontSize').val(config.header_font_size || 14);
+                $('#editarBodyFontSize').val(config.body_font_size || 13);
                 $('#editarFooterDireccion').val(config.footer_direccion);
                 $('#editarFooterTelefono').val(config.footer_telefono);
                 $('#editarFooterMovil').val(config.footer_movil);

@@ -79,16 +79,16 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 		font-size: <?= ($configCotizacion['header_font_size'] ?? 14) ?>px;
 	}
 
-	.header img {
-		width: <?= ($configCotizacion['logo_width'] ?? 80) ?>%;
-		object-fit: contain;
-		max-height: 60px;
-	}
-	
 	.header > div:first-child {
 		display: flex;
 		align-items: <?= $configCotizacion['logo_align_vertical'] ?? 'center' ?>;
 		justify-content: <?= $configCotizacion['logo_align_horizontal'] ?? 'center' ?>;
+	}
+	
+	.header > div:first-child img {
+		width: <?= ($configCotizacion['logo_width'] ?? 80) ?>%;
+		object-fit: contain;
+		max-height: 60px;
 	}
 
 	footer {
@@ -140,6 +140,7 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 
 	.body {
 		padding: 5px 25px;
+		font-size: <?= ($configCotizacion['body_font_size'] ?? 13) ?>px;
 	}
 
 	.table-header {
@@ -148,7 +149,7 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 		margin-top: 20px;
 		margin-left: auto;
 		margin-right: auto;
-		font-size:13px;
+		font-size: <?= ($configCotizacion['body_font_size'] ?? 13) ?>px;
 	}
 
 	.table-header tr {
@@ -175,7 +176,7 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 		margin-top: 20px;
 		margin-left: auto;
 		margin-right: auto;
-		font-size:13px;
+		font-size: <?= ($configCotizacion['body_font_size'] ?? 13) ?>px;
 	}
 
 	.table-products th,
@@ -196,7 +197,7 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 	.table-products tfoot * {
 		text-transform: uppercase;
 		font-weight: 700;
-		font-size: 14px;
+		font-size: <?= ($configCotizacion['body_font_size'] ?? 13) + 1 ?>px;
 	}
 
 	.break-before {

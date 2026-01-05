@@ -40,6 +40,7 @@ class ControladorPersonalizacionCotizaciones {
                 "header_color_fondo" => $_POST["nuevoHeaderColorFondo"] ?? '#873173',
                 "header_color_texto" => $_POST["nuevoHeaderColorTexto"] ?? '#FFFFFF',
                 "header_font_size" => !empty($_POST["nuevoHeaderFontSize"]) ? (int)$_POST["nuevoHeaderFontSize"] : 14,
+                "body_font_size" => !empty($_POST["nuevoBodyFontSize"]) ? (int)$_POST["nuevoBodyFontSize"] : 13,
                 "footer_direccion" => $_POST["nuevoFooterDireccion"] ?? '',
                 "footer_telefono" => $_POST["nuevoFooterTelefono"] ?? '',
                 "footer_movil" => $_POST["nuevoFooterMovil"] ?? '',
@@ -108,12 +109,15 @@ class ControladorPersonalizacionCotizaciones {
                 "header_servicios" => $_POST["editarHeaderServicios"] ?? '',
                 "header_color_fondo" => $_POST["editarHeaderColorFondo"] ?? '#873173',
                 "header_color_texto" => $_POST["editarHeaderColorTexto"] ?? '#FFFFFF',
+                "header_font_size" => !empty($_POST["editarHeaderFontSize"]) ? (int)$_POST["editarHeaderFontSize"] : 14,
+                "body_font_size" => !empty($_POST["editarBodyFontSize"]) ? (int)$_POST["editarBodyFontSize"] : 13,
                 "footer_direccion" => $_POST["editarFooterDireccion"] ?? '',
                 "footer_telefono" => $_POST["editarFooterTelefono"] ?? '',
                 "footer_movil" => $_POST["editarFooterMovil"] ?? '',
                 "footer_correo" => $_POST["editarFooterCorreo"] ?? '',
                 "footer_color_fondo" => $_POST["editarFooterColorFondo"] ?? '#873173',
-                "footer_color_texto" => $_POST["editarFooterColorTexto"] ?? '#FFFFFF'
+                "footer_color_texto" => $_POST["editarFooterColorTexto"] ?? '#FFFFFF',
+                "footer_font_size" => !empty($_POST["editarFooterFontSize"]) ? (int)$_POST["editarFooterFontSize"] : 16
             ];
             
             $respuesta = ModeloPersonalizacionCotizaciones::mdlActualizarConfiguracion($datos);

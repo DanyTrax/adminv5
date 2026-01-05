@@ -10,6 +10,7 @@ try {
         'logo_align_vertical' => "ALTER TABLE personalizacion_cotizaciones ADD COLUMN logo_align_vertical VARCHAR(20) NULL DEFAULT 'center' AFTER logo_width",
         'logo_align_horizontal' => "ALTER TABLE personalizacion_cotizaciones ADD COLUMN logo_align_horizontal VARCHAR(20) NULL DEFAULT 'center' AFTER logo_align_vertical",
         'header_font_size' => "ALTER TABLE personalizacion_cotizaciones ADD COLUMN header_font_size INT(3) NULL DEFAULT 14 AFTER header_color_texto",
+        'body_font_size' => "ALTER TABLE personalizacion_cotizaciones ADD COLUMN body_font_size INT(3) NULL DEFAULT 13 AFTER header_font_size",
         'footer_font_size' => "ALTER TABLE personalizacion_cotizaciones ADD COLUMN footer_font_size INT(3) NULL DEFAULT 16 AFTER footer_color_texto"
     ];
     
