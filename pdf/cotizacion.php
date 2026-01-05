@@ -85,12 +85,16 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 		display: flex;
 		align-items: <?= $configCotizacion['logo_align_vertical'] ?? 'center' ?>;
 		justify-content: <?= $configCotizacion['logo_align_horizontal'] ?? 'center' ?>;
+		width: 100%;
+		height: 100%;
 	}
 	
 	.header > div:first-child img {
-		width: <?= ($configCotizacion['logo_width'] ?? 80) ?>%;
+		width: <?= ($configCotizacion['logo_width'] ?? 80) ?>% !important;
+		max-width: <?= ($configCotizacion['logo_width'] ?? 80) ?>% !important;
 		object-fit: contain;
 		max-height: 60px;
+		height: auto;
 	}
 
 	footer {

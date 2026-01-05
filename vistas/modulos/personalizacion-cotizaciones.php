@@ -428,6 +428,8 @@ if (isset($_GET['eliminar'])) {
                                 <small class="help-block">Tamaño del texto del contenido de la cotización</small>
                             </div>
                         </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="nuevoHeaderNit">NIT:</label>
@@ -643,6 +645,15 @@ TRABAJOS ESPECIALES</textarea>
                             <div class="form-group">
                                 <label for="editarHeaderFontSize">Tamaño de Texto Header (px):</label>
                                 <input type="number" class="form-control" id="editarHeaderFontSize" name="editarHeaderFontSize" value="14" min="8" max="24" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="editarBodyFontSize">Tamaño de Texto Body (px):</label>
+                                <input type="number" class="form-control" id="editarBodyFontSize" name="editarBodyFontSize" value="13" min="8" max="20" required>
+                                <small class="help-block">Tamaño del texto del contenido de la cotización</small>
                             </div>
                         </div>
                     </div>
