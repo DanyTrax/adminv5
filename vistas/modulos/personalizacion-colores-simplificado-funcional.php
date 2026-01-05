@@ -263,24 +263,31 @@ if (isset($_GET['eliminar'])) {
                                         </td>
                                         <td><?= date('d/m/Y H:i', strtotime($config['fecha_actualizacion'])) ?></td>
                                         <td>
-                                            <button class="btn btn-warning btn-xs btnEditarConfiguracion" 
-                                                    data-id="<?= $config['id'] ?>"
-                                                    data-toggle="modal" 
-                                                    data-target="#modalEditarConfiguracion">
-                                                <i class="fa fa-pencil"></i> Editar
-                                            </button>
-                                            
-                                            <?php if (!$config['activo']): ?>
-                                                <a href="personalizacion-colores-simplificado?activar=<?= $config['id'] ?><?= $idSucursalSeleccionada !== null ? '&sucursal=' . $idSucursalSeleccionada : '' ?>" class="btn btn-success btn-xs">
-                                                    <i class="fa fa-check"></i> Activar
+                                            <div class="btn-group">
+                                                <button class="btn btn-warning btn-xs btnEditarConfiguracion" 
+                                                        data-id="<?= $config['id'] ?>"
+                                                        data-toggle="modal" 
+                                                        data-target="#modalEditarConfiguracion"
+                                                        title="Editar configuración">
+                                                    <i class="fa fa-pencil"></i> Editar
+                                                </button>
+                                                
+                                                <a href="personalizacion-colores-simplificado?activar=<?= $config['id'] ?><?= $idSucursalSeleccionada !== null ? '&sucursal=' . $idSucursalSeleccionada : '' ?>" 
+                                                   class="btn <?= $config['activo'] ? 'btn-info' : 'btn-success' ?> btn-xs"
+                                                   title="<?= $config['activo'] ? 'Esta configuración ya está aplicada' : 'Aplicar esta configuración' ?>">
+                                                    <i class="fa <?= $config['activo'] ? 'fa-check-circle' : 'fa-check' ?>"></i> 
+                                                    <?= $config['activo'] ? 'Aplicada' : 'Aplicar' ?>
                                                 </a>
-                                            <?php endif; ?>
-                                            
-                                            <?php if (count($todasConfiguraciones) > 1): ?>
-                                                <a href="personalizacion-colores-simplificado?eliminar=<?= $config['id'] ?><?= $idSucursalSeleccionada !== null ? '&sucursal=' . $idSucursalSeleccionada : '' ?>" class="btn btn-danger btn-xs" onclick="return confirm('¿Estás seguro de eliminar esta configuración?')">
-                                                    <i class="fa fa-trash"></i> Eliminar
-                                                </a>
-                                            <?php endif; ?>
+                                                
+                                                <?php if (count($todasConfiguraciones) > 1): ?>
+                                                    <a href="personalizacion-colores-simplificado?eliminar=<?= $config['id'] ?><?= $idSucursalSeleccionada !== null ? '&sucursal=' . $idSucursalSeleccionada : '' ?>" 
+                                                       class="btn btn-danger btn-xs" 
+                                                       onclick="return confirm('¿Estás seguro de eliminar esta configuración?')"
+                                                       title="Eliminar configuración">
+                                                        <i class="fa fa-trash"></i> Eliminar
+                                                    </a>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
