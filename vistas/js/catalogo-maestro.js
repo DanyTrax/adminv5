@@ -604,7 +604,9 @@ if(respuesta && typeof respuesta === 'object') {
                 $("#idProductoMaestro").val(respuesta["id"] || "");
                 $("#editarCodigoMaestro").val(respuesta["codigo"] || "");
                 $("#editarDescripcionMaestro").val(respuesta["descripcion"] || "");
-                $("#editarPrecioVentaMaestro").val(respuesta["precio_venta"] || "");
+                // Redondear precio a entero sin decimales
+                var precioRedondeado = respuesta["precio_venta"] ? Math.round(parseFloat(respuesta["precio_venta"])) : "";
+                $("#editarPrecioVentaMaestro").val(precioRedondeado);
                 $("#editarCategoriaMaestro").val(respuesta["id_categoria"] || "");
 
                 // Configurar imagen

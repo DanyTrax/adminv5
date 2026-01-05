@@ -490,7 +490,7 @@ MODAL EDITAR PRODUCTO MAESTRO
               
                 <span class="input-group-addon"><i class="fa fa-arrow-up"></i></span> 
 
-                <input type="number" class="form-control input-lg" name="editarPrecioVentaMaestro" id="editarPrecioVentaMaestro" min="0" step="any" required>
+                <input type="number" class="form-control input-lg" name="editarPrecioVentaMaestro" id="editarPrecioVentaMaestro" min="0" step="1" required>
 
               </div>
 
