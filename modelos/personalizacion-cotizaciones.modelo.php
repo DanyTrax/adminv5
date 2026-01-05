@@ -194,13 +194,18 @@ class ModeloPersonalizacionCotizaciones {
             
             if ($resultado) {
                 return $conexion->lastInsertId();
+            } else {
+                $errorInfo = $stmt->errorInfo();
+                error_log("Error en execute: " . print_r($errorInfo, true));
+                throw new Exception("Error al ejecutar INSERT: " . ($errorInfo[2] ?? 'Error desconocido'));
             }
             
-            return false;
-            
+        } catch (PDOException $e) {
+            error_log("Error PDO en mdlCrearConfiguracion: " . $e->getMessage());
+            throw new Exception("Error de base de datos: " . $e->getMessage());
         } catch (Exception $e) {
             error_log("Error en mdlCrearConfiguracion: " . $e->getMessage());
-            return false;
+            throw $e;
         }
     }
     

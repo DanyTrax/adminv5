@@ -45,18 +45,37 @@ class ControladorPersonalizacionCotizaciones {
                 "usuario_creador" => $_SESSION["id"] ?? 1
             ];
             
-            $respuesta = ModeloPersonalizacionCotizaciones::mdlCrearConfiguracion($datos);
-            
-            if ($respuesta) {
-                return [
-                    "success" => true,
-                    "mensaje" => "Configuración creada exitosamente",
-                    "id" => $respuesta
-                ];
-            } else {
+            try {
+                $respuesta = ModeloPersonalizacionCotizaciones::mdlCrearConfiguracion($datos);
+                
+                if ($respuesta && $respuesta > 0) {
+                    return [
+                        "success" => true,
+                        "mensaje" => "Configuración creada exitosamente",
+                        "id" => $respuesta
+                    ];
+                } else {
+                    return [
+                        "success" => false,
+                        "mensaje" => "Error al crear la configuración. La operación no retornó un ID válido."
+                    ];
+                }
+            } catch (PDOException $e) {
+                error_log("Error PDO en ctrCrearConfiguracion: " . $e->getMessage());
+                $mensaje = "Error de base de datos: " . $e->getMessage();
+                // Simplificar mensaje para el usuario
+                if (strpos($e->getMessage(), 'Table') !== false) {
+                    $mensaje = "La tabla 'personalizacion_cotizaciones' no existe. Ejecute primero el script de creación.";
+                }
                 return [
                     "success" => false,
-                    "mensaje" => "Error al crear la configuración"
+                    "mensaje" => $mensaje
+                ];
+            } catch (Exception $e) {
+                error_log("Error en ctrCrearConfiguracion: " . $e->getMessage());
+                return [
+                    "success" => false,
+                    "mensaje" => "Error: " . $e->getMessage()
                 ];
             }
         }
