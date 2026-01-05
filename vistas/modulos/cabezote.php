@@ -92,6 +92,12 @@
 							</a>
 						</li>
 						<li>
+							<a href="personalizacion-cotizaciones" style="padding: 10px 15px;">
+								<i class="fa fa-file-text" style="margin-right: 8px; color: #9c27b0;"></i>
+								Personalización de Cotizaciones
+							</a>
+						</li>
+						<li>
 							<a href="sucursales" style="padding: 10px 15px;">
 								<i class="fa fa-building" style="margin-right: 8px; color: #5cb85c;"></i>
 								Sucursales

@@ -17,8 +17,31 @@ require_once "../modelos/productos.modelo.php";
 require_once "../controladores/cotizaciones.controlador.php";
 require_once "../modelos/cotizaciones.modelo.php";
 
+require_once "../controladores/personalizacion-cotizaciones.controlador.php";
 
 $cotizacion = ControladorCotizaciones::findById($_GET['codigo']);
+
+// Obtener configuración personalizada de cotizaciones
+$configCotizacion = ControladorPersonalizacionCotizaciones::ctrMostrarConfiguracionActiva();
+
+// Si no hay configuración, usar valores por defecto
+if (!$configCotizacion) {
+    $configCotizacion = [
+        'header_logo' => 'vistas/img/cotizacion/Infinito1.png',
+        'header_nombre_empresa' => 'ACPLASTICOS',
+        'header_nit' => 'NIT: 901.718.358-2',
+        'header_regimen' => 'IVA E ICA RÉGIMEN COMÚN',
+        'header_servicios' => "AVISOS\nLETRAS EN 3D\nTOMA UNO\nTRABAJOS ESPECIALES",
+        'header_color_fondo' => '#873173',
+        'header_color_texto' => '#FFFFFF',
+        'footer_direccion' => 'Carrera 27 # 10-65 Local 116',
+        'footer_telefono' => 'Tel: 601 569 9557',
+        'footer_movil' => 'Móvil: 322 744 5631',
+        'footer_correo' => 'Correo: ventas1@acplasticos.com',
+        'footer_color_fondo' => '#873173',
+        'footer_color_texto' => '#FFFFFF'
+    ];
+}
 // Obtenemos el texto original de la base de datos
 $productos_string = $cotizacion['productos'];
 
@@ -43,11 +66,11 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 	}
 
 	.header {
-		background: #873173;
+		background: <?= $configCotizacion['header_color_fondo'] ?>;
 		padding: 5px;
 		border-top-left-radius: 90px;
 		border-bottom-left-radius: 90px;
-		color: white;
+		color: <?= $configCotizacion['header_color_texto'] ?>;
 		font-weight: 700;
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
@@ -61,7 +84,7 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 	}
 
 	footer {
-		background: #873173;
+		background: <?= $configCotizacion['footer_color_fondo'] ?>;
 		margin-top: 20px;
 	}
 
@@ -87,7 +110,7 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 
 	footer div:last-child {
 		padding: 15px;
-		color: white;
+		color: <?= $configCotizacion['footer_color_texto'] ?>;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -210,19 +233,23 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 <main>
 	<header class="header">
 		<div class="text-center">
-			<img src="<?= $hostname ?>/vistas/img/cotizacion/Infinito1.png" alt="" />
+			<img src="<?= $hostname ?>/<?= $configCotizacion['header_logo'] ?>" alt="" />
 		</div>
 		<div>
-			<div>ACPLASTICOS</div>
-			<div>NIT: 901.718.358-2</div>
-			<div>IVA E ICA RÉGIMEN COMÚN</div>
+			<div><?= htmlspecialchars($configCotizacion['header_nombre_empresa']) ?></div>
+			<div><?= htmlspecialchars($configCotizacion['header_nit']) ?></div>
+			<div><?= htmlspecialchars($configCotizacion['header_regimen']) ?></div>
 		</div>
 		
 		<div>
-			<div>AVISOS</div>
-			<div>LETRAS EN 3D</div>
-			<div>TOMA UNO</div>
-			<div>TRABAJOS ESPECIALES</div>
+			<?php 
+			$servicios = explode("\n", $configCotizacion['header_servicios']);
+			foreach ($servicios as $servicio): 
+				if (trim($servicio)): ?>
+					<div><?= htmlspecialchars(trim($servicio)) ?></div>
+				<?php endif;
+			endforeach; 
+			?>
 		</div>
 		<div class="text-center">
 			<p style="margin-bottom: 5px;">Cotización</p>
@@ -373,10 +400,10 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 	<div></div>
 	<div>
 		<p>
-			Carrera 27 # 10-65 Local 116 Tel: 601 569 9557 Móvil: 322 744 5631
+			<?= htmlspecialchars($configCotizacion['footer_direccion']) ?> <?= htmlspecialchars($configCotizacion['footer_telefono']) ?> <?= htmlspecialchars($configCotizacion['footer_movil']) ?>
 		</p>
 		<p>
-			Correo: ventas1@acplasticos.com
+			<?= htmlspecialchars($configCotizacion['footer_correo']) ?>
 		</p>
 	</div>
 </footer>
@@ -393,6 +420,16 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script>
+	// Función para convertir hex a RGB
+	function hexToRgb(hex) {
+		var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+		return result ? {
+			r: parseInt(result[1], 16),
+			g: parseInt(result[2], 16),
+			b: parseInt(result[3], 16)
+		} : {r: 135, g: 49, b: 115}; // Color por defecto
+	}
+	
 	const handleGeneratePdf = () => {
 		let element = document.querySelector("main");
 		let opt = {
@@ -435,7 +472,10 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 
 
 					pdf.setDrawColor(0);
-					pdf.setFillColor('#873173');
+					// Convertir color hex a RGB para PDF
+					var footerColor = '<?= $configCotizacion['footer_color_fondo'] ?>';
+					var footerRgb = hexToRgb(footerColor);
+					pdf.setFillColor(footerRgb.r, footerRgb.g, footerRgb.b);
 					pdf.rect(2, pageSize.getHeight() - 20, pageSize.getWidth() - 5, 1, "F");
 
 					pdf.rect(2, pageSize.getHeight() - 18.5, pageSize.getWidth() - 5, 0.5, "F");
@@ -444,8 +484,9 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 
 					pdf.setFontSize(10);
 					pdf.setTextColor(255, 255, 255);
-					pdf.text('Carrera 27 # 10-65 Local 116 Tel: 601 569 9557 Móvil: 322 744 5631', pageSize.getWidth() / 4, pageSize.getHeight() - 10);
-					pdf.text('Correo: ventas1@acplastico.com', pageSize.getWidth() / 2.6, pageSize.getHeight() - 5)
+					var footerText = '<?= htmlspecialchars($configCotizacion['footer_direccion'] . ' ' . $configCotizacion['footer_telefono'] . ' ' . $configCotizacion['footer_movil']) ?>';
+					pdf.text(footerText, pageSize.getWidth() / 4, pageSize.getHeight() - 10);
+					pdf.text('<?= htmlspecialchars($configCotizacion['footer_correo']) ?>', pageSize.getWidth() / 2.6, pageSize.getHeight() - 5)
 				}
 
 			}).save();
