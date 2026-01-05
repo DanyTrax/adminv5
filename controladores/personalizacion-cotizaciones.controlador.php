@@ -1,6 +1,6 @@
 <?php
 
-require_once "../modelos/personalizacion-cotizaciones.modelo.php";
+require_once __DIR__ . "/../modelos/personalizacion-cotizaciones.modelo.php";
 
 class ControladorPersonalizacionCotizaciones {
     

@@ -1,6 +1,6 @@
 <?php
-require_once "controladores/personalizacion-cotizaciones.controlador.php";
-require_once "modelos/sucursales.modelo.php";
+require_once __DIR__ . "/../../controladores/personalizacion-cotizaciones.controlador.php";
+require_once __DIR__ . "/../../modelos/sucursales.modelo.php";
 
 // Obtener sucursal seleccionada (si existe)
 $idSucursalSeleccionada = isset($_GET['sucursal']) ? (int)$_GET['sucursal'] : null;

@@ -1,6 +1,6 @@
 <?php
 
-require_once "../api-transferencias/conexion-central.php";
+require_once __DIR__ . "/../api-transferencias/conexion-central.php";
 
 class ModeloPersonalizacionCotizaciones {
     
@@ -10,7 +10,7 @@ class ModeloPersonalizacionCotizaciones {
     static public function mdlObtenerIdSucursalActual() {
         
         try {
-            require_once "conexion.php";
+            require_once __DIR__ . "/conexion.php";
             $conexionLocal = Conexion::conectar();
             
             $stmt = $conexionLocal->prepare("SELECT codigo_sucursal FROM sucursal_local LIMIT 1");
