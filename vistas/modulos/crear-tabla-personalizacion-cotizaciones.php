@@ -1,6 +1,6 @@
 <?php
 // Módulo para ejecutar el script de creación de tabla de personalización de cotizaciones
-require_once "../api-transferencias/conexion-central.php";
+require_once __DIR__ . "/../../api-transferencias/conexion-central.php";
 
 try {
     $pdo = ConexionCentral::conectar();
