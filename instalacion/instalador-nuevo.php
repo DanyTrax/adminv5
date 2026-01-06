@@ -606,7 +606,27 @@ function aplicarCambiosSQLCentral($datos_central) {
         }
         
         // Conectar a la base de datos central
-        require_once __DIR__ . '/../api-transferencias/conexion-central.php';
+        // Intentar diferentes rutas posibles para conexion-central.php
+        $rutas_posibles = [
+            __DIR__ . '/../api-transferencias/conexion-central.php',
+            __DIR__ . '/../../api-transferencias/conexion-central.php',
+            dirname(__DIR__) . '/api-transferencias/conexion-central.php'
+        ];
+        
+        $conexion_central_cargado = false;
+        foreach ($rutas_posibles as $ruta) {
+            if (file_exists($ruta)) {
+                require_once $ruta;
+                $conexion_central_cargado = true;
+                break;
+            }
+        }
+        
+        if (!$conexion_central_cargado) {
+            error_log("⚠️  No se pudo cargar conexion-central.php, saltando cambios SQL del central");
+            return true; // No es crítico
+        }
+        
         $conexion = ConexionCentral::conectar();
         $conexion->beginTransaction();
         
