@@ -30,7 +30,13 @@ $todasConfiguraciones = ControladorPersonalizacionColores::ctrObtenerTodasConfig
 ControladorPersonalizacionColores::ctrActualizarConfiguracion();
 
 if (isset($_GET['activar'])) {
-    $idSucursalParaActivar = isset($_GET['sucursal']) && $_GET['sucursal'] != '0' ? (int)$_GET['sucursal'] : null;
+    // Si hay una sucursal en la URL, usar esa; si no, usar la sucursal actual
+    if (isset($_GET['sucursal']) && $_GET['sucursal'] != '0') {
+        $idSucursalParaActivar = (int)$_GET['sucursal'];
+    } else {
+        // Aplicar a la sucursal actual
+        $idSucursalParaActivar = $idSucursalActual;
+    }
     ControladorPersonalizacionColores::ctrActivarConfiguracion($_GET['activar'], $idSucursalParaActivar);
 }
 
