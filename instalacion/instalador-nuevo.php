@@ -208,6 +208,9 @@ function ejecutarInstalacionCompleta() {
         // 5. Registrar sucursal en el sistema central
         registrarSucursalEnCentral($datos_sucursal, $datos_central);
         
+        // 6. Aplicar cambios SQL necesarios en la base de datos central
+        aplicarCambiosSQLCentral($datos_central);
+        
         return [
             'success' => true,
             'message' => 'Instalación completada exitosamente. La sucursal está lista para usar.'
@@ -591,6 +594,177 @@ function registrarSucursalEnCentral($datos_sucursal, $datos_central) {
     // Esta función se implementaría para registrar la sucursal en el sistema central
     // Por ahora solo retornamos true
     return true;
+}
+
+// Función para aplicar cambios SQL necesarios en la base de datos central
+function aplicarCambiosSQLCentral($datos_central) {
+    try {
+        // Verificar si hay configuración del central
+        if (empty($datos_central['url_central'])) {
+            error_log("URL central no configurada, saltando cambios SQL del central");
+            return true; // No es crítico, solo un log
+        }
+        
+        // Conectar a la base de datos central
+        require_once __DIR__ . '/../api-transferencias/conexion-central.php';
+        $conexion = ConexionCentral::conectar();
+        $conexion->beginTransaction();
+        
+        // ============================================
+        // 1. TABLA personalizacion_colores
+        // ============================================
+        
+        // 1.1. Verificar si la tabla existe
+        $stmt = $conexion->query("SHOW TABLES LIKE 'personalizacion_colores'");
+        if ($stmt->rowCount() > 0) {
+            // 1.2. Agregar campo id_sucursal si no existe
+            $stmt = $conexion->query("SHOW COLUMNS FROM personalizacion_colores LIKE 'id_sucursal'");
+            if ($stmt->rowCount() == 0) {
+                $conexion->exec("
+                    ALTER TABLE personalizacion_colores 
+                    ADD COLUMN id_sucursal INT(11) NULL DEFAULT NULL AFTER activo,
+                    ADD INDEX idx_id_sucursal (id_sucursal)
+                ");
+                error_log("✅ Campo 'id_sucursal' agregado a personalizacion_colores");
+            }
+            
+            // 1.3. Agregar campo nombre_sucursal si no existe
+            $stmt = $conexion->query("SHOW COLUMNS FROM personalizacion_colores LIKE 'nombre_sucursal'");
+            if ($stmt->rowCount() == 0) {
+                $conexion->exec("
+                    ALTER TABLE personalizacion_colores 
+                    ADD COLUMN nombre_sucursal VARCHAR(255) NULL AFTER id_sucursal
+                ");
+                error_log("✅ Campo 'nombre_sucursal' agregado a personalizacion_colores");
+            }
+        }
+        
+        // ============================================
+        // 2. TABLA personalizacion_cotizaciones
+        // ============================================
+        
+        // 2.1. Crear tabla si no existe
+        $stmt = $conexion->query("SHOW TABLES LIKE 'personalizacion_cotizaciones'");
+        if ($stmt->rowCount() == 0) {
+            $conexion->exec("
+                CREATE TABLE personalizacion_cotizaciones (
+                    id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                    id_sucursal INT(11) NULL,
+                    nombre_sucursal VARCHAR(255) NULL,
+                    
+                    -- Header
+                    header_logo VARCHAR(255) NULL,
+                    header_nombre_empresa VARCHAR(255) NULL,
+                    header_nit VARCHAR(255) NULL,
+                    header_regimen VARCHAR(255) NULL,
+                    header_servicios TEXT NULL,
+                    header_color_fondo VARCHAR(7) NULL,
+                    header_color_texto VARCHAR(7) NULL,
+                    
+                    -- Footer
+                    footer_direccion VARCHAR(255) NULL,
+                    footer_telefono VARCHAR(255) NULL,
+                    footer_movil VARCHAR(255) NULL,
+                    footer_correo VARCHAR(255) NULL,
+                    footer_color_fondo VARCHAR(7) NULL,
+                    footer_color_texto VARCHAR(7) NULL,
+                    
+                    activo TINYINT(1) DEFAULT 1,
+                    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    usuario_creador INT(11) NULL,
+                    
+                    INDEX idx_sucursal (id_sucursal),
+                    INDEX idx_activo (activo)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            ");
+            error_log("✅ Tabla 'personalizacion_cotizaciones' creada");
+            
+            // Crear configuración global por defecto
+            $stmt = $conexion->prepare("
+                INSERT INTO personalizacion_cotizaciones (
+                    id_sucursal, nombre_sucursal,
+                    header_logo, header_nombre_empresa, header_nit, header_regimen, header_servicios,
+                    header_color_fondo, header_color_texto,
+                    footer_direccion, footer_telefono, footer_movil, footer_correo,
+                    footer_color_fondo, footer_color_texto,
+                    activo, usuario_creador
+                ) VALUES (
+                    NULL, 'Global',
+                    'vistas/img/cotizacion/Infinito1.png', 'ACPLASTICOS', 'NIT: 901.718.358-2', 
+                    'IVA E ICA RÉGIMEN COMÚN', 'AVISOS\nLETRAS EN 3D\nTOMA UNO\nTRABAJOS ESPECIALES',
+                    '#873173', '#FFFFFF',
+                    'Carrera 27 # 10-65 Local 116', 'Tel: 601 569 9557', 'Móvil: 322 744 5631', 
+                    'Correo: ventas1@acplasticos.com',
+                    '#873173', '#FFFFFF',
+                    1, 1
+                )
+            ");
+            $stmt->execute();
+            error_log("✅ Configuración global por defecto creada en personalizacion_cotizaciones");
+        }
+        
+        // 2.2. Agregar campos de logo y texto si no existen
+        $camposLogo = [
+            'logo_width' => "INT(3) NULL DEFAULT 80",
+            'logo_align_vertical' => "VARCHAR(20) NULL DEFAULT 'center'",
+            'logo_align_horizontal' => "VARCHAR(20) NULL DEFAULT 'center'",
+            'header_font_size' => "INT(3) NULL DEFAULT 14",
+            'body_font_size' => "INT(3) NULL DEFAULT 13",
+            'footer_font_size' => "INT(3) NULL DEFAULT 16"
+        ];
+        
+        foreach ($camposLogo as $nombreCampo => $definicion) {
+            $stmt = $conexion->prepare("SHOW COLUMNS FROM personalizacion_cotizaciones LIKE ?");
+            $stmt->execute([$nombreCampo]);
+            if ($stmt->rowCount() == 0) {
+                // Determinar después de qué campo agregarlo
+                $despuesDe = '';
+                switch ($nombreCampo) {
+                    case 'logo_width':
+                        $despuesDe = 'AFTER header_logo';
+                        break;
+                    case 'logo_align_vertical':
+                        $despuesDe = 'AFTER logo_width';
+                        break;
+                    case 'logo_align_horizontal':
+                        $despuesDe = 'AFTER logo_align_vertical';
+                        break;
+                    case 'header_font_size':
+                        $despuesDe = 'AFTER header_color_texto';
+                        break;
+                    case 'body_font_size':
+                        $despuesDe = 'AFTER header_font_size';
+                        break;
+                    case 'footer_font_size':
+                        $despuesDe = 'AFTER footer_color_texto';
+                        break;
+                }
+                
+                $conexion->exec("ALTER TABLE personalizacion_cotizaciones ADD COLUMN $nombreCampo $definicion $despuesDe");
+                error_log("✅ Campo '$nombreCampo' agregado a personalizacion_cotizaciones");
+            }
+        }
+        
+        $conexion->commit();
+        error_log("✅ Cambios SQL del central aplicados exitosamente");
+        return true;
+        
+    } catch (PDOException $e) {
+        if (isset($conexion) && $conexion->inTransaction()) {
+            $conexion->rollBack();
+        }
+        error_log("❌ Error al aplicar cambios SQL del central: " . $e->getMessage());
+        // No lanzar excepción para no bloquear la instalación
+        return false;
+    } catch (Exception $e) {
+        if (isset($conexion) && $conexion->inTransaction()) {
+            $conexion->rollBack();
+        }
+        error_log("❌ Error al aplicar cambios SQL del central: " . $e->getMessage());
+        // No lanzar excepción para no bloquear la instalación
+        return false;
+    }
 }
 
 // Función para importar medios de pago de sucursales seleccionadas
