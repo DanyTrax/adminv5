@@ -283,7 +283,7 @@ function actualizarImagenEnBD($campoImagen, $rutaImagen, $idSucursal = null) {
         require_once "../api-transferencias/conexion-central.php";
         $conexion = ConexionCentral::conectar();
         
-        // Actualizar solo la configuración activa de la sucursal actual (o global si idSucursal es null)
+        // Actualizar solo la configuración activa de la sucursal especificada (o global si idSucursal es null)
         if ($idSucursal !== null) {
             // Buscar configuración activa de la sucursal específica
             $sql = "UPDATE personalizacion_colores SET $campoImagen = ? WHERE activo = 1 AND id_sucursal = ?";
@@ -293,20 +293,37 @@ function actualizarImagenEnBD($campoImagen, $rutaImagen, $idSucursal = null) {
             // Si no se actualizó ninguna fila, puede que no haya configuración específica de la sucursal
             // En ese caso, crear una nueva configuración activa para esta sucursal
             if ($resultado && $stmt->rowCount() == 0) {
-                // Obtener la configuración global activa como base
+                // Obtener la configuración global activa como base, o la de otra sucursal si no hay global
                 $stmt = $conexion->prepare("SELECT * FROM personalizacion_colores WHERE activo = 1 AND id_sucursal IS NULL LIMIT 1");
                 $stmt->execute();
-                $configGlobal = $stmt->fetch(PDO::FETCH_ASSOC);
+                $configBase = $stmt->fetch(PDO::FETCH_ASSOC);
                 
-                if ($configGlobal) {
+                // Si no hay configuración global, buscar cualquier configuración activa
+                if (!$configBase) {
+                    $stmt = $conexion->prepare("SELECT * FROM personalizacion_colores WHERE activo = 1 LIMIT 1");
+                    $stmt->execute();
+                    $configBase = $stmt->fetch(PDO::FETCH_ASSOC);
+                }
+                
+                if ($configBase) {
                     // Desactivar todas las configuraciones de esta sucursal
                     $stmt = $conexion->prepare("UPDATE personalizacion_colores SET activo = 0 WHERE id_sucursal = ?");
                     $stmt->execute([$idSucursal]);
                     
-                    // Crear nueva configuración para esta sucursal basada en la global
+                    // Obtener nombre de sucursal
+                    $nombreSucursal = 'Sucursal #' . $idSucursal;
+                    $stmt = $conexion->prepare("SELECT nombre FROM sucursales WHERE id = ?");
+                    $stmt->execute([$idSucursal]);
+                    $sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($sucursal) {
+                        $nombreSucursal = $sucursal['nombre'];
+                    }
+                    
+                    // Crear nueva configuración para esta sucursal basada en la base
                     $stmt = $conexion->prepare("
                         INSERT INTO personalizacion_colores (
                             nombre_configuracion,
+                            nombre_sucursal,
                             login_gradient_start,
                             login_gradient_end,
                             navbar_color,
@@ -320,22 +337,68 @@ function actualizarImagenEnBD($campoImagen, $rutaImagen, $idSucursal = null) {
                             activo,
                             id_sucursal,
                             usuario_creador
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
                     ");
                     
                     // Actualizar el campo de imagen correspondiente
                     $datos = [
-                        $configGlobal['nombre_configuracion'] . ' - ' . date('Y-m-d H:i:s'),
-                        $configGlobal['login_gradient_start'],
-                        $configGlobal['login_gradient_end'],
-                        $configGlobal['navbar_color'],
-                        $configGlobal['navbar_hover_color'],
-                        $configGlobal['sidebar_color'],
-                        $configGlobal['sidebar_hover_color'],
-                        $configGlobal['sidebar_text_color'],
-                        $campoImagen == 'icono_pequeno' ? $rutaImagen : $configGlobal['icono_pequeno'],
-                        $campoImagen == 'logo_menu' ? $rutaImagen : $configGlobal['logo_menu'],
-                        $campoImagen == 'logo_login' ? $rutaImagen : $configGlobal['logo_login'],
+                        $configBase['nombre_configuracion'] . ' - ' . date('Y-m-d H:i:s'),
+                        $nombreSucursal,
+                        $configBase['login_gradient_start'],
+                        $configBase['login_gradient_end'],
+                        $configBase['navbar_color'],
+                        $configBase['navbar_hover_color'],
+                        $configBase['sidebar_color'],
+                        $configBase['sidebar_hover_color'],
+                        $configBase['sidebar_text_color'],
+                        $campoImagen == 'icono_pequeno' ? $rutaImagen : ($configBase['icono_pequeno'] ?? 'vistas/img/plantilla/icono-blanco.png'),
+                        $campoImagen == 'logo_menu' ? $rutaImagen : ($configBase['logo_menu'] ?? 'vistas/img/plantilla/logo-blanco-lineal.png'),
+                        $campoImagen == 'logo_login' ? $rutaImagen : ($configBase['logo_login'] ?? 'vistas/img/plantilla/Infinito1.png'),
+                        $idSucursal,
+                        $_SESSION['id'] ?? 1
+                    ];
+                    
+                    $resultado = $stmt->execute($datos);
+                } else {
+                    // Si no hay ninguna configuración, crear una por defecto
+                    $stmt = $conexion->prepare("UPDATE personalizacion_colores SET activo = 0 WHERE id_sucursal = ?");
+                    $stmt->execute([$idSucursal]);
+                    
+                    // Obtener nombre de sucursal
+                    $nombreSucursal = 'Sucursal #' . $idSucursal;
+                    $stmt = $conexion->prepare("SELECT nombre FROM sucursales WHERE id = ?");
+                    $stmt->execute([$idSucursal]);
+                    $sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($sucursal) {
+                        $nombreSucursal = $sucursal['nombre'];
+                    }
+                    
+                    $stmt = $conexion->prepare("
+                        INSERT INTO personalizacion_colores (
+                            nombre_configuracion,
+                            nombre_sucursal,
+                            login_gradient_start,
+                            login_gradient_end,
+                            navbar_color,
+                            navbar_hover_color,
+                            sidebar_color,
+                            sidebar_hover_color,
+                            sidebar_text_color,
+                            icono_pequeno,
+                            logo_menu,
+                            logo_login,
+                            activo,
+                            id_sucursal,
+                            usuario_creador
+                        ) VALUES (?, ?, '#3c8dbc', '#2c3e50', '#3c8dbc', '#357ca5', '#222d32', '#1e282c', '#b8c7ce', ?, ?, ?, 1, ?, ?)
+                    ");
+                    
+                    $datos = [
+                        'Configuración ' . $nombreSucursal . ' - ' . date('Y-m-d H:i:s'),
+                        $nombreSucursal,
+                        $campoImagen == 'icono_pequeno' ? $rutaImagen : 'vistas/img/plantilla/icono-blanco.png',
+                        $campoImagen == 'logo_menu' ? $rutaImagen : 'vistas/img/plantilla/logo-blanco-lineal.png',
+                        $campoImagen == 'logo_login' ? $rutaImagen : 'vistas/img/plantilla/Infinito1.png',
                         $idSucursal,
                         $_SESSION['id'] ?? 1
                     ];
