@@ -190,9 +190,50 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 		border: 1px solid;
 	}
 
-	.table-products td {
-		padding: 2px;
+	.table-products th {
+		padding: 5px;
 		text-align: center;
+	}
+
+	.table-products td {
+		padding: 5px;
+		text-align: center;
+	}
+
+	.table-products th:nth-child(1),
+	.table-products td:nth-child(1) {
+		width: 5%;
+		text-align: center;
+	}
+
+	.table-products th:nth-child(2),
+	.table-products td:nth-child(2) {
+		width: 5%;
+		text-align: center;
+	}
+
+	.table-products th:nth-child(3),
+	.table-products td:nth-child(3) {
+		width: 50%;
+		text-align: left;
+		padding: 5px 10px;
+		line-height: 1.4;
+	}
+
+	.table-products th:nth-child(4),
+	.table-products td:nth-child(4) {
+		width: 20%;
+		text-align: right;
+		padding: 5px 10px;
+		white-space: nowrap;
+	}
+
+	.table-products th:nth-child(5),
+	.table-products td:nth-child(5) {
+		width: 20%;
+		text-align: right;
+		padding: 5px 10px;
+		white-space: nowrap;
 	}
 
 	.table-products tfoot.no-border,
