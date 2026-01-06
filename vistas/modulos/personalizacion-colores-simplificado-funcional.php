@@ -30,7 +30,8 @@ $todasConfiguraciones = ControladorPersonalizacionColores::ctrObtenerTodasConfig
 ControladorPersonalizacionColores::ctrActualizarConfiguracion();
 
 if (isset($_GET['activar'])) {
-    ControladorPersonalizacionColores::ctrActivarConfiguracion($_GET['activar']);
+    $idSucursalParaActivar = isset($_GET['sucursal']) && $_GET['sucursal'] != '0' ? (int)$_GET['sucursal'] : null;
+    ControladorPersonalizacionColores::ctrActivarConfiguracion($_GET['activar'], $idSucursalParaActivar);
 }
 
 if (isset($_GET['eliminar'])) {

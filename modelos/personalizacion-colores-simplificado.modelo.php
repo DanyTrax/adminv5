@@ -231,12 +231,12 @@ class ModeloPersonalizacionColores {
     /*=============================================
     ACTIVAR CONFIGURACIÓN ESPECÍFICA
     =============================================*/
-    static public function mdlActivarConfiguracion($id) {
+    static public function mdlActivarConfiguracion($id, $idSucursalDestino = null) {
         
         try {
             $conexion = ConexionCentral::conectar();
             
-            // Obtener información de la configuración para saber su sucursal
+            // Obtener información de la configuración
             $stmt = $conexion->prepare("SELECT id_sucursal FROM personalizacion_colores WHERE id = ?");
             $stmt->execute([$id]);
             $config = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -248,7 +248,19 @@ class ModeloPersonalizacionColores {
                 ];
             }
             
-            $idSucursal = $config['id_sucursal'];
+            // Si se especifica una sucursal destino, usar esa; si no, usar la de la configuración
+            $idSucursal = $idSucursalDestino !== null ? $idSucursalDestino : $config['id_sucursal'];
+            
+            // Si se está aplicando a una sucursal específica, obtener el nombre de la sucursal
+            $nombreSucursal = 'Global';
+            if ($idSucursal !== null) {
+                $stmt = $conexion->prepare("SELECT nombre FROM sucursales WHERE id = ?");
+                $stmt->execute([$idSucursal]);
+                $sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($sucursal) {
+                    $nombreSucursal = $sucursal['nombre'];
+                }
+            }
             
             $conexion->beginTransaction();
             

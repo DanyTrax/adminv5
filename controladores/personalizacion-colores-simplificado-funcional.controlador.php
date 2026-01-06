@@ -290,9 +290,9 @@ class ControladorPersonalizacionColores {
     /*=============================================
     ACTIVAR CONFIGURACIÓN
     =============================================*/
-    static public function ctrActivarConfiguracion($id) {
+    static public function ctrActivarConfiguracion($id, $idSucursal = null) {
         
-        $resultado = ModeloPersonalizacionColores::mdlActivarConfiguracion($id);
+        $resultado = ModeloPersonalizacionColores::mdlActivarConfiguracion($id, $idSucursal);
         
         if ($resultado['success']) {
             echo '<script>
