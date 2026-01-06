@@ -202,19 +202,19 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 
 	.table-products th:nth-child(1),
 	.table-products td:nth-child(1) {
-		width: 5%;
+		width: 4%;
 		text-align: center;
 	}
 
 	.table-products th:nth-child(2),
 	.table-products td:nth-child(2) {
-		width: 5%;
+		width: 4%;
 		text-align: center;
 	}
 
 	.table-products th:nth-child(3),
 	.table-products td:nth-child(3) {
-		width: 50%;
+		width: 58%;
 		text-align: left;
 		padding: 5px 10px;
 		line-height: 1.4;
@@ -222,17 +222,17 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 
 	.table-products th:nth-child(4),
 	.table-products td:nth-child(4) {
-		width: 20%;
+		width: 17%;
 		text-align: right;
-		padding: 5px 10px;
+		padding: 5px 8px;
 		white-space: nowrap;
 	}
 
 	.table-products th:nth-child(5),
 	.table-products td:nth-child(5) {
-		width: 20%;
+		width: 17%;
 		text-align: right;
-		padding: 5px 10px;
+		padding: 5px 8px;
 		white-space: nowrap;
 	}
 
