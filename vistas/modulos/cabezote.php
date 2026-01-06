@@ -66,45 +66,45 @@
 						<span class="hidden-xs" style="margin-left: 5px;">Gestión Central</span>
 						<i class="fa fa-caret-down" style="margin-left: 5px;"></i>
 					</a>
-					<ul class="dropdown-menu" style="width: 200px; left: auto; right: 0;">
+					<ul class="dropdown-menu gestion-central-menu" style="width: 250px; left: auto; right: 0; min-width: 250px;">
 						<li>
-							<a href="usuarios-central" style="padding: 10px 15px;">
+							<a href="usuarios-central" style="padding: 10px 15px; white-space: normal; word-wrap: break-word;">
 								<i class="fa fa-users" style="margin-right: 8px; color: #337ab7;"></i>
 								Usuarios Centrales
 							</a>
 						</li>
 						<li>
-							<a href="clientes-central" style="padding: 10px 15px;">
+							<a href="clientes-central" style="padding: 10px 15px; white-space: normal; word-wrap: break-word;">
 								<i class="fa fa-user-circle" style="margin-right: 8px; color: #f39c12;"></i>
 								Clientes Centrales
 							</a>
 						</li>
 						<li>
-							<a href="categorias-central" style="padding: 10px 15px;">
+							<a href="categorias-central" style="padding: 10px 15px; white-space: normal; word-wrap: break-word;">
 								<i class="fa fa-tags" style="margin-right: 8px; color: #9c27b0;"></i>
 								Categorías Centrales
 							</a>
 						</li>
 						<li>
-							<a href="personalizacion-colores-simplificado" style="padding: 10px 15px;">
+							<a href="personalizacion-colores-simplificado" style="padding: 10px 15px; white-space: normal; word-wrap: break-word;">
 								<i class="fa fa-paint-brush" style="margin-right: 8px; color: #e91e63;"></i>
 								Personalización de Colores
 							</a>
 						</li>
 						<li>
-							<a href="personalizacion-cotizaciones" style="padding: 10px 15px;">
+							<a href="personalizacion-cotizaciones" style="padding: 10px 15px; white-space: normal; word-wrap: break-word;">
 								<i class="fa fa-file-text" style="margin-right: 8px; color: #9c27b0;"></i>
 								Personalización de Cotizaciones
 							</a>
 						</li>
 						<li>
-							<a href="sucursales" style="padding: 10px 15px;">
+							<a href="sucursales" style="padding: 10px 15px; white-space: normal; word-wrap: break-word;">
 								<i class="fa fa-building" style="margin-right: 8px; color: #5cb85c;"></i>
 								Sucursales
 							</a>
 						</li>
 						<li>
-							<a href="catalogo-maestro" style="padding: 10px 15px;">
+							<a href="catalogo-maestro" style="padding: 10px 15px; white-space: normal; word-wrap: break-word;">
 								<i class="fa fa-database" style="margin-right: 8px; color: #17a2b8;"></i>
 								Catálogo Maestro
 							</a>
