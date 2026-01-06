@@ -238,6 +238,11 @@ if (isset($_GET['eliminar'])) {
                         </h3>
                     </div>
                     <div class="box-body">
+                        <div class="alert alert-info" style="margin-bottom: 15px;">
+                            <i class="fa fa-info-circle"></i> 
+                            <strong>Nota:</strong> Al aplicar una configuración del historial, solo se aplicarán los <strong>colores</strong>. 
+                            Las <strong>imágenes del sistema</strong> se gestionan independientemente desde la sección "Imágenes del Sistema" arriba.
+                        </div>
                         <div class="table-responsive">
                             <table class="table table-bordered table-striped table-hover">
                                 <thead>
@@ -291,8 +296,8 @@ if (isset($_GET['eliminar'])) {
                                                         
                                                         <a href="personalizacion-colores-simplificado?activar=<?= $config['id'] ?><?= $idSucursalSeleccionada !== null ? '&sucursal=' . $idSucursalSeleccionada : '' ?>" 
                                                            class="btn btn-success btn-xs"
-                                                           title="Aplicar esta configuración a la sucursal seleccionada">
-                                                            <i class="fa fa-check"></i> Aplicar
+                                                           title="Aplicar solo los colores de esta configuración a la sucursal seleccionada (las imágenes se mantienen)">
+                                                            <i class="fa fa-check"></i> Aplicar Colores
                                                         </a>
                                                         
                                                         <?php if (count($todasConfiguraciones) > 1): ?>
