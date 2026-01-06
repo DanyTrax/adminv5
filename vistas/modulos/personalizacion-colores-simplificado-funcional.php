@@ -274,9 +274,8 @@ if (isset($_GET['eliminar'])) {
                                                 
                                                 <a href="personalizacion-colores-simplificado?activar=<?= $config['id'] ?><?= $idSucursalSeleccionada !== null ? '&sucursal=' . $idSucursalSeleccionada : '' ?>" 
                                                    class="btn <?= $config['activo'] ? 'btn-info' : 'btn-success' ?> btn-xs"
-                                                   title="<?= $config['activo'] ? 'Esta configuración ya está aplicada' : 'Aplicar esta configuración' ?>">
-                                                    <i class="fa <?= $config['activo'] ? 'fa-check-circle' : 'fa-check' ?>"></i> 
-                                                    <?= $config['activo'] ? 'Aplicada' : 'Aplicar' ?>
+                                                   title="Aplicar esta configuración a la sucursal actual">
+                                                    <i class="fa fa-check"></i> Aplicar
                                                 </a>
                                                 
                                                 <?php if (count($todasConfiguraciones) > 1): ?>
