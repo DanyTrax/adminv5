@@ -91,8 +91,7 @@ if (isset($_GET['eliminar'])) {
                                             <option value="0" <?= $idSucursalSeleccionada === null ? 'selected' : '' ?>>Global (Todas las sucursales)</option>
                                             <?php foreach ($sucursales as $sucursal): ?>
                                                 <option value="<?= $sucursal['id'] ?>" <?= $idSucursalSeleccionada == $sucursal['id'] ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($sucursal['nombre']) ?> 
-                                                    <?= $sucursal['id'] == $idSucursalActual ? '(Actual)' : '' ?>
+                                                    <?= htmlspecialchars($sucursal['nombre']) ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
