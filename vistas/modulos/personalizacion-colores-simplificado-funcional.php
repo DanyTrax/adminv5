@@ -21,7 +21,7 @@ if ($idSucursalSeleccionada === null && $idSucursalActual !== null) {
 }
 
 // Obtener configuración actual (de la sucursal seleccionada o actual)
-$configuracionActual = ControladorPersonalizacionColores::ctrMostrarConfiguracionActiva();
+$configuracionActual = ControladorPersonalizacionColores::ctrMostrarConfiguracionActiva($idSucursalSeleccionada);
 
 // Obtener todas las configuraciones (de la sucursal seleccionada o todas)
 $todasConfiguraciones = ControladorPersonalizacionColores::ctrObtenerTodasConfiguraciones($idSucursalSeleccionada);

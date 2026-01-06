@@ -10,9 +10,9 @@ class ControladorPersonalizacionColores {
     /*=============================================
     MOSTRAR CONFIGURACIÓN ACTIVA
     =============================================*/
-    static public function ctrMostrarConfiguracionActiva() {
+    static public function ctrMostrarConfiguracionActiva($idSucursal = null) {
         
-        return ModeloPersonalizacionColores::mdlObtenerConfiguracionActiva();
+        return ModeloPersonalizacionColores::mdlObtenerConfiguracionActiva($idSucursal);
     }
     
     /*=============================================
