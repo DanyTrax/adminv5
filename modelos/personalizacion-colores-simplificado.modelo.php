@@ -286,7 +286,12 @@ class ModeloPersonalizacionColores {
                 $configExistente = $stmt->fetch(PDO::FETCH_ASSOC);
                 
                 if ($configExistente) {
-                    // Actualizar la configuración existente con los datos de la original
+                    // Obtener las imágenes actuales de la configuración existente para mantenerlas
+                    $stmt = $conexion->prepare("SELECT icono_pequeno, logo_menu, logo_login FROM personalizacion_colores WHERE id = ?");
+                    $stmt->execute([$configExistente['id']]);
+                    $configActual = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    // Actualizar la configuración existente solo con los colores (mantener imágenes actuales)
                     $stmt = $conexion->prepare("
                         UPDATE personalizacion_colores SET
                             nombre_configuracion = ?,
@@ -297,9 +302,6 @@ class ModeloPersonalizacionColores {
                             sidebar_color = ?,
                             sidebar_hover_color = ?,
                             sidebar_text_color = ?,
-                            icono_pequeno = ?,
-                            logo_menu = ?,
-                            logo_login = ?,
                             activo = 1,
                             fecha_actualizacion = CURRENT_TIMESTAMP
                         WHERE id = ?
@@ -313,13 +315,30 @@ class ModeloPersonalizacionColores {
                         $configOriginal['sidebar_color'],
                         $configOriginal['sidebar_hover_color'],
                         $configOriginal['sidebar_text_color'],
-                        $configOriginal['icono_pequeno'],
-                        $configOriginal['logo_menu'],
-                        $configOriginal['logo_login'],
                         $configExistente['id']
                     ]);
                 } else {
-                    // Crear una nueva configuración para esta sucursal
+                    // Obtener las imágenes por defecto o de la configuración activa actual de la sucursal
+                    $imagenesPorDefecto = [
+                        'icono_pequeno' => 'vistas/img/plantilla/icono-blanco.png',
+                        'logo_menu' => 'vistas/img/plantilla/logo-blanco-lineal.png',
+                        'logo_login' => 'vistas/img/plantilla/Infinito1.png'
+                    ];
+                    
+                    // Intentar obtener imágenes de la configuración activa actual de la sucursal
+                    $stmt = $conexion->prepare("SELECT icono_pequeno, logo_menu, logo_login FROM personalizacion_colores WHERE id_sucursal = ? AND activo = 1 LIMIT 1");
+                    $stmt->execute([$idSucursalDestino]);
+                    $configActiva = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($configActiva) {
+                        $imagenesPorDefecto = [
+                            'icono_pequeno' => $configActiva['icono_pequeno'] ?: $imagenesPorDefecto['icono_pequeno'],
+                            'logo_menu' => $configActiva['logo_menu'] ?: $imagenesPorDefecto['logo_menu'],
+                            'logo_login' => $configActiva['logo_login'] ?: $imagenesPorDefecto['logo_login']
+                        ];
+                    }
+                    
+                    // Crear una nueva configuración para esta sucursal (solo colores, mantener imágenes actuales)
                     $stmt = $conexion->prepare("
                         INSERT INTO personalizacion_colores (
                             id_sucursal, nombre_sucursal, nombre_configuracion,
@@ -341,9 +360,9 @@ class ModeloPersonalizacionColores {
                         $configOriginal['sidebar_color'],
                         $configOriginal['sidebar_hover_color'],
                         $configOriginal['sidebar_text_color'],
-                        $configOriginal['icono_pequeno'],
-                        $configOriginal['logo_menu'],
-                        $configOriginal['logo_login'],
+                        $imagenesPorDefecto['icono_pequeno'],
+                        $imagenesPorDefecto['logo_menu'],
+                        $imagenesPorDefecto['logo_login'],
                         $_SESSION['id'] ?? 1
                     ]);
                 }
