@@ -347,11 +347,10 @@ if (isset($_GET['eliminar'])) {
                             <div class="form-group">
                                 <label for="id_sucursal_modal">Sucursal:</label>
                                 <select class="form-control" id="id_sucursal_modal" name="id_sucursal">
-                                    <option value="">Global (Todas las sucursales)</option>
+                                    <option value="" <?= $idSucursalSeleccionada === null ? 'selected' : '' ?>>Global (Todas las sucursales)</option>
                                     <?php foreach ($sucursales as $sucursal): ?>
-                                        <option value="<?= $sucursal['id'] ?>" <?= ($idSucursalSeleccionada == $sucursal['id'] || ($idSucursalSeleccionada === null && $sucursal['id'] == $idSucursalActual)) ? 'selected' : '' ?>>
+                                        <option value="<?= $sucursal['id'] ?>" <?= $idSucursalSeleccionada == $sucursal['id'] ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($sucursal['nombre']) ?>
-                                            <?= $sucursal['id'] == $idSucursalActual ? ' (Actual)' : '' ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -495,9 +494,9 @@ if (isset($_GET['eliminar'])) {
                             <div class="form-group">
                                 <label for="editar_id_sucursal_modal">Sucursal:</label>
                                 <select class="form-control" id="editar_id_sucursal_modal" name="id_sucursal">
-                                    <option value="">Global (Todas las sucursales)</option>
+                                    <option value="" <?= $idSucursalSeleccionada === null ? 'selected' : '' ?>>Global (Todas las sucursales)</option>
                                     <?php foreach ($sucursales as $sucursal): ?>
-                                        <option value="<?= $sucursal['id'] ?>">
+                                        <option value="<?= $sucursal['id'] ?>" <?= $idSucursalSeleccionada == $sucursal['id'] ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($sucursal['nombre']) ?>
                                         </option>
                                     <?php endforeach; ?>
