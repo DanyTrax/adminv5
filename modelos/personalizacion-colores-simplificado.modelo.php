@@ -264,7 +264,7 @@ class ModeloPersonalizacionColores {
             
             $conexion->beginTransaction();
             
-            // Desactivar todas las configuraciones de la misma sucursal (o globales si id_sucursal es null)
+            // Desactivar todas las configuraciones de la sucursal destino (o globales si es null)
             if ($idSucursal !== null) {
                 $stmt = $conexion->prepare("UPDATE personalizacion_colores SET activo = 0 WHERE id_sucursal = ?");
                 $stmt->execute([$idSucursal]);
@@ -273,28 +273,100 @@ class ModeloPersonalizacionColores {
                 $stmt->execute();
             }
             
-            // Activar la configuración específica
-            $stmt = $conexion->prepare("
-                UPDATE personalizacion_colores 
-                SET activo = 1, fecha_actualizacion = CURRENT_TIMESTAMP 
-                WHERE id = ?
-            ");
-            
-            $resultado = $stmt->execute([$id]);
-            
-            if ($resultado) {
-                $conexion->commit();
-                return [
-                    'success' => true,
-                    'message' => 'Configuración activada exitosamente'
-                ];
+            // Si se está aplicando a una sucursal diferente, crear o actualizar una copia para esa sucursal
+            if ($idSucursalDestino !== null && $idSucursalDestino != $config['id_sucursal']) {
+                // Obtener todos los datos de la configuración original
+                $stmt = $conexion->prepare("SELECT * FROM personalizacion_colores WHERE id = ?");
+                $stmt->execute([$id]);
+                $configOriginal = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                // Verificar si ya existe una configuración para esta sucursal
+                $stmt = $conexion->prepare("SELECT id FROM personalizacion_colores WHERE id_sucursal = ? LIMIT 1");
+                $stmt->execute([$idSucursalDestino]);
+                $configExistente = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($configExistente) {
+                    // Actualizar la configuración existente con los datos de la original
+                    $stmt = $conexion->prepare("
+                        UPDATE personalizacion_colores SET
+                            nombre_configuracion = ?,
+                            login_gradient_start = ?,
+                            login_gradient_end = ?,
+                            navbar_color = ?,
+                            navbar_hover_color = ?,
+                            sidebar_color = ?,
+                            sidebar_hover_color = ?,
+                            sidebar_text_color = ?,
+                            icono_pequeno = ?,
+                            logo_menu = ?,
+                            logo_login = ?,
+                            activo = 1,
+                            fecha_actualizacion = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    ");
+                    $stmt->execute([
+                        $configOriginal['nombre_configuracion'],
+                        $configOriginal['login_gradient_start'],
+                        $configOriginal['login_gradient_end'],
+                        $configOriginal['navbar_color'],
+                        $configOriginal['navbar_hover_color'],
+                        $configOriginal['sidebar_color'],
+                        $configOriginal['sidebar_hover_color'],
+                        $configOriginal['sidebar_text_color'],
+                        $configOriginal['icono_pequeno'],
+                        $configOriginal['logo_menu'],
+                        $configOriginal['logo_login'],
+                        $configExistente['id']
+                    ]);
+                } else {
+                    // Crear una nueva configuración para esta sucursal
+                    $stmt = $conexion->prepare("
+                        INSERT INTO personalizacion_colores (
+                            id_sucursal, nombre_sucursal, nombre_configuracion,
+                            login_gradient_start, login_gradient_end,
+                            navbar_color, navbar_hover_color,
+                            sidebar_color, sidebar_hover_color, sidebar_text_color,
+                            icono_pequeno, logo_menu, logo_login,
+                            activo, fecha_creacion, usuario_creador
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?)
+                    ");
+                    $stmt->execute([
+                        $idSucursalDestino,
+                        $nombreSucursal,
+                        $configOriginal['nombre_configuracion'],
+                        $configOriginal['login_gradient_start'],
+                        $configOriginal['login_gradient_end'],
+                        $configOriginal['navbar_color'],
+                        $configOriginal['navbar_hover_color'],
+                        $configOriginal['sidebar_color'],
+                        $configOriginal['sidebar_hover_color'],
+                        $configOriginal['sidebar_text_color'],
+                        $configOriginal['icono_pequeno'],
+                        $configOriginal['logo_menu'],
+                        $configOriginal['logo_login'],
+                        $_SESSION['id'] ?? 1
+                    ]);
+                }
             } else {
-                $conexion->rollBack();
-                return [
-                    'success' => false,
-                    'error' => 'Error al activar la configuración'
-                ];
+                // Activar la configuración seleccionada directamente
+                $stmt = $conexion->prepare("
+                    UPDATE personalizacion_colores 
+                    SET activo = 1, fecha_actualizacion = CURRENT_TIMESTAMP 
+                    WHERE id = ?
+                ");
+                $stmt->execute([$id]);
             }
+            
+            $conexion->commit();
+            
+            $mensaje = $idSucursalDestino !== null && $idSucursalDestino != $config['id_sucursal'] 
+                ? "Configuración aplicada a la sucursal: $nombreSucursal"
+                : "Configuración activada exitosamente";
+            
+            return [
+                'success' => true,
+                'message' => $mensaje
+            ];
             
         } catch (Exception $e) {
             if (isset($conexion)) {

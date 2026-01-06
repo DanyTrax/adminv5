@@ -273,8 +273,8 @@ if (isset($_GET['eliminar'])) {
                                                     <i class="fa fa-pencil"></i> Editar
                                                 </button>
                                                 
-                                                <a href="personalizacion-colores-simplificado?activar=<?= $config['id'] ?><?= $idSucursalSeleccionada !== null ? '&sucursal=' . $idSucursalSeleccionada : '' ?>" 
-                                                   class="btn <?= $config['activo'] ? 'btn-info' : 'btn-success' ?> btn-xs"
+                                                <a href="personalizacion-colores-simplificado?activar=<?= $config['id'] ?><?= $idSucursalActual !== null ? '&sucursal=' . $idSucursalActual : '' ?>" 
+                                                   class="btn btn-success btn-xs"
                                                    title="Aplicar esta configuración a la sucursal actual">
                                                     <i class="fa fa-check"></i> Aplicar
                                                 </a>
