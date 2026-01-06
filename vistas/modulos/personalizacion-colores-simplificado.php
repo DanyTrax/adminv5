@@ -1,17 +1,57 @@
 <?php
 require_once "controladores/personalizacion-colores-simplificado-funcional.controlador.php";
+require_once "modelos/sucursales.modelo.php";
 
-// Obtener configuración actual
-$configuracionActual = ControladorPersonalizacionColores::ctrMostrarConfiguracionActiva();
+// Obtener sucursal seleccionada (si existe)
+$idSucursalSeleccionada = isset($_GET['sucursal']) ? (int)$_GET['sucursal'] : null;
+if ($idSucursalSeleccionada === 0) {
+    $idSucursalSeleccionada = null; // 0 significa "Global"
+}
 
-// Obtener todas las configuraciones
-$todasConfiguraciones = ControladorPersonalizacionColores::ctrObtenerTodasConfiguraciones();
+// Obtener todas las sucursales activas
+$respuestaSucursales = ModeloSucursales::mdlObtenerSucursales(true);
+$sucursales = $respuestaSucursales['success'] ? $respuestaSucursales['data'] : [];
+
+// Obtener ID de sucursal actual (solo para mostrar en el selector)
+$idSucursalActual = ModeloPersonalizacionColores::mdlObtenerIdSucursalActual();
+
+// Obtener configuración actual (de la sucursal seleccionada, o null si es Global)
+$configuracionActual = ControladorPersonalizacionColores::ctrMostrarConfiguracionActiva($idSucursalSeleccionada);
+
+// Si no hay configuración, crear una por defecto para mostrar
+if (!$configuracionActual) {
+    $configuracionActual = [
+        'nombre_configuracion' => 'Configuración por Defecto',
+        'login_gradient_start' => '#3c8dbc',
+        'login_gradient_end' => '#2c3e50',
+        'navbar_color' => '#3c8dbc',
+        'navbar_hover_color' => '#357ca5',
+        'sidebar_color' => '#222d32',
+        'sidebar_hover_color' => '#1e282c',
+        'sidebar_text_color' => '#b8c7ce',
+        'icono_pequeno' => 'vistas/img/plantilla/icono-blanco.png',
+        'logo_menu' => 'vistas/img/plantilla/logo-blanco-lineal.png',
+        'logo_login' => 'vistas/img/plantilla/Infinito1.png'
+    ];
+}
+
+// Obtener todas las configuraciones (de la sucursal seleccionada o todas si es Global)
+$todasConfiguraciones = ControladorPersonalizacionColores::ctrObtenerTodasConfiguraciones($idSucursalSeleccionada);
 
 // Procesar acciones
 ControladorPersonalizacionColores::ctrActualizarConfiguracion();
 
 if (isset($_GET['activar'])) {
-    ControladorPersonalizacionColores::ctrActivarConfiguracion($_GET['activar']);
+    // Usar la sucursal seleccionada en el filtro, o la de la URL si existe
+    if ($idSucursalSeleccionada !== null) {
+        $idSucursalParaActivar = $idSucursalSeleccionada;
+    } elseif (isset($_GET['sucursal']) && $_GET['sucursal'] != '0') {
+        $idSucursalParaActivar = (int)$_GET['sucursal'];
+    } else {
+        // Si es Global, aplicar sin sucursal específica
+        $idSucursalParaActivar = null;
+    }
+    ControladorPersonalizacionColores::ctrActivarConfiguracion($_GET['activar'], $idSucursalParaActivar);
 }
 
 if (isset($_GET['eliminar'])) {
@@ -32,6 +72,44 @@ if (isset($_GET['eliminar'])) {
     </section>
 
     <section class="content">
+        <!-- Selector de Sucursal -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-info">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">
+                            <i class="fa fa-building"></i> Seleccionar Sucursal
+                        </h3>
+                    </div>
+                    <div class="box-body">
+                        <form method="get" action="personalizacion-colores-simplificado" id="formSelectorSucursal">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="sucursal">Sucursal:</label>
+                                        <select class="form-control" id="sucursal" name="sucursal" onchange="this.form.submit()">
+                                            <option value="0" <?= $idSucursalSeleccionada === null ? 'selected' : '' ?>>Global (Todas las sucursales)</option>
+                                            <?php foreach ($sucursales as $sucursal): ?>
+                                                <option value="<?= $sucursal['id'] ?>" <?= $idSucursalSeleccionada == $sucursal['id'] ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($sucursal['nombre']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="alert alert-info" style="margin-top: 25px; margin-bottom: 0;">
+                                        <i class="fa fa-info-circle"></i> 
+                                        <strong>Información:</strong> Selecciona una sucursal para ver y editar su personalización de colores e imágenes.
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Configuración Actual -->
         <div class="row">
             <div class="col-md-12">
@@ -39,6 +117,11 @@ if (isset($_GET['eliminar'])) {
                     <div class="box-header with-border">
                         <h3 class="box-title">
                             <i class="fa fa-palette"></i> Configuración Actual
+                            <?php if ($idSucursalSeleccionada !== null): ?>
+                                - <?= htmlspecialchars($sucursales[array_search($idSucursalSeleccionada, array_column($sucursales, 'id'))]['nombre'] ?? 'Sucursal #' . $idSucursalSeleccionada) ?>
+                            <?php else: ?>
+                                - Global
+                            <?php endif; ?>
                         </h3>
                         <div class="box-tools pull-right">
                             <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#modalNuevaConfiguracion">
@@ -86,6 +169,11 @@ if (isset($_GET['eliminar'])) {
                                 <h4><i class="fa fa-image"></i> Imágenes del Sistema</h4>
                                 <div class="alert alert-info">
                                     <i class="fa fa-info-circle"></i> <strong>Instrucciones:</strong> Haz clic en cualquier imagen para cambiarla desde tu equipo.
+                                    <?php if ($idSucursalSeleccionada !== null): ?>
+                                        <br><strong>Nota:</strong> Los cambios se aplicarán a la sucursal seleccionada: <strong><?= htmlspecialchars($sucursales[array_search($idSucursalSeleccionada, array_column($sucursales, 'id'))]['nombre'] ?? 'Sucursal #' . $idSucursalSeleccionada) ?></strong>
+                                    <?php else: ?>
+                                        <br><strong>Nota:</strong> Los cambios se aplicarán globalmente a todas las sucursales.
+                                    <?php endif; ?>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-4">
@@ -139,11 +227,11 @@ if (isset($_GET['eliminar'])) {
                 </div>
             </div>
         </div>
-
+        
         <!-- Historial de Configuraciones -->
         <div class="row">
             <div class="col-md-12">
-                <div class="box box-info">
+                <div class="box box-warning">
                     <div class="box-header with-border">
                         <h3 class="box-title">
                             <i class="fa fa-history"></i> Historial de Configuraciones
@@ -151,7 +239,7 @@ if (isset($_GET['eliminar'])) {
                     </div>
                     <div class="box-body">
                         <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
+                            <table class="table table-bordered table-striped table-hover">
                                 <thead>
                                     <tr>
                                         <th>Nombre</th>
@@ -164,49 +252,62 @@ if (isset($_GET['eliminar'])) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($todasConfiguraciones as $config): ?>
-                                    <tr>
-                                        <td><?= $config['nombre_configuracion'] ?></td>
-                                        <td>
-                                            <div style="background: linear-gradient(90deg, <?= $config['login_gradient_start'] ?>, <?= $config['login_gradient_end'] ?>); width: 100px; height: 20px; border-radius: 3px; display: inline-block;"></div>
-                                        </td>
-                                        <td>
-                                            <span class="badge" style="background-color: <?= $config['navbar_color'] ?>; color: white;">
-                                                <?= $config['navbar_color'] ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge" style="background-color: <?= $config['sidebar_color'] ?>; color: <?= $config['sidebar_text_color'] ?>;">
-                                                <?= $config['sidebar_color'] ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <?php if ($config['activo']): ?>
-                                                <span class="label label-success">Activa</span>
-                                            <?php else: ?>
-                                                <span class="label label-default">Inactiva</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td><?= date('d/m/Y H:i', strtotime($config['fecha_actualizacion'])) ?></td>
-                                        <td>
-                                            <button type="button" class="btn btn-primary btn-xs" onclick="editarConfiguracion(<?= $config['id'] ?>)">
-                                                <i class="fa fa-edit"></i> Editar
-                                            </button>
-                                            
-                                            <?php if (!$config['activo']): ?>
-                                                <a href="personalizacion-colores-simplificado?activar=<?= $config['id'] ?>" class="btn btn-success btn-xs">
-                                                    <i class="fa fa-check"></i> Activar
-                                                </a>
-                                            <?php endif; ?>
-                                            
-                                            <?php if (count($todasConfiguraciones) > 1): ?>
-                                                <a href="personalizacion-colores-simplificado?eliminar=<?= $config['id'] ?>" class="btn btn-danger btn-xs" onclick="return confirm('¿Estás seguro de eliminar esta configuración?')">
-                                                    <i class="fa fa-trash"></i> Eliminar
-                                                </a>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
+                                    <?php if (empty($todasConfiguraciones)): ?>
+                                        <tr>
+                                            <td colspan="7" class="text-center">
+                                                <p class="text-muted">No hay configuraciones guardadas</p>
+                                            </td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($todasConfiguraciones as $config): ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($config['nombre_configuracion']) ?></td>
+                                                <td>
+                                                    <div style="background: linear-gradient(135deg, <?= $config['login_gradient_start'] ?> 0%, <?= $config['login_gradient_end'] ?> 100%); width: 100px; height: 30px; border-radius: 3px;"></div>
+                                                </td>
+                                                <td>
+                                                    <div style="background-color: <?= $config['navbar_color'] ?>; width: 100px; height: 30px; border-radius: 3px;"></div>
+                                                </td>
+                                                <td>
+                                                    <div style="background-color: <?= $config['sidebar_color'] ?>; width: 100px; height: 30px; border-radius: 3px;"></div>
+                                                </td>
+                                                <td>
+                                                    <?php if ($config['activo'] == 1): ?>
+                                                        <span class="label label-success">Activa</span>
+                                                    <?php else: ?>
+                                                        <span class="label label-default">Inactiva</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td><?= date('d/m/Y H:i', strtotime($config['fecha_creacion'])) ?></td>
+                                                <td>
+                                                    <div class="btn-group">
+                                                        <button class="btn btn-warning btn-xs btnEditarConfiguracion" 
+                                                                data-id="<?= $config['id'] ?>"
+                                                                data-toggle="modal" 
+                                                                data-target="#modalEditarConfiguracion"
+                                                                title="Editar configuración">
+                                                            <i class="fa fa-pencil"></i> Editar
+                                                        </button>
+                                                        
+                                                        <a href="personalizacion-colores-simplificado?activar=<?= $config['id'] ?><?= $idSucursalSeleccionada !== null ? '&sucursal=' . $idSucursalSeleccionada : '' ?>" 
+                                                           class="btn btn-success btn-xs"
+                                                           title="Aplicar esta configuración a la sucursal seleccionada">
+                                                            <i class="fa fa-check"></i> Aplicar
+                                                        </a>
+                                                        
+                                                        <?php if (count($todasConfiguraciones) > 1): ?>
+                                                            <a href="personalizacion-colores-simplificado?eliminar=<?= $config['id'] ?><?= $idSucursalSeleccionada !== null ? '&sucursal=' . $idSucursalSeleccionada : '' ?>" 
+                                                               class="btn btn-danger btn-xs" 
+                                                               onclick="return confirm('¿Estás seguro de eliminar esta configuración?')"
+                                                               title="Eliminar configuración">
+                                                                <i class="fa fa-times"></i> Eliminar
+                                                            </a>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -230,116 +331,241 @@ if (isset($_GET['eliminar'])) {
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="form-group">
                                 <label for="nombre_configuracion">Nombre de la Configuración</label>
                                 <input type="text" class="form-control" id="nombre_configuracion" name="nombre_configuracion" value="Mi Configuración" required>
                             </div>
                             
+                            <div class="form-group">
+                                <label for="id_sucursal_modal">Sucursal:</label>
+                                <select class="form-control" id="id_sucursal_modal" name="id_sucursal">
+                                    <option value="" <?= $idSucursalSeleccionada === null ? 'selected' : '' ?>>Global (Todas las sucursales)</option>
+                                    <?php foreach ($sucursales as $sucursal): ?>
+                                        <option value="<?= $sucursal['id'] ?>" <?= $idSucursalSeleccionada == $sucursal['id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($sucursal['nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <small class="help-block">Selecciona una sucursal específica o deja en "Global" para aplicar a todas</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            
                             <h4><i class="fa fa-sign-in"></i> Gradiente del Login</h4>
                             <div class="form-group">
                                 <label for="login_gradient_start">Color Inicio</label>
                                 <div class="input-group">
-                                    <input type="color" class="form-control" id="login_gradient_start" name="login_gradient_start" value="#3c8dbc" required>
-                                    <span class="input-group-addon">
-                                        <input type="text" class="form-control color-text" value="#3c8dbc" readonly>
-                                    </span>
+                                    <input type="color" class="form-control" id="login_gradient_start" name="login_gradient_start" value="<?= $configuracionActual['login_gradient_start'] ?>" required>
+                                    <input type="text" class="form-control" id="login_gradient_start_text" value="<?= $configuracionActual['login_gradient_start'] ?>" readonly>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label for="login_gradient_end">Color Fin</label>
                                 <div class="input-group">
-                                    <input type="color" class="form-control" id="login_gradient_end" name="login_gradient_end" value="#2c3e50" required>
-                                    <span class="input-group-addon">
-                                        <input type="text" class="form-control color-text" value="#2c3e50" readonly>
-                                    </span>
+                                    <input type="color" class="form-control" id="login_gradient_end" name="login_gradient_end" value="<?= $configuracionActual['login_gradient_end'] ?>" required>
+                                    <input type="text" class="form-control" id="login_gradient_end_text" value="<?= $configuracionActual['login_gradient_end'] ?>" readonly>
                                 </div>
                             </div>
-                            
+                            <div class="preview-box" style="background: linear-gradient(135deg, <?= $configuracionActual['login_gradient_start'] ?> 0%, <?= $configuracionActual['login_gradient_end'] ?> 100%); height: 80px; border-radius: 5px; margin-top: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                <strong>Vista Previa</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
                             <h4><i class="fa fa-desktop"></i> Barra Principal</h4>
                             <div class="form-group">
-                                <label for="navbar_color">Color de Fondo</label>
+                                <label for="navbar_color">Color de la Barra</label>
                                 <div class="input-group">
-                                    <input type="color" class="form-control" id="navbar_color" name="navbar_color" value="#3c8dbc" required>
-                                    <span class="input-group-addon">
-                                        <input type="text" class="form-control color-text" value="#3c8dbc" readonly>
-                                    </span>
+                                    <input type="color" class="form-control" id="navbar_color" name="navbar_color" value="<?= $configuracionActual['navbar_color'] ?>" required>
+                                    <input type="text" class="form-control" id="navbar_color_text" value="<?= $configuracionActual['navbar_color'] ?>" readonly>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label for="navbar_hover_color">Color Hover</label>
                                 <div class="input-group">
-                                    <input type="color" class="form-control" id="navbar_hover_color" name="navbar_hover_color" value="#2c3e50" required>
-                                    <span class="input-group-addon">
-                                        <input type="text" class="form-control color-text" value="#2c3e50" readonly>
-                                    </span>
+                                    <input type="color" class="form-control" id="navbar_hover_color" name="navbar_hover_color" value="<?= $configuracionActual['navbar_hover_color'] ?>" required>
+                                    <input type="text" class="form-control" id="navbar_hover_color_text" value="<?= $configuracionActual['navbar_hover_color'] ?>" readonly>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <h4><i class="fa fa-bars"></i> Barra Lateral</h4>
-                            <div class="form-group">
-                                <label for="sidebar_color">Color de Fondo</label>
-                                <div class="input-group">
-                                    <input type="color" class="form-control" id="sidebar_color" name="sidebar_color" value="#222d32" required>
-                                    <span class="input-group-addon">
-                                        <input type="text" class="form-control color-text" value="#222d32" readonly>
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="sidebar_hover_color">Color Hover</label>
-                                <div class="input-group">
-                                    <input type="color" class="form-control" id="sidebar_hover_color" name="sidebar_hover_color" value="#1a252f" required>
-                                    <span class="input-group-addon">
-                                        <input type="text" class="form-control color-text" value="#1a252f" readonly>
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="sidebar_text_color">Color del Texto</label>
-                                <div class="input-group">
-                                    <input type="color" class="form-control" id="sidebar_text_color" name="sidebar_text_color" value="#b8c7ce" required>
-                                    <span class="input-group-addon">
-                                        <input type="text" class="form-control color-text" value="#b8c7ce" readonly>
-                                    </span>
-                                </div>
+                            <div class="preview-box preview-navbar-editar" style="background-color: <?= $configuracionActual['navbar_color'] ?>; height: 80px; border-radius: 5px; margin-top: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                <strong>Vista Previa</strong>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Vista Previa -->
                     <div class="row">
                         <div class="col-md-12">
-                            <h4><i class="fa fa-eye"></i> Vista Previa</h4>
-                            <div id="vistaPrevia" class="preview-container" style="border: 1px solid #ddd; border-radius: 5px; padding: 20px; background: #f9f9f9;">
-                                <div class="preview-navbar" style="background-color: #3c8dbc; color: white; padding: 10px; margin-bottom: 10px; border-radius: 3px;">
-                                    <strong>Barra Principal</strong>
+                            <h4><i class="fa fa-bars"></i> Barra Lateral</h4>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="sidebar_color">Color de Fondo</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="sidebar_color" name="sidebar_color" value="<?= $configuracionActual['sidebar_color'] ?>" required>
+                                    <input type="text" class="form-control" id="sidebar_color_text" value="<?= $configuracionActual['sidebar_color'] ?>" readonly>
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="preview-sidebar" style="background-color: #222d32; color: #b8c7ce; padding: 10px; border-radius: 3px; margin-bottom: 10px;">
-                                            <strong>Barra Lateral</strong>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-9">
-                                        <div class="preview-login" style="background: linear-gradient(135deg, #3c8dbc 0%, #2c3e50 100%); color: white; padding: 20px; border-radius: 3px; text-align: center;">
-                                            <strong>Gradiente Login</strong>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="sidebar_hover_color">Color Hover</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="sidebar_hover_color" name="sidebar_hover_color" value="<?= $configuracionActual['sidebar_hover_color'] ?>" required>
+                                    <input type="text" class="form-control" id="sidebar_hover_color_text" value="<?= $configuracionActual['sidebar_hover_color'] ?>" readonly>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="sidebar_text_color">Color de Texto</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="sidebar_text_color" name="sidebar_text_color" value="<?= $configuracionActual['sidebar_text_color'] ?>" required>
+                                    <input type="text" class="form-control" id="sidebar_text_color_text" value="<?= $configuracionActual['sidebar_text_color'] ?>" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="preview-box preview-sidebar-editar" style="background-color: <?= $configuracionActual['sidebar_color'] ?>; color: <?= $configuracionActual['sidebar_text_color'] ?>; height: 80px; border-radius: 5px; margin-top: 10px; display: flex; align-items: center; justify-content: center;">
+                                <strong>Vista Previa Barra Lateral</strong>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">
-                        <i class="fa fa-times"></i> Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary" name="actualizarConfiguracion">
-                        <i class="fa fa-save"></i> Guardar Configuración
-                    </button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" name="actualizarConfiguracion">Guardar Configuración</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Configuración -->
+<div class="modal fade" id="modalEditarConfiguracion" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <form method="post" id="formEditarConfiguracion" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">
+                        <i class="fa fa-pencil"></i> Editar Configuración de Colores
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editar_configuracion" name="editar_configuracion" value="">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="editar_nombre_configuracion">Nombre de la Configuración</label>
+                                <input type="text" class="form-control" id="editar_nombre_configuracion" name="nombre_configuracion" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="editar_id_sucursal_modal">Sucursal:</label>
+                                <select class="form-control" id="editar_id_sucursal_modal" name="id_sucursal">
+                                    <option value="" <?= $idSucursalSeleccionada === null ? 'selected' : '' ?>>Global (Todas las sucursales)</option>
+                                    <?php foreach ($sucursales as $sucursal): ?>
+                                        <option value="<?= $sucursal['id'] ?>" <?= $idSucursalSeleccionada == $sucursal['id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($sucursal['nombre']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <small class="help-block">Selecciona una sucursal específica o deja en "Global" para aplicar a todas</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4><i class="fa fa-sign-in"></i> Gradiente del Login</h4>
+                            <div class="form-group">
+                                <label for="editar_login_gradient_start">Color Inicio</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="editar_login_gradient_start" name="login_gradient_start" required>
+                                    <input type="text" class="form-control" id="editar_login_gradient_start_text" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="editar_login_gradient_end">Color Fin</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="editar_login_gradient_end" name="login_gradient_end" required>
+                                    <input type="text" class="form-control" id="editar_login_gradient_end_text" readonly>
+                                </div>
+                            </div>
+                            <div class="preview-box preview-login-editar" style="height: 80px; border-radius: 5px; margin-top: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                <strong>Vista Previa</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h4><i class="fa fa-desktop"></i> Barra Principal</h4>
+                            <div class="form-group">
+                                <label for="editar_navbar_color">Color de la Barra</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="editar_navbar_color" name="navbar_color" required>
+                                    <input type="text" class="form-control" id="editar_navbar_color_text" readonly>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="editar_navbar_hover_color">Color Hover</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="editar_navbar_hover_color" name="navbar_hover_color" required>
+                                    <input type="text" class="form-control" id="editar_navbar_hover_color_text" readonly>
+                                </div>
+                            </div>
+                            <div class="preview-box preview-navbar-editar" style="height: 80px; border-radius: 5px; margin-top: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                                <strong>Vista Previa</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h4><i class="fa fa-bars"></i> Barra Lateral</h4>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="editar_sidebar_color">Color de Fondo</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="editar_sidebar_color" name="sidebar_color" required>
+                                    <input type="text" class="form-control" id="editar_sidebar_color_text" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="editar_sidebar_hover_color">Color Hover</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="editar_sidebar_hover_color" name="sidebar_hover_color" required>
+                                    <input type="text" class="form-control" id="editar_sidebar_hover_color_text" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="editar_sidebar_text_color">Color de Texto</label>
+                                <div class="input-group">
+                                    <input type="color" class="form-control" id="editar_sidebar_text_color" name="sidebar_text_color" required>
+                                    <input type="text" class="form-control" id="editar_sidebar_text_color_text" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="preview-box preview-sidebar-editar" style="height: 80px; border-radius: 5px; margin-top: 10px; display: flex; align-items: center; justify-content: center;">
+                                <strong>Vista Previa Barra Lateral</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" name="actualizarConfiguracion">Actualizar Configuración</button>
                 </div>
             </form>
         </div>
@@ -347,22 +573,73 @@ if (isset($_GET['eliminar'])) {
 </div>
 
 <script>
-$(document).ready(function() {
-    // Actualizar vista previa cuando cambien los colores
-    $('input[type="color"]').on('change', function() {
-        actualizarVistaPrevia();
-    });
-    
-    // Actualizar texto de color cuando cambie el input
-    $('input[type="color"]').on('change', function() {
-        var colorInput = $(this);
-        var textInput = colorInput.closest('.input-group').find('.color-text');
-        textInput.val(colorInput.val());
-    });
-    
-    // Inicializar vista previa
+// Sincronizar inputs de color con texto
+$('#login_gradient_start, #login_gradient_end, #navbar_color, #navbar_hover_color, #sidebar_color, #sidebar_hover_color, #sidebar_text_color').on('input', function(){
+    var id = $(this).attr('id');
+    $('#' + id + '_text').val($(this).val());
     actualizarVistaPrevia();
 });
+
+$('#login_gradient_start_text, #login_gradient_end_text, #navbar_color_text, #navbar_hover_color_text, #sidebar_color_text, #sidebar_hover_color_text, #sidebar_text_color_text').on('input', function(){
+    var id = $(this).attr('id').replace('_text', '');
+    $('#' + id).val($(this).val());
+    actualizarVistaPrevia();
+});
+
+function actualizarVistaPrevia() {
+    var gradientStart = $('#login_gradient_start').val();
+    var gradientEnd = $('#login_gradient_end').val();
+    var navbarColor = $('#navbar_color').val();
+    var sidebarColor = $('#sidebar_color').val();
+    var sidebarTextColor = $('#sidebar_text_color').val();
+    
+    $('.preview-box').first().css({
+        'background': 'linear-gradient(135deg, ' + gradientStart + ' 0%, ' + gradientEnd + ' 100%)'
+    });
+    
+    $('.preview-navbar-editar').css({
+        'background-color': navbarColor
+    });
+    
+    $('.preview-sidebar-editar').css({
+        'background-color': sidebarColor,
+        'color': sidebarTextColor
+    });
+}
+
+// Sincronizar inputs de color con texto (Editar)
+$('#editar_login_gradient_start, #editar_login_gradient_end, #editar_navbar_color, #editar_navbar_hover_color, #editar_sidebar_color, #editar_sidebar_hover_color, #editar_sidebar_text_color').on('input', function(){
+    var id = $(this).attr('id');
+    $('#' + id + '_text').val($(this).val());
+    actualizarVistaPreviaEditar();
+});
+
+$('#editar_login_gradient_start_text, #editar_login_gradient_end_text, #editar_navbar_color_text, #editar_navbar_hover_color_text, #editar_sidebar_color_text, #editar_sidebar_hover_color_text, #editar_sidebar_text_color_text').on('input', function(){
+    var id = $(this).attr('id').replace('_text', '');
+    $('#' + id).val($(this).val());
+    actualizarVistaPreviaEditar();
+});
+
+function actualizarVistaPreviaEditar() {
+    var gradientStart = $('#editar_login_gradient_start').val();
+    var gradientEnd = $('#editar_login_gradient_end').val();
+    var navbarColor = $('#editar_navbar_color').val();
+    var sidebarColor = $('#editar_sidebar_color').val();
+    var sidebarTextColor = $('#editar_sidebar_text_color').val();
+    
+    $('.preview-login-editar').css({
+        'background': 'linear-gradient(135deg, ' + gradientStart + ' 0%, ' + gradientEnd + ' 100%)'
+    });
+    
+    $('.preview-navbar-editar').css({
+        'background-color': navbarColor
+    });
+    
+    $('.preview-sidebar-editar').css({
+        'background-color': sidebarColor,
+        'color': sidebarTextColor
+    });
+}
 
 // Función para abrir el selector de imágenes
 function abrirSelectorImagen(tipo) {
@@ -378,11 +655,18 @@ function subirImagen(tipo, input) {
     var previewBox = document.getElementById('preview-' + tipo);
     previewBox.innerHTML = '<div style="text-align: center; color: #666;"><i class="fa fa-spinner fa-spin" style="font-size: 24px;"></i><br><small>Subiendo imagen...</small></div>';
     
+    // Obtener la sucursal seleccionada
+    var sucursalSeleccionada = $('#sucursal').val();
+    var idSucursal = sucursalSeleccionada && sucursalSeleccionada != '0' ? sucursalSeleccionada : null;
+    
     // Crear FormData para enviar la imagen
     var formData = new FormData();
     formData.append('accion', 'subir_imagen');
     formData.append('tipo', tipo);
     formData.append('imagen', file);
+    if (idSucursal) {
+        formData.append('id_sucursal', idSucursal);
+    }
     
     // Enviar imagen al servidor
     $.ajax({
@@ -396,23 +680,34 @@ function subirImagen(tipo, input) {
                 var data = JSON.parse(response);
                 if (data.success) {
                     // Actualizar la imagen en la vista previa
+                    var rutaImagen = data.ruta_imagen + '?t=' + new Date().getTime();
                     var img = previewBox.querySelector('img');
                     if (img) {
-                        img.src = data.ruta_imagen + '?t=' + new Date().getTime();
+                        img.src = rutaImagen;
                     } else {
-                        previewBox.innerHTML = '<img src="' + data.ruta_imagen + '?t=' + new Date().getTime() + '" style="max-width: ' + (tipo === 'icono-pequeno' ? '50px' : '100px') + '; max-height: ' + (tipo === 'icono-pequeno' ? '50px' : '50px') + '; margin-bottom: 10px;"><div style="color: #666; font-size: 12px;"><i class="fa fa-check text-success" style="font-size: 16px; margin-bottom: 5px; display: block;"></i><strong>' + (tipo === 'icono-pequeno' ? 'Icono Pequeño' : tipo === 'logo-menu' ? 'Logo Menú' : 'Logo Login') + '</strong><br><small>Imagen actualizada</small></div>';
+                        previewBox.innerHTML = '<img src="' + rutaImagen + '" style="max-width: ' + (tipo === 'icono-pequeno' ? '50px' : '100px') + '; max-height: ' + (tipo === 'icono-pequeno' ? '50px' : '50px') + '; margin-bottom: 10px;"><div style="color: #666; font-size: 12px;"><i class="fa fa-check text-success" style="font-size: 16px; margin-bottom: 5px; display: block;"></i><strong>' + (tipo === 'icono-pequeno' ? 'Icono Pequeño' : tipo === 'logo-menu' ? 'Logo Menú' : 'Logo Login') + '</strong><br><small>Imagen actualizada</small></div>';
                     }
                     
-                    // Mostrar mensaje de éxito
+                    // Actualizar imágenes en la página inmediatamente
+                    if (tipo === 'icono-pequeno') {
+                        $('.logo-mini img').attr('src', rutaImagen);
+                    } else if (tipo === 'logo-menu') {
+                        $('.logo-lg img').attr('src', rutaImagen);
+                    } else if (tipo === 'logo-login') {
+                        $('.login-logo img').attr('src', rutaImagen);
+                    }
+                    
+                    // Mostrar mensaje de éxito con información de la sucursal
+                    var mensaje = data.mensaje || "La imagen se ha subido y aplicado correctamente";
                     swal({
                         type: "success",
                         title: "¡Imagen actualizada!",
-                        text: "La imagen se ha subido y aplicado correctamente en todo el sistema",
+                        text: mensaje,
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
                     });
                     
-                    // Recargar la página después de 2 segundos para aplicar los cambios
+                    // Recargar la página después de 2 segundos para aplicar los cambios completamente
                     setTimeout(function() {
                         window.location.reload();
                     }, 2000);
@@ -447,30 +742,10 @@ function mostrarError(mensaje) {
     }, 2000);
 }
 
-function actualizarVistaPrevia() {
-    var navbarColor = $('#navbar_color').val();
-    var sidebarColor = $('#sidebar_color').val();
-    var sidebarTextColor = $('#sidebar_text_color').val();
-    var gradientStart = $('#login_gradient_start').val();
-    var gradientEnd = $('#login_gradient_end').val();
+// Editar configuración
+$('.btnEditarConfiguracion').on('click', function() {
+    var id = $(this).data('id');
     
-    $('.preview-navbar').css({
-        'background-color': navbarColor
-    });
-    
-    $('.preview-sidebar').css({
-        'background-color': sidebarColor,
-        'color': sidebarTextColor
-    });
-    
-    $('.preview-login').css({
-        'background': 'linear-gradient(135deg, ' + gradientStart + ' 0%, ' + gradientEnd + ' 100%)'
-    });
-}
-
-// Función para editar configuración
-function editarConfiguracion(id) {
-    // Obtener datos de la configuración mediante AJAX
     $.ajax({
         url: 'ajax/personalizacion-colores.ajax.php',
         type: 'POST',
@@ -480,131 +755,63 @@ function editarConfiguracion(id) {
         },
         success: function(response) {
             try {
-                var data = JSON.parse(response);
-                if (data.success) {
-                    var config = data.configuracion;
+                var config = JSON.parse(response);
+                if (config.success && config.data) {
+                    var data = config.data;
                     
-                    // Llenar el modal con los datos de la configuración
-                    $('#nombre_configuracion').val(config.nombre_configuracion);
-                    $('#login_gradient_start').val(config.login_gradient_start);
-                    $('#login_gradient_end').val(config.login_gradient_end);
-                    $('#navbar_color').val(config.navbar_color);
-                    $('#navbar_hover_color').val(config.navbar_hover_color);
-                    $('#sidebar_color').val(config.sidebar_color);
-                    $('#sidebar_hover_color').val(config.sidebar_hover_color);
-                    $('#sidebar_text_color').val(config.sidebar_text_color);
+                    $('#editar_configuracion').val(data.id);
+                    $('#editar_nombre_configuracion').val(data.nombre_configuracion);
+                    $('#editar_login_gradient_start').val(data.login_gradient_start);
+                    $('#editar_login_gradient_start_text').val(data.login_gradient_start);
+                    $('#editar_login_gradient_end').val(data.login_gradient_end);
+                    $('#editar_login_gradient_end_text').val(data.login_gradient_end);
+                    $('#editar_navbar_color').val(data.navbar_color);
+                    $('#editar_navbar_color_text').val(data.navbar_color);
+                    $('#editar_navbar_hover_color').val(data.navbar_hover_color);
+                    $('#editar_navbar_hover_color_text').val(data.navbar_hover_color);
+                    $('#editar_sidebar_color').val(data.sidebar_color);
+                    $('#editar_sidebar_color_text').val(data.sidebar_color);
+                    $('#editar_sidebar_hover_color').val(data.sidebar_hover_color);
+                    $('#editar_sidebar_hover_color_text').val(data.sidebar_hover_color);
+                    $('#editar_sidebar_text_color').val(data.sidebar_text_color);
+                    $('#editar_sidebar_text_color_text').val(data.sidebar_text_color);
+                    $('#editar_id_sucursal_modal').val(data.id_sucursal || '');
                     
-                    // Actualizar los campos de texto de color
-                    $('.color-text').each(function() {
-                        var colorInput = $(this).closest('.input-group').find('input[type="color"]');
-                        $(this).val(colorInput.val());
-                    });
-                    
-                    // Actualizar vista previa
-                    actualizarVistaPrevia();
-                    
-                    // Agregar campo oculto para indicar que es edición
-                    $('#formNuevaConfiguracion').append('<input type="hidden" name="editar_configuracion" value="' + id + '">');
-                    
-                    // Cambiar el título del modal
-                    $('#modalNuevaConfiguracion .modal-title').html('<i class="fa fa-edit"></i> Editar Configuración de Colores');
-                    
-                    // Cambiar el texto del botón
-                    $('#formNuevaConfiguracion button[type="submit"]').html('<i class="fa fa-save"></i> Actualizar Configuración');
-                    
-                    // Mostrar el modal
-                    $('#modalNuevaConfiguracion').modal('show');
+                    actualizarVistaPreviaEditar();
                 } else {
-                    throw new Error(data.error || 'Error desconocido');
+                    swal({
+                        type: "error",
+                        title: "Error",
+                        text: "No se pudo cargar la configuración",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
                 }
             } catch (e) {
                 console.error('Error parsing response:', e);
                 swal({
                     type: "error",
                     title: "Error",
-                    text: "Error al cargar la configuración",
+                    text: "Error al procesar la respuesta del servidor",
                     showConfirmButton: true,
                     confirmButtonText: "Cerrar"
                 });
             }
         },
-        error: function(xhr, status, error) {
-            console.error('Error AJAX:', error);
+        error: function() {
             swal({
                 type: "error",
                 title: "Error",
-                text: "Error de conexión: " + error,
+                text: "Error de conexión",
                 showConfirmButton: true,
                 confirmButtonText: "Cerrar"
             });
         }
     });
-}
+});
 
-// Limpiar modal cuando se cierre
-$('#modalNuevaConfiguracion').on('hidden.bs.modal', function() {
-    // Remover campo oculto de edición
-    $('input[name="editar_configuracion"]').remove();
-    
-    // Restaurar título del modal
-    $('#modalNuevaConfiguracion .modal-title').html('<i class="fa fa-palette"></i> Nueva Configuración de Colores');
-    
-    // Restaurar texto del botón
-    $('#formNuevaConfiguracion button[type="submit"]').html('<i class="fa fa-save"></i> Guardar Configuración');
-    
-    // Limpiar formulario
-    $('#formNuevaConfiguracion')[0].reset();
-    
-    // Restaurar valores por defecto
-    $('#login_gradient_start').val('#3c8dbc');
-    $('#login_gradient_end').val('#2c3e50');
-    $('#navbar_color').val('#3c8dbc');
-    $('#navbar_hover_color').val('#2c3e50');
-    $('#sidebar_color').val('#222d32');
-    $('#sidebar_hover_color').val('#1a252f');
-    $('#sidebar_text_color').val('#b8c7ce');
-    
-    // Actualizar vista previa
-    actualizarVistaPrevia();
+// Limpiar modal al cerrar
+$('#modalEditarConfiguracion').on('hidden.bs.modal', function() {
+    $(this).find('form')[0].reset();
 });
 </script>
-
-<style>
-.color-preview {
-    border: 1px solid #ddd;
-    margin-bottom: 10px;
-}
-
-.preview-container {
-    min-height: 200px;
-}
-
-.input-group .color-text {
-    background-color: #f5f5f5;
-    border-left: none;
-}
-
-.input-group .form-control:first-child {
-    border-right: none;
-}
-
-.input-group .form-control:last-child {
-    border-left: none;
-}
-
-.image-preview-box:hover {
-    border-color: #3c8dbc !important;
-    background-color: #f0f8ff !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.image-preview-box:hover .fa-camera {
-    color: #3c8dbc !important;
-}
-
-.image-preview-box:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-</style>
