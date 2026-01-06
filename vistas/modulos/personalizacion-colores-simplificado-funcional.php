@@ -12,32 +12,44 @@ if ($idSucursalSeleccionada === 0) {
 $respuestaSucursales = ModeloSucursales::mdlObtenerSucursales(true);
 $sucursales = $respuestaSucursales['success'] ? $respuestaSucursales['data'] : [];
 
-// Obtener ID de sucursal actual
+// Obtener ID de sucursal actual (solo para mostrar en el selector)
 $idSucursalActual = ModeloPersonalizacionColores::mdlObtenerIdSucursalActual();
 
-// Si no se seleccionó una sucursal, usar la actual
-if ($idSucursalSeleccionada === null && $idSucursalActual !== null) {
-    $idSucursalSeleccionada = $idSucursalActual;
-}
-
-// Obtener configuración actual (de la sucursal seleccionada o actual)
+// Obtener configuración actual (de la sucursal seleccionada, o null si es Global)
 $configuracionActual = ControladorPersonalizacionColores::ctrMostrarConfiguracionActiva($idSucursalSeleccionada);
 
-// Obtener todas las configuraciones (de la sucursal seleccionada o todas)
+// Si no hay configuración, crear una por defecto para mostrar
+if (!$configuracionActual) {
+    $configuracionActual = [
+        'nombre_configuracion' => 'Configuración por Defecto',
+        'login_gradient_start' => '#3c8dbc',
+        'login_gradient_end' => '#2c3e50',
+        'navbar_color' => '#3c8dbc',
+        'navbar_hover_color' => '#357ca5',
+        'sidebar_color' => '#222d32',
+        'sidebar_hover_color' => '#1e282c',
+        'sidebar_text_color' => '#b8c7ce',
+        'icono_pequeno' => 'vistas/img/plantilla/icono-blanco.png',
+        'logo_menu' => 'vistas/img/plantilla/logo-blanco-lineal.png',
+        'logo_login' => 'vistas/img/plantilla/Infinito1.png'
+    ];
+}
+
+// Obtener todas las configuraciones (de la sucursal seleccionada o todas si es Global)
 $todasConfiguraciones = ControladorPersonalizacionColores::ctrObtenerTodasConfiguraciones($idSucursalSeleccionada);
 
 // Procesar acciones
 ControladorPersonalizacionColores::ctrActualizarConfiguracion();
 
 if (isset($_GET['activar'])) {
-    // Si hay una sucursal seleccionada en el filtro, usar esa; si no, usar la sucursal de la URL o la actual
+    // Usar la sucursal seleccionada en el filtro, o la de la URL si existe
     if ($idSucursalSeleccionada !== null) {
         $idSucursalParaActivar = $idSucursalSeleccionada;
     } elseif (isset($_GET['sucursal']) && $_GET['sucursal'] != '0') {
         $idSucursalParaActivar = (int)$_GET['sucursal'];
     } else {
-        // Aplicar a la sucursal actual
-        $idSucursalParaActivar = $idSucursalActual;
+        // Si es Global, aplicar sin sucursal específica
+        $idSucursalParaActivar = null;
     }
     ControladorPersonalizacionColores::ctrActivarConfiguracion($_GET['activar'], $idSucursalParaActivar);
 }
@@ -89,8 +101,7 @@ if (isset($_GET['eliminar'])) {
                                 <div class="col-md-6">
                                     <div class="alert alert-info" style="margin-top: 25px; margin-bottom: 0;">
                                         <i class="fa fa-info-circle"></i> 
-                                        <strong>Información:</strong> Selecciona una sucursal para ver y editar su personalización. 
-                                        Si seleccionas "Global", podrás crear configuraciones que se aplicarán a todas las sucursales.
+                                        <strong>Información:</strong> Selecciona una sucursal para ver y editar su personalización de colores e imágenes.
                                     </div>
                                 </div>
                             </div>
@@ -160,7 +171,7 @@ if (isset($_GET['eliminar'])) {
                                 <div class="alert alert-info">
                                     <i class="fa fa-info-circle"></i> <strong>Instrucciones:</strong> Haz clic en cualquier imagen para cambiarla desde tu equipo.
                                     <?php if ($idSucursalSeleccionada !== null): ?>
-                                        <br><strong>Nota:</strong> Los cambios se aplicarán a la sucursal: <strong><?= htmlspecialchars($sucursales[array_search($idSucursalSeleccionada, array_column($sucursales, 'id'))]['nombre'] ?? 'Sucursal #' . $idSucursalSeleccionada) ?></strong>
+                                        <br><strong>Nota:</strong> Los cambios se aplicarán a la sucursal seleccionada: <strong><?= htmlspecialchars($sucursales[array_search($idSucursalSeleccionada, array_column($sucursales, 'id'))]['nombre'] ?? 'Sucursal #' . $idSucursalSeleccionada) ?></strong>
                                     <?php else: ?>
                                         <br><strong>Nota:</strong> Los cambios se aplicarán globalmente a todas las sucursales.
                                     <?php endif; ?>
