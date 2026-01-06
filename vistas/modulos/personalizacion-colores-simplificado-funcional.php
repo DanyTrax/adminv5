@@ -159,6 +159,11 @@ if (isset($_GET['eliminar'])) {
                                 <h4><i class="fa fa-image"></i> Imágenes del Sistema</h4>
                                 <div class="alert alert-info">
                                     <i class="fa fa-info-circle"></i> <strong>Instrucciones:</strong> Haz clic en cualquier imagen para cambiarla desde tu equipo.
+                                    <?php if ($idSucursalSeleccionada !== null): ?>
+                                        <br><strong>Nota:</strong> Los cambios se aplicarán a la sucursal: <strong><?= htmlspecialchars($sucursales[array_search($idSucursalSeleccionada, array_column($sucursales, 'id'))]['nombre'] ?? 'Sucursal #' . $idSucursalSeleccionada) ?></strong>
+                                    <?php else: ?>
+                                        <br><strong>Nota:</strong> Los cambios se aplicarán globalmente a todas las sucursales.
+                                    <?php endif; ?>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-4">
