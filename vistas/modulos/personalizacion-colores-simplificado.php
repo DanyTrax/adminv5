@@ -756,8 +756,8 @@ $('.btnEditarConfiguracion').on('click', function() {
         success: function(response) {
             try {
                 var config = JSON.parse(response);
-                if (config.success && config.data) {
-                    var data = config.data;
+                if (config.success && config.configuracion) {
+                    var data = config.configuracion;
                     
                     $('#editar_configuracion').val(data.id);
                     $('#editar_nombre_configuracion').val(data.nombre_configuracion);
@@ -782,7 +782,7 @@ $('.btnEditarConfiguracion').on('click', function() {
                     swal({
                         type: "error",
                         title: "Error",
-                        text: "No se pudo cargar la configuración",
+                        text: config.error || "No se pudo cargar la configuración",
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
                     });
