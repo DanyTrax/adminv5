@@ -279,9 +279,9 @@ if (isset($_GET['eliminar'])) {
                                                     <i class="fa fa-pencil"></i> Editar
                                                 </button>
                                                 
-                                                <a href="personalizacion-colores-simplificado?activar=<?= $config['id'] ?><?= $idSucursalActual !== null ? '&sucursal=' . $idSucursalActual : '' ?>" 
+                                                <a href="personalizacion-colores-simplificado?activar=<?= $config['id'] ?><?= $idSucursalSeleccionada !== null ? '&sucursal=' . $idSucursalSeleccionada : ($idSucursalActual !== null ? '&sucursal=' . $idSucursalActual : '') ?>" 
                                                    class="btn btn-success btn-xs"
-                                                   title="Aplicar esta configuración a la sucursal actual">
+                                                   title="Aplicar esta configuración a la sucursal seleccionada">
                                                     <i class="fa fa-check"></i> Aplicar
                                                 </a>
                                                 
@@ -331,12 +331,13 @@ if (isset($_GET['eliminar'])) {
                                 <select class="form-control" id="id_sucursal_modal" name="id_sucursal">
                                     <option value="">Global (Todas las sucursales)</option>
                                     <?php foreach ($sucursales as $sucursal): ?>
-                                        <option value="<?= $sucursal['id'] ?>" <?= $idSucursalSeleccionada == $sucursal['id'] ? 'selected' : '' ?>>
+                                        <option value="<?= $sucursal['id'] ?>" <?= ($idSucursalSeleccionada == $sucursal['id'] || ($idSucursalSeleccionada === null && $sucursal['id'] == $idSucursalActual)) ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($sucursal['nombre']) ?>
+                                            <?= $sucursal['id'] == $idSucursalActual ? ' (Actual)' : '' ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <small class="help-block">Selecciona una sucursal específica o deja en "Global" para aplicar a todas</small>
+                                <small class="help-block">Selecciona una sucursal específica o deja en "Global" para aplicar a todas. La configuración se aplicará a la sucursal seleccionada.</small>
                             </div>
                         </div>
                     </div>
@@ -723,11 +724,18 @@ function subirImagen(tipo, input) {
     var previewBox = document.getElementById('preview-' + tipo);
     previewBox.innerHTML = '<div style="text-align: center; color: #666;"><i class="fa fa-spinner fa-spin" style="font-size: 24px;"></i><br><small>Subiendo imagen...</small></div>';
     
+    // Obtener la sucursal seleccionada
+    var sucursalSeleccionada = $('#sucursal').val();
+    var idSucursal = sucursalSeleccionada && sucursalSeleccionada != '0' ? sucursalSeleccionada : null;
+    
     // Crear FormData para enviar la imagen
     var formData = new FormData();
     formData.append('accion', 'subir_imagen');
     formData.append('tipo', tipo);
     formData.append('imagen', file);
+    if (idSucursal) {
+        formData.append('id_sucursal', idSucursal);
+    }
     
     // Enviar imagen al servidor
     $.ajax({

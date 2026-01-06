@@ -53,8 +53,8 @@ if (isset($_POST["accion"])) {
                     $campoImagen = str_replace('-', '_', $tipo);
                     $rutaRelativa = "vistas/img/personalizacion/" . $nombreArchivo;
                     
-                    // Obtener ID de sucursal actual
-                    $idSucursal = obtenerIdSucursalActual();
+                    // Obtener ID de sucursal: primero del POST, si no existe, de la sucursal actual
+                    $idSucursal = !empty($_POST['id_sucursal']) ? (int)$_POST['id_sucursal'] : obtenerIdSucursalActual();
                     
                     if (actualizarImagenEnBD($campoImagen, $rutaRelativa, $idSucursal)) {
                         echo json_encode([
