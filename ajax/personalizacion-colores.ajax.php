@@ -57,10 +57,22 @@ if (isset($_POST["accion"])) {
                     $idSucursal = !empty($_POST['id_sucursal']) ? (int)$_POST['id_sucursal'] : obtenerIdSucursalActual();
                     
                     if (actualizarImagenEnBD($campoImagen, $rutaRelativa, $idSucursal)) {
+                        $mensaje = 'Imagen subida y aplicada correctamente';
+                        if ($idSucursal !== null) {
+                            // Obtener nombre de sucursal
+                            require_once "../api-transferencias/conexion-central.php";
+                            $conexion = ConexionCentral::conectar();
+                            $stmt = $conexion->prepare("SELECT nombre FROM sucursales WHERE id = ?");
+                            $stmt->execute([$idSucursal]);
+                            $sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
+                            if ($sucursal) {
+                                $mensaje = 'Imagen subida y aplicada a la sucursal: ' . $sucursal['nombre'];
+                            }
+                        }
                         echo json_encode([
                             'success' => true,
                             'ruta_imagen' => $rutaRelativa,
-                            'mensaje' => 'Imagen subida y aplicada correctamente'
+                            'mensaje' => $mensaje
                         ]);
                     } else {
                         echo json_encode([

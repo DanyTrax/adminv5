@@ -30,8 +30,10 @@ $todasConfiguraciones = ControladorPersonalizacionColores::ctrObtenerTodasConfig
 ControladorPersonalizacionColores::ctrActualizarConfiguracion();
 
 if (isset($_GET['activar'])) {
-    // Si hay una sucursal en la URL, usar esa; si no, usar la sucursal actual
-    if (isset($_GET['sucursal']) && $_GET['sucursal'] != '0') {
+    // Si hay una sucursal seleccionada en el filtro, usar esa; si no, usar la sucursal de la URL o la actual
+    if ($idSucursalSeleccionada !== null) {
+        $idSucursalParaActivar = $idSucursalSeleccionada;
+    } elseif (isset($_GET['sucursal']) && $_GET['sucursal'] != '0') {
         $idSucursalParaActivar = (int)$_GET['sucursal'];
     } else {
         // Aplicar a la sucursal actual
@@ -766,11 +768,12 @@ function subirImagen(tipo, input) {
                         $('.login-logo img').attr('src', rutaImagen);
                     }
                     
-                    // Mostrar mensaje de éxito
+                    // Mostrar mensaje de éxito con información de la sucursal
+                    var mensaje = data.mensaje || "La imagen se ha subido y aplicado correctamente";
                     swal({
                         type: "success",
                         title: "¡Imagen actualizada!",
-                        text: "La imagen se ha subido y aplicado correctamente",
+                        text: mensaje,
                         showConfirmButton: true,
                         confirmButtonText: "Cerrar"
                     });
