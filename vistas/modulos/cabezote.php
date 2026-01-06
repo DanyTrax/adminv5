@@ -241,6 +241,27 @@
   font-size: 12px;
 }
 
+/* Estilos para el menú de Gestión Central */
+.gestion-central-menu {
+	width: 250px !important;
+	min-width: 250px !important;
+	max-width: 300px !important;
+}
+
+.gestion-central-menu li a {
+	white-space: normal !important;
+	word-wrap: break-word !important;
+	overflow-wrap: break-word !important;
+	line-height: 1.4 !important;
+	display: flex !important;
+	align-items: center !important;
+}
+
+.gestion-central-menu li a i {
+	flex-shrink: 0 !important;
+	margin-right: 8px !important;
+}
+
 .notifications-menu .dropdown-menu {
 	width: 320px !important;
 	max-width: 320px !important;
