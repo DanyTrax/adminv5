@@ -360,34 +360,34 @@ $hostname = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
 					<tr>
 						<td><?= $k + 1 ?></td>
 						<td><?= $producto->cantidad ?></td>
-						<td><?= $producto->descripcion ?></td>
-						<td>$ <?= number_format($producto->precio, 0, ',', '.') ?></td>
-						<td>$ <?= number_format($producto->total, 0, ',', '.') ?></td>
+						<td style="text-align: left; line-height: 1.4;"><?= htmlspecialchars($producto->descripcion) ?></td>
+						<td style="text-align: right; white-space: nowrap;">$ <?= number_format($producto->precio, 0, ',', '.') ?></td>
+						<td style="text-align: right; white-space: nowrap;">$ <?= number_format($producto->total, 0, ',', '.') ?></td>
 					</tr>
 				<?php endforeach; ?>
 			</tbody>
 			<tfoot class="no-border">
 				<tr>
 					<td colspan="3" rowspan="4" class="no-border"><?= $cotizacion['detalle'] ?></td>
-					<td class="no-border">Subtotal</td>
-					<td class="no-border">$ <?= number_format($subtotal, 0, ',', '.') ?></td>
+					<td class="no-border" style="text-align: right; white-space: nowrap;">Subtotal</td>
+					<td class="no-border" style="text-align: right; white-space: nowrap;">$ <?= number_format($subtotal, 0, ',', '.') ?></td>
 				</tr>
 				<?php if ($descuento > 1) : ?>
 				<tr>
-					<td>Descuento</td>
-					<td>$ <?= number_format($descuento, 0, ',', '.') ?></td>
+					<td style="text-align: right; white-space: nowrap;">Descuento</td>
+					<td style="text-align: right; white-space: nowrap;">$ <?= number_format($descuento, 0, ',', '.') ?></td>
 				</tr>
 				<?php endif; ?>
 				<?php if ($iva > 1) : ?>
 				<tr>
-					<td>Iva</td>
-					<td>$ <?= number_format($iva, 0, ',', '.') ?></td>
+					<td style="text-align: right; white-space: nowrap;">Iva</td>
+					<td style="text-align: right; white-space: nowrap;">$ <?= number_format($iva, 0, ',', '.') ?></td>
 				</tr>
 				<?php endif; ?>
 				
 				<tr>
-					<td>Total</td>
-					<td>$ <?= number_format($total, 0, ',', '.') ?></td>
+					<td style="text-align: right; white-space: nowrap;">Total</td>
+					<td style="text-align: right; white-space: nowrap;">$ <?= number_format($total, 0, ',', '.') ?></td>
 				</tr>
 			</tfoot>
 		</table>
