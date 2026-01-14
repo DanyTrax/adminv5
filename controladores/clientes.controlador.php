@@ -23,11 +23,24 @@ class ControladorClientes
 			error_log("nuevaDireccion: " . $_POST["nuevaDireccion"]);
 
 			// Validaciones individuales con debug
-			$validacionNombre = preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)]+$/', $_POST["nuevoCliente"]);
-			$validacionDocumento = preg_match('/^[0-9]{1,11}$/', $_POST["nuevoDocumentoId"]);
-			$validacionEmail = preg_match('/^[@\.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevoEmail"]);
-			$validacionTelefono = preg_match('/^[0-9]{7,10}$/', $_POST["nuevoTelefono"]);
-			$validacionDireccion = preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@–—]+$/', $_POST["nuevaDireccion"]);
+			// Nombre: requerido, permite letras, números, espacios y caracteres comunes
+			$validacionNombre = !empty($_POST["nuevoCliente"]) && preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)]+$/', $_POST["nuevoCliente"]);
+			
+			// Documento: requerido, solo números, 1-11 dígitos
+			$validacionDocumento = !empty($_POST["nuevoDocumentoId"]) && preg_match('/^[0-9]{1,11}$/', $_POST["nuevoDocumentoId"]);
+			
+			// Email: opcional, si está presente debe ser válido
+			$email = trim($_POST["nuevoEmail"] ?? '');
+			$validacionEmail = empty($email) || filter_var($email, FILTER_VALIDATE_EMAIL) || preg_match('/^[@\.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $email);
+			
+			// Teléfono: requerido, solo números, 7-15 dígitos (más flexible)
+			$telefono = trim($_POST["nuevoTelefono"] ?? '');
+			$telefonoLimpio = preg_replace('/[^0-9]/', '', $telefono); // Limpiar caracteres no numéricos
+			$validacionTelefono = !empty($telefonoLimpio) && strlen($telefonoLimpio) >= 7 && strlen($telefonoLimpio) <= 15;
+			
+			// Dirección: opcional, si está presente permite caracteres comunes
+			$direccion = trim($_POST["nuevaDireccion"] ?? '');
+			$validacionDireccion = empty($direccion) || preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@–—]+$/', $direccion);
 
 			error_log("=== DEBUG CLIENTES - RESULTADOS VALIDACIÓN ===");
 			error_log("Nombre válido: " . ($validacionNombre ? "SÍ" : "NO"));
@@ -47,11 +60,11 @@ class ControladorClientes
 				$tabla = "clientes";
 
 				$datos = array(
-					"nombre" => $_POST["nuevoCliente"],
-					"documento" => $_POST["nuevoDocumentoId"],
-					"email" => $_POST["nuevoEmail"],
-					"telefono" => $_POST["nuevoTelefono"],
-					"direccion" => $_POST["nuevaDireccion"]
+					"nombre" => trim($_POST["nuevoCliente"]),
+					"documento" => trim($_POST["nuevoDocumentoId"]),
+					"email" => !empty(trim($_POST["nuevoEmail"] ?? '')) ? trim($_POST["nuevoEmail"]) : '',
+					"telefono" => $telefonoLimpio, // Usar teléfono limpio
+					"direccion" => !empty(trim($_POST["nuevaDireccion"] ?? '')) ? trim($_POST["nuevaDireccion"]) : ''
 				);
 
 				$respuesta = ModeloClientes::mdlIngresarCliente($tabla, $datos);
