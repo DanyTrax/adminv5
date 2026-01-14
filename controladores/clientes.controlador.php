@@ -179,23 +179,37 @@ class ControladorClientes
 
 		if (isset($_POST["editarCliente"])) {
 
+			// Validaciones mejoradas (iguales a crear cliente)
+			$validacionNombre = !empty($_POST["editarCliente"]) && preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)]+$/', $_POST["editarCliente"]);
+			$validacionDocumento = !empty($_POST["editarDocumentoId"]) && preg_match('/^[0-9]{1,11}$/', $_POST["editarDocumentoId"]);
+			
+			$email = trim($_POST["editarEmail"] ?? '');
+			$validacionEmail = empty($email) || filter_var($email, FILTER_VALIDATE_EMAIL) || preg_match('/^[@\.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $email);
+			
+			$telefono = trim($_POST["editarTelefono"] ?? '');
+			$telefonoLimpio = preg_replace('/[^0-9]/', '', $telefono);
+			$validacionTelefono = !empty($telefonoLimpio) && strlen($telefonoLimpio) >= 7 && strlen($telefonoLimpio) <= 15;
+			
+			$direccion = trim($_POST["editarDireccion"] ?? '');
+			$validacionDireccion = empty($direccion) || preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@–—]+$/', $direccion);
+
 			if (
-				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)]+$/', $_POST["editarCliente"]) &&
-				preg_match('/^[0-9]{1,11}$/', $_POST["editarDocumentoId"]) &&
-				preg_match('/^[@\.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarEmail"]) &&
-				preg_match('/^[0-9]{7,10}$/', $_POST["editarTelefono"]) &&
-				preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@–—]+$/', $_POST["editarDireccion"])
+				$validacionNombre &&
+				$validacionDocumento &&
+				$validacionEmail &&
+				$validacionTelefono &&
+				$validacionDireccion
 			) {
 
 				$tabla = "clientes";
 
 				$datos = array(
 					"id" => $_POST["idCliente"],
-					"nombre" => $_POST["editarCliente"],
-					"documento" => $_POST["editarDocumentoId"],
-					"email" => $_POST["editarEmail"],
-					"telefono" => $_POST["editarTelefono"],
-					"direccion" => $_POST["editarDireccion"]
+					"nombre" => trim($_POST["editarCliente"]),
+					"documento" => trim($_POST["editarDocumentoId"]),
+					"email" => !empty($email) ? $email : '',
+					"telefono" => $telefonoLimpio,
+					"direccion" => !empty($direccion) ? $direccion : ''
 				);
 
 				$respuesta = ModeloClientes::mdlEditarCliente($tabla, $datos);
