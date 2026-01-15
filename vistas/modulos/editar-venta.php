@@ -428,3 +428,8 @@ MODAL AGREGAR CLIENTE
   </div>
 
 </div>
+
+<script>
+  // CAMBIO: Pasar medios de pago a JavaScript para que estén disponibles en ventas.js
+  var listaMediosPago = <?php echo json_encode($mediosPago); ?>;
+</script>
