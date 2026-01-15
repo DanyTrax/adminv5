@@ -721,6 +721,19 @@ $('#formEditarVenta').on('submit', function(event) {
 
     }
 
+    // CAMBIO: Validar abono antes de enviar
+    var abono = Number($("#nuevoAbono").val().replace(/\./g, ''));
+    var totalVenta = Number($("#totalVenta").val().replace(/\./g, ''));
+    
+    if(abono > totalVenta) {
+        swal({
+            type: 'error',
+            title: 'Error',
+            text: 'El abono no puede ser mayor que el total de la venta.'
+        });
+        return;
+    }
+
     var datos = $(this).serialize();
 
     $.ajax({
@@ -749,6 +762,69 @@ $('#formEditarVenta').on('submit', function(event) {
             }
         }
     });
+});
+
+/*=============================================
+VALIDAR Y ACTUALIZAR ABONO EN EDICIÓN DE VENTA
+=============================================*/
+$(document).ready(function() {
+    // Solo ejecutar en la página de editar venta
+    if($('#formEditarVenta').length > 0) {
+        // Formatear campo de abono
+        $('#nuevoAbono').number(true, 0, ',', '.');
+        
+        // Función para actualizar saldo pendiente
+        function actualizarSaldoPendiente() {
+            var abono = Number($("#nuevoAbono").val().replace(/\./g, '')) || 0;
+            var totalVenta = Number($("#totalVenta").val().replace(/\./g, '')) || 0;
+            var saldoPendiente = totalVenta - abono;
+            
+            if(saldoPendiente < 0) {
+                saldoPendiente = 0;
+            }
+            
+            $("#saldoPendiente").text("Saldo pendiente: $" + saldoPendiente.toLocaleString('es-CO'));
+            
+            // Cambiar color según el saldo
+            if(saldoPendiente === 0) {
+                $("#saldoPendiente").removeClass("text-danger text-warning").addClass("text-success");
+            } else if(saldoPendiente > 0 && saldoPendiente < totalVenta) {
+                $("#saldoPendiente").removeClass("text-success text-danger").addClass("text-warning");
+            } else {
+                $("#saldoPendiente").removeClass("text-success text-warning").addClass("text-danger");
+            }
+        }
+        
+        // Validar abono cuando cambia
+        $('#nuevoAbono').on('keyup change', function() {
+            var abono = Number($(this).val().replace(/\./g, ''));
+            var totalVenta = Number($("#totalVenta").val().replace(/\./g, ''));
+            
+            // Validar que no sea negativo
+            if(abono < 0) {
+                $(this).val(0).number(true, 0, ',', '.');
+                swal({ title: "Error", text: "El abono no puede ser negativo", type: "error", confirmButtonText: "Cerrar" });
+                actualizarSaldoPendiente();
+                return;
+            }
+            
+            // Validar que no exceda el total
+            if(abono > totalVenta) {
+                $(this).val(totalVenta).number(true, 0, ',', '.');
+                swal({ title: "Error", text: "El abono no puede ser mayor que el total", type: "error", confirmButtonText: "Cerrar" });
+            }
+            
+            actualizarSaldoPendiente();
+        });
+        
+        // Actualizar saldo cuando cambia el total
+        $('#totalVenta, #nuevoImpuestoVenta, #nuevoDescuentoVenta').on('keyup change', function() {
+            actualizarSaldoPendiente();
+        });
+        
+        // Actualizar saldo inicial
+        actualizarSaldoPendiente();
+    }
 });
 
 /*=============================================

@@ -226,6 +226,19 @@
                   <div class="col-xs-6 divNuevoMetodoPago"></div>
                   <div class="col-xs-12 cajasMetodoPago" style="padding-top: 10px; padding-left: 0;"></div>
                 </div>
+                
+                <!-- CAMBIO: Campo editable para abono -->
+                <div class="form-group">
+                  <label>Abono Actual</label>
+                  <div class="input-group">
+                    <span class="input-group-addon"><i class="ion ion-social-usd"></i></span>
+                    <input type="text" class="form-control" id="nuevoAbono" name="nuevoAbono" value="<?= number_format($venta["abono"], 0, ',', '.') ?>" placeholder="0" required>
+                  </div>
+                  <small class="help-block">
+                    <span id="saldoPendiente">Saldo pendiente: $<?= number_format($venta["total"] - $venta["abono"], 0, ',', '.') ?></span>
+                  </small>
+                </div>
+                
                 <br>
               </div>
             </div>

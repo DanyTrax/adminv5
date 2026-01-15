@@ -81,15 +81,27 @@ class ControladorVentas {
             }
 
             // --- LÓGICA DE ACTUALIZACIÓN DE PRODUCTOS Y CLIENTES ---
+            // CAMBIO: Identificar productos por código en lugar de id != "libre"
             $listaProductos = json_decode($_POST["listaProductos"], true);
             $productosComprados = [];
             foreach ($listaProductos as $item) {
-                if ($item["id"] != "libre") {
-                    $productosComprados[] = $item["cantidad"];
+                // Verificar si es producto de stock (tiene ID numérico, no "libre")
+                if (isset($item["id"]) && $item["id"] != "libre" && is_numeric($item["id"])) {
                     $productoActual = ModeloProductos::mdlMostrarProductos("productos", "id", $item["id"], "id");
                     if($productoActual){
-                        ModeloProductos::mdlActualizarCampo("productos", "ventas", $item["cantidad"] + $productoActual["ventas"], $item["id"]);
-                        ModeloProductos::mdlActualizarCampo("productos", "stock", $item["stock"], $item["id"]);
+                        // Verificar si tiene código (producto de stock) o no (entrada manual)
+                        $tieneCodigo = !empty($productoActual["codigo"]) || !empty($productoActual["codigo_maestro"]);
+                        
+                        if($tieneCodigo) {
+                            // Es producto de stock: actualizar ventas y stock
+                            $productosComprados[] = $item["cantidad"];
+                            $nuevasVentas = $item["cantidad"] + $productoActual["ventas"];
+                            $nuevoStock = $productoActual["stock"] - $item["cantidad"]; // CORRECCIÓN: Calcular stock correctamente
+                            
+                            ModeloProductos::mdlActualizarCampo("productos", "ventas", $nuevasVentas, $item["id"]);
+                            ModeloProductos::mdlActualizarCampo("productos", "stock", $nuevoStock, $item["id"]);
+                        }
+                        // Si no tiene código, es entrada manual y no se actualiza stock
                     }
                 }
             }
@@ -209,16 +221,29 @@ static public function ctrEditarVenta() {
         $listaNueva = json_decode($_POST["listaProductos"], true) ?: [];
 
         if ($listaOriginal != $listaNueva || $ventaAnterior["id_cliente"] != $_POST["seleccionarCliente"]) {
+            // CAMBIO: Identificar productos por código y calcular stock correctamente
             // Lógica de revertir y aplicar stock y compras
             $clienteOriginal = ModeloClientes::mdlMostrarClientes("clientes", "id", $ventaAnterior["id_cliente"]);
             $totalProductosOriginales = 0;
+            
+            // REVERTIR: Restaurar stock de productos originales (solo si tienen código)
             foreach ($listaOriginal as $item) {
-                if(isset($item["id"]) && $item["id"] != "libre"){
-                    $totalProductosOriginales += $item["cantidad"];
+                if(isset($item["id"]) && $item["id"] != "libre" && is_numeric($item["id"])){
                     $producto = ModeloProductos::mdlMostrarProductos("productos", "id", $item["id"], "id");
                     if($producto){
-                        ModeloProductos::mdlActualizarCampo("productos", "ventas", $producto["ventas"] - $item["cantidad"], $item["id"]);
-                        ModeloProductos::mdlActualizarCampo("productos", "stock", $producto["stock"] + $item["cantidad"], $item["id"]);
+                        // Verificar si tiene código (producto de stock)
+                        $tieneCodigo = !empty($producto["codigo"]) || !empty($producto["codigo_maestro"]);
+                        
+                        if($tieneCodigo) {
+                            // Es producto de stock: revertir ventas y restaurar stock
+                            $totalProductosOriginales += $item["cantidad"];
+                            $nuevasVentas = $producto["ventas"] - $item["cantidad"];
+                            $nuevoStock = $producto["stock"] + $item["cantidad"]; // CORRECCIÓN: Sumar al stock al revertir
+                            
+                            ModeloProductos::mdlActualizarCampo("productos", "ventas", $nuevasVentas, $item["id"]);
+                            ModeloProductos::mdlActualizarCampo("productos", "stock", $nuevoStock, $item["id"]);
+                        }
+                        // Si no tiene código, es entrada manual y no se actualiza stock
                     }
                 }
             }
@@ -226,21 +251,51 @@ static public function ctrEditarVenta() {
                  ModeloClientes::mdlActualizarCliente("clientes", "compras", $clienteOriginal["compras"] - $totalProductosOriginales, $ventaAnterior["id_cliente"]);
             }
            
+            // APLICAR: Actualizar stock de productos nuevos (solo si tienen código)
             $clienteNuevo = ModeloClientes::mdlMostrarClientes("clientes", "id", $_POST["seleccionarCliente"]);
             $totalProductosNuevos = 0;
             foreach ($listaNueva as $item) {
-                if(isset($item["id"]) && $item["id"] != "libre"){
-                    $totalProductosNuevos += $item["cantidad"];
+                if(isset($item["id"]) && $item["id"] != "libre" && is_numeric($item["id"])){
                     $producto = ModeloProductos::mdlMostrarProductos("productos", "id", $item["id"], "id");
                     if($producto){
-                        ModeloProductos::mdlActualizarCampo("productos", "ventas", $producto["ventas"] + $item["cantidad"], $item["id"]);
-                        ModeloProductos::mdlActualizarCampo("productos", "stock", $item["stock"], $item["id"]);
+                        // Verificar si tiene código (producto de stock)
+                        $tieneCodigo = !empty($producto["codigo"]) || !empty($producto["codigo_maestro"]);
+                        
+                        if($tieneCodigo) {
+                            // Es producto de stock: actualizar ventas y reducir stock
+                            $totalProductosNuevos += $item["cantidad"];
+                            $nuevasVentas = $producto["ventas"] + $item["cantidad"];
+                            $nuevoStock = $producto["stock"] - $item["cantidad"]; // CORRECCIÓN: Calcular stock correctamente
+                            
+                            ModeloProductos::mdlActualizarCampo("productos", "ventas", $nuevasVentas, $item["id"]);
+                            ModeloProductos::mdlActualizarCampo("productos", "stock", $nuevoStock, $item["id"]);
+                        }
+                        // Si no tiene código, es entrada manual y no se actualiza stock
                     }
                 }
             }
             if($clienteNuevo){
                 ModeloClientes::mdlActualizarCliente("clientes", "compras", $clienteNuevo["compras"] + $totalProductosNuevos, $_POST["seleccionarCliente"]);
             }
+        }
+        
+        // CAMBIO: Calcular y validar abono correctamente
+        $nuevoTotal = self::convertirMonedaAFloat($_POST["totalVenta"] ?? 0);
+        $abonoEditado = self::convertirMonedaAFloat($_POST["nuevoAbono"] ?? $ventaAnterior["abono"]);
+        
+        // Validar que el abono no exceda el nuevo total
+        if($abonoEditado > $nuevoTotal) {
+            $abonoEditado = $nuevoTotal; // Ajustar abono al total si excede
+        }
+        
+        // Determinar método de pago según el abono
+        $metodoPagoEditado = $_POST["nuevoMetodoPago"] ?? $ventaAnterior["metodo_pago"];
+        if($abonoEditado >= $nuevoTotal && $nuevoTotal > 0) {
+            $metodoPagoEditado = "Completo";
+        } else if($abonoEditado > 0 && $abonoEditado < $nuevoTotal) {
+            $metodoPagoEditado = "Abono";
+        } else if($abonoEditado == 0 && $nuevoTotal > 0) {
+            $metodoPagoEditado = "Se Debe";
         }
         
         $datosEditados = [
@@ -250,29 +305,42 @@ static public function ctrEditarVenta() {
             "productos" => $_POST["listaProductos"],
             "impuesto" => self::convertirMonedaAFloat($_POST["nuevoPrecioImpuesto"] ?? 0),
             "neto" => self::convertirMonedaAFloat($_POST["nuevoPrecioNeto"] ?? 0),
-            "total" => self::convertirMonedaAFloat($_POST["totalVenta"] ?? 0),
+            "total" => $nuevoTotal,
             "detalle" => $_POST["detalle"] ?? "",
-            "metodo_pago" => $_POST["nuevoMetodoPago"] ?? "", // Corrección para evitar warning
+            "metodo_pago" => $metodoPagoEditado,
             "pago" => $_POST["pago"] ?? "",
             "medio_pago" => $_POST["nuevoMedioPago"] ?? $ventaAnterior["medio_pago"],
-            "abono" => $ventaAnterior["abono"], "id_vend_abono" => $ventaAnterior["id_vend_abono"],
-            "fecha_abono" => $ventaAnterior["fecha_abono"], "fecha_venta" => $ventaAnterior["fecha_venta"]
+            "abono" => $abonoEditado,
+            "id_vend_abono" => $_SESSION["id"] ?? $ventaAnterior["id_vend_abono"],
+            "fecha_abono" => date("Y-m-d H:i:s"), // Actualizar fecha de abono
+            "fecha_venta" => $ventaAnterior["fecha_venta"]
         ];
 
         $respuesta = ModeloVentas::mdlEditarVenta("ventas", $datosEditados);
 
         if ($respuesta === "ok") {
-            // Actualizar Contabilidad
+            // CAMBIO: Sincronizar contabilidad con abono real de la venta
+            // Eliminar entrada anterior
             ModeloContabilidad::deleteByFactura($_POST["editarVenta"]);
+            
+            // Crear nueva entrada con datos correctos
             $detalleEntrada = "Venta (editada) factura No. " . $_POST["editarVenta"] . " por " . ($_SESSION["nombre"] ?? 'N/A');
-            $abono = self::convertirMonedaAFloat($_POST["nuevoValorEfectivo"] ?? 0);
-            $valorContable = ($_POST["nuevoMetodoPago"] === "Se Debe") ? 0 : $abono;
+            if ($metodoPagoEditado === "Completo") {
+                $detalleEntrada .= " - pago completo";
+            }
+            
+            // Usar el abono real de la venta editada (no $_POST["nuevoValorEfectivo"])
+            $valorContable = ($metodoPagoEditado === "Se Debe") ? 0 : $abonoEditado;
 
             ModeloContabilidad::save([
-                "id_vendedor" => $_SESSION["id"] ?? 0, // Corrección para evitar error fatal
-                "fecha" => date("Y-m-d H:i:s"), "detalle" => $detalleEntrada, "valor" => $valorContable,
-                "medio_pago" => $datosEditados["medio_pago"], "forma_pago" => $datosEditados["metodo_pago"],
-                "factura" => $_POST["editarVenta"], "tipo" => "Entrada"
+                "id_vendedor" => $_SESSION["id"] ?? 0,
+                "fecha" => date("Y-m-d H:i:s"),
+                "detalle" => $detalleEntrada,
+                "valor" => $valorContable,
+                "medio_pago" => $datosEditados["medio_pago"],
+                "forma_pago" => $datosEditados["metodo_pago"],
+                "factura" => $_POST["editarVenta"],
+                "tipo" => "Entrada"
             ]);
         }
 
@@ -292,14 +360,21 @@ private static function _revertirCambiosVenta($idVenta){
     $idCliente = $venta["id_cliente"];
     $productos = json_decode($venta["productos"], true);
 
-    // 1. Revertir stock
+    // CAMBIO: Revertir stock solo para productos con código
     if (is_array($productos)) {
         foreach ($productos as $item) {
-            if(isset($item["id"]) && $item["id"] != "libre"){
+            if(isset($item["id"]) && $item["id"] != "libre" && is_numeric($item["id"])){
                 $producto = ModeloProductos::mdlMostrarProductos("productos", "id", $item["id"], "id");
                 if($producto){
-                    ModeloProductos::mdlActualizarCampo("productos", "ventas", $producto["ventas"] - $item["cantidad"], $item["id"]);
-                    ModeloProductos::mdlActualizarCampo("productos", "stock", $producto["stock"] + $item["cantidad"], $item["id"]);
+                    // Verificar si tiene código (producto de stock)
+                    $tieneCodigo = !empty($producto["codigo"]) || !empty($producto["codigo_maestro"]);
+                    
+                    if($tieneCodigo) {
+                        // Es producto de stock: revertir ventas y restaurar stock
+                        ModeloProductos::mdlActualizarCampo("productos", "ventas", $producto["ventas"] - $item["cantidad"], $item["id"]);
+                        ModeloProductos::mdlActualizarCampo("productos", "stock", $producto["stock"] + $item["cantidad"], $item["id"]);
+                    }
+                    // Si no tiene código, es entrada manual y no se actualiza stock
                 }
             }
         }
