@@ -1,3 +1,7 @@
+<?php
+// CAMBIO: Cargar medios de pago de la sucursal actual
+$mediosPago = ControladorMediosPago::ctrMostrarMediosPago();
+?>
 <div class="content-wrapper">
 
   <section class="content-header">
