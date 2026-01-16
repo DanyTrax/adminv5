@@ -282,21 +282,31 @@ static public function ctrEditarVenta() {
         
         // CAMBIO: Calcular y validar abono correctamente
         $nuevoTotal = self::convertirMonedaAFloat($_POST["totalVenta"] ?? 0);
-        $abonoEditado = self::convertirMonedaAFloat($_POST["nuevoAbono"] ?? $ventaAnterior["abono"]);
+        $metodoPagoSeleccionado = $_POST["nuevoMetodoPago"] ?? $ventaAnterior["metodo_pago"];
         
-        // Validar que el abono no exceda el nuevo total
-        if($abonoEditado > $nuevoTotal) {
-            $abonoEditado = $nuevoTotal; // Ajustar abono al total si excede
-        }
-        
-        // Determinar método de pago según el abono
-        $metodoPagoEditado = $_POST["nuevoMetodoPago"] ?? $ventaAnterior["metodo_pago"];
-        if($abonoEditado >= $nuevoTotal && $nuevoTotal > 0) {
+        // CAMBIO: Si el método de pago es "Completo", el abono debe ser igual al nuevo total
+        if($metodoPagoSeleccionado === "Completo") {
+            $abonoEditado = $nuevoTotal; // Forzar abono igual al total
             $metodoPagoEditado = "Completo";
-        } else if($abonoEditado > 0 && $abonoEditado < $nuevoTotal) {
-            $metodoPagoEditado = "Abono";
-        } else if($abonoEditado == 0 && $nuevoTotal > 0) {
-            $metodoPagoEditado = "Se Debe";
+        } else {
+            // Si no es "Completo", usar el abono ingresado
+            $abonoEditado = self::convertirMonedaAFloat($_POST["nuevoAbono"] ?? $ventaAnterior["abono"]);
+            
+            // Validar que el abono no exceda el nuevo total
+            if($abonoEditado > $nuevoTotal) {
+                $abonoEditado = $nuevoTotal; // Ajustar abono al total si excede
+            }
+            
+            // Determinar método de pago según el abono
+            if($abonoEditado >= $nuevoTotal && $nuevoTotal > 0) {
+                $metodoPagoEditado = "Completo";
+            } else if($abonoEditado > 0 && $abonoEditado < $nuevoTotal) {
+                $metodoPagoEditado = "Abono";
+            } else if($abonoEditado == 0 && $nuevoTotal > 0) {
+                $metodoPagoEditado = "Se Debe";
+            } else {
+                $metodoPagoEditado = $metodoPagoSeleccionado;
+            }
         }
         
         $datosEditados = [
