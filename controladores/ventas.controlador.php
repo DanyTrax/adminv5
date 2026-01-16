@@ -366,9 +366,10 @@ static public function ctrEditarVenta() {
 
             // Crear UN SOLO movimiento nuevo en contabilidad
             // CAMBIO: Usar el id_vendedor original, no el que está editando
+            // CAMBIO: Usar la misma fecha que se usó para la venta (actualizada o original según checkbox)
             ModeloContabilidad::save([
                 "id_vendedor" => $ventaAnterior["id_vendedor"], // Vendedor original de la venta
-                "fecha" => date("Y-m-d H:i:s"),
+                "fecha" => $fechaAbono, // Usar la misma fecha que se usó para fecha_abono
                 "detalle" => $detalleEntrada,
                 "valor" => $valorContable,
                 "medio_pago" => $datosEditados["medio_pago"],
