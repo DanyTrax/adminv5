@@ -111,7 +111,7 @@ static public function mdlEditarVenta($tabla, $datos) {
         }
 
         // 2. ACTUALIZAR LA TABLA PRINCIPAL 'ventas'
-        // Se actualizan todos los campos necesarios
+        // Se actualizan todos los campos necesarios, incluyendo abono
         $stmtVenta = $db->prepare("UPDATE $tabla SET 
                                     id_cliente = :id_cliente, 
                                     id_vendedor = :id_vendedor, 
@@ -122,7 +122,10 @@ static public function mdlEditarVenta($tabla, $datos) {
                                     detalle = :detalle, 
                                     metodo_pago = :metodo_pago, 
                                     pago = :pago, 
-                                    medio_pago = :medio_pago 
+                                    medio_pago = :medio_pago,
+                                    abono = :abono,
+                                    id_vend_abono = :id_vend_abono,
+                                    fecha_abono = :fecha_abono
                                   WHERE id = :id");
 
         $stmtVenta->bindParam(":id", $ventaId, PDO::PARAM_INT);
@@ -136,6 +139,9 @@ static public function mdlEditarVenta($tabla, $datos) {
         $stmtVenta->bindParam(":metodo_pago", $datos["metodo_pago"], PDO::PARAM_STR);
         $stmtVenta->bindParam(":pago", $datos["pago"], PDO::PARAM_STR);
         $stmtVenta->bindParam(":medio_pago", $datos["medio_pago"], PDO::PARAM_STR);
+        $stmtVenta->bindParam(":abono", $datos["abono"], PDO::PARAM_STR);
+        $stmtVenta->bindParam(":id_vend_abono", $datos["id_vend_abono"], PDO::PARAM_INT);
+        $stmtVenta->bindParam(":fecha_abono", $datos["fecha_abono"], PDO::PARAM_STR);
         $stmtVenta->execute();
 
         // 3. BORRAR los productos detallados antiguos
