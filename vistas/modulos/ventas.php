@@ -12,7 +12,7 @@ if ($_SESSION["perfil"] == "Especial") {
 }
 
 // CAMBIO: Cargar medios de pago desde la base de datos
-require_once "../controladores/medios-pago.controlador.php";
+require_once __DIR__ . "/../../controladores/medios-pago.controlador.php";
 $mediosPago = ControladorMediosPago::ctrMostrarMediosPago();
 
 $xml = ControladorVentas::ctrDescargarXML();
