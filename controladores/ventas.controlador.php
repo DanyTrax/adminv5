@@ -5,6 +5,7 @@ require_once __DIR__ . "/../modelos/ventas.modelo.php";
 require_once __DIR__ . "/../modelos/productos.modelo.php";
 require_once __DIR__ . "/../modelos/clientes.modelo.php";
 require_once __DIR__ . "/../modelos/contabilidad.modelo.php";
+require_once __DIR__ . "/usuarios.controlador.php";
 class ControladorVentas {
 
     /*=============================================
