@@ -323,8 +323,13 @@ static public function ctrEditarVenta() {
             // Esto evita conflictos y resetea correctamente el historial de abonos
             ModeloContabilidad::deleteByFactura($_POST["editarVenta"]);
             
+            // CAMBIO: Obtener el vendedor original de la venta (no el que está editando)
+            $vendedorOriginal = ControladorUsuarios::ctrMostrarUsuarios("id", $ventaAnterior["id_vendedor"]);
+            $nombreVendedorOriginal = $vendedorOriginal ? $vendedorOriginal["nombre"] : 'N/A';
+            
             // Crear un SOLO movimiento nuevo basado en la edición actual
-            $detalleEntrada = "Venta (editada) factura No. " . $_POST["editarVenta"] . " por " . ($_SESSION["nombre"] ?? 'N/A');
+            // El detalle indica que fue editada, pero el vendedor es el original
+            $detalleEntrada = "Venta (editada) factura No. " . $_POST["editarVenta"] . " por " . $nombreVendedorOriginal;
             
             // Determinar el texto del detalle según el método de pago
             if ($metodoPagoEditado === "Completo") {
@@ -339,8 +344,9 @@ static public function ctrEditarVenta() {
             $valorContable = ($metodoPagoEditado === "Se Debe") ? 0 : $abonoEditado;
 
             // Crear UN SOLO movimiento nuevo en contabilidad
+            // CAMBIO: Usar el id_vendedor original, no el que está editando
             ModeloContabilidad::save([
-                "id_vendedor" => $_SESSION["id"] ?? 0,
+                "id_vendedor" => $ventaAnterior["id_vendedor"], // Vendedor original de la venta
                 "fecha" => date("Y-m-d H:i:s"),
                 "detalle" => $detalleEntrada,
                 "valor" => $valorContable,
