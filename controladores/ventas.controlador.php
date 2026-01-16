@@ -312,6 +312,13 @@ static public function ctrEditarVenta() {
             }
         }
         
+        // CAMBIO: Determinar si se debe actualizar la fecha
+        $actualizarFecha = isset($_POST["actualizarFecha"]) && $_POST["actualizarFecha"] == "1";
+        
+        // Si se marca el checkbox, usar fecha actual, sino mantener la original
+        $fechaAbono = $actualizarFecha ? date("Y-m-d H:i:s") : $ventaAnterior["fecha_abono"];
+        $fechaVenta = $actualizarFecha ? date("Y-m-d H:i:s") : $ventaAnterior["fecha_venta"];
+        
         $datosEditados = [
             "codigo" => $_POST["editarVenta"],
             "id_cliente" => $_POST["seleccionarCliente"],
@@ -326,8 +333,8 @@ static public function ctrEditarVenta() {
             "medio_pago" => $_POST["nuevoMedioPago"] ?? $ventaAnterior["medio_pago"],
             "abono" => $abonoEditado,
             "id_vend_abono" => $ventaAnterior["id_vendedor"], // CAMBIO: Usar el vendedor original, no el que edita
-            "fecha_abono" => date("Y-m-d H:i:s"), // Actualizar fecha de abono
-            "fecha_venta" => $ventaAnterior["fecha_venta"]
+            "fecha_abono" => $fechaAbono, // Actualizar solo si el checkbox está marcado
+            "fecha_venta" => $fechaVenta // Actualizar solo si el checkbox está marcado
         ];
 
         $respuesta = ModeloVentas::mdlEditarVenta("ventas", $datosEditados);

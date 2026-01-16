@@ -243,6 +243,17 @@ $mediosPago = ControladorMediosPago::ctrMostrarMediosPago();
                   </small>
                 </div>
                 
+                <!-- CAMBIO: Checkbox para actualizar fecha -->
+                <div class="form-group">
+                  <div class="checkbox">
+                    <label>
+                      <input type="checkbox" id="actualizarFecha" name="actualizarFecha" value="1">
+                      <strong>Actualizar fecha de la venta</strong>
+                      <small class="text-muted"> (Si está marcado, se actualizará la fecha de abono y la fecha de la venta con la fecha/hora actual)</small>
+                    </label>
+                  </div>
+                </div>
+                
                 <br>
               </div>
             </div>
