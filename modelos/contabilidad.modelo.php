@@ -342,6 +342,25 @@ class ModeloContabilidad
     }
     
     /*=============================================
+    NUEVA FUNCIÓN: OBTENER TODAS LAS ENTRADAS DE UNA FACTURA
+    =============================================*/
+    public static function findByFactura($factura)
+    {
+        // Buscar todas las entradas de la factura
+        $sql = "SELECT * FROM " . self::TABLA . " 
+                WHERE factura = :factura AND tipo = 'Entrada' 
+                ORDER BY fecha ASC, id ASC";
+        $stmt = Conexion::conectar()->prepare($sql);
+        $stmt->bindParam(":factura", $factura, PDO::PARAM_STR);
+
+        if ($stmt->execute()) {
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            return [];
+        }
+    }
+    
+    /*=============================================
     NUEVA FUNCIÓN: ACTUALIZAR SOLO LA ENTRADA ORIGINAL DE LA VENTA
     =============================================*/
     public static function updateFirstEntryByFactura($factura, $datos)

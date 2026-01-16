@@ -302,7 +302,7 @@ static public function ctrEditarVenta() {
         $datosEditados = [
             "codigo" => $_POST["editarVenta"],
             "id_cliente" => $_POST["seleccionarCliente"],
-            "id_vendedor" => $_POST["idVendedor"],
+            "id_vendedor" => $ventaAnterior["id_vendedor"], // CAMBIO: Mantener el vendedor original, no el que edita
             "productos" => $_POST["listaProductos"],
             "impuesto" => self::convertirMonedaAFloat($_POST["nuevoPrecioImpuesto"] ?? 0),
             "neto" => self::convertirMonedaAFloat($_POST["nuevoPrecioNeto"] ?? 0),
@@ -312,7 +312,7 @@ static public function ctrEditarVenta() {
             "pago" => $_POST["pago"] ?? "",
             "medio_pago" => $_POST["nuevoMedioPago"] ?? $ventaAnterior["medio_pago"],
             "abono" => $abonoEditado,
-            "id_vend_abono" => $_SESSION["id"] ?? $ventaAnterior["id_vend_abono"],
+            "id_vend_abono" => $ventaAnterior["id_vendedor"], // CAMBIO: Usar el vendedor original, no el que edita
             "fecha_abono" => date("Y-m-d H:i:s"), // Actualizar fecha de abono
             "fecha_venta" => $ventaAnterior["fecha_venta"]
         ];
@@ -741,6 +741,33 @@ static public function ctrSumaTotalVentasGeneral($fechaInicial, $fechaFinal){
     OBTENER HISTORIAL DE ABONOS DE UNA VENTA
     =============================================*/
     public static function ctrObtenerHistorialAbonos($idVenta) {
-        return ModeloVentas::mdlObtenerHistorialAbonos($idVenta);
+        // CAMBIO: Obtener historial desde contabilidad basándose en el código de factura
+        $venta = ModeloVentas::mdlMostrarVentas("ventas", "id", $idVenta);
+        if (!$venta) {
+            return [];
+        }
+        
+        $codigoFactura = $venta["codigo"];
+        
+        // Obtener entradas de contabilidad para esta factura
+        $entradas = ModeloContabilidad::findByFactura($codigoFactura);
+        
+        // Formatear para que coincida con el formato esperado
+        $historial = [];
+        foreach ($entradas as $entrada) {
+            $vendedor = ControladorUsuarios::ctrMostrarUsuarios("id", $entrada["id_vendedor"]);
+            $estado = ($entrada["forma_pago"] === "Completo") ? "Pago completo" : "Parcial";
+            
+            $historial[] = [
+                "id" => $entrada["id"],
+                "monto_abono" => $entrada["valor"],
+                "fecha_abono" => $entrada["fecha"],
+                "nombre_vendedor_abono" => $vendedor ? $vendedor["nombre"] : 'N/A',
+                "medio_pago" => $entrada["medio_pago"],
+                "observaciones" => $estado
+            ];
+        }
+        
+        return $historial;
     }
 }
