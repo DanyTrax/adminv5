@@ -15,6 +15,15 @@ class ControladorSalidasInventario{
 		return $respuesta;
 
 	}
+	
+	/*=============================================
+	FILTRAR SALIDAS DE INVENTARIO POR FECHA
+	=============================================*/
+	
+	static public function ctrFilterBy($fechaInicial, $fechaFinal) {
+		$tabla = "salidas_inventario";
+		return ModeloSalidasInventario::mdlFilterBy($tabla, $fechaInicial, $fechaFinal);
+	}
 
 	/*=============================================
 	CREAR SALIDA DE INVENTARIO

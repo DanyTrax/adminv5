@@ -1,6 +1,15 @@
 <?php
 
-$salidasInventario = ControladorSalidasInventario::ctrMostrarSalidasInventario(null, null);
+// CAMBIO: Obtener fechas de filtro si existen
+$fechaInicial = isset($_GET["fechaInicial"]) ? $_GET["fechaInicial"] : null;
+$fechaFinal = isset($_GET["fechaFinal"]) ? $_GET["fechaFinal"] : null;
+
+// Si hay filtros de fecha, usar el método de filtrado
+if ($fechaInicial && $fechaFinal) {
+    $salidasInventario = ControladorSalidasInventario::ctrFilterBy($fechaInicial, $fechaFinal);
+} else {
+    $salidasInventario = ControladorSalidasInventario::ctrMostrarSalidasInventario(null, null);
+}
 
 ?>
 
@@ -43,6 +52,21 @@ $salidasInventario = ControladorSalidasInventario::ctrMostrarSalidasInventario(n
               <i class="fa fa-plus"></i>
               Nueva Salida de Inventario
             
+            </button>
+            
+            <!-- CAMBIO: Botón de filtro de fecha -->
+            <button type="button" class="btn btn-default pull-right" id="daterange-btn-salidas" style="margin-right: 10px;">
+              <span>
+                <i class="fa fa-calendar"></i>
+                <?php
+                if (isset($_GET["fechaInicial"])) {
+                    echo $_GET["fechaInicial"] . " - " . $_GET["fechaFinal"];
+                } else {
+                    echo 'Rango de fecha';
+                }
+                ?>
+              </span>
+              <i class="fa fa-caret-down"></i>
             </button>
 
           </div>

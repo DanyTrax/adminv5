@@ -43,6 +43,46 @@ class ModeloSalidasInventario{
 		$stmt = null;
 
 	}
+	
+	/*=============================================
+	FILTRAR SALIDAS DE INVENTARIO POR FECHA
+	=============================================*/
+	static public function mdlFilterBy($tabla, $fechaInicial, $fechaFinal) {
+		$sql = "SELECT 
+			s.*,
+			u.nombre as usuario_nombre,
+			p.descripcion as producto_nombre,
+			p.codigo as producto_codigo
+		FROM $tabla s
+		LEFT JOIN usuarios u ON s.id_usuario = u.id
+		LEFT JOIN productos p ON s.id_producto = p.id
+		WHERE 1=1";
+		
+		$params = [];
+		
+		if ($fechaInicial != null && $fechaFinal != null) {
+			// Se usa DATE() para comparar solo la fecha
+			if($fechaInicial == $fechaFinal){
+				$sql .= " AND DATE(s.fecha_salida) = :fecha";
+				$params[":fecha"] = $fechaInicial;
+			} else {
+				$sql .= " AND DATE(s.fecha_salida) BETWEEN :fechaInicial AND :fechaFinal";
+				$params[":fechaInicial"] = $fechaInicial;
+				$params[":fechaFinal"] = $fechaFinal;
+			}
+		}
+		
+		$sql .= " ORDER BY s.fecha_salida DESC";
+		
+		$stmt = Conexion::conectar()->prepare($sql);
+		
+		foreach ($params as $key => $value) {
+			$stmt->bindValue($key, $value);
+		}
+		
+		$stmt->execute();
+		return $stmt->fetchAll();
+	}
 
 	/*=============================================
 	CREAR SALIDA DE INVENTARIO
