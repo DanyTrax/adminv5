@@ -377,8 +377,16 @@ $(document).on("change", "#nuevoMetodoPago", function() {
     // Al editar, se usa el campo fijo "nuevoAbono" en lugar de "nuevoValorEfectivo"
 	if ($(this).val() == "Completo") {
         $('.divNuevoMetodoPago').html(medioPago);
-        // Solo crear campo dinámico si NO estamos editando
-        if (!esEditarVenta) {
+        // CAMBIO: Si estamos editando, actualizar el campo de abono al total
+        if (esEditarVenta) {
+            var totalVenta = Number($("#totalVenta").val().replace(/\./g, '')) || 0;
+            $("#nuevoAbono").val(totalVenta).number(true, 0, ',', '.');
+            // Actualizar saldo pendiente
+            if (typeof actualizarSaldoPendiente === 'function') {
+                actualizarSaldoPendiente();
+            }
+        } else {
+            // Solo crear campo dinámico si NO estamos editando
             $(".cajasMetodoPago").empty();
             $(this).parent().parent().parent().children(".cajasMetodoPago").html('<div class="col-xs-6">' +
                 '<div class="input-group">' +
