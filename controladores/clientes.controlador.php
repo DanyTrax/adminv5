@@ -75,8 +75,9 @@ class ControladorClientes
 					if (isset($_POST["origen"]) && ($_POST["origen"] == "crear-venta" || $_POST["origen"] == "crear-cotizacion")) {
 						
 						// Obtener el ID del cliente recién creado
+						// CAMBIO: Usar PDO::PARAM_STR para soportar documentos grandes
 						$stmt = Conexion::conectar()->prepare("SELECT id, nombre, documento FROM clientes WHERE documento = :documento ORDER BY id DESC LIMIT 1");
-						$stmt->bindParam(":documento", $_POST["nuevoDocumentoId"], PDO::PARAM_INT);
+						$stmt->bindParam(":documento", $_POST["nuevoDocumentoId"], PDO::PARAM_STR);
 						$stmt->execute();
 						$clienteCreado = $stmt->fetch();
 						

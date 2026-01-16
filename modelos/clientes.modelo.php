@@ -11,8 +11,9 @@ class ModeloClientes
 
 	static public function mdlIngresarCliente($tabla, $datos)
 	{
+		// CAMBIO: Usar PDO::PARAM_STR para soportar documentos grandes (BIGINT o VARCHAR)
 		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE documento = :documento");
-		$stmt->bindParam(":documento", $datos["documento"], PDO::PARAM_INT);
+		$stmt->bindParam(":documento", $datos["documento"], PDO::PARAM_STR);
 		$stmt->execute();
 		$resultado = $stmt->fetch();
 
@@ -22,8 +23,9 @@ class ModeloClientes
 
 		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(nombre, documento, email, telefono, direccion, fecha_nacimiento, compras, ultima_compra) VALUES (:nombre, :documento, :email, :telefono, :direccion, now(), 0, now())");
 
+		// CAMBIO: Usar PDO::PARAM_STR para soportar documentos grandes (BIGINT o VARCHAR)
 		$stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
-		$stmt->bindParam(":documento", $datos["documento"], PDO::PARAM_INT);
+		$stmt->bindParam(":documento", $datos["documento"], PDO::PARAM_STR);
 		$stmt->bindParam(":email", $datos["email"], PDO::PARAM_STR);
 		$stmt->bindParam(":telefono", $datos["telefono"], PDO::PARAM_STR);
 		$stmt->bindParam(":direccion", $datos["direccion"], PDO::PARAM_STR);
@@ -74,8 +76,9 @@ class ModeloClientes
 
 	static public function mdlEditarCliente($tabla, $datos)
 	{
+		// CAMBIO: Usar PDO::PARAM_STR para soportar documentos grandes (BIGINT o VARCHAR)
 		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE documento = :documento and id <> :id");
-		$stmt->bindParam(":documento", $datos["documento"], PDO::PARAM_INT);
+		$stmt->bindParam(":documento", $datos["documento"], PDO::PARAM_STR);
 		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
 		$stmt->execute();
 		$resultado = $stmt->fetch();
@@ -86,9 +89,10 @@ class ModeloClientes
 
 		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET nombre = :nombre, documento = :documento, email = :email, telefono = :telefono, direccion = :direccion WHERE id = :id");
 
+		// CAMBIO: Usar PDO::PARAM_STR para soportar documentos grandes (BIGINT o VARCHAR)
 		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
 		$stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
-		$stmt->bindParam(":documento", $datos["documento"], PDO::PARAM_INT);
+		$stmt->bindParam(":documento", $datos["documento"], PDO::PARAM_STR);
 		$stmt->bindParam(":email", $datos["email"], PDO::PARAM_STR);
 		$stmt->bindParam(":telefono", $datos["telefono"], PDO::PARAM_STR);
 		$stmt->bindParam(":direccion", $datos["direccion"], PDO::PARAM_STR);
