@@ -214,6 +214,9 @@ class ControladorVentas {
 static public function ctrEditarVenta() {
     
     if (isset($_POST["editarVenta"])) {
+        
+        // CAMBIO: Configurar zona horaria de Bogotá para la edición
+        date_default_timezone_set('America/Bogota');
 
         $ventaAnterior = ModeloVentas::mdlMostrarVentas("ventas", "codigo", $_POST["editarVenta"]);
         if(!$ventaAnterior) { return "error_venta_no_encontrada"; }
