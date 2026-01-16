@@ -11,6 +11,10 @@ if ($_SESSION["perfil"] == "Especial") {
   return;
 }
 
+// CAMBIO: Cargar medios de pago desde la base de datos
+require_once "../controladores/medios-pago.controlador.php";
+$mediosPago = ControladorMediosPago::ctrMostrarMediosPago();
+
 $xml = ControladorVentas::ctrDescargarXML();
 
 if ($xml) {
@@ -236,9 +240,14 @@ $formaPago = isset($_GET['formaPago']) ? $_GET['formaPago'] : null;
                                 
                                 <select class="form-control" name="nuevoMedioPagoAbono" required>
                                     <option value="">Seleccione Medio de Pago</option>
-                                    <?php foreach (MedioPago::ALL as $value) : ?>
-                                        <option value="<?= $value ?>"><?= $value ?></option>
-                                    <?php endforeach; ?>
+                                    <?php 
+                                    // CAMBIO: Cargar medios de pago desde la base de datos de la sucursal actual
+                                    if (is_array($mediosPago) && count($mediosPago) > 0) {
+                                        foreach ($mediosPago as $medio) {
+                                            echo '<option value="' . htmlspecialchars($medio["nombre"]) . '">' . htmlspecialchars($medio["nombre"]) . '</option>';
+                                        }
+                                    }
+                                    ?>
                                 </select>
                             </div>
                         </div>
