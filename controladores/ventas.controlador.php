@@ -319,25 +319,35 @@ static public function ctrEditarVenta() {
         $respuesta = ModeloVentas::mdlEditarVenta("ventas", $datosEditados);
 
         if ($respuesta === "ok") {
-            // CAMBIO: Actualizar solo la entrada original de la venta en contabilidad
-            // Mantener abonos adicionales independientes (no se eliminan)
+            // CAMBIO: Eliminar TODOS los abonos anteriores y crear UN SOLO movimiento nuevo
+            // Esto evita conflictos y resetea correctamente el historial de abonos
+            ModeloContabilidad::deleteByFactura($_POST["editarVenta"]);
+            
+            // Crear un SOLO movimiento nuevo basado en la edición actual
             $detalleEntrada = "Venta (editada) factura No. " . $_POST["editarVenta"] . " por " . ($_SESSION["nombre"] ?? 'N/A');
+            
+            // Determinar el texto del detalle según el método de pago
             if ($metodoPagoEditado === "Completo") {
                 $detalleEntrada .= " - pago completo";
+            } else if ($metodoPagoEditado === "Abono") {
+                $detalleEntrada .= " - abono parcial";
+            } else {
+                $detalleEntrada .= " - pendiente de pago";
             }
             
-            // Usar el abono real de la venta editada
+            // Usar el abono que se ingresó en la edición (no los abonos anteriores)
             $valorContable = ($metodoPagoEditado === "Se Debe") ? 0 : $abonoEditado;
 
-            // Actualizar solo la primera entrada (la original de la venta)
-            // Los abonos adicionales posteriores se mantienen independientes
-            ModeloContabilidad::updateFirstEntryByFactura($_POST["editarVenta"], [
+            // Crear UN SOLO movimiento nuevo en contabilidad
+            ModeloContabilidad::save([
                 "id_vendedor" => $_SESSION["id"] ?? 0,
                 "fecha" => date("Y-m-d H:i:s"),
                 "detalle" => $detalleEntrada,
                 "valor" => $valorContable,
                 "medio_pago" => $datosEditados["medio_pago"],
-                "forma_pago" => $datosEditados["metodo_pago"]
+                "forma_pago" => $datosEditados["metodo_pago"],
+                "factura" => $_POST["editarVenta"],
+                "tipo" => "Entrada"
             ]);
         }
 
