@@ -319,28 +319,25 @@ static public function ctrEditarVenta() {
         $respuesta = ModeloVentas::mdlEditarVenta("ventas", $datosEditados);
 
         if ($respuesta === "ok") {
-            // CAMBIO: Sincronizar contabilidad con abono real de la venta
-            // Eliminar entrada anterior
-            ModeloContabilidad::deleteByFactura($_POST["editarVenta"]);
-            
-            // Crear nueva entrada con datos correctos
+            // CAMBIO: Actualizar solo la entrada original de la venta en contabilidad
+            // Mantener abonos adicionales independientes (no se eliminan)
             $detalleEntrada = "Venta (editada) factura No. " . $_POST["editarVenta"] . " por " . ($_SESSION["nombre"] ?? 'N/A');
             if ($metodoPagoEditado === "Completo") {
                 $detalleEntrada .= " - pago completo";
             }
             
-            // Usar el abono real de la venta editada (no $_POST["nuevoValorEfectivo"])
+            // Usar el abono real de la venta editada
             $valorContable = ($metodoPagoEditado === "Se Debe") ? 0 : $abonoEditado;
 
-            ModeloContabilidad::save([
+            // Actualizar solo la primera entrada (la original de la venta)
+            // Los abonos adicionales posteriores se mantienen independientes
+            ModeloContabilidad::updateFirstEntryByFactura($_POST["editarVenta"], [
                 "id_vendedor" => $_SESSION["id"] ?? 0,
                 "fecha" => date("Y-m-d H:i:s"),
                 "detalle" => $detalleEntrada,
                 "valor" => $valorContable,
                 "medio_pago" => $datosEditados["medio_pago"],
-                "forma_pago" => $datosEditados["metodo_pago"],
-                "factura" => $_POST["editarVenta"],
-                "tipo" => "Entrada"
+                "forma_pago" => $datosEditados["metodo_pago"]
             ]);
         }
 

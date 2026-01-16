@@ -320,6 +320,67 @@ class ModeloContabilidad
             return "error";
         }
     }
+    
+    /*=============================================
+    NUEVA FUNCIÓN: ENCONTRAR LA PRIMERA ENTRADA (ORIGINAL DE LA VENTA)
+    =============================================*/
+    public static function findFirstEntryByFactura($factura)
+    {
+        // Buscar la entrada más antigua de la factura (la original de la venta)
+        $sql = "SELECT * FROM " . self::TABLA . " 
+                WHERE factura = :factura AND tipo = 'Entrada' 
+                ORDER BY id ASC, fecha ASC 
+                LIMIT 1";
+        $stmt = Conexion::conectar()->prepare($sql);
+        $stmt->bindParam(":factura", $factura, PDO::PARAM_STR);
+
+        if ($stmt->execute()) {
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } else {
+            return null;
+        }
+    }
+    
+    /*=============================================
+    NUEVA FUNCIÓN: ACTUALIZAR SOLO LA ENTRADA ORIGINAL DE LA VENTA
+    =============================================*/
+    public static function updateFirstEntryByFactura($factura, $datos)
+    {
+        // Encontrar la entrada original
+        $entradaOriginal = self::findFirstEntryByFactura($factura);
+        
+        if (!$entradaOriginal) {
+            // Si no existe, crear una nueva
+            $datos["factura"] = $factura;
+            $datos["tipo"] = "Entrada";
+            return self::save($datos);
+        }
+        
+        // Si existe, actualizar solo esa entrada usando SQL directo (más seguro)
+        $idEntradaOriginal = $entradaOriginal["id"];
+        $columns = [];
+        $values = [];
+        
+        foreach ($datos as $key => $value) {
+            $columns[] = "$key = :$key";
+            $values[":$key"] = $value;
+        }
+        
+        $sql = "UPDATE " . self::TABLA . " SET " . implode(", ", $columns) . " WHERE id = :id";
+        $values[":id"] = $idEntradaOriginal;
+        
+        $stmt = Conexion::conectar()->prepare($sql);
+        
+        foreach ($values as $key => &$val) {
+            $stmt->bindParam($key, $val);
+        }
+        
+        if ($stmt->execute()) {
+            return "ok";
+        } else {
+            return "error";
+        }
+    }
     /*=============================================
     MOSTRAR ENTRADAS SERVER-SIDE (VERSIÓN FINAL CON FILTRO DE FECHA CORREGIDO)
     =============================================*/

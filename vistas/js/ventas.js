@@ -348,77 +348,87 @@ $(".nuevoAbono").number(true);
 SELECCIONAR MÉTODO DE PAGO (CON VALIDACIÓN EN TIEMPO REAL)
 =============================================*/
 $(document).on("change", "#nuevoMetodoPago", function() {
+    
+    // CAMBIO: Verificar si estamos en editar venta o crear venta
+    var esEditarVenta = $('#formEditarVenta').length > 0;
 
-    // --- INICIO DE LA MODIFICACIÓN ---
+    // --- INICIO DE LA MODIFICACIÓN ---
 	// 1. Creamos la estructura base del select
-  var opcionesMediosPago = '<option value="">Seleccione medio de pago</option>';
-    
-    // Verificamos que 'listaMediosPago' exista y sea un array antes de usarla
-    if (typeof listaMediosPago !== 'undefined' && Array.isArray(listaMediosPago)) {
-        
-        listaMediosPago.forEach(function(item, index){
-            // El array 'listaMediosPago' contiene objetos, accedemos a la propiedad 'nombre'
-            opcionesMediosPago += '<option value="'+item.nombre+'">'+item.nombre+'</option>';
-        });
-    }
+  var opcionesMediosPago = '<option value="">Seleccione medio de pago</option>';
+    
+    // Verificamos que 'listaMediosPago' exista y sea un array antes de usarla
+    if (typeof listaMediosPago !== 'undefined' && Array.isArray(listaMediosPago)) {
+        
+        listaMediosPago.forEach(function(item, index){
+            // El array 'listaMediosPago' contiene objetos, accedemos a la propiedad 'nombre'
+            opcionesMediosPago += '<option value="'+item.nombre+'">'+item.nombre+'</option>';
+        });
+    }
 
-    let medioPago = `
-        <div class="input-group">
-            <select class="form-control" id="nuevoMedioPago" name="nuevoMedioPago" required>
-                ${opcionesMediosPago}
-            </select>
-        </div>
-    `;
+    let medioPago = `
+        <div class="input-group">
+            <select class="form-control" id="nuevoMedioPago" name="nuevoMedioPago" required>
+                ${opcionesMediosPago}
+            </select>
+        </div>
+    `;
 
+    // CAMBIO: Solo crear campos dinámicos si NO estamos editando
+    // Al editar, se usa el campo fijo "nuevoAbono" en lugar de "nuevoValorEfectivo"
 	if ($(this).val() == "Completo") {
-		$(".cajasMetodoPago").empty();
-		$(this).parent().parent().parent().children(".cajasMetodoPago").html('<div class="col-xs-6">' +
-			'<div class="input-group">' +
-			'<span class="input-group-addon"><i class="ion ion-social-usd"></i></span>' +
-			'<input type="text" class="form-control nuevoValorEfectivo" value="' + $("#nuevoTotalVenta").val() + '" disabled>' +
-			'</div>' +
-			'</div>');
-		$('.nuevoValorEfectivo').number(true);
-		$('.divNuevoMetodoPago').html(medioPago);
+        $('.divNuevoMetodoPago').html(medioPago);
+        // Solo crear campo dinámico si NO estamos editando
+        if (!esEditarVenta) {
+            $(".cajasMetodoPago").empty();
+            $(this).parent().parent().parent().children(".cajasMetodoPago").html('<div class="col-xs-6">' +
+                '<div class="input-group">' +
+                '<span class="input-group-addon"><i class="ion ion-social-usd"></i></span>' +
+                '<input type="text" class="form-control nuevoValorEfectivo" value="' + $("#nuevoTotalVenta").val() + '" disabled>' +
+                '</div>' +
+                '</div>');
+            $('.nuevoValorEfectivo').number(true);
+        }
 	} else if ($(this).val() == "Abono") {
-		$(".cajasMetodoPago").empty();
-		$(this).parent().parent().parent().children('.cajasMetodoPago').html('<div class="col-xs-6">' +
-			'<div class="input-group">' +
-			'<span class="input-group-addon"><i class="ion ion-social-usd"></i></span>' +
-			'<input type="text" class="form-control nuevoValorEfectivo" name="nuevoValorEfectivo" placeholder="Ingrese el abono" required>' +
-			'</div>' +
-			'</div>');
-		$('.nuevoValorEfectivo').number(true);
-		$('.divNuevoMetodoPago').html(medioPago);
+        $('.divNuevoMetodoPago').html(medioPago);
+        // Solo crear campo dinámico si NO estamos editando
+        if (!esEditarVenta) {
+            $(".cajasMetodoPago").empty();
+            $(this).parent().parent().parent().children('.cajasMetodoPago').html('<div class="col-xs-6">' +
+                '<div class="input-group">' +
+                '<span class="input-group-addon"><i class="ion ion-social-usd"></i></span>' +
+                '<input type="text" class="form-control nuevoValorEfectivo" name="nuevoValorEfectivo" placeholder="Ingrese el abono" required>' +
+                '</div>' +
+                '</div>');
+            $('.nuevoValorEfectivo').number(true);
 
-        // --- INICIO DE LA VALIDACIÓN AÑADIDA ---
-        $(".formularioVenta").off("keyup change", "input.nuevoValorEfectivo").on("keyup change", "input.nuevoValorEfectivo", function(){
-            
-            // Se leen los valores y se eliminan los puntos de miles
-            var abono = Number($(this).val().replace(/\./g, ''));
-            var totalVenta = Number($("#totalVenta").val().replace(/\./g, ''));
+            // --- INICIO DE LA VALIDACIÓN AÑADIDA ---
+            $(".formularioVenta").off("keyup change", "input.nuevoValorEfectivo").on("keyup change", "input.nuevoValorEfectivo", function(){
+                
+                // Se leen los valores y se eliminan los puntos de miles
+                var abono = Number($(this).val().replace(/\./g, ''));
+                var totalVenta = Number($("#totalVenta").val().replace(/\./g, ''));
 
-            // 1. VERIFICA QUE EL ABONO NO SEA NEGATIVO
-            if(abono < 0){
-                $(this).val(0);
-                swal({ title: "Error", text: "El abono no puede ser negativo", type: "error", confirmButtonText: "Cerrar" });
-                return;
-            }
+                // 1. VERIFICA QUE EL ABONO NO SEA NEGATIVO
+                if(abono < 0){
+                    $(this).val(0);
+                    swal({ title: "Error", text: "El abono no puede ser negativo", type: "error", confirmButtonText: "Cerrar" });
+                    return;
+                }
 
-            // 2. VERIFICA QUE EL ABONO NO SUPERE EL TOTAL
-            if(abono > totalVenta){
-                // Se corrige el valor al máximo permitido y se le vuelve a dar formato
-                $(this).val(totalVenta).number(true, 0, ',', '.');
-                swal({ title: "Error", text: "El abono no puede ser mayor que el total", type: "error", confirmButtonText: "Cerrar" });
-            }
-        });
-        // --- FIN DE LA VALIDACIÓN AÑADIDA ---
-
+                // 2. VERIFICA QUE EL ABONO NO SUPERE EL TOTAL
+                if(abono > totalVenta){
+                    // Se corrige el valor al máximo permitido y se le vuelve a dar formato
+                    $(this).val(totalVenta).number(true, 0, ',', '.');
+                    swal({ title: "Error", text: "El abono no puede ser mayor que el total", type: "error", confirmButtonText: "Cerrar" });
+                }
+            });
+            // --- FIN DE LA VALIDACIÓN AÑADIDA ---
+        }
 	} else {
-		$(".cajasMetodoPago").empty();
+        $(".cajasMetodoPago").empty();
 		$('.divNuevoMetodoPago').empty();
-        // Se desactiva la validación si se cambia a "Se Debe"
-        $(".formularioVenta").off("keyup change", "input.nuevoValorEfectivo");
+        // Se desactiva la validación si se cambia a "Se Debe"
+        $(".formularioVenta").off("keyup change", "input.nuevoValorEfectivo");
 	}
 });
 
