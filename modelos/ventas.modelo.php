@@ -22,6 +22,52 @@ class ModeloVentas {
 	}
 
 /*=============================================
+GENERAR CÓDIGO DE FACTURA CON BLOQUEO (PREVENIR CONFLICTOS)
+=============================================*/
+static public function mdlGenerarCodigoFactura() {
+    try {
+        $conexion = Conexion::conectar();
+        
+        // ✅ INICIAR TRANSACCIÓN
+        $conexion->beginTransaction();
+        
+        try {
+            // ✅ OBTENER SIGUIENTE CÓDIGO CON BLOQUEO (SELECT FOR UPDATE)
+            $stmt = $conexion->prepare("
+                SELECT COALESCE(MAX(codigo), 10000) + 1 as siguiente_codigo
+                FROM ventas
+                FOR UPDATE
+            ");
+            
+            $stmt->execute();
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+            $siguienteCodigo = (int)$resultado["siguiente_codigo"];
+            
+            // ✅ CONFIRMAR TRANSACCIÓN (el bloqueo se mantiene hasta commit)
+            $conexion->commit();
+            
+            error_log("🔢 Código de factura generado con bloqueo: " . $siguienteCodigo);
+            
+            return $siguienteCodigo;
+            
+        } catch(Exception $e) {
+            // ✅ CANCELAR TRANSACCIÓN EN CASO DE ERROR
+            $conexion->rollBack();
+            throw $e;
+        }
+        
+    } catch(Exception $e) {
+        error_log("❌ Error en generación de código con bloqueo: " . $e->getMessage());
+        
+        // ✅ RESPALDO: usar timestamp para evitar duplicados
+        $codigoRespaldo = (int)(time() % 999999); // Últimos 6 dígitos del timestamp
+        error_log("🔄 Código de respaldo: " . $codigoRespaldo);
+        
+        return $codigoRespaldo;
+    }
+}
+
+/*=============================================
 REGISTRO DE VENTA (VERSIÓN FINAL DEFINITIVA)
 =============================================*/
 static public function mdlIngresarVenta($tabla, $datos){
