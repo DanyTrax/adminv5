@@ -129,10 +129,22 @@ class ControladorVentas {
                 $metodoPagoFinal = "Completo";
             }
 
+            // CAMBIO: Generar código de factura de forma segura (con bloqueo para evitar conflictos)
+            // Si viene desde el formulario, intentar usar ese valor primero
+            // Si no existe o está vacío, generar uno nuevo de forma segura
+            $codigoFactura = isset($_POST["nuevaVenta"]) && !empty($_POST["nuevaVenta"]) 
+                ? (int)$_POST["nuevaVenta"] 
+                : ModeloVentas::mdlGenerarCodigoFactura();
+            
+            // Si se generó un código nuevo, actualizar también el POST para la referencia posterior
+            if (!isset($_POST["nuevaVenta"]) || empty($_POST["nuevaVenta"])) {
+                $_POST["nuevaVenta"] = $codigoFactura;
+            }
+
             $datosVenta = [
                 "id_vendedor"   => $_POST["idVendedor"],
                 "id_cliente"    => $_POST["seleccionarCliente"],
-                "codigo"        => $_POST["nuevaVenta"],
+                "codigo"        => $codigoFactura,
                 "productos"     => $_POST["listaProductos"],
                 "impuesto"      => self::convertirMonedaAFloat($_POST["nuevoPrecioImpuesto"]),
                 "descuento"     => self::convertirMonedaAFloat($_POST["nuevoPrecioDescuento"]),
@@ -153,7 +165,7 @@ class ControladorVentas {
             if ($respuesta === "ok") {
                 
                 // --- INICIO DE LA CORRECCIÓN: SE RESTAURA EL GUARDADO EN CONTABILIDAD ---
-                $detalleEntrada = "Venta factura No. " . $_POST["nuevaVenta"] . " por " . $_SESSION["nombre"];
+                $detalleEntrada = "Venta factura No. " . $codigoFactura . " por " . $_SESSION["nombre"];
                 if ($metodoPagoFinal === "Completo") {
                     $detalleEntrada .= " - pago completo";
                 }
