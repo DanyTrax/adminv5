@@ -141,42 +141,55 @@ static public function mdlIngresarVenta($tabla, $datos){
 	$stmt->bindParam(":fecha_abono", $datos["fecha_abono"], PDO::PARAM_STR);
 	$stmt->bindParam(":medio_pago", $datos["medio_pago"], PDO::PARAM_STR);
 
-	// Intentamos ejecutar la inserción de la venta principal
-	if ($stmt->execute()) {
-		
-		// SI LA VENTA SE GUARDÓ BIEN, AHORA GUARDAMOS LOS PRODUCTOS
-		
-		// 1. Obtenemos el ID de la venta que acabamos de crear
-		$idVenta = $db->lastInsertId();
-		
-		// 2. Decodificamos la lista de productos
-		$productos = json_decode($datos["productos"], true);
+		// Intentamos ejecutar la inserción de la venta principal
+		if ($stmt->execute()) {
+			
+			// SI LA VENTA SE GUARDÓ BIEN, AHORA GUARDAMOS LOS PRODUCTOS
+			
+			// 1. Obtenemos el ID de la venta que acabamos de crear
+			$idVenta = $db->lastInsertId();
+			
+			// 2. Decodificamos la lista de productos
+			$productos = json_decode($datos["productos"], true);
 
-		// 3. Recorremos y guardamos cada producto en la tabla 'venta_productos'
-		if(is_array($productos)){
-			foreach ($productos as $prod) {
-				
-				$stmtProd = $db->prepare("INSERT INTO venta_productos (id_venta, descripcion, cantidad, total) VALUES (:id_venta, :descripcion, :cantidad, :total)");
-				
-				$stmtProd->bindParam(":id_venta", $idVenta, PDO::PARAM_INT);
-				$stmtProd->bindParam(":descripcion", $prod["descripcion"], PDO::PARAM_STR);
-				$stmtProd->bindParam(":cantidad", $prod["cantidad"], PDO::PARAM_INT);
-				$stmtProd->bindParam(":total", $prod["total"], PDO::PARAM_STR);
-				
-				// Si la inserción de un producto falla, todo el proceso se considera un error
-				if(!$stmtProd->execute()){
-					// Idealmente aquí se debería usar una transacción para revertir la venta,
-					// pero por ahora, devolver error es suficiente para saber que algo falló.
-					return "error en productos"; 
+			// 3. Recorremos y guardamos cada producto en la tabla 'venta_productos'
+			if(is_array($productos)){
+				foreach ($productos as $prod) {
+					
+					$stmtProd = $db->prepare("INSERT INTO venta_productos (id_venta, descripcion, cantidad, total) VALUES (:id_venta, :descripcion, :cantidad, :total)");
+					
+					$stmtProd->bindParam(":id_venta", $idVenta, PDO::PARAM_INT);
+					$stmtProd->bindParam(":descripcion", $prod["descripcion"], PDO::PARAM_STR);
+					$stmtProd->bindParam(":cantidad", $prod["cantidad"], PDO::PARAM_INT);
+					$stmtProd->bindParam(":total", $prod["total"], PDO::PARAM_STR);
+					
+					// Si la inserción de un producto falla, todo el proceso se considera un error
+					if(!$stmtProd->execute()){
+						// Revertir la transacción si hay error
+						$db->rollBack();
+						return "error en productos"; 
+					}
 				}
 			}
-		}
 
-		return "ok"; // Si todo salió bien
+			// ✅ CONFIRMAR TRANSACCIÓN (todo salió bien)
+			$db->commit();
+			
+			error_log("✅ Venta guardada exitosamente con código: " . $codigoIngresar);
+			
+			return "ok"; // Si todo salió bien
+			
+		} else {
+			// Si la inserción principal falla, revertir transacción
+			$db->rollBack();
+			return "error en venta";
+		}
 		
-	} else {
-		// Si la inserción principal falla, devolvemos el error
-		return "error en venta";
+	} catch (Exception $e) {
+		// ✅ REVERTIR TRANSACCIÓN EN CASO DE CUALQUIER ERROR
+		$db->rollBack();
+		error_log("❌ Error al guardar venta: " . $e->getMessage());
+		return "error en venta: " . $e->getMessage();
 	}
 }
 
