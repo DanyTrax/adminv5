@@ -68,17 +68,64 @@ static public function mdlGenerarCodigoFactura() {
 }
 
 /*=============================================
-REGISTRO DE VENTA (VERSIÓN FINAL DEFINITIVA)
+REGISTRO DE VENTA (VERSIÓN FINAL DEFINITIVA CON GENERACIÓN SEGURA DE CÓDIGO)
 =============================================*/
 static public function mdlIngresarVenta($tabla, $datos){
 
 	$db = Conexion::conectar();
+	
+	// ✅ INICIAR TRANSACCIÓN PARA GENERACIÓN ATÓMICA DE CÓDIGO
+	$db->beginTransaction();
+	
+	try {
+		// ✅ VERIFICAR SI EL CÓDIGO YA EXISTE (dentro de la transacción con bloqueo)
+		$codigoIngresar = isset($datos["codigo"]) ? (int)$datos["codigo"] : null;
+		
+		if ($codigoIngresar) {
+			// Verificar si el código ya existe (con bloqueo)
+			$stmtVerificar = $db->prepare("SELECT id FROM $tabla WHERE codigo = :codigo FOR UPDATE");
+			$stmtVerificar->bindParam(":codigo", $codigoIngresar, PDO::PARAM_INT);
+			$stmtVerificar->execute();
+			
+			if ($stmtVerificar->fetch()) {
+				// El código ya existe, generar uno nuevo
+				error_log("⚠️ Código duplicado detectado: " . $codigoIngresar . " - Generando nuevo código");
+				$codigoIngresar = null; // Forzar generación de nuevo código
+			}
+		}
+		
+		// ✅ GENERAR CÓDIGO SI NO EXISTE O FUE RECHAZADO POR DUPLICADO
+		if (!$codigoIngresar) {
+			// Obtener el siguiente código con bloqueo
+			$stmtMax = $db->prepare("SELECT COALESCE(MAX(codigo), 10000) + 1 as siguiente_codigo FROM $tabla FOR UPDATE");
+			$stmtMax->execute();
+			$resultado = $stmtMax->fetch(PDO::FETCH_ASSOC);
+			$codigoIngresar = (int)$resultado["siguiente_codigo"];
+			
+			// Verificar que el nuevo código no exista (por si acaso)
+			$stmtVerificar2 = $db->prepare("SELECT id FROM $tabla WHERE codigo = :codigo FOR UPDATE");
+			$stmtVerificar2->bindParam(":codigo", $codigoIngresar, PDO::PARAM_INT);
+			$stmtVerificar2->execute();
+			
+			$intentos = 0;
+			while ($stmtVerificar2->fetch() && $intentos < 10) {
+				// Si existe, incrementar y verificar de nuevo
+				$codigoIngresar++;
+				$stmtVerificar2->execute();
+				$intentos++;
+			}
+			
+			error_log("🔢 Código generado de forma segura: " . $codigoIngresar);
+		}
+		
+		// Actualizar el código en los datos
+		$datos["codigo"] = $codigoIngresar;
 
-	// Usamos tu consulta INSERT original que es la correcta para tu tabla
-	$stmt = $db->prepare("INSERT INTO $tabla(codigo,id_cliente,id_vendedor,productos,impuesto,descuento,neto,total,detalle,metodo_pago,fecha_venta,abono,id_vend_abono,fecha_abono, pago, Ult_abono, medio_pago) VALUES (:codigo,:id_cliente,:id_vendedor,:productos,:impuesto,:descuento,:neto,:total,:detalle,:metodo_pago,:fecha_venta,:abono,:id_vend_abono,:fecha_abono, '', 0, :medio_pago)");
+		// Usamos tu consulta INSERT original que es la correcta para tu tabla
+		$stmt = $db->prepare("INSERT INTO $tabla(codigo,id_cliente,id_vendedor,productos,impuesto,descuento,neto,total,detalle,metodo_pago,fecha_venta,abono,id_vend_abono,fecha_abono, pago, Ult_abono, medio_pago) VALUES (:codigo,:id_cliente,:id_vendedor,:productos,:impuesto,:descuento,:neto,:total,:detalle,:metodo_pago,:fecha_venta,:abono,:id_vend_abono,:fecha_abono, '', 0, :medio_pago)");
 
-	// Usamos todos tus bindParam originales
-	$stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_INT);
+		// Usamos todos tus bindParam originales
+		$stmt->bindParam(":codigo", $datos["codigo"], PDO::PARAM_INT);
 	$stmt->bindParam(":id_cliente", $datos["id_cliente"], PDO::PARAM_INT);
 	$stmt->bindParam(":id_vendedor", $datos["id_vendedor"], PDO::PARAM_INT);
 	$stmt->bindParam(":productos", $datos["productos"], PDO::PARAM_STR);

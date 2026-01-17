@@ -129,22 +129,16 @@ class ControladorVentas {
                 $metodoPagoFinal = "Completo";
             }
 
-            // CAMBIO: Generar código de factura de forma segura (con bloqueo para evitar conflictos)
-            // Si viene desde el formulario, intentar usar ese valor primero
-            // Si no existe o está vacío, generar uno nuevo de forma segura
-            $codigoFactura = isset($_POST["nuevaVenta"]) && !empty($_POST["nuevaVenta"]) 
+            // CAMBIO: El código se generará de forma segura DENTRO de mdlIngresarVenta
+            // Pasamos el código del formulario (si existe) para que lo valide y genere uno nuevo si hay duplicado
+            $codigoFormulario = isset($_POST["nuevaVenta"]) && !empty($_POST["nuevaVenta"]) 
                 ? (int)$_POST["nuevaVenta"] 
-                : ModeloVentas::mdlGenerarCodigoFactura();
-            
-            // Si se generó un código nuevo, actualizar también el POST para la referencia posterior
-            if (!isset($_POST["nuevaVenta"]) || empty($_POST["nuevaVenta"])) {
-                $_POST["nuevaVenta"] = $codigoFactura;
-            }
+                : null;
 
             $datosVenta = [
                 "id_vendedor"   => $_POST["idVendedor"],
                 "id_cliente"    => $_POST["seleccionarCliente"],
-                "codigo"        => $codigoFactura,
+                "codigo"        => $codigoFormulario, // Se validará y regenerará si es necesario dentro de mdlIngresarVenta
                 "productos"     => $_POST["listaProductos"],
                 "impuesto"      => self::convertirMonedaAFloat($_POST["nuevoPrecioImpuesto"]),
                 "descuento"     => self::convertirMonedaAFloat($_POST["nuevoPrecioDescuento"]),
