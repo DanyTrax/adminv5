@@ -158,8 +158,19 @@ class ControladorVentas {
 
             if ($respuesta === "ok") {
                 
+                // CAMBIO: Obtener el código real usado (puede haber cambiado si hubo duplicado)
+                $codigoFacturaFinal = $datosVenta["codigo"] ?? $codigoFormulario ?? null;
+                
+                // Si no tenemos el código, obtenerlo de la última venta insertada
+                if (!$codigoFacturaFinal) {
+                    $ultimaVenta = ModeloVentas::mdlMostrarVentas("ventas", null, null);
+                    if ($ultimaVenta && is_array($ultimaVenta) && count($ultimaVenta) > 0) {
+                        $codigoFacturaFinal = $ultimaVenta[count($ultimaVenta) - 1]["codigo"];
+                    }
+                }
+                
                 // --- INICIO DE LA CORRECCIÓN: SE RESTAURA EL GUARDADO EN CONTABILIDAD ---
-                $detalleEntrada = "Venta factura No. " . $codigoFactura . " por " . $_SESSION["nombre"];
+                $detalleEntrada = "Venta factura No. " . ($codigoFacturaFinal ?? "N/A") . " por " . $_SESSION["nombre"];
                 if ($metodoPagoFinal === "Completo") {
                     $detalleEntrada .= " - pago completo";
                 }
@@ -173,7 +184,7 @@ class ControladorVentas {
                     "valor" => $valorContable,
                     "medio_pago"  => $_POST["nuevoMedioPago"] ?? "", 
                     "forma_pago"  => $_POST["nuevoMetodoPago"],
-                    "factura"     => $_POST["nuevaVenta"], 
+                    "factura"     => $codigoFacturaFinal ?? $_POST["nuevaVenta"] ?? "", 
                     "tipo" => "Entrada"
                 ]);
                 // --- FIN DE LA CORRECCIÓN ---
@@ -184,7 +195,7 @@ class ControladorVentas {
                     
                     $datosHistorial = array(
                         "id_venta" => null, // Se obtendrá después de insertar la venta
-                        "codigo_venta" => $_POST["nuevaVenta"],
+                        "codigo_venta" => $codigoFacturaFinal ?? $_POST["nuevaVenta"] ?? "",
                         "monto_abono" => $valorAbono,
                         "fecha_abono" => $datosVenta["fecha_venta"],
                         "id_vendedor_abono" => $_POST["idVendedor"],
@@ -193,8 +204,9 @@ class ControladorVentas {
                         "observaciones" => $metodoPagoFinal === "Completo" ? "Pago completo inicial" : "Abono inicial"
                     );
                     
-                    // Obtener el ID de la venta recién creada
-                    $ventaCreada = ModeloVentas::mdlMostrarVentas("ventas", "codigo", $_POST["nuevaVenta"]);
+                    // Obtener el ID de la venta recién creada usando el código final
+                    $codigoBuscar = $codigoFacturaFinal ?? $_POST["nuevaVenta"] ?? null;
+                    $ventaCreada = $codigoBuscar ? ModeloVentas::mdlMostrarVentas("ventas", "codigo", $codigoBuscar) : null;
                     if ($ventaCreada) {
                         $datosHistorial["id_venta"] = $ventaCreada["id"];
                         ModeloVentas::mdlRegistrarAbonoHistorial($datosHistorial);
