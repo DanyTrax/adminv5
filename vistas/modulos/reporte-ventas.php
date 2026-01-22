@@ -44,6 +44,7 @@ echo utf8_decode("<table border='1'>
             <th style='font-weight:bold; background-color:#3c8dbc; color:white;'>CLIENTE</th>
             <th style='font-weight:bold; background-color:#3c8dbc; color:white;'>VENDEDOR</th>
             <th style='font-weight:bold; background-color:#3c8dbc; color:white;'>FORMA DE PAGO</th>
+            <th style='font-weight:bold; background-color:#3c8dbc; color:white;'>MEDIO DE PAGO</th>
             <th style='font-weight:bold; background-color:#3c8dbc; color:white;'>NETO</th>
             <th style='font-weight:bold; background-color:#3c8dbc; color:white;'>TOTAL</th>
             <th style='font-weight:bold; background-color:#3c8dbc; color:white;'>FECHA VENTA</th>
@@ -59,6 +60,7 @@ foreach ($ventas as $key => $row) {
             <td>" . $cliente['nombre'] . "</td>
             <td>" . $vendedor['nombre'] . "</td>
             <td>" . $row['metodo_pago'] . "</td>
+            <td>" . (isset($row['medio_pago']) ? $row['medio_pago'] : 'N/A') . "</td>
             <td>" . (int) round($row['neto']) . "</td>
             <td>" . (int) round($row['total']) . "</td>
             <td>" . date('Y-m-d', strtotime($row['fecha_venta'])) . "</td>
