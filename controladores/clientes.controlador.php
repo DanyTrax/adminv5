@@ -69,6 +69,37 @@ class ControladorClientes
 
 				$respuesta = ModeloClientes::mdlIngresarCliente($tabla, $datos);
 
+				// ✅ VERIFICAR RESPUESTAS DE DUPLICADOS
+				if ($respuesta == "duplicado_documento") {
+					echo '<script>
+					swal({
+						  type: "warning",
+						  title: "¡Documento duplicado!",
+						  text: "El documento ' . htmlspecialchars($_POST["nuevoDocumentoId"]) . ' ya existe en el sistema. Por favor, verifique e intente con otro documento.",
+						  showConfirmButton: true,
+						  confirmButtonText: "Cerrar"
+						}).then(function(result){
+							
+						})
+			  	</script>';
+					return;
+				}
+
+				if ($respuesta == "duplicado_nombre") {
+					echo '<script>
+					swal({
+						  type: "warning",
+						  title: "¡Nombre duplicado!",
+						  text: "El nombre del cliente ya existe en el sistema. Por favor, verifique e intente con otro nombre.",
+						  showConfirmButton: true,
+						  confirmButtonText: "Cerrar"
+						}).then(function(result){
+							
+						})
+			  	</script>';
+					return;
+				}
+
 				if ($respuesta == "ok") {
 
 					// Verificar si viene de crear venta o cotización
@@ -215,6 +246,37 @@ class ControladorClientes
 
 				$respuesta = ModeloClientes::mdlEditarCliente($tabla, $datos);
 
+				// ✅ VERIFICAR RESPUESTAS DE DUPLICADOS
+				if ($respuesta == "duplicado_documento") {
+					echo '<script>
+					swal({
+						  type: "warning",
+						  title: "¡Documento duplicado!",
+						  text: "El documento ' . htmlspecialchars($_POST["editarDocumentoId"]) . ' ya existe en otro cliente. Por favor, verifique e intente con otro documento.",
+						  showConfirmButton: true,
+						  confirmButtonText: "Cerrar"
+						}).then(function(result){
+							
+						})
+			  	</script>';
+					return;
+				}
+
+				if ($respuesta == "duplicado_nombre") {
+					echo '<script>
+					swal({
+						  type: "warning",
+						  title: "¡Nombre duplicado!",
+						  text: "El nombre del cliente ya existe en otro registro. Por favor, verifique e intente con otro nombre.",
+						  showConfirmButton: true,
+						  confirmButtonText: "Cerrar"
+						}).then(function(result){
+							
+						})
+			  	</script>';
+					return;
+				}
+
 				if ($respuesta == "ok") {
 
 					echo '<script>
@@ -238,7 +300,8 @@ class ControladorClientes
 
 					swal({
 						  type: "error",
-						  title: "' . $respuesta . '",
+						  title: "Error al editar el cliente",
+						  text: "Ocurrió un error inesperado. Por favor, intente nuevamente.",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
 						}).then(function(result){

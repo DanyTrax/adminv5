@@ -11,17 +11,30 @@ class ModeloClientes
 
 	static public function mdlIngresarCliente($tabla, $datos)
 	{
-		// CAMBIO: Usar PDO::PARAM_STR para soportar documentos grandes (BIGINT o VARCHAR)
-		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE documento = :documento");
+		$conexion = Conexion::conectar();
+		
+		// ✅ VERIFICAR SI EL DOCUMENTO YA EXISTE
+		$stmt = $conexion->prepare("SELECT * FROM $tabla WHERE documento = :documento");
 		$stmt->bindParam(":documento", $datos["documento"], PDO::PARAM_STR);
 		$stmt->execute();
-		$resultado = $stmt->fetch();
+		$resultadoDocumento = $stmt->fetch();
 
-		if ($resultado) {
-			return 'El documento ya existe';
+		if ($resultadoDocumento) {
+			return 'duplicado_documento';
 		}
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(nombre, documento, email, telefono, direccion, fecha_nacimiento, compras, ultima_compra) VALUES (:nombre, :documento, :email, :telefono, :direccion, now(), 0, now())");
+		// ✅ VERIFICAR SI EL NOMBRE YA EXISTE (comparación sin distinguir mayúsculas/minúsculas)
+		$stmt = $conexion->prepare("SELECT * FROM $tabla WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(:nombre))");
+		$stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
+		$stmt->execute();
+		$resultadoNombre = $stmt->fetch();
+
+		if ($resultadoNombre) {
+			return 'duplicado_nombre';
+		}
+
+		// ✅ SI NO HAY DUPLICADOS, PROCEDER CON LA INSERCIÓN
+		$stmt = $conexion->prepare("INSERT INTO $tabla(nombre, documento, email, telefono, direccion, fecha_nacimiento, compras, ultima_compra) VALUES (:nombre, :documento, :email, :telefono, :direccion, now(), 0, now())");
 
 		// CAMBIO: Usar PDO::PARAM_STR para soportar documentos grandes (BIGINT o VARCHAR)
 		$stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
@@ -76,18 +89,32 @@ class ModeloClientes
 
 	static public function mdlEditarCliente($tabla, $datos)
 	{
-		// CAMBIO: Usar PDO::PARAM_STR para soportar documentos grandes (BIGINT o VARCHAR)
-		$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE documento = :documento and id <> :id");
+		$conexion = Conexion::conectar();
+		
+		// ✅ VERIFICAR SI EL DOCUMENTO YA EXISTE (excluyendo el cliente actual)
+		$stmt = $conexion->prepare("SELECT * FROM $tabla WHERE documento = :documento AND id <> :id");
 		$stmt->bindParam(":documento", $datos["documento"], PDO::PARAM_STR);
 		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
 		$stmt->execute();
-		$resultado = $stmt->fetch();
+		$resultadoDocumento = $stmt->fetch();
 
-		if ($resultado) {
-			return 'El documento ya existe';
+		if ($resultadoDocumento) {
+			return 'duplicado_documento';
 		}
 
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET nombre = :nombre, documento = :documento, email = :email, telefono = :telefono, direccion = :direccion WHERE id = :id");
+		// ✅ VERIFICAR SI EL NOMBRE YA EXISTE (excluyendo el cliente actual, comparación sin distinguir mayúsculas/minúsculas)
+		$stmt = $conexion->prepare("SELECT * FROM $tabla WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(:nombre)) AND id <> :id");
+		$stmt->bindParam(":nombre", $datos["nombre"], PDO::PARAM_STR);
+		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
+		$stmt->execute();
+		$resultadoNombre = $stmt->fetch();
+
+		if ($resultadoNombre) {
+			return 'duplicado_nombre';
+		}
+
+		// ✅ SI NO HAY DUPLICADOS, PROCEDER CON LA ACTUALIZACIÓN
+		$stmt = $conexion->prepare("UPDATE $tabla SET nombre = :nombre, documento = :documento, email = :email, telefono = :telefono, direccion = :direccion WHERE id = :id");
 
 		// CAMBIO: Usar PDO::PARAM_STR para soportar documentos grandes (BIGINT o VARCHAR)
 		$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
