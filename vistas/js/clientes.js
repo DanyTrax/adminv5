@@ -23,7 +23,9 @@ $(".tablas").on("click", ".btnEditarCliente", function(){
 	       $("#editarCliente").val(respuesta["nombre"]);
 	       $("#editarDocumentoId").val(respuesta["documento"]);
 	       $("#editarEmail").val(respuesta["email"]);
-	       $("#editarTelefono").val(respuesta["telefono"]);
+	       // Limpiar teléfono para que solo contenga números (igual que crear)
+	       var telefonoLimpio = (respuesta["telefono"] || "").toString().replace(/[^0-9]/g, '');
+	       $("#editarTelefono").val(telefonoLimpio);
 	       $("#editarDireccion").val(respuesta["direccion"]);
            
 	  }

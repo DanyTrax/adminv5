@@ -350,7 +350,7 @@ MODAL EDITAR CLIENTE
 
                 <span class="input-group-addon"><i class="fa fa-phone"></i></span>
 
-                <input type="text" class="form-control input-lg" name="editarTelefono" id="editarTelefono" data-inputmask="'mask':'(999) 999-9999'" data-mask required>
+                <input type="text" class="form-control input-lg" name="editarTelefono" id="editarTelefono" placeholder="Ingresar teléfono (7-10 dígitos)" pattern="[0-9]{7,10}" minlength="7" maxlength="10" required>
 
               </div>
 
