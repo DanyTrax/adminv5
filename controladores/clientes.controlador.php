@@ -211,19 +211,40 @@ class ControladorClientes
 
 		if (isset($_POST["editarCliente"])) {
 
-			// Validaciones mejoradas (iguales a crear cliente)
+			// Debug: Log de los datos recibidos
+			error_log("=== DEBUG CLIENTES EDITAR - DATOS RECIBIDOS ===");
+			error_log("editarCliente: " . $_POST["editarCliente"]);
+			error_log("editarDocumentoId: " . $_POST["editarDocumentoId"]);
+			error_log("editarEmail: " . $_POST["editarEmail"]);
+			error_log("editarTelefono: " . $_POST["editarTelefono"]);
+			error_log("editarDireccion: " . $_POST["editarDireccion"]);
+
+			// Validaciones individuales con debug (iguales a crear cliente)
+			// Nombre: requerido, permite letras, números, espacios y caracteres comunes
 			$validacionNombre = !empty($_POST["editarCliente"]) && preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)]+$/', $_POST["editarCliente"]);
+			
+			// Documento: requerido, solo números, 1-11 dígitos
 			$validacionDocumento = !empty($_POST["editarDocumentoId"]) && preg_match('/^[0-9]{1,11}$/', $_POST["editarDocumentoId"]);
 			
+			// Email: opcional, si está presente debe ser válido
 			$email = trim($_POST["editarEmail"] ?? '');
 			$validacionEmail = empty($email) || filter_var($email, FILTER_VALIDATE_EMAIL) || preg_match('/^[@\.\a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $email);
 			
+			// Teléfono: requerido, solo números, 7-15 dígitos (más flexible)
 			$telefono = trim($_POST["editarTelefono"] ?? '');
-			$telefonoLimpio = preg_replace('/[^0-9]/', '', $telefono);
+			$telefonoLimpio = preg_replace('/[^0-9]/', '', $telefono); // Limpiar caracteres no numéricos
 			$validacionTelefono = !empty($telefonoLimpio) && strlen($telefonoLimpio) >= 7 && strlen($telefonoLimpio) <= 15;
 			
+			// Dirección: opcional, si está presente permite caracteres comunes
 			$direccion = trim($_POST["editarDireccion"] ?? '');
 			$validacionDireccion = empty($direccion) || preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)\#\/\:\;\@–—]+$/', $direccion);
+
+			error_log("=== DEBUG CLIENTES EDITAR - RESULTADOS VALIDACIÓN ===");
+			error_log("Nombre válido: " . ($validacionNombre ? "SÍ" : "NO"));
+			error_log("Documento válido: " . ($validacionDocumento ? "SÍ" : "NO"));
+			error_log("Email válido: " . ($validacionEmail ? "SÍ" : "NO"));
+			error_log("Teléfono válido: " . ($validacionTelefono ? "SÍ" : "NO"));
+			error_log("Dirección válida: " . ($validacionDireccion ? "SÍ" : "NO"));
 
 			if (
 				$validacionNombre &&
@@ -239,9 +260,9 @@ class ControladorClientes
 					"id" => $_POST["idCliente"],
 					"nombre" => trim($_POST["editarCliente"]),
 					"documento" => trim($_POST["editarDocumentoId"]),
-					"email" => !empty($email) ? $email : '',
-					"telefono" => $telefonoLimpio,
-					"direccion" => !empty($direccion) ? $direccion : ''
+					"email" => !empty(trim($_POST["editarEmail"] ?? '')) ? trim($_POST["editarEmail"]) : '',
+					"telefono" => $telefonoLimpio, // Usar teléfono limpio
+					"direccion" => !empty(trim($_POST["editarDireccion"] ?? '')) ? trim($_POST["editarDireccion"]) : ''
 				);
 
 				$respuesta = ModeloClientes::mdlEditarCliente($tabla, $datos);
@@ -252,7 +273,7 @@ class ControladorClientes
 					swal({
 						  type: "warning",
 						  title: "¡Documento duplicado!",
-						  text: "El documento ' . htmlspecialchars($_POST["editarDocumentoId"]) . ' ya existe en otro cliente. Por favor, verifique e intente con otro documento.",
+						  text: "El documento ' . htmlspecialchars($_POST["editarDocumentoId"]) . ' ya existe en el sistema. Por favor, verifique e intente con otro documento.",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
 						}).then(function(result){
@@ -267,7 +288,7 @@ class ControladorClientes
 					swal({
 						  type: "warning",
 						  title: "¡Nombre duplicado!",
-						  text: "El nombre del cliente ya existe en otro registro. Por favor, verifique e intente con otro nombre.",
+						  text: "El nombre del cliente ya existe en el sistema. Por favor, verifique e intente con otro nombre.",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
 						}).then(function(result){
