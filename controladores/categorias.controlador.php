@@ -12,7 +12,10 @@ class ControladorCategorias{
 			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["nuevaCategoria"])){
 
 				$tabla = "categorias";
-				$datos = $_POST["nuevaCategoria"];
+				$datos = array(
+					"categoria" => $_POST["nuevaCategoria"],
+					"prefijo" => $_POST["nuevoPrefijo"] ?? ""
+				);
 				$respuesta = ModeloCategorias::mdlIngresarCategoria($tabla, $datos);
 
 				if($respuesta == "ok"){
@@ -66,8 +69,11 @@ class ControladorCategorias{
 			if(preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚ ]+$/', $_POST["editarCategoria"])){
 
 				$tabla = "categorias";
-				$datos = array("categoria"=>$_POST["editarCategoria"],
-							   "id"=>$_POST["idCategoria"]);
+				$datos = array(
+					"categoria" => $_POST["editarCategoria"],
+					"id" => $_POST["idCategoria"],
+					"prefijo" => $_POST["editarPrefijo"] ?? ""
+				);
 				$respuesta = ModeloCategorias::mdlEditarCategoria($tabla, $datos);
 
 				if($respuesta == "ok"){

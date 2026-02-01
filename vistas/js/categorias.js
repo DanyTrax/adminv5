@@ -20,6 +20,7 @@ $(".tablas").on("click", ".btnEditarCategoria", function(){
 
      		$("#editarCategoria").val(respuesta["categoria"]);
      		$("#idCategoria").val(respuesta["id"]);
+     		$("#editarPrefijo").val(respuesta["prefijo"] || "");
 
      	}
 

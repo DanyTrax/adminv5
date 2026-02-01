@@ -9,24 +9,42 @@ class ModeloCategorias{
 	=============================================*/
 
 	static public function mdlIngresarCategoria($tabla, $datos){
+		try {
+			$db = Conexion::conectar();
+			
+			// Verificar si la tabla tiene campo prefijo
+			$stmtCheck = $db->prepare("SHOW COLUMNS FROM $tabla LIKE 'prefijo'");
+			$stmtCheck->execute();
+			$tienePrefijo = $stmtCheck->rowCount() > 0;
+			
+			// Si $datos es un array (con prefijo), usar ambos campos
+			if (is_array($datos)) {
+				$categoria = $datos["categoria"];
+				$prefijo = isset($datos["prefijo"]) && !empty($datos["prefijo"]) ? strtoupper(trim($datos["prefijo"])) : null;
+				
+				if ($tienePrefijo && $prefijo !== null) {
+					$stmt = $db->prepare("INSERT INTO $tabla(categoria, prefijo) VALUES (:categoria, :prefijo)");
+					$stmt->bindParam(":categoria", $categoria, PDO::PARAM_STR);
+					$stmt->bindParam(":prefijo", $prefijo, PDO::PARAM_STR);
+				} else {
+					$stmt = $db->prepare("INSERT INTO $tabla(categoria) VALUES (:categoria)");
+					$stmt->bindParam(":categoria", $categoria, PDO::PARAM_STR);
+				}
+			} else {
+				// Compatibilidad con código antiguo donde $datos es solo el nombre
+				$stmt = $db->prepare("INSERT INTO $tabla(categoria) VALUES (:categoria)");
+				$stmt->bindParam(":categoria", $datos, PDO::PARAM_STR);
+			}
 
-		$stmt = Conexion::conectar()->prepare("INSERT INTO $tabla(categoria) VALUES (:categoria)");
-
-		$stmt->bindParam(":categoria", $datos, PDO::PARAM_STR);
-
-		if($stmt->execute()){
-
-			return "ok";
-
-		}else{
-
+			if($stmt->execute()){
+				return "ok";
+			} else {
+				return "error";
+			}
+		} catch (Exception $e) {
+			error_log("Error creando categoría: " . $e->getMessage());
 			return "error";
-		
 		}
-
-		$stmt->close();
-		$stmt = null;
-
 	}
 
 	/*=============================================
@@ -66,25 +84,34 @@ class ModeloCategorias{
 	=============================================*/
 
 	static public function mdlEditarCategoria($tabla, $datos){
+		try {
+			$db = Conexion::conectar();
+			
+			// Verificar si la tabla tiene campo prefijo
+			$stmtCheck = $db->prepare("SHOW COLUMNS FROM $tabla LIKE 'prefijo'");
+			$stmtCheck->execute();
+			$tienePrefijo = $stmtCheck->rowCount() > 0;
+			
+			if ($tienePrefijo && isset($datos["prefijo"])) {
+				$stmt = $db->prepare("UPDATE $tabla SET categoria = :categoria, prefijo = :prefijo WHERE id = :id");
+				$prefijo = !empty($datos["prefijo"]) ? strtoupper(trim($datos["prefijo"])) : null;
+				$stmt->bindParam(":prefijo", $prefijo, PDO::PARAM_STR);
+			} else {
+				$stmt = $db->prepare("UPDATE $tabla SET categoria = :categoria WHERE id = :id");
+			}
 
-		$stmt = Conexion::conectar()->prepare("UPDATE $tabla SET categoria = :categoria WHERE id = :id");
+			$stmt->bindParam(":categoria", $datos["categoria"], PDO::PARAM_STR);
+			$stmt->bindParam(":id", $datos["id"], PDO::PARAM_INT);
 
-		$stmt -> bindParam(":categoria", $datos["categoria"], PDO::PARAM_STR);
-		$stmt -> bindParam(":id", $datos["id"], PDO::PARAM_INT);
-
-		if($stmt->execute()){
-
-			return "ok";
-
-		}else{
-
+			if($stmt->execute()){
+				return "ok";
+			} else {
+				return "error";
+			}
+		} catch (Exception $e) {
+			error_log("Error editando categoría: " . $e->getMessage());
 			return "error";
-		
 		}
-
-		$stmt->close();
-		$stmt = null;
-
 	}
 
 /*=============================================

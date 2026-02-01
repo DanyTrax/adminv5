@@ -177,13 +177,44 @@ MODAL AGREGAR CATEGORÍA
             
             <div class="form-group">
               
+              <label for="nuevaCategoria">Nombre de la Categoría <span class="text-red">*</span></label>
+              
               <div class="input-group">
               
                 <span class="input-group-addon"><i class="fa fa-th"></i></span> 
 
-                <input type="text" class="form-control input-lg" name="nuevaCategoria" placeholder="Ingresar categoría" required>
+                <input type="text" class="form-control input-lg" name="nuevaCategoria" id="nuevaCategoria" 
+                       placeholder="Ingrese el nombre de la categoría" required>
 
               </div>
+              
+              <div class="help-block text-red" id="error-categoria-nueva" style="display:none;"></div>
+
+            </div>
+            
+            <!-- ENTRADA PARA EL PREFIJO (opcional en sucursales) -->
+            
+            <div class="form-group">
+              
+              <label for="nuevoPrefijo">Prefijo para Códigos</label>
+              
+              <div class="input-group">
+              
+                <span class="input-group-addon"><i class="fa fa-code"></i></span> 
+
+                <input type="text" class="form-control input-lg" name="nuevoPrefijo" id="nuevoPrefijo" 
+                       placeholder="Ej: LAM (máximo 10 caracteres)" maxlength="10" 
+                       pattern="[A-Za-z0-9]+">
+              </div>
+              
+              <div class="help-block">
+                <i class="fa fa-info-circle"></i> 
+                Este prefijo se usará para generar códigos de productos. 
+                Ejemplo: Si el prefijo es "LAM", los productos tendrán códigos como LAM0001, LAM0002, etc.
+                <strong>Nota:</strong> En sucursales, el prefijo se sincroniza desde categorías centrales.
+              </div>
+              
+              <div class="help-block text-red" id="error-prefijo-nuevo" style="display:none;"></div>
 
             </div>
   
@@ -197,7 +228,7 @@ MODAL AGREGAR CATEGORÍA
 
         <div class="modal-footer">
 
-          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
 
           <button type="submit" class="btn btn-primary">Guardar categoría</button>
 
@@ -234,7 +265,7 @@ MODAL EDITAR CATEGORÍA
         CABEZA DEL MODAL
         ======================================-->
 
-        <div class="modal-header" style="background:#3c8dbc; color:white">
+        <div class="modal-header" style="background:#f39c12; color:white">
 
           <button type="button" class="close" data-dismiss="modal">&times;</button>
 
@@ -250,19 +281,50 @@ MODAL EDITAR CATEGORÍA
 
           <div class="box-body">
 
+            <input type="hidden" name="idCategoria" id="idCategoria" required>
+
             <!-- ENTRADA PARA EL NOMBRE -->
             
             <div class="form-group">
+              
+              <label for="editarCategoria">Nombre de la Categoría <span class="text-red">*</span></label>
               
               <div class="input-group">
               
                 <span class="input-group-addon"><i class="fa fa-th"></i></span> 
 
-                <input type="text" class="form-control input-lg" name="editarCategoria" id="editarCategoria" required>
-
-                 <input type="hidden"  name="idCategoria" id="idCategoria" required>
+                <input type="text" class="form-control input-lg" name="editarCategoria" id="editarCategoria" 
+                       placeholder="Ingrese el nombre de la categoría" required>
 
               </div>
+              
+              <div class="help-block text-red" id="error-categoria-editar" style="display:none;"></div>
+
+            </div>
+            
+            <!-- ENTRADA PARA EL PREFIJO (opcional en sucursales) -->
+            
+            <div class="form-group">
+              
+              <label for="editarPrefijo">Prefijo para Códigos</label>
+              
+              <div class="input-group">
+              
+                <span class="input-group-addon"><i class="fa fa-code"></i></span> 
+
+                <input type="text" class="form-control input-lg" name="editarPrefijo" id="editarPrefijo" 
+                       placeholder="Ej: LAM (máximo 10 caracteres)" maxlength="10" 
+                       pattern="[A-Za-z0-9]+">
+              </div>
+              
+              <div class="help-block">
+                <i class="fa fa-info-circle"></i> 
+                Este prefijo se usará para generar códigos de productos. 
+                Ejemplo: Si el prefijo es "LAM", los productos tendrán códigos como LAM0001, LAM0002, etc.
+                <strong>Nota:</strong> En sucursales, el prefijo se sincroniza desde categorías centrales.
+              </div>
+              
+              <div class="help-block text-red" id="error-prefijo-editar" style="display:none;"></div>
 
             </div>
   
@@ -276,9 +338,9 @@ MODAL EDITAR CATEGORÍA
 
         <div class="modal-footer">
 
-          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Salir</button>
+          <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Cancelar</button>
 
-          <button type="submit" class="btn btn-primary">Guardar cambios</button>
+          <button type="submit" class="btn btn-warning">Guardar cambios</button>
 
         </div>
 
