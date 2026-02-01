@@ -343,9 +343,8 @@ public function ctrImportarDesdeExcel() {
                     return;
                 }
                 
-                // ✅ PROCESAR PRODUCTOS CON LÓGICA INTELIGENTE
+                // ✅ PROCESAR PRODUCTOS - SOLO CAMPOS OBLIGATORIOS
                 $productosCreados = 0;
-                $productosActualizados = 0;
                 $productosErrores = 0;
                 $erroresDetallados = [];
                 
@@ -355,7 +354,7 @@ public function ctrImportarDesdeExcel() {
                         
                         $fila = $indice + 2;
                         
-                        // ✅ VALIDACIÓN: CAMPOS OBLIGATORIOS
+                        // ✅ VALIDACIÓN: SOLO 3 CAMPOS OBLIGATORIOS
                         $descripcion = trim($producto['DESCRIPCION'] ?? '');
                         $id_categoria = trim($producto['ID_CATEGORIA'] ?? '');
                         $precio_venta = trim($producto['PRECIO_VENTA'] ?? '');
@@ -381,92 +380,31 @@ public function ctrImportarDesdeExcel() {
                         
                         // ✅ LIMPIAR Y PREPARAR DATOS
                         $precio_venta_limpio = floatval(str_replace([','], '', $precio_venta));
+                        $id_categoria_int = intval($id_categoria);
                         
-                        $es_divisible_text = trim($producto['ES_DIVISIBLE'] ?? '');
-                        $es_divisible = (strtoupper($es_divisible_text) === 'SI') ? 1 : 0;
+                        // ✅ CREAR PRODUCTO NUEVO - CÓDIGO SE GENERA AUTOMÁTICAMENTE
+                        $datosCrear = array(
+                            "descripcion" => $descripcion,
+                            "id_categoria" => $id_categoria_int,
+                            "precio_venta" => $precio_venta_limpio,
+                            "imagen" => "vistas/img/productos/default/anonymous.png",
+                            "es_divisible" => 0, // Por defecto NO divisible
+                            "codigo_hijo_mitad" => '',
+                            "codigo_hijo_tercio" => '',
+                            "codigo_hijo_cuarto" => '',
+                            "activo" => 1 // Todos los productos importados están activos
+                        );
                         
-                        // Códigos hijos opcionales
-                        $codigo_hijo_mitad = trim($producto['CODIGO_HIJO_MITAD'] ?? '');
-                        $codigo_hijo_tercio = trim($producto['CODIGO_HIJO_TERCIO'] ?? '');
-                        $codigo_hijo_cuarto = trim($producto['CODIGO_HIJO_CUARTO'] ?? '');
+                        $respuesta = ModeloCatalogoMaestro::mdlCrearProductoMaestroAutomatico($datosCrear);
                         
-                        // Limpiar valores "NULL" o vacíos
-                        if(in_array(strtoupper($codigo_hijo_mitad), ['NULL', '', '0'])) $codigo_hijo_mitad = '';
-                        if(in_array(strtoupper($codigo_hijo_tercio), ['NULL', '', '0'])) $codigo_hijo_tercio = '';
-                        if(in_array(strtoupper($codigo_hijo_cuarto), ['NULL', '', '0'])) $codigo_hijo_cuarto = '';
-                        
-                        // ✅ VERIFICAR SI ES ACTUALIZACIÓN O CREACIÓN
-                        $id_existente = trim($producto['ID'] ?? '');
-                        $codigo_existente = trim($producto['CODIGO'] ?? '');
-                        
-                        $esActualizacion = false;
-                        
-                        // Si tiene ID válido, intentar actualizar
-                        if(!empty($id_existente) && is_numeric($id_existente) && $id_existente > 0) {
-                            
-                            // Verificar que el ID existe en la base de datos
-                            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
-                            $db = ConexionCentral::conectar();
-                            $stmtVerificar = $db->prepare("SELECT id FROM catalogo_maestro WHERE id = ? AND activo = 1");
-                            $stmtVerificar->execute([$id_existente]);
-                            
-                            if($stmtVerificar->rowCount() > 0) {
-                                $esActualizacion = true;
+                        if($respuesta['status'] === "ok") {
+                            $productosCreados++;
+                            if($indice < 3) {
+                                error_log("CREADO fila {$fila}: Código {$respuesta['codigo']} - {$descripcion}");
                             }
-                        }
-                        
-                        if($esActualizacion) {
-                            
-                            // ✅ ACTUALIZAR PRODUCTO EXISTENTE
-                            $datosActualizar = array(
-                                "id" => intval($id_existente),
-                                "descripcion" => $descripcion,
-                                "id_categoria" => intval($id_categoria),
-                                "precio_venta" => $precio_venta_limpio,
-                                "imagen" => "vistas/img/productos/default/anonymous.png",
-                                "es_divisible" => $es_divisible,
-                                "codigo_hijo_mitad" => $codigo_hijo_mitad,
-                                "codigo_hijo_tercio" => $codigo_hijo_tercio,
-                                "codigo_hijo_cuarto" => $codigo_hijo_cuarto
-                            );
-                            
-                            $respuesta = ModeloCatalogoMaestro::mdlEditarProductoMaestro($datosActualizar);
-                            
-                            if($respuesta === "ok") {
-                                $productosActualizados++;
-                                if($indice < 3) {
-                                    error_log("ACTUALIZADO fila {$fila}: ID {$id_existente} - {$descripcion}");
-                                }
-                            } else {
-                                $erroresDetallados[] = "Fila {$fila}: Error actualizando - {$respuesta}";
-                                $productosErrores++;
-                            }
-                            
                         } else {
-                            
-                            // ✅ CREAR PRODUCTO NUEVO CON GENERACIÓN AUTOMÁTICA
-                            $datosCrear = array(
-                                "descripcion" => $descripcion,
-                                "id_categoria" => intval($id_categoria),
-                                "precio_venta" => $precio_venta_limpio,
-                                "imagen" => "vistas/img/productos/default/anonymous.png",
-                                "es_divisible" => $es_divisible,
-                                "codigo_hijo_mitad" => $codigo_hijo_mitad,
-                                "codigo_hijo_tercio" => $codigo_hijo_tercio,
-                                "codigo_hijo_cuarto" => $codigo_hijo_cuarto
-                            );
-                            
-                            $respuesta = ModeloCatalogoMaestro::mdlCrearProductoMaestroAutomatico($datosCrear);
-                            
-                            if($respuesta['status'] === "ok") {
-                                $productosCreados++;
-                                if($indice < 3) {
-                                    error_log("CREADO fila {$fila}: Código {$respuesta['codigo']} - {$descripcion}");
-                                }
-                            } else {
-                                $erroresDetallados[] = "Fila {$fila}: Error creando - " . ($respuesta['message'] ?? 'Error desconocido');
-                                $productosErrores++;
-                            }
+                            $erroresDetallados[] = "Fila {$fila}: Error creando - " . ($respuesta['message'] ?? 'Error desconocido');
+                            $productosErrores++;
                         }
                         
                     } catch(Exception $e) {
@@ -477,18 +415,9 @@ public function ctrImportarDesdeExcel() {
                 }
                 
                 // ✅ RESULTADO FINAL
-                error_log("RESULTADO: Creados={$productosCreados}, Actualizados={$productosActualizados}, Errores={$productosErrores}");
+                error_log("RESULTADO: Creados={$productosCreados}, Errores={$productosErrores}");
                 
-                $totalProcesados = $productosCreados + $productosActualizados;
-                $mensaje = "Productos procesados: {$totalProcesados}";
-                
-                if($productosCreados > 0) {
-                    $mensaje .= "\\n• Nuevos creados: {$productosCreados}";
-                }
-                
-                if($productosActualizados > 0) {
-                    $mensaje .= "\\n• Actualizados: {$productosActualizados}";
-                }
+                $mensaje = "Productos creados: {$productosCreados}";
                 
                 if($productosErrores > 0) {
                     $mensaje .= "\\n• Errores: {$productosErrores}";

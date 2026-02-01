@@ -26,17 +26,11 @@ $output = fopen('php://output', 'w');
 // Agregar BOM para UTF-8 (Excel)
 fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
 
-// ENCABEZADOS DE LA PLANTILLA
+// ENCABEZADOS DE LA PLANTILLA - SOLO 3 CAMPOS OBLIGATORIOS
 $encabezados = [
-    'ID',                    // Opcional: para actualizar productos existentes
-    'CODIGO',                // Opcional: se genera automáticamente con prefijo de categoría
     'DESCRIPCION',           // OBLIGATORIO
     'ID_CATEGORIA',          // OBLIGATORIO - Ver referencia de categorías abajo
-    'PRECIO_VENTA',          // OBLIGATORIO
-    'ES_DIVISIBLE',          // Opcional: SI/NO
-    'CODIGO_HIJO_MITAD',     // Opcional
-    'CODIGO_HIJO_TERCIO',    // Opcional
-    'CODIGO_HIJO_CUARTO'     // Opcional
+    'PRECIO_VENTA'           // OBLIGATORIO
 ];
 
 fputcsv($output, $encabezados, ',');
@@ -44,30 +38,17 @@ fputcsv($output, $encabezados, ',');
 // DATOS DE EJEMPLO
 if (count($categorias) > 0) {
     $categoriaEjemplo = $categorias[0];
-    $prefijoEjemplo = !empty($categoriaEjemplo['prefijo']) ? $categoriaEjemplo['prefijo'] : 'PROD';
     
     $ejemplo1 = [
-        '',  // ID (vacío para nuevo producto)
-        '',  // CODIGO (vacío - se generará automáticamente con prefijo)
         'Ejemplo Producto 1',
         $categoriaEjemplo['id'],  // ID_CATEGORIA
-        '10000',
-        'NO',
-        '',
-        '',
-        ''
+        '10000'
     ];
     
     $ejemplo2 = [
-        '',  // ID
-        '',  // CODIGO
         'Ejemplo Producto 2',
         $categoriaEjemplo['id'],  // ID_CATEGORIA
-        '15000',
-        'SI',
-        '',
-        '',
-        ''
+        '15000'
     ];
     
     fputcsv($output, $ejemplo1, ',');
@@ -95,11 +76,11 @@ fputcsv($output, [], ',');
 
 // INSTRUCCIONES
 fputcsv($output, ['=== INSTRUCCIONES ==='], ',');
-fputcsv($output, ['1. ID_CATEGORIA es OBLIGATORIO - Use el ID de la tabla de referencia'], ',');
-fputcsv($output, ['2. CODIGO se genera automáticamente usando el prefijo de la categoría'], ',');
-fputcsv($output, ['3. Si no especifica CODIGO, se generará: PREFIJO0001, PREFIJO0002, etc.'], ',');
-fputcsv($output, ['4. DESCRIPCION y PRECIO_VENTA son obligatorios'], ',');
-fputcsv($output, ['5. Para actualizar un producto existente, incluya el ID'], ',');
+fputcsv($output, ['1. Solo se requieren 3 campos: DESCRIPCION, ID_CATEGORIA y PRECIO_VENTA'], ',');
+fputcsv($output, ['2. El CODIGO se genera automáticamente usando el prefijo de la categoría'], ',');
+fputcsv($output, ['3. Ejemplo: Si la categoría tiene prefijo "LAM", se generará LAM0001, LAM0002, etc.'], ',');
+fputcsv($output, ['4. Todos los productos importados se crean como ACTIVOS automáticamente'], ',');
+fputcsv($output, ['5. Use el ID_CATEGORIA de la tabla de referencia de categorías'], ',');
 
 fclose($output);
 exit;

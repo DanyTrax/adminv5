@@ -1230,6 +1230,8 @@ public static function mdlCrearProductoMaestroAutomatico($datos) {
         $codigoGenerado = self::mdlGenerarCodigoAutomatico($datos["id_categoria"] ?? null);
         
         // ✅ INSERTAR PRODUCTO CON CÓDIGO GENERADO
+        $activo = isset($datos["activo"]) ? intval($datos["activo"]) : 1; // Por defecto activo = 1
+        
         $stmt = $db->prepare("
             INSERT INTO catalogo_maestro (
                 codigo, descripcion, id_categoria, precio_venta, imagen,
@@ -1238,7 +1240,7 @@ public static function mdlCrearProductoMaestroAutomatico($datos) {
             ) VALUES (
                 :codigo, :descripcion, :id_categoria, :precio_venta, :imagen,
                 :es_divisible, :codigo_hijo_mitad, :codigo_hijo_tercio, :codigo_hijo_cuarto,
-                1, NOW(), NOW()
+                :activo, NOW(), NOW()
             )
         ");
         
@@ -1256,6 +1258,7 @@ public static function mdlCrearProductoMaestroAutomatico($datos) {
         $stmt->bindParam(":codigo_hijo_mitad", $codigo_hijo_mitad, PDO::PARAM_STR);
         $stmt->bindParam(":codigo_hijo_tercio", $codigo_hijo_tercio, PDO::PARAM_STR);
         $stmt->bindParam(":codigo_hijo_cuarto", $codigo_hijo_cuarto, PDO::PARAM_STR);
+        $stmt->bindParam(":activo", $activo, PDO::PARAM_INT);
         
         if($stmt->execute()) {
             
