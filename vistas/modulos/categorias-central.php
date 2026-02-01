@@ -81,6 +81,7 @@ if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] != "Administrador") {
                             <thead>
                                 <tr>
                                     <th style="width:10px">#</th>
+                                    <th style="width:80px">ID</th>
                                     <th>Categoría</th>
                                     <th>Prefijo</th>
                                     <th>Fecha Creación</th>

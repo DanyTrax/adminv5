@@ -128,7 +128,7 @@ if ($('.btnSincronizarCategorias').length === 0) {
         tbody.empty();
 
         if (categorias.length === 0) {
-            tbody.append('<tr><td colspan="5" class="text-center">No hay categorías disponibles</td></tr>');
+            tbody.append('<tr><td colspan="6" class="text-center">No hay categorías disponibles</td></tr>');
             return;
         }
 
@@ -155,6 +155,7 @@ if ($('.btnSincronizarCategorias').length === 0) {
             
             var fila = '<tr>' +
                 '<td>' + (index + 1) + '</td>' +
+                '<td><span class="label label-primary" style="font-size:12px;">' + categoria.id + '</span></td>' +
                 '<td><strong>' + categoria.categoria + '</strong></td>' +
                 '<td><span class="label label-info">' + prefijo + '</span></td>' +
                 '<td>' + fechaCreacion + '</td>' +
