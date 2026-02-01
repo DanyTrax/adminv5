@@ -82,6 +82,7 @@ if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] != "Administrador") {
                                 <tr>
                                     <th style="width:10px">#</th>
                                     <th>Categoría</th>
+                                    <th>Prefijo</th>
                                     <th>Fecha Creación</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -115,6 +116,19 @@ MODAL CREAR CATEGORÍA CENTRAL
                             <input type="text" class="form-control input-lg" name="categoria" id="categoria" 
                                    placeholder="Ingrese el nombre de la categoría" required>
                             <div class="help-block text-red" id="error-categoria"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="prefijo">Prefijo para Códigos <span class="text-red">*</span></label>
+                            <input type="text" class="form-control input-lg" name="prefijo" id="prefijo" 
+                                   placeholder="Ej: LAM (máximo 10 caracteres)" maxlength="10" 
+                                   pattern="[A-Za-z0-9]+" required>
+                            <div class="help-block">
+                                <i class="fa fa-info-circle"></i> 
+                                Este prefijo se usará para generar códigos de productos. 
+                                Ejemplo: Si el prefijo es "LAM", los productos tendrán códigos como LAM0001, LAM0002, etc.
+                            </div>
+                            <div class="help-block text-red" id="error-prefijo"></div>
                         </div>
                         
                         <div class="form-group">
@@ -162,6 +176,19 @@ MODAL EDITAR CATEGORÍA CENTRAL
                             <input type="text" class="form-control input-lg" name="categoria" id="categoriaEditar" 
                                    placeholder="Ingrese el nombre de la categoría" required>
                             <div class="help-block text-red" id="error-categoria-editar"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="prefijoEditar">Prefijo para Códigos <span class="text-red">*</span></label>
+                            <input type="text" class="form-control input-lg" name="prefijo" id="prefijoEditar" 
+                                   placeholder="Ej: LAM (máximo 10 caracteres)" maxlength="10" 
+                                   pattern="[A-Za-z0-9]+" required>
+                            <div class="help-block">
+                                <i class="fa fa-info-circle"></i> 
+                                Este prefijo se usará para generar códigos de productos. 
+                                Ejemplo: Si el prefijo es "LAM", los productos tendrán códigos como LAM0001, LAM0002, etc.
+                            </div>
+                            <div class="help-block text-red" id="error-prefijo-editar"></div>
                         </div>
                     </div>
                 </div>

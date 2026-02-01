@@ -56,12 +56,13 @@ class ModeloCategoriasCentral {
             $pdo = ConexionCentral::conectar();
             
             $stmt = $pdo->prepare("
-                INSERT INTO categorias (categoria, fecha) 
-                VALUES (?, NOW())
+                INSERT INTO categorias (categoria, prefijo, fecha) 
+                VALUES (?, ?, NOW())
             ");
             
             $resultado = $stmt->execute([
-                $datos['categoria']
+                $datos['categoria'],
+                strtoupper(trim($datos['prefijo'] ?? '')) // Convertir a mayúsculas y limpiar
             ]);
             
             if ($resultado) {
@@ -96,12 +97,14 @@ class ModeloCategoriasCentral {
             
             $stmt = $pdo->prepare("
                 UPDATE categorias SET 
-                    categoria = ?
+                    categoria = ?,
+                    prefijo = ?
                 WHERE id = ?
             ");
             
             $resultado = $stmt->execute([
                 $datos['categoria'],
+                strtoupper(trim($datos['prefijo'] ?? '')), // Convertir a mayúsculas y limpiar
                 $id
             ]);
             
@@ -202,8 +205,8 @@ class ModeloCategoriasCentral {
                 }
             }
             
-            // Insertar categorías únicas en la BD central
-            $stmt = $pdo->prepare("INSERT INTO categorias (categoria, fecha) VALUES (?, NOW())");
+            // Insertar categorías únicas en la BD central (sin prefijo si viene de sucursales antiguas)
+            $stmt = $pdo->prepare("INSERT INTO categorias (categoria, prefijo, fecha) VALUES (?, NULL, NOW())");
             foreach ($categoriasUnicas as $categoria) {
                 $stmt->execute([$categoria]);
             }
@@ -270,11 +273,23 @@ class ModeloCategoriasCentral {
                     $stmt = $pdoSucursal->prepare("DELETE FROM categorias");
                     $stmt->execute();
                     
-                    // Insertar categorías centrales en la sucursal manteniendo los IDs
-                    $stmt = $pdoSucursal->prepare("INSERT INTO categorias (id, categoria, fecha) VALUES (?, ?, NOW())");
+                    // Verificar si la tabla de la sucursal tiene el campo prefijo
+                    $stmtCheck = $pdoSucursal->prepare("SHOW COLUMNS FROM categorias LIKE 'prefijo'");
+                    $stmtCheck->execute();
+                    $tienePrefijo = $stmtCheck->rowCount() > 0;
                     
-                    foreach ($categorias as $categoria) {
-                        $stmt->execute([$categoria['id'], $categoria['categoria']]);
+                    // Insertar categorías centrales en la sucursal manteniendo los IDs
+                    if ($tienePrefijo) {
+                        $stmt = $pdoSucursal->prepare("INSERT INTO categorias (id, categoria, prefijo, fecha) VALUES (?, ?, ?, NOW())");
+                        foreach ($categorias as $categoria) {
+                            $stmt->execute([$categoria['id'], $categoria['categoria'], $categoria['prefijo'] ?? null]);
+                        }
+                    } else {
+                        // Si la sucursal no tiene el campo prefijo, insertar sin él
+                        $stmt = $pdoSucursal->prepare("INSERT INTO categorias (id, categoria, fecha) VALUES (?, ?, NOW())");
+                        foreach ($categorias as $categoria) {
+                            $stmt->execute([$categoria['id'], $categoria['categoria']]);
+                        }
                     }
                     
                     $sucursalesSincronizadas++;

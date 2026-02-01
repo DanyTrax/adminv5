@@ -79,7 +79,8 @@ if ($('.btnSincronizarCategorias').length === 0) {
     $(document).on('click', '.btnEditarCategoriaCentral', function() {
         var idCategoria = $(this).attr('idCategoria');
         var categoria = $(this).attr('categoria');
-        mostrarModalEditar(idCategoria, categoria);
+        var prefijo = $(this).attr('prefijo') || '';
+        mostrarModalEditar(idCategoria, categoria, prefijo);
     });
 
     $(document).on('click', '.btnEliminarCategoriaCentral', function() {
@@ -127,7 +128,7 @@ if ($('.btnSincronizarCategorias').length === 0) {
         tbody.empty();
 
         if (categorias.length === 0) {
-            tbody.append('<tr><td colspan="4" class="text-center">No hay categorías disponibles</td></tr>');
+            tbody.append('<tr><td colspan="5" class="text-center">No hay categorías disponibles</td></tr>');
             return;
         }
 
@@ -138,6 +139,7 @@ if ($('.btnSincronizarCategorias').length === 0) {
                 '<button class="btn btn-warning btn-xs btnEditarCategoriaCentral" ' +
                 'idCategoria="' + categoria.id + '" ' +
                 'categoria="' + categoria.categoria + '" ' +
+                'prefijo="' + (categoria.prefijo || '') + '" ' +
                 'title="Editar categoría">' +
                 '<i class="fa fa-pencil"></i>' +
                 '</button>' +
@@ -149,9 +151,12 @@ if ($('.btnSincronizarCategorias').length === 0) {
                 '</button>' +
                 '</div>';
 
+            var prefijo = categoria.prefijo || '<span class="text-muted">Sin prefijo</span>';
+            
             var fila = '<tr>' +
                 '<td>' + (index + 1) + '</td>' +
                 '<td><strong>' + categoria.categoria + '</strong></td>' +
+                '<td><span class="label label-info">' + prefijo + '</span></td>' +
                 '<td>' + fechaCreacion + '</td>' +
                 '<td>' + acciones + '</td>' +
                 '</tr>';
@@ -166,16 +171,19 @@ if ($('.btnSincronizarCategorias').length === 0) {
     function mostrarModalCrear() {
         $('#formCrearCategoriaCentral')[0].reset();
         $('#error-categoria').text('');
+        $('#error-prefijo').text('');
         $('#modalCrearCategoriaCentral').modal('show');
     }
 
     /*=============================================
     MOSTRAR MODAL EDITAR
     =============================================*/
-    function mostrarModalEditar(idCategoria, categoria) {
+    function mostrarModalEditar(idCategoria, categoria, prefijo) {
         $('#idCategoriaEditar').val(idCategoria);
         $('#categoriaEditar').val(categoria);
+        $('#prefijoEditar').val(prefijo || '');
         $('#error-categoria-editar').text('');
+        $('#error-prefijo-editar').text('');
         $('#modalEditarCategoriaCentral').modal('show');
     }
 
@@ -208,7 +216,11 @@ if ($('.btnSincronizarCategorias').length === 0) {
                     mostrarSweetAlert('success', 'Éxito', respuesta.message);
                     cargarCategorias();
                 } else {
-                    $('#error-categoria').text(respuesta.message);
+                    if (respuesta.message.includes('prefijo')) {
+                        $('#error-prefijo').text(respuesta.message);
+                    } else {
+                        $('#error-categoria').text(respuesta.message);
+                    }
                 }
             },
             error: function(xhr, status, error) {
@@ -237,7 +249,11 @@ if ($('.btnSincronizarCategorias').length === 0) {
                     mostrarSweetAlert('success', 'Éxito', respuesta.message);
                     cargarCategorias();
                 } else {
-                    $('#error-categoria-editar').text(respuesta.message);
+                    if (respuesta.message.includes('prefijo')) {
+                        $('#error-prefijo-editar').text(respuesta.message);
+                    } else {
+                        $('#error-categoria-editar').text(respuesta.message);
+                    }
                 }
             },
             error: function(xhr, status, error) {

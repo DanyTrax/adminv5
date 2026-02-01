@@ -1113,35 +1113,49 @@ static private function mdlBuscarInformacionHijoAPI($dbCentral, $codigoHijo) {
 /*=============================================
 GENERAR CÓDIGO AUTOMÁTICO PARA PRODUCTO
 =============================================*/
-public static function mdlGenerarCodigoAutomatico() {
+public static function mdlGenerarCodigoAutomatico($idCategoria = null) {
     
     try {
         
         $db = self::conectarCentral();
         
-        // Buscar el último código que siga el patrón PROD####
+        // Obtener prefijo de la categoría si se proporciona id_categoria
+        $prefijo = 'PROD'; // Prefijo por defecto
+        if ($idCategoria) {
+            $stmtPrefijo = $db->prepare("SELECT prefijo FROM categorias WHERE id = ?");
+            $stmtPrefijo->execute([$idCategoria]);
+            $categoria = $stmtPrefijo->fetch(PDO::FETCH_ASSOC);
+            
+            if ($categoria && !empty($categoria['prefijo'])) {
+                $prefijo = strtoupper(trim($categoria['prefijo']));
+            }
+        }
+        
+        // Buscar el último código que use este prefijo
+        $longitudPrefijo = strlen($prefijo);
+        $patron = '^' . preg_quote($prefijo, '/') . '[0-9]{4}$';
         $stmt = $db->prepare("
             SELECT codigo 
             FROM catalogo_maestro 
-            WHERE codigo REGEXP '^PROD[0-9]{4}$' 
-            ORDER BY CAST(SUBSTRING(codigo, 5) AS UNSIGNED) DESC 
+            WHERE codigo REGEXP ? 
+            ORDER BY CAST(SUBSTRING(codigo, ?) AS UNSIGNED) DESC 
             LIMIT 1
         ");
         
-        $stmt->execute();
+        $stmt->execute([$patron, $longitudPrefijo + 1]);
         $ultimoCodigo = $stmt->fetch();
         
         if($ultimoCodigo) {
             // Extraer el número del último código
-            $numero = intval(substr($ultimoCodigo['codigo'], 4));
+            $numero = intval(substr($ultimoCodigo['codigo'], $longitudPrefijo));
             $siguienteNumero = $numero + 1;
         } else {
-            // Si no hay códigos, empezar desde 1
+            // Si no hay códigos con este prefijo, empezar desde 1
             $siguienteNumero = 1;
         }
         
-        // Generar código con formato PROD0001
-        $nuevoCodigo = 'PROD' . str_pad($siguienteNumero, 4, '0', STR_PAD_LEFT);
+        // Generar código con formato PREFIJO0001
+        $nuevoCodigo = $prefijo . str_pad($siguienteNumero, 4, '0', STR_PAD_LEFT);
         
         // Verificar que no exista (por seguridad)
         $stmtVerificar = $db->prepare("SELECT 1 FROM catalogo_maestro WHERE codigo = ?");
@@ -1149,27 +1163,47 @@ public static function mdlGenerarCodigoAutomatico() {
         
         if($stmtVerificar->rowCount() > 0) {
             // Si por alguna razón existe, buscar el siguiente disponible
-            return self::mdlGenerarCodigoAutomaticoAlternativo();
+            return self::mdlGenerarCodigoAutomaticoAlternativo($prefijo);
         }
         
         return $nuevoCodigo;
         
     } catch(Exception $e) {
         error_log("Error generando código automático: " . $e->getMessage());
-        return 'PROD' . str_pad(rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+        $prefijo = $idCategoria ? self::obtenerPrefijoCategoria($idCategoria) : 'PROD';
+        return $prefijo . str_pad(rand(1000, 9999), 4, '0', STR_PAD_LEFT);
     }
+}
+
+/*=============================================
+OBTENER PREFIJO DE CATEGORÍA
+=============================================*/
+private static function obtenerPrefijoCategoria($idCategoria) {
+    try {
+        $db = self::conectarCentral();
+        $stmt = $db->prepare("SELECT prefijo FROM categorias WHERE id = ?");
+        $stmt->execute([$idCategoria]);
+        $categoria = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($categoria && !empty($categoria['prefijo'])) {
+            return strtoupper(trim($categoria['prefijo']));
+        }
+    } catch(Exception $e) {
+        error_log("Error obteniendo prefijo de categoría: " . $e->getMessage());
+    }
+    return 'PROD'; // Prefijo por defecto
 }
 
 /*=============================================
 GENERAR CÓDIGO ALTERNATIVO SI HAY CONFLICTO
 =============================================*/
-private static function mdlGenerarCodigoAutomaticoAlternativo() {
+private static function mdlGenerarCodigoAutomaticoAlternativo($prefijo = 'PROD') {
     
     $db = self::conectarCentral();
     
-    // Buscar un número disponible
+    // Buscar un número disponible con el prefijo dado
     for($i = 1; $i <= 9999; $i++) {
-        $codigo = 'PROD' . str_pad($i, 4, '0', STR_PAD_LEFT);
+        $codigo = $prefijo . str_pad($i, 4, '0', STR_PAD_LEFT);
         
         $stmt = $db->prepare("SELECT 1 FROM catalogo_maestro WHERE codigo = ?");
         $stmt->execute([$codigo]);
@@ -1180,7 +1214,7 @@ private static function mdlGenerarCodigoAutomaticoAlternativo() {
     }
     
     // Si se agotan los números, usar timestamp
-    return 'PROD' . substr(time(), -4);
+    return $prefijo . substr(time(), -4);
 }
 /*=============================================
 CREAR PRODUCTO MAESTRO CON GENERACIÓN AUTOMÁTICA
@@ -1192,8 +1226,8 @@ public static function mdlCrearProductoMaestroAutomatico($datos) {
         $db = self::conectarCentral();
         $db->beginTransaction();
         
-        // ✅ GENERAR CÓDIGO AUTOMÁTICO
-        $codigoGenerado = self::mdlGenerarCodigoAutomatico();
+        // ✅ GENERAR CÓDIGO AUTOMÁTICO CON PREFIJO DE CATEGORÍA
+        $codigoGenerado = self::mdlGenerarCodigoAutomatico($datos["id_categoria"] ?? null);
         
         // ✅ INSERTAR PRODUCTO CON CÓDIGO GENERADO
         $stmt = $db->prepare("

@@ -27,8 +27,25 @@ class ControladorCategoriasCentral {
                 ];
             }
             
+            // Validar prefijo
+            if (empty($_POST["prefijo"])) {
+                return [
+                    'success' => false,
+                    'message' => 'El prefijo es requerido'
+                ];
+            }
+            
+            // Validar que el prefijo solo contenga letras y números
+            if (!preg_match('/^[A-Za-z0-9]+$/', $_POST["prefijo"])) {
+                return [
+                    'success' => false,
+                    'message' => 'El prefijo solo puede contener letras y números'
+                ];
+            }
+            
             $datos = [
                 'categoria' => $_POST["categoria"],
+                'prefijo' => $_POST["prefijo"],
                 'descripcion' => $_POST["descripcion"] ?? '',
                 'activo' => isset($_POST["activo"]) ? (bool)$_POST["activo"] : true
             ];
@@ -62,8 +79,25 @@ class ControladorCategoriasCentral {
                 ];
             }
             
+            // Validar prefijo
+            if (empty($_POST["prefijo"])) {
+                return [
+                    'success' => false,
+                    'message' => 'El prefijo es requerido'
+                ];
+            }
+            
+            // Validar que el prefijo solo contenga letras y números
+            if (!preg_match('/^[A-Za-z0-9]+$/', $_POST["prefijo"])) {
+                return [
+                    'success' => false,
+                    'message' => 'El prefijo solo puede contener letras y números'
+                ];
+            }
+            
             $datos = [
-                'categoria' => $_POST["categoria"]
+                'categoria' => $_POST["categoria"],
+                'prefijo' => $_POST["prefijo"]
             ];
             
             $respuesta = ModeloCategoriasCentral::mdlEditarCategoriaCentral($_POST["id"], $datos);
