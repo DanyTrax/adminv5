@@ -69,7 +69,10 @@ if($_SESSION["perfil"] == "Vendedor"){
          <tr>
            
            <th style="width:10px">#</th>
-           <th>Categoria</th>
+           <th style="width:80px">ID</th>
+           <th>Categoría</th>
+           <th>Prefijo</th>
+           <th>Fecha Creación</th>
            <th>Acciones</th>
 
          </tr> 
@@ -85,31 +88,43 @@ if($_SESSION["perfil"] == "Vendedor"){
 
           $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
 
-          foreach ($categorias as $key => $value) {
-           
-            echo ' <tr>
+          if (empty($categorias)) {
+            echo '<tr><td colspan="6" class="text-center">No hay categorías disponibles</td></tr>';
+          } else {
+            foreach ($categorias as $key => $value) {
+              $prefijo = !empty($value["prefijo"]) ? $value["prefijo"] : '<span class="text-muted">Sin prefijo</span>';
+              $fechaCreacion = !empty($value["fecha"]) ? date('d/m/Y', strtotime($value["fecha"])) : 'N/A';
+              
+              echo ' <tr>
 
-                    <td>'.($key+1).'</td>
+                      <td>'.($key+1).'</td>
 
-                    <td class="text-uppercase">'.$value["categoria"].'</td>
+                      <td><span class="label label-primary" style="font-size:12px;">'.$value["id"].'</span></td>
 
-                    <td>
+                      <td><strong class="text-uppercase">'.$value["categoria"].'</strong></td>
 
-                      <div class="btn-group">
-                          
-                        <button class="btn btn-warning btnEditarCategoria" idCategoria="'.$value["id"].'" data-toggle="modal" data-target="#modalEditarCategoria"><i class="fa fa-pencil"></i></button>';
+                      <td><span class="label label-info">'.$prefijo.'</span></td>
 
-                        if($_SESSION["perfil"] == "Administrador"){
+                      <td>'.$fechaCreacion.'</td>
 
-                          echo '<button class="btn btn-danger btnEliminarCategoria" idCategoria="'.$value["id"].'"><i class="fa fa-times"></i></button>';
+                      <td>
 
-                        }
+                        <div class="btn-group">
+                            
+                          <button class="btn btn-warning btn-xs btnEditarCategoria" idCategoria="'.$value["id"].'" data-toggle="modal" data-target="#modalEditarCategoria" title="Editar categoría"><i class="fa fa-pencil"></i></button>';
 
-                      echo '</div>  
+                          if($_SESSION["perfil"] == "Administrador"){
 
-                    </td>
+                            echo '<button class="btn btn-danger btn-xs btnEliminarCategoria" idCategoria="'.$value["id"].'" title="Eliminar categoría"><i class="fa fa-times"></i></button>';
 
-                  </tr>';
+                          }
+
+                        echo '</div>  
+
+                      </td>
+
+                    </tr>';
+            }
           }
 
         ?>

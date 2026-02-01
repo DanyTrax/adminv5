@@ -15,9 +15,12 @@ class AjaxCatalogoMaestro {
 
     public $accion;
 
+    public $idCategoria;
+    
     public function ajaxObtenerSiguienteCodigo() {
-        
-        $respuesta = ModeloCatalogoMaestro::mdlObtenerSiguienteCodigo();
+        // Obtener id_categoria si se proporciona
+        $idCategoria = isset($this->idCategoria) && !empty($this->idCategoria) ? intval($this->idCategoria) : null;
+        $respuesta = ModeloCatalogoMaestro::mdlGenerarCodigoAutomatico($idCategoria);
         echo $respuesta;
     }
     
@@ -101,6 +104,7 @@ OBTENER SIGUIENTE CÓDIGO
 if(isset($_POST["accion"]) && $_POST["accion"] == "obtenerCodigo") {
     
     $obtenerCodigo = new AjaxCatalogoMaestro();
+    $obtenerCodigo->idCategoria = $_POST["idCategoria"] ?? null;
     $obtenerCodigo->ajaxObtenerSiguienteCodigo();
 }
 

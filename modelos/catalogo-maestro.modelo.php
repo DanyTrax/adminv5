@@ -607,10 +607,7 @@ public static function mdlEliminarProductoMaestro($datos) {
             $errores = [];
             
             foreach ($datosExcel as $fila) {
-                // Generar código automáticamente si no viene
-                $codigo = !empty($fila['codigo']) ? $fila['codigo'] : self::mdlObtenerSiguienteCodigo();
-                
-                // Validar que la categoría existe
+                // Validar que la categoría existe primero
                 $stmtCategoria = $db->prepare("SELECT id FROM categorias WHERE id = :id_categoria");
                 $stmtCategoria->bindParam(":id_categoria", $fila['id_categoria'], PDO::PARAM_INT);
                 $stmtCategoria->execute();
@@ -619,6 +616,9 @@ public static function mdlEliminarProductoMaestro($datos) {
                     $errores[] = "Categoría no existe para: " . $fila['descripcion'];
                     continue;
                 }
+                
+                // Generar código automáticamente usando prefijo de categoría si no viene
+                $codigo = !empty($fila['codigo']) ? $fila['codigo'] : self::mdlGenerarCodigoAutomatico($fila['id_categoria']);
                 
                 $stmt = $db->prepare("
                     INSERT INTO catalogo_maestro (codigo, descripcion, id_categoria, precio_venta) 

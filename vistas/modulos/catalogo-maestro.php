@@ -250,7 +250,11 @@ MODAL AGREGAR PRODUCTO MAESTRO
               
                 <span class="input-group-addon"><i class="fa fa-code"></i></span> 
 
-                <input type="text" class="form-control input-lg" name="nuevoCodigoMaestro" id="nuevoCodigoMaestro" placeholder="Código del producto" readonly required>
+                <input type="text" class="form-control input-lg" name="nuevoCodigoMaestro" id="nuevoCodigoMaestro" placeholder="Se genera automáticamente con prefijo de categoría" readonly required>
+                <small class="help-block">
+                    <i class="fa fa-info-circle"></i> 
+                    El código se generará automáticamente usando el prefijo de la categoría seleccionada (ej: LAM0001, LAM0002)
+                </small>
 
               </div>
 
@@ -723,15 +727,18 @@ MODAL IMPORTAR EXCEL
 
             <div class="alert alert-warning">
               <h4><i class="fa fa-warning"></i> Instrucciones para Importar</h4>
-              <p><strong>1.</strong> Descargue la plantilla Excel desde el botón "Descargar Plantilla Excel"</p>
+              <p><strong>1.</strong> Descargue la plantilla CSV desde el botón "Descargar Plantilla CSV"</p>
               <p><strong>2.</strong> Complete los datos requeridos en el archivo:</p>
               <ul>
-                <li><strong>codigo:</strong> Código del producto (opcional - se genera automático)</li>
-                <li><strong>descripcion:</strong> Nombre del producto (OBLIGATORIO)</li>
-                <li><strong>id_categoria:</strong> ID de la categoría (OBLIGATORIO - ver referencia en plantilla)</li>
-                <li><strong>precio_venta:</strong> Precio de venta (OBLIGATORIO)</li>
+                <li><strong>ID:</strong> Opcional - Solo si desea actualizar un producto existente</li>
+                <li><strong>CODIGO:</strong> Opcional - Se genera automáticamente usando el prefijo de la categoría (ej: LAM0001, LAM0002)</li>
+                <li><strong>DESCRIPCION:</strong> Nombre del producto (OBLIGATORIO)</li>
+                <li><strong>ID_CATEGORIA:</strong> ID de la categoría (OBLIGATORIO) - Ver tabla de referencia en la plantilla</li>
+                <li><strong>PRECIO_VENTA:</strong> Precio de venta (OBLIGATORIO)</li>
+                <li><strong>ES_DIVISIBLE:</strong> Opcional - SI/NO</li>
               </ul>
-              <p><strong>3.</strong> Guarde el archivo y súbalo aquí</p>
+              <p><strong>3.</strong> <strong>IMPORTANTE:</strong> El código se genera automáticamente usando el prefijo de la categoría. Si la categoría tiene prefijo "LAM", los códigos serán LAM0001, LAM0002, etc.</p>
+              <p><strong>4.</strong> Guarde el archivo y súbalo aquí</p>
             </div>
 
             <div class="form-group">

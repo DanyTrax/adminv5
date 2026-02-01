@@ -262,27 +262,60 @@ GENERAR CÓDIGO AUTOMÁTICO
 
 function configurarEventosModales() {
 
-    // Generar código automático al abrir el modal de agregar
+    // Generar código automático cuando se selecciona una categoría
+    $(document).on('change', 'select[name="nuevaCategoriaMaestro"]', function() {
+        var idCategoria = $(this).val();
+        if (idCategoria && idCategoria !== '') {
+            var datos = new FormData();
+            datos.append("accion", "obtenerCodigo");
+            datos.append("idCategoria", idCategoria);
+
+            $.ajax({
+                url: "ajax/catalogo-maestro.ajax.php",
+                method: "POST",
+                data: datos,
+                cache: false,
+                contentType: false,
+                processData: false,
+                dataType: "text",
+                success: function(respuesta){
+                    $("#nuevoCodigoMaestro").val(respuesta);
+                },
+                error: function(xhr, status, error) {
+                    $("#nuevoCodigoMaestro").val("PROD0001");
+                }
+            });
+        } else {
+            $("#nuevoCodigoMaestro").val("");
+        }
+    });
+    
+    // Generar código automático al abrir el modal de agregar (solo si ya hay categoría seleccionada)
     $('#modalAgregarProductoMaestro').on('show.bs.modal', function () {
+        var idCategoria = $('select[name="nuevaCategoriaMaestro"]').val();
+        if (idCategoria && idCategoria !== '') {
+            var datos = new FormData();
+            datos.append("accion", "obtenerCodigo");
+            datos.append("idCategoria", idCategoria);
 
-        var datos = new FormData();
-        datos.append("accion", "obtenerCodigo");
-
-        $.ajax({
-            url: "ajax/catalogo-maestro.ajax.php",
-            method: "POST",
-            data: datos,
-            cache: false,
-            contentType: false,
-            processData: false,
-            dataType: "text",
-            success: function(respuesta){
-                $("#nuevoCodigoMaestro").val(respuesta);
-            },
-            error: function(xhr, status, error) {
-$("#nuevoCodigoMaestro").val("PROD0001");
-            }
-        });
+            $.ajax({
+                url: "ajax/catalogo-maestro.ajax.php",
+                method: "POST",
+                data: datos,
+                cache: false,
+                contentType: false,
+                processData: false,
+                dataType: "text",
+                success: function(respuesta){
+                    $("#nuevoCodigoMaestro").val(respuesta);
+                },
+                error: function(xhr, status, error) {
+                    $("#nuevoCodigoMaestro").val("PROD0001");
+                }
+            });
+        } else {
+            $("#nuevoCodigoMaestro").val("");
+        }
     });
 }
 
@@ -1072,7 +1105,8 @@ function configurarValidaciones() {
     });
 
     // Validación de categoría
-    $('#nuevaCategoriaMaestro, #editarCategoriaMaestro').on('change', function(){
+    // Validación de categoría (solo para editar, crear ya tiene su propio handler)
+    $('#editarCategoriaMaestro').on('change', function(){
         if($(this).val() === '' || $(this).val() === '0') {
             $(this).addClass('is-invalid');
         } else {
