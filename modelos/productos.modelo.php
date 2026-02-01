@@ -203,4 +203,59 @@ static public function mdlAgregarStock($tabla, $idProducto, $cantidad){
     $stmt->close();
     $stmt = null;
 }
+
+/*=============================================
+BORRAR TODOS LOS PRODUCTOS DE LA SUCURSAL
+=============================================*/
+static public function mdlBorrarTodosProductos($tabla) {
+    try {
+        $db = Conexion::conectar();
+        $db->beginTransaction();
+        
+        // Eliminar todos los productos
+        $stmt = $db->prepare("DELETE FROM $tabla");
+        $resultado = $stmt->execute();
+        
+        if ($resultado) {
+            $db->commit();
+            return "ok";
+        } else {
+            $db->rollBack();
+            return "error";
+        }
+    } catch (Exception $e) {
+        if (isset($db)) {
+            $db->rollBack();
+        }
+        error_log("Error borrando todos los productos: " . $e->getMessage());
+        return "error";
+    }
+}
+
+/*=============================================
+SINCRONIZAR PRODUCTOS DESDE CATÁLOGO MAESTRO
+=============================================*/
+static public function mdlSincronizarDesdeCatalogoMaestro($tabla) {
+    try {
+        require_once __DIR__ . "/catalogo-maestro.modelo.php";
+        
+        // Primero borrar todos los productos
+        $borrar = self::mdlBorrarTodosProductos($tabla);
+        if ($borrar !== "ok") {
+            return "error_borrar";
+        }
+        
+        // Luego sincronizar desde catálogo maestro
+        $sincronizacion = ModeloCatalogoMaestro::mdlSincronizarAProductosLocales();
+        
+        if ($sincronizacion) {
+            return "ok";
+        } else {
+            return "error_sincronizar";
+        }
+    } catch (Exception $e) {
+        error_log("Error sincronizando productos: " . $e->getMessage());
+        return "error";
+    }
+}
 }

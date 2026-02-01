@@ -124,4 +124,96 @@ class ControladorCategorias{
             return "error_con_productos";
         }
     }
+
+/*=============================================
+BORRAR TODAS LAS CATEGORÍAS DE LA SUCURSAL
+=============================================*/
+static public function ctrBorrarTodasCategorias() {
+    if (isset($_POST["borrarTodasCategorias"])) {
+        $tabla = "categorias";
+        $respuesta = ModeloCategorias::mdlBorrarTodasCategorias($tabla);
+        
+        if ($respuesta == "ok") {
+            echo '<script>
+                swal({
+                    type: "success",
+                    title: "Categorías eliminadas",
+                    text: "Todas las categorías han sido eliminadas de esta sucursal",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                }).then(function(result){
+                    if (result.value) {
+                        window.location = "categorias";
+                    }
+                });
+            </script>';
+        } else {
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: "No se pudieron eliminar las categorías",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+        }
+    }
+}
+
+/*=============================================
+SINCRONIZAR CATEGORÍAS DESDE CENTRAL
+=============================================*/
+static public function ctrSincronizarCategorias() {
+    if (isset($_POST["sincronizarCategorias"])) {
+        $tabla = "categorias";
+        $respuesta = ModeloCategorias::mdlSincronizarCategoriasDesdeCentral($tabla);
+        
+        if ($respuesta == "ok") {
+            echo '<script>
+                swal({
+                    type: "success",
+                    title: "Sincronización completada",
+                    text: "Las categorías han sido sincronizadas desde las categorías centrales",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                }).then(function(result){
+                    if (result.value) {
+                        window.location = "categorias";
+                    }
+                });
+            </script>';
+        } else if ($respuesta == "error_borrar") {
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Error al borrar",
+                    text: "No se pudieron eliminar las categorías existentes",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+        } else if ($respuesta == "error_sincronizar") {
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Error al sincronizar",
+                    text: "No se pudieron sincronizar las categorías desde central",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+        } else {
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: "Ocurrió un error durante la sincronización",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+        }
+    }
+}
 }

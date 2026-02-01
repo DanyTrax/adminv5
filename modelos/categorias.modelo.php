@@ -111,5 +111,60 @@ static public function mdlContarProductosPorCategoria($tabla, $item, $valor){
     return $stmt->fetchColumn(); // Devuelve solo el número del conteo (ej: '0', '5', etc.)
 }
 
+/*=============================================
+BORRAR TODAS LAS CATEGORÍAS DE LA SUCURSAL
+=============================================*/
+static public function mdlBorrarTodasCategorias($tabla) {
+    try {
+        $db = Conexion::conectar();
+        $db->beginTransaction();
+        
+        // Eliminar todas las categorías
+        $stmt = $db->prepare("DELETE FROM $tabla");
+        $resultado = $stmt->execute();
+        
+        if ($resultado) {
+            $db->commit();
+            return "ok";
+        } else {
+            $db->rollBack();
+            return "error";
+        }
+    } catch (Exception $e) {
+        if (isset($db)) {
+            $db->rollBack();
+        }
+        error_log("Error borrando todas las categorías: " . $e->getMessage());
+        return "error";
+    }
+}
+
+/*=============================================
+SINCRONIZAR CATEGORÍAS DESDE CENTRAL
+=============================================*/
+static public function mdlSincronizarCategoriasDesdeCentral($tabla) {
+    try {
+        require_once __DIR__ . "/categorias-central.modelo.php";
+        
+        // Primero borrar todas las categorías
+        $borrar = self::mdlBorrarTodasCategorias($tabla);
+        if ($borrar !== "ok") {
+            return "error_borrar";
+        }
+        
+        // Luego sincronizar desde central
+        $sincronizacion = ModeloCategoriasCentral::mdlSincronizarCentralASucursalActual();
+        
+        if ($sincronizacion && isset($sincronizacion['success']) && $sincronizacion['success']) {
+            return "ok";
+        } else {
+            return "error_sincronizar";
+        }
+    } catch (Exception $e) {
+        error_log("Error sincronizando categorías: " . $e->getMessage());
+        return "error";
+    }
+}
+
 }
 

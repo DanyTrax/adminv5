@@ -7,7 +7,7 @@ require_once "../modelos/productos.modelo.php";
 
 class AjaxCategorias{
 
-	/* EDITAR CATEGOR�A */
+	/* EDITAR CATEGOR�A */
 	public $idCategoria;
 	public function ajaxEditarCategoria(){
 		$item = "id";
@@ -36,4 +36,14 @@ if(isset($_POST["idCategoriaBorrar"])){
 	$borrar = new AjaxCategorias();
 	$borrar -> idCategoriaBorrar = $_POST["idCategoriaBorrar"];
 	$borrar -> ajaxBorrarCategoria();
+}
+
+// Si la petición es para borrar todas las categorías
+if(isset($_POST["borrarTodasCategorias"])){
+    ControladorCategorias::ctrBorrarTodasCategorias();
+}
+
+// Si la petición es para sincronizar categorías desde central
+if(isset($_POST["sincronizarCategorias"])){
+    ControladorCategorias::ctrSincronizarCategorias();
 }

@@ -45,6 +45,18 @@ if($_SESSION["perfil"] == "Vendedor"){
           Agregar categoría
 
         </button>
+        
+        <!--=====================================
+        BOTONES DE SINCRONIZACIÓN Y BORRAR TODO
+        ======================================-->
+        <div class="btn-group pull-right" style="margin-left: 10px;">
+          <button type="button" class="btn btn-danger btnBorrarTodasCategorias" title="Borrar todas las categorías de esta sucursal">
+            <i class="fa fa-trash"></i> Borrar Todo
+          </button>
+          <button type="button" class="btn btn-success btnSincronizarCategorias" title="Sincronizar categorías desde central">
+            <i class="fa fa-refresh"></i> Sincronizar con Categorías Centrales
+          </button>
+        </div>
 
       </div>
 
@@ -270,5 +282,76 @@ MODAL EDITAR CATEGORÍA
 
 </div>
 
+<script>
+$(document).ready(function() {
+    
+    /*=============================================
+    BORRAR TODAS LAS CATEGORÍAS
+    =============================================*/
+    $(document).on("click", ".btnBorrarTodasCategorias", function() {
+        swal({
+            title: "¿Está seguro?",
+            text: "¡Esta acción eliminará TODAS las categorías de esta sucursal! Esta acción no se puede deshacer.",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Sí, borrar todo",
+            cancelButtonText: "Cancelar"
+        }).then(function(result) {
+            if (result.value) {
+                var datos = new FormData();
+                datos.append("borrarTodasCategorias", "ok");
+                
+                $.ajax({
+                    url: "ajax/categorias.ajax.php",
+                    method: "POST",
+                    data: datos,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function(respuesta) {
+                        // La respuesta viene del controlador con el swal incluido
+                        eval(respuesta);
+                    }
+                });
+            }
+        });
+    });
 
+    /*=============================================
+    SINCRONIZAR CATEGORÍAS DESDE CENTRAL
+    =============================================*/
+    $(document).on("click", ".btnSincronizarCategorias", function() {
+        swal({
+            title: "¿Sincronizar categorías?",
+            text: "Esta acción eliminará todas las categorías actuales y las reemplazará con las de categorías centrales. ¿Desea continuar?",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#5cb85c",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Sí, sincronizar",
+            cancelButtonText: "Cancelar"
+        }).then(function(result) {
+            if (result.value) {
+                var datos = new FormData();
+                datos.append("sincronizarCategorias", "ok");
+                
+                $.ajax({
+                    url: "ajax/categorias.ajax.php",
+                    method: "POST",
+                    data: datos,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function(respuesta) {
+                        // La respuesta viene del controlador con el swal incluido
+                        eval(respuesta);
+                    }
+                });
+            }
+        });
+    });
+});
+</script>
 

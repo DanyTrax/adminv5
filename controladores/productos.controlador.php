@@ -202,8 +202,100 @@ OBTENER SIGUIENTE CÓDIGO DE PRODUCTO
 static public function ctrObtenerSiguienteCodigo($item, $valor){
 
     $tabla = "productos";
-    $respuesta = ModeloProductos::mdlObtenerUltimoCodigoPorCategoria($tabla, $item, $valor);
+    $respuesta = ModeloProductos::mdlObtenerUltimoCodigo($tabla, $item, $valor);
     return $respuesta;
 
+}
+
+/*=============================================
+BORRAR TODOS LOS PRODUCTOS DE LA SUCURSAL
+=============================================*/
+static public function ctrBorrarTodosProductos() {
+    if (isset($_POST["borrarTodosProductos"])) {
+        $tabla = "productos";
+        $respuesta = ModeloProductos::mdlBorrarTodosProductos($tabla);
+        
+        if ($respuesta == "ok") {
+            echo '<script>
+                swal({
+                    type: "success",
+                    title: "Productos eliminados",
+                    text: "Todos los productos han sido eliminados de esta sucursal",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                }).then(function(result){
+                    if (result.value) {
+                        window.location = "productos";
+                    }
+                });
+            </script>';
+        } else {
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: "No se pudieron eliminar los productos",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+        }
+    }
+}
+
+/*=============================================
+SINCRONIZAR PRODUCTOS DESDE CATÁLOGO MAESTRO
+=============================================*/
+static public function ctrSincronizarProductos() {
+    if (isset($_POST["sincronizarProductos"])) {
+        $tabla = "productos";
+        $respuesta = ModeloProductos::mdlSincronizarDesdeCatalogoMaestro($tabla);
+        
+        if ($respuesta == "ok") {
+            echo '<script>
+                swal({
+                    type: "success",
+                    title: "Sincronización completada",
+                    text: "Los productos han sido sincronizados desde el catálogo maestro",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                }).then(function(result){
+                    if (result.value) {
+                        window.location = "productos";
+                    }
+                });
+            </script>';
+        } else if ($respuesta == "error_borrar") {
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Error al borrar",
+                    text: "No se pudieron eliminar los productos existentes",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+        } else if ($respuesta == "error_sincronizar") {
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Error al sincronizar",
+                    text: "No se pudieron sincronizar los productos desde el catálogo maestro",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+        } else {
+            echo '<script>
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: "Ocurrió un error durante la sincronización",
+                    showConfirmButton: true,
+                    confirmButtonText: "Cerrar"
+                });
+            </script>';
+        }
+    }
 }
 }

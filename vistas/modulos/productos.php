@@ -41,6 +41,18 @@ if($_SESSION["perfil"] == "Vendedor" && !isset($_GET["ruta"])){
         // Botón de agregar producto oculto según solicitud del usuario
         // Solo se permite edición de productos existentes
         ?>
+        
+        <!--=====================================
+        BOTONES DE SINCRONIZACIÓN Y BORRAR TODO
+        ======================================-->
+        <div class="btn-group pull-right" style="margin-left: 10px;">
+          <button type="button" class="btn btn-danger btnBorrarTodosProductos" title="Borrar todos los productos de esta sucursal">
+            <i class="fa fa-trash"></i> Borrar Todo
+          </button>
+          <button type="button" class="btn btn-success btnSincronizarProductos" title="Sincronizar productos desde catálogo maestro">
+            <i class="fa fa-refresh"></i> Sincronizar con Catálogo Maestro
+          </button>
+        </div>
 
       </div>
 
@@ -293,5 +305,73 @@ $(document).ready(function() {
         $(this).find('#camposDivisiblesNuevo').hide().find('input').val('');
     });
 
+});
+
+/*=============================================
+BORRAR TODOS LOS PRODUCTOS
+=============================================*/
+$(document).on("click", ".btnBorrarTodosProductos", function() {
+    swal({
+        title: "¿Está seguro?",
+        text: "¡Esta acción eliminará TODOS los productos de esta sucursal! Esta acción no se puede deshacer.",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Sí, borrar todo",
+        cancelButtonText: "Cancelar"
+    }).then(function(result) {
+        if (result.value) {
+            var datos = new FormData();
+            datos.append("borrarTodosProductos", "ok");
+            
+            $.ajax({
+                url: "ajax/productos.ajax.php",
+                method: "POST",
+                data: datos,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(respuesta) {
+                    // La respuesta viene del controlador con el swal incluido
+                    eval(respuesta);
+                }
+            });
+        }
+    });
+});
+
+/*=============================================
+SINCRONIZAR PRODUCTOS DESDE CATÁLOGO MAESTRO
+=============================================*/
+$(document).on("click", ".btnSincronizarProductos", function() {
+    swal({
+        title: "¿Sincronizar productos?",
+        text: "Esta acción eliminará todos los productos actuales y los reemplazará con los del catálogo maestro. ¿Desea continuar?",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#5cb85c",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Sí, sincronizar",
+        cancelButtonText: "Cancelar"
+    }).then(function(result) {
+        if (result.value) {
+            var datos = new FormData();
+            datos.append("sincronizarProductos", "ok");
+            
+            $.ajax({
+                url: "ajax/productos.ajax.php",
+                method: "POST",
+                data: datos,
+                cache: false,
+                contentType: false,
+                processData: false,
+                success: function(respuesta) {
+                    // La respuesta viene del controlador con el swal incluido
+                    eval(respuesta);
+                }
+            });
+        }
+    });
 });
 </script>

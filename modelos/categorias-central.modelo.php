@@ -399,19 +399,34 @@ class ModeloCategoriasCentral {
             $stmt = $pdoLocal->prepare("DELETE FROM categorias");
             $stmt->execute();
             
+            // Verificar si la tabla local tiene el campo prefijo
+            $stmtCheck = $pdoLocal->prepare("SHOW COLUMNS FROM categorias LIKE 'prefijo'");
+            $stmtCheck->execute();
+            $tienePrefijo = $stmtCheck->rowCount() > 0;
+            
             // Insertar categorías centrales en la sucursal actual
-            $stmt = $pdoLocal->prepare("INSERT INTO categorias (id, categoria, fecha) VALUES (?, ?, NOW())");
             $insertadas = 0;
             
             foreach ($categorias as $categoria) {
                 try {
-                    $stmt->execute([$categoria['id'], $categoria['categoria']]);
+                    if ($tienePrefijo) {
+                        $stmt = $pdoLocal->prepare("INSERT INTO categorias (id, categoria, prefijo, fecha) VALUES (?, ?, ?, NOW())");
+                        $stmt->execute([$categoria['id'], $categoria['categoria'], $categoria['prefijo'] ?? null]);
+                    } else {
+                        $stmt = $pdoLocal->prepare("INSERT INTO categorias (id, categoria, fecha) VALUES (?, ?, NOW())");
+                        $stmt->execute([$categoria['id'], $categoria['categoria']]);
+                    }
                     $insertadas++;
                 } catch (Exception $e) {
                     // Si falla por ID duplicado, intentar sin ID
                     try {
-                        $stmtSinId = $pdoLocal->prepare("INSERT INTO categorias (categoria, fecha) VALUES (?, NOW())");
-                        $stmtSinId->execute([$categoria['categoria']]);
+                        if ($tienePrefijo) {
+                            $stmtSinId = $pdoLocal->prepare("INSERT INTO categorias (categoria, prefijo, fecha) VALUES (?, ?, NOW())");
+                            $stmtSinId->execute([$categoria['categoria'], $categoria['prefijo'] ?? null]);
+                        } else {
+                            $stmtSinId = $pdoLocal->prepare("INSERT INTO categorias (categoria, fecha) VALUES (?, NOW())");
+                            $stmtSinId->execute([$categoria['categoria']]);
+                        }
                         $insertadas++;
                     } catch (Exception $e2) {
                         error_log("Error insertando categoría {$categoria['categoria']}: " . $e2->getMessage());

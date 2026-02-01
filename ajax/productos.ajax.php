@@ -83,3 +83,13 @@ if(isset($_POST["idCategoria"])){
     $respuesta = ControladorProductos::ctrObtenerUltimoCodigo($item, $valor);
     echo json_encode($respuesta);
 }
+
+// Si la petición es para borrar todos los productos
+if(isset($_POST["borrarTodosProductos"])){
+    ControladorProductos::ctrBorrarTodosProductos();
+}
+
+// Si la petición es para sincronizar productos desde catálogo maestro
+if(isset($_POST["sincronizarProductos"])){
+    ControladorProductos::ctrSincronizarProductos();
+}
