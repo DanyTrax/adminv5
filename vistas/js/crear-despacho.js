@@ -1271,18 +1271,29 @@ VALIDAR STOCK DE PRODUCTOS
 function validarStockProductos() {
     
     // VERIFICACIÓN CRÍTICA: Solo ejecutar si estamos en la página correcta
-    if(typeof window.location === 'undefined' || 
-       (window.location.href.indexOf('crear-despacho') === -1 && 
-        window.location.href.indexOf('ruta=crear-despacho') === -1)) {
+    // Verificar URL primero
+    if(typeof window === 'undefined' || typeof window.location === 'undefined') {
+        return;
+    }
+    
+    var url = window.location.href || '';
+    var pathname = window.location.pathname || '';
+    
+    // Verificar que la URL contenga 'crear-despacho'
+    if(url.indexOf('crear-despacho') === -1 && 
+       url.indexOf('ruta=crear-despacho') === -1 &&
+       pathname.indexOf('crear-despacho') === -1) {
         // No estamos en la página de crear-despacho, salir inmediatamente
         return;
     }
     
-    // Verificación adicional por elementos del DOM
-    if(typeof $ !== 'undefined' && 
-       $("#formCrearDespacho").length === 0 && 
-       $("#productosDespachoSeleccionados").length === 0) {
-        return;
+    // Verificación adicional por elementos del DOM (solo si jQuery está disponible)
+    if(typeof $ !== 'undefined') {
+        if($("#formCrearDespacho").length === 0 && 
+           $("#productosDespachoSeleccionados").length === 0 &&
+           $("#crearDespachoContainer").length === 0) {
+            return;
+        }
     }
 
     if(productosDespacho.length === 0) {
