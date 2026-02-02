@@ -45,38 +45,59 @@ $(document).ready(function() {
             dataType: "json",
             success: function(respuesta) {
                 
+                // Validar que la respuesta sea válida
+                if (!respuesta || respuesta === null || typeof respuesta !== "object") {
+                    swal({
+                        type: "error",
+                        title: "Error",
+                        text: "No se encontró el producto."
+                    });
+                    return;
+                }
+                
                 // LLENAR INFORMACIÓN DE SOLO LECTURA
-                $("#infoCodigo").text(respuesta["codigo"]);
-                $("#infoDescripcion").text(respuesta["descripcion"]);
-                $("#infoPrecioVenta").text("$" + parseFloat(respuesta["precio_venta"]).toLocaleString());
-                $("#infoStockActual").text(respuesta["stock"] + " unidades");
+                $("#infoCodigo").text(respuesta["codigo"] || "");
+                $("#infoDescripcion").text(respuesta["descripcion"] || "");
+                $("#infoPrecioVenta").text("$" + parseFloat(respuesta["precio_venta"] || 0).toLocaleString());
+                $("#infoStockActual").text((respuesta["stock"] || 0) + " unidades");
                 
                 // Determinar tipo de producto
                 var tipoProducto = respuesta["es_divisible"] == 1 ? "Divisible" : "Simple";
                 $("#infoTipo").text(tipoProducto);
 
                 // CAMPOS EDITABLES
-                $("#editarStock").val(respuesta["stock"]);
+                $("#editarStock").val(respuesta["stock"] || 0);
 
                 // --- LÍNEA CORREGIDA PARA PASAR EL ID ---
                 $("#idProducto").val(respuesta["id"]);
 
-                if (respuesta["imagen"] != "") {
+                if (respuesta["imagen"] != "" && respuesta["imagen"]) {
                     $("#imagenActual").val(respuesta["imagen"]);
                     $(".previsualizar").attr("src", respuesta["imagen"]);
                 }
 
                 // Obtener nombre de la categoría
-                var datosCategoria = new FormData();
-                datosCategoria.append("idCategoria", respuesta["id_categoria"]);
-                $.ajax({
-                    url: "ajax/categorias.ajax.php",
-                    method: "POST",
-                    data: datosCategoria,
-                    cache: false, contentType: false, processData: false, dataType: "json",
-                    success: function(respuestaCategoria) {
-                        $("#infoCategoria").text(respuestaCategoria["categoria"]);
-                    }
+                if (respuesta["id_categoria"]) {
+                    var datosCategoria = new FormData();
+                    datosCategoria.append("idCategoria", respuesta["id_categoria"]);
+                    $.ajax({
+                        url: "ajax/categorias.ajax.php",
+                        method: "POST",
+                        data: datosCategoria,
+                        cache: false, contentType: false, processData: false, dataType: "json",
+                        success: function(respuestaCategoria) {
+                            if (respuestaCategoria && respuestaCategoria["categoria"]) {
+                                $("#infoCategoria").text(respuestaCategoria["categoria"]);
+                            }
+                        }
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                swal({
+                    type: "error",
+                    title: "Error",
+                    text: "No se pudo cargar el producto. Por favor, intente nuevamente."
                 });
             }
         });
