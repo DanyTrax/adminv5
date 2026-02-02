@@ -1,10 +1,18 @@
+console.log("📦 productos.js cargado correctamente");
+
 $(document).ready(function() {
+    console.log("✅ $(document).ready ejecutado en productos.js");
 
     /*=============================================
     CARGAR LA TABLA DE PRODUCTOS (RENDERIZADO DIRECTO DESDE PHP)
     =============================================*/
     // La tabla ahora se renderiza directamente desde PHP como en ventas
     // No se usa DataTable con AJAX, se usa la clase "tablas" estándar
+    
+    console.log("🔍 Verificando botones en la página...");
+    console.log("Botones .btnEditarProducto encontrados:", $("button.btnEditarProducto").length);
+    console.log("Botones .btnDividirProducto encontrados:", $("button.btnDividirProducto").length);
+    console.log("Botones .btnEliminarProducto encontrados:", $("button.btnEliminarProducto").length);
 
     /*=============================================
     SUBIENDO LA FOTO DEL PRODUCTO
@@ -148,6 +156,7 @@ $(document).ready(function() {
     /*=============================================
     ELIMINAR PRODUCTO
     =============================================*/
+    console.log("🗑️ Registrando evento para .btnEliminarProducto");
     $(document).on("click", "button.btnEliminarProducto", function() {
         console.log("🔴 BOTÓN ELIMINAR CLICKEADO");
         console.log("Elemento:", this);
@@ -176,6 +185,7 @@ $(document).ready(function() {
     /*=============================================
     DIVIDIR PRODUCTO (LÓGICA NUEVA)
     =============================================*/
+    console.log("✂️ Registrando evento para .btnDividirProducto");
     $(document).on("click", "button.btnDividirProducto", function() {
         console.log("🟢 BOTÓN DIVIDIR CLICKEADO");
         console.log("Elemento:", this);
