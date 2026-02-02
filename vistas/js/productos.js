@@ -34,7 +34,7 @@ $(document).ready(function() {
         e.preventDefault();
         e.stopPropagation();
         
-        var idProducto = $(this).attr("idProducto");
+        var idProducto = $(this).attr("data-id-producto") || $(this).attr("idProducto");
         
         console.log("ID Producto capturado:", idProducto);
         
@@ -128,9 +128,9 @@ $(document).ready(function() {
     ELIMINAR PRODUCTO
     =============================================*/
     $(".tablas").on("click", "button.btnEliminarProducto", function() {
-        var idProducto = $(this).attr("idProducto");
-        var codigo = $(this).attr("codigo");
-        var imagen = $(this).attr("imagen");
+        var idProducto = $(this).attr("data-id-producto") || $(this).attr("idProducto");
+        var codigo = $(this).attr("data-codigo") || $(this).attr("codigo");
+        var imagen = $(this).attr("data-imagen") || $(this).attr("imagen");
         swal({
             title: '¿Está seguro de borrar el producto?',
             text: "¡Si no lo está puede cancelar la acción!",
@@ -149,7 +149,7 @@ $(document).ready(function() {
     DIVIDIR PRODUCTO (LÓGICA NUEVA)
     =============================================*/
     $(".tablas").on("click", "button.btnDividirProducto", function() {
-        var idProducto = $(this).attr("idProducto");
+        var idProducto = $(this).attr("data-id-producto") || $(this).attr("idProducto");
         var datos = new FormData();
         datos.append("idProducto", idProducto);
 

@@ -141,13 +141,13 @@ if($_SESSION["perfil"] == "Vendedor" && !isset($_GET["ruta"])){
                 $botones = "<div class='btn-group'>";
                 if(isset($_SESSION["perfil"])){
                   if($_SESSION["perfil"] == "Administrador"){
-                    $botones .= "<button class='btn btn-warning btnEditarProducto' idProducto='".$value["id"]."'><i class='fa fa-pencil'></i></button>";
+                    $botones .= "<button class='btn btn-warning btnEditarProducto' data-id-producto='".$value["id"]."'><i class='fa fa-pencil'></i></button>";
                   }
                   if(($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") && $value["es_divisible"] == 1){
-                    $botones .= "<button class='btn btn-info btnDividirProducto' idProducto='".$value["id"]."'><i class='fa fa-pie-chart'></i></button>";
+                    $botones .= "<button class='btn btn-info btnDividirProducto' data-id-producto='".$value["id"]."'><i class='fa fa-pie-chart'></i></button>";
                   }
                   if($_SESSION["perfil"] == "Administrador"){
-                    $botones .= "<button class='btn btn-danger btnEliminarProducto' idProducto='".$value["id"]."' codigo='".$value["codigo"]."' imagen='".$value["imagen"]."'><i class='fa fa-times'></i></button>";
+                    $botones .= "<button class='btn btn-danger btnEliminarProducto' data-id-producto='".$value["id"]."' data-codigo='".$value["codigo"]."' data-imagen='".$value["imagen"]."'><i class='fa fa-times'></i></button>";
                   }
                 }
                 $botones .= "</div>";
