@@ -5,21 +5,29 @@ $(document).ready(function() {
     =============================================*/
     var perfilOculto = $("#perfilOculto").val();
     
-    // Función para obtener la URL con filtros
-    function obtenerUrlAjax() {
-        var filtroCategoria = $("#filtroCategoria").val() || "";
-        var url = "ajax/datatable-productos.ajax.php?perfilOculto=" + perfilOculto;
-        if (filtroCategoria) {
-            url += "&filtroCategoria=" + filtroCategoria;
-        }
-        return url;
-    }
-    
     var tablaProductos = $('.tablaProductos').DataTable({
-        "ajax": {
-            "url": obtenerUrlAjax(),
-            "dataSrc": "data",
-            "type": "GET"
+        "ajax": function(data, callback, settings) {
+            // Leer el valor del filtro cada vez que se hace la petición
+            var filtroCategoria = $("#filtroCategoria").val() || "";
+            var url = "ajax/datatable-productos.ajax.php?perfilOculto=" + perfilOculto;
+            if (filtroCategoria) {
+                url += "&filtroCategoria=" + filtroCategoria;
+            }
+            
+            console.log("Cargando productos desde:", url);
+            
+            $.ajax({
+                url: url,
+                dataType: "json",
+                success: function(json) {
+                    console.log("Productos recibidos:", json.data ? json.data.length : 0);
+                    callback(json);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error cargando productos:", error, xhr.responseText);
+                    callback({"data": []});
+                }
+            });
         },
         "deferRender": true,
         "retrieve": true,
@@ -34,10 +42,10 @@ $(document).ready(function() {
         var categoriaSeleccionada = $(this).val();
         console.log("Filtro cambiado a categoría:", categoriaSeleccionada);
         
-        // Actualizar la URL del AJAX y recargar
-        tablaProductos.ajax.url(obtenerUrlAjax()).load(function(json) {
+        // Recargar la tabla - la función ajax leerá el nuevo valor del filtro
+        tablaProductos.ajax.reload(function(json) {
             console.log("Tabla recargada con", json.data ? json.data.length : 0, "productos");
-        }, false);
+        }, false); // false = mantener la página actual
     });
 
     /*=============================================
