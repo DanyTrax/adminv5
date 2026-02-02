@@ -814,3 +814,17 @@ MODAL IMPORTAR EXCEL
   $eliminarProductoMaestro -> ctrEliminarProductoMaestro();
 
 ?>
+
+<script>
+/*=============================================
+FILTRO POR CATEGORÍA (RECARGAR PÁGINA COMO EN VENTAS Y PRODUCTOS)
+=============================================*/
+$(document).on("change", "#filtroCategoriaMaestro", function() {
+    var categoriaSeleccionada = $(this).val();
+    var url = "index.php?ruta=catalogo-maestro";
+    if (categoriaSeleccionada) {
+        url += "&filtroCategoria=" + categoriaSeleccionada;
+    }
+    window.location = url;
+});
+</script>
