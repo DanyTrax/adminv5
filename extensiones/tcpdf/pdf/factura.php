@@ -101,41 +101,32 @@ class imprimirFactura
 		// Pedimos la informaci��n del segundo vendedor
 		$vendAbono = ControladorUsuarios::ctrMostrarUsuarios("id", $respuestaVenta["id_vend_abono"]);
 
-		//INFORMACION EMPRESA - Obtener desde BD Central
+		//INFORMACION EMPRESA - Obtener desde tabla sucursal_local (configuración local)
 		$tikempresa = "";
 		$tiknumero = "";
 		$tikdirecc = "";
 		$tikcorreo = "NO HAY CORREO";
 		
-		// Obtener información de la sucursal desde BD Central
-		if (isset($respuestaVendedor['empresa']) && !empty($respuestaVendedor['empresa'])) {
-			try {
-				// Buscar la sucursal por nombre en la BD central
-				$sucursalInfo = ModeloSucursales::mdlMostrarSucursal("nombre", $respuestaVendedor['empresa']);
-				
-				if ($sucursalInfo) {
-					$tikempresa = strtoupper($sucursalInfo['nombre']);
-					$tiknumero = $sucursalInfo['telefono'] ?: "NO DISPONIBLE";
-					$tikdirecc = $sucursalInfo['direccion'] ?: "NO DISPONIBLE";
-					$tikcorreo = $sucursalInfo['email'] ?: "NO HAY CORREO";
-				} else {
-					// Fallback a datos por defecto si no se encuentra la sucursal
-					$tikempresa = strtoupper($respuestaVendedor['empresa']);
-					$tiknumero = "NO DISPONIBLE";
-					$tikdirecc = "NO DISPONIBLE";
-					$tikcorreo = "NO HAY CORREO";
-				}
-			} catch (Exception $e) {
-				// En caso de error, usar datos por defecto
-				error_log("Error obteniendo datos de sucursal: " . $e->getMessage());
-				$tikempresa = strtoupper($respuestaVendedor['empresa']);
+		// Obtener información de la sucursal desde la tabla local sucursal_local
+		try {
+			$sucursalLocal = ModeloSucursales::mdlObtenerConfiguracionLocal();
+			
+			if ($sucursalLocal && !empty($sucursalLocal)) {
+				$tikempresa = !empty($sucursalLocal['nombre']) ? strtoupper($sucursalLocal['nombre']) : "SUCURSAL NO DEFINIDA";
+				$tiknumero = !empty($sucursalLocal['telefono']) ? $sucursalLocal['telefono'] : "NO DISPONIBLE";
+				$tikdirecc = !empty($sucursalLocal['direccion']) ? $sucursalLocal['direccion'] : "NO DISPONIBLE";
+				$tikcorreo = !empty($sucursalLocal['email']) ? $sucursalLocal['email'] : "NO HAY CORREO";
+			} else {
+				// Fallback a datos por defecto si no se encuentra la configuración
+				$tikempresa = "SUCURSAL NO CONFIGURADA";
 				$tiknumero = "NO DISPONIBLE";
 				$tikdirecc = "NO DISPONIBLE";
 				$tikcorreo = "NO HAY CORREO";
 			}
-		} else {
-			// Si no hay empresa definida, usar datos por defecto
-			$tikempresa = "SUCURSAL NO DEFINIDA";
+		} catch (Exception $e) {
+			// En caso de error, usar datos por defecto
+			error_log("Error obteniendo datos de sucursal local: " . $e->getMessage());
+			$tikempresa = "SUCURSAL NO CONFIGURADA";
 			$tiknumero = "NO DISPONIBLE";
 			$tikdirecc = "NO DISPONIBLE";
 			$tikcorreo = "NO HAY CORREO";
