@@ -30,8 +30,21 @@ $(document).ready(function() {
     /*=============================================
     EDITAR PRODUCTO (VERSIÓN CORREGIDA)
     =============================================*/
-    $(".tablas").on("click", "button.btnEditarProducto", function() {
+    $(".tablas").on("click", "button.btnEditarProducto", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         var idProducto = $(this).attr("idProducto");
+        
+        if (!idProducto) {
+            swal({
+                type: "error",
+                title: "Error",
+                text: "No se pudo obtener el ID del producto."
+            });
+            return;
+        }
+        
         var datos = new FormData();
         datos.append("idProducto", idProducto);
 
@@ -74,6 +87,8 @@ $(document).ready(function() {
                 if (respuesta["imagen"] != "" && respuesta["imagen"]) {
                     $("#imagenActual").val(respuesta["imagen"]);
                     $(".previsualizar").attr("src", respuesta["imagen"]);
+                } else {
+                    $(".previsualizar").attr("src", "vistas/img/productos/default/anonymous.png");
                 }
 
                 // Obtener nombre de la categoría
@@ -92,8 +107,12 @@ $(document).ready(function() {
                         }
                     });
                 }
+                
+                // Abrir el modal después de cargar los datos
+                $("#modalEditarProducto").modal("show");
             },
             error: function(xhr, status, error) {
+                console.error("Error AJAX:", error, xhr.responseText);
                 swal({
                     type: "error",
                     title: "Error",
