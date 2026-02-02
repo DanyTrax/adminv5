@@ -36,7 +36,9 @@ $(document).ready(function() {
         
         var idProducto = $(this).attr("idProducto");
         
-        if (!idProducto) {
+        console.log("ID Producto capturado:", idProducto);
+        
+        if (!idProducto || idProducto === "" || idProducto === undefined) {
             swal({
                 type: "error",
                 title: "Error",
