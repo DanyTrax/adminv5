@@ -234,7 +234,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
   <script src="<?php echo $url; ?>vistas/js/plantilla.js"></script>
   <script src="<?php echo $url; ?>vistas/js/usuarios.js"></script>
   <script src="<?php echo $url; ?>vistas/js/categorias.js"></script>
-  <script src="<?php echo $url; ?>vistas/js/productos.js?v=1.2"></script> 
+  <script src="<?php echo $url; ?>vistas/js/productos.js?v=<?php echo time(); ?>"></script> 
   <script src="<?php echo $url; ?>vistas/js/clientes.js"></script>
   <script src="<?php echo $url; ?>vistas/js/ventas.js"></script>
   <script src="<?php echo $url; ?>vistas/js/contabilidad.js"></script>
