@@ -363,13 +363,19 @@ class ModeloUsuariosCentral {
                 ");
             }
             
+            // Asegurar que todos los campos tengan valores por defecto
+            $password = !empty($usuario['password']) ? $usuario['password'] : 'password123';
+            $telefono = !empty($usuario['telefono']) ? $usuario['telefono'] : '';
+            $direccion = !empty($usuario['direccion']) ? $usuario['direccion'] : '';
+            $foto = !empty($usuario['foto']) ? $usuario['foto'] : 'vistas/img/usuarios/default/anonymous.png';
+            
             $stmt->bindParam(":nombre", $usuario['nombre'], PDO::PARAM_STR);
             $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
-            $stmt->bindParam(":password", $usuario['password'], PDO::PARAM_STR);
+            $stmt->bindParam(":password", $password, PDO::PARAM_STR);
             $stmt->bindParam(":perfil", $usuario['perfil'], PDO::PARAM_STR);
-            $stmt->bindParam(":foto", $usuario['foto'], PDO::PARAM_STR);
-            $stmt->bindParam(":telefono", $usuario['telefono'], PDO::PARAM_STR);
-            $stmt->bindParam(":direccion", $usuario['direccion'], PDO::PARAM_STR);
+            $stmt->bindParam(":foto", $foto, PDO::PARAM_STR);
+            $stmt->bindParam(":telefono", $telefono, PDO::PARAM_STR);
+            $stmt->bindParam(":direccion", $direccion, PDO::PARAM_STR);
             if ($idLocalExiste) {
                 $stmt->bindParam(":id_local", $usuario['id'], PDO::PARAM_INT);
             }
