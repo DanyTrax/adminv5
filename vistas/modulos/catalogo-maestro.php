@@ -38,6 +38,26 @@
         <a href="descargar-plantilla-excel.php?descargar=csv" class="btn btn-success">
             <i class="fa fa-download"></i> Descargar Plantilla CSV
         </a>
+        
+        <!--=====================================
+        FILTRO POR CATEGORÍA
+        ======================================-->
+        <div class="form-group pull-right" style="display: inline-block; margin-right: 15px; margin-bottom: 0;">
+          <label for="filtroCategoriaMaestro" style="margin-right: 10px; font-weight: normal;">
+            <i class="fa fa-filter"></i> Filtrar por categoría:
+          </label>
+          <select class="form-control" id="filtroCategoriaMaestro" name="filtroCategoriaMaestro" style="display: inline-block; width: 250px;">
+            <option value="">Todas las categorías</option>
+            <?php
+            $categorias = ControladorCatalogoMaestro::ctrMostrarCategoriasCentrales();
+            $filtroCategoriaActual = isset($_GET["filtroCategoria"]) ? (int)$_GET["filtroCategoria"] : null;
+            foreach ($categorias as $key => $value) {
+              $selected = ($filtroCategoriaActual == $value["id"]) ? 'selected' : '';
+              echo '<option value="'.$value["id"].'" '.$selected.'>'.$value["categoria"].'</option>';
+            }
+            ?>
+          </select>
+        </div>
 
       </div>
 
@@ -68,8 +88,16 @@
 
         <?php
 
-          $item = null;
-          $valor = null;
+          // Obtener filtro de categoría desde GET
+          $filtroCategoria = isset($_GET["filtroCategoria"]) && !empty($_GET["filtroCategoria"]) ? (int)$_GET["filtroCategoria"] : null;
+          
+          if ($filtroCategoria !== null) {
+              $item = "id_categoria";
+              $valor = $filtroCategoria;
+          } else {
+              $item = null;
+              $valor = null;
+          }
 
           $productos = ControladorCatalogoMaestro::ctrMostrarCatalogoMaestro($item, $valor);
 

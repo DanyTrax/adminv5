@@ -32,16 +32,47 @@ class ModeloCatalogoMaestro {
         $db = self::conectarCentral();
         
         if($item != null) {
-            $stmt = $db->prepare("
-                SELECT cm.*, c.categoria as nombre_categoria 
-                FROM catalogo_maestro cm 
-                LEFT JOIN categorias c ON cm.id_categoria = c.id 
-                WHERE cm.$item = :$item AND cm.activo = 1
-            ");
-            $stmt->bindParam(":".$item, $valor, PDO::PARAM_STR);
-            $stmt->execute();
-            return $stmt->fetch();
+            // Si el item es 'id', devolver un solo registro (fetch)
+            if($item == "id") {
+                $stmt = $db->prepare("
+                    SELECT cm.*, c.categoria as nombre_categoria 
+                    FROM catalogo_maestro cm 
+                    LEFT JOIN categorias c ON cm.id_categoria = c.id 
+                    WHERE cm.$item = :$item AND cm.activo = 1
+                ");
+                $stmt->bindParam(":".$item, $valor, PDO::PARAM_INT);
+                $stmt->execute();
+                return $stmt->fetch();
+            } else {
+                // Para otros campos como 'id_categoria', devolver todos los registros (fetchAll)
+                // Ordenar por codigo ASC dentro de la categoría
+                $stmt = $db->prepare("
+                    SELECT cm.*, c.categoria as nombre_categoria,
+                           mitad.descripcion as descripcion_mitad,
+                           mitad.precio_venta as precio_mitad,
+                           tercio.descripcion as descripcion_tercio,
+                           tercio.precio_venta as precio_tercio,
+                           cuarto.descripcion as descripcion_cuarto,
+                           cuarto.precio_venta as precio_cuarto
+                    FROM catalogo_maestro cm 
+                    LEFT JOIN categorias c ON cm.id_categoria = c.id 
+                    LEFT JOIN catalogo_maestro mitad ON cm.codigo_hijo_mitad = mitad.codigo
+                    LEFT JOIN catalogo_maestro tercio ON cm.codigo_hijo_tercio = tercio.codigo
+                    LEFT JOIN catalogo_maestro cuarto ON cm.codigo_hijo_cuarto = cuarto.codigo
+                    WHERE cm.$item = :$item AND cm.activo = 1 
+                    ORDER BY cm.codigo ASC
+                ");
+                // Usar PARAM_INT para id_categoria, PARAM_STR para otros campos
+                if($item == "id_categoria"){
+                    $stmt->bindParam(":".$item, $valor, PDO::PARAM_INT);
+                }else{
+                    $stmt->bindParam(":".$item, $valor, PDO::PARAM_STR);
+                }
+                $stmt->execute();
+                return $stmt->fetchAll();
+            }
         } else {
+            // Sin filtro: ordenar primero por id_categoria ASC, luego por codigo ASC
             $stmt = $db->prepare("
                 SELECT cm.*, c.categoria as nombre_categoria,
                        mitad.descripcion as descripcion_mitad,
@@ -56,7 +87,7 @@ class ModeloCatalogoMaestro {
                 LEFT JOIN catalogo_maestro tercio ON cm.codigo_hijo_tercio = tercio.codigo
                 LEFT JOIN catalogo_maestro cuarto ON cm.codigo_hijo_cuarto = cuarto.codigo
                 WHERE cm.activo = 1 
-                ORDER BY CAST(cm.codigo AS UNSIGNED) ASC
+                ORDER BY cm.id_categoria ASC, cm.codigo ASC
             ");
             $stmt->execute();
             return $stmt->fetchAll();
