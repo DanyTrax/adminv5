@@ -6,7 +6,13 @@ class ModeloProductos {
 			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item ORDER BY id DESC");
 			$stmt -> bindParam(":".$item, $valor, PDO::PARAM_STR);
 			$stmt -> execute();
-			return $stmt -> fetch();
+			// Si el item es 'id', devolver un solo registro (fetch)
+			// Si es otro campo como 'id_categoria', devolver todos los registros (fetchAll)
+			if($item == "id"){
+				return $stmt -> fetch();
+			}else{
+				return $stmt -> fetchAll();
+			}
 		}else{
 			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla ORDER BY id DESC");
 			$stmt -> execute();
