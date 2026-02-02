@@ -303,13 +303,28 @@ class ModeloUsuariosCentral {
         try {
             $conexion = ConexionCentral::conectar();
             
-            // Verificar si el usuario ya existe por ID local o usuario
-            $stmt = $conexion->prepare("
-                SELECT id FROM usuarios_central 
-                WHERE usuario = :usuario OR id_local = :id_local
-            ");
-            $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
-            $stmt->bindParam(":id_local", $usuario['id'], PDO::PARAM_INT);
+            // Verificar si la columna id_local existe
+            $stmt = $conexion->prepare("SHOW COLUMNS FROM usuarios_central LIKE 'id_local'");
+            $stmt->execute();
+            $idLocalExiste = $stmt->fetch();
+            
+            // Verificar si el usuario ya existe
+            if ($idLocalExiste) {
+                // Si existe id_local, verificar por usuario o id_local
+                $stmt = $conexion->prepare("
+                    SELECT id FROM usuarios_central 
+                    WHERE usuario = :usuario OR id_local = :id_local
+                ");
+                $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+                $stmt->bindParam(":id_local", $usuario['id'], PDO::PARAM_INT);
+            } else {
+                // Si no existe id_local, solo verificar por usuario
+                $stmt = $conexion->prepare("
+                    SELECT id FROM usuarios_central 
+                    WHERE usuario = :usuario
+                ");
+                $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+            }
             $stmt->execute();
             
             if ($stmt->fetch()) {
@@ -320,17 +335,33 @@ class ModeloUsuariosCentral {
             }
             
             // Insertar usuario en usuarios_central
-            $stmt = $conexion->prepare("
-                INSERT INTO usuarios_central (
-                    nombre, usuario, password, perfil, foto, 
-                    telefono, direccion, activo, 
-                    sincronizado, fecha_creacion, id_local
-                ) VALUES (
-                    :nombre, :usuario, :password, :perfil, :foto,
-                    :telefono, :direccion, 1,
-                    0, NOW(), :id_local
-                )
-            ");
+            if ($idLocalExiste) {
+                // Si existe id_local, incluirlo en el INSERT
+                $stmt = $conexion->prepare("
+                    INSERT INTO usuarios_central (
+                        nombre, usuario, password, perfil, foto, 
+                        telefono, direccion, activo, 
+                        sincronizado, fecha_creacion, id_local
+                    ) VALUES (
+                        :nombre, :usuario, :password, :perfil, :foto,
+                        :telefono, :direccion, 1,
+                        0, NOW(), :id_local
+                    )
+                ");
+            } else {
+                // Si no existe id_local, no incluirlo en el INSERT
+                $stmt = $conexion->prepare("
+                    INSERT INTO usuarios_central (
+                        nombre, usuario, password, perfil, foto, 
+                        telefono, direccion, activo, 
+                        sincronizado, fecha_creacion
+                    ) VALUES (
+                        :nombre, :usuario, :password, :perfil, :foto,
+                        :telefono, :direccion, 1,
+                        0, NOW()
+                    )
+                ");
+            }
             
             $stmt->bindParam(":nombre", $usuario['nombre'], PDO::PARAM_STR);
             $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
@@ -339,7 +370,9 @@ class ModeloUsuariosCentral {
             $stmt->bindParam(":foto", $usuario['foto'], PDO::PARAM_STR);
             $stmt->bindParam(":telefono", $usuario['telefono'], PDO::PARAM_STR);
             $stmt->bindParam(":direccion", $usuario['direccion'], PDO::PARAM_STR);
-            $stmt->bindParam(":id_local", $usuario['id'], PDO::PARAM_INT);
+            if ($idLocalExiste) {
+                $stmt->bindParam(":id_local", $usuario['id'], PDO::PARAM_INT);
+            }
             
             if ($stmt->execute()) {
                 return [
