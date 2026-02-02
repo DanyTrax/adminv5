@@ -56,8 +56,10 @@ if($_SESSION["perfil"] == "Vendedor" && !isset($_GET["ruta"])){
             $item = null;
             $valor = null;
             $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
+            $filtroCategoriaActual = isset($_GET["filtroCategoria"]) ? (int)$_GET["filtroCategoria"] : null;
             foreach ($categorias as $key => $value) {
-              echo '<option value="'.$value["id"].'">'.$value["categoria"].'</option>';
+              $selected = ($filtroCategoriaActual == $value["id"]) ? 'selected' : '';
+              echo '<option value="'.$value["id"].'" '.$selected.'>'.$value["categoria"].'</option>';
             }
             ?>
           </select>
@@ -79,7 +81,7 @@ if($_SESSION["perfil"] == "Vendedor" && !isset($_GET["ruta"])){
 
       <div class="box-body">
         
-       <table class="table table-bordered table-striped dt-responsive tablaProductos" width="100%">
+       <table class="table table-bordered table-striped dt-responsive tablas" width="100%">
         
         <thead>
          
@@ -97,7 +99,83 @@ if($_SESSION["perfil"] == "Vendedor" && !isset($_GET["ruta"])){
            
          </tr> 
 
-        </thead>       
+        </thead>
+        
+        <tbody>
+          
+          <?php
+          
+          // Obtener filtro de categoría desde GET
+          $filtroCategoria = isset($_GET["filtroCategoria"]) && !empty($_GET["filtroCategoria"]) ? (int)$_GET["filtroCategoria"] : null;
+          
+          if ($filtroCategoria !== null) {
+              $item = "id_categoria";
+              $valor = $filtroCategoria;
+          } else {
+              $item = null;
+              $valor = null;
+          }
+          
+          $orden = "id";
+          
+          $productos = ControladorProductos::ctrMostrarProductos($item, $valor, $orden);
+          
+          if (is_array($productos) && count($productos) > 0) {
+              
+              foreach ($productos as $key => $value) {
+                
+                $imagen = "<img src='".$value["imagen"]."' width='40px'>";
+                
+                $itemCategoria = "id";
+                $valorCategoria = $value["id_categoria"];
+                $categorias = ControladorCategorias::ctrMostrarCategorias($itemCategoria, $valorCategoria);
+                
+                if($value["stock"] <= 10){
+                  $stock = "<button class='btn btn-danger'>".$value["stock"]."</button>";
+                } else if($value["stock"] > 11 && $value["stock"] <= 15){
+                  $stock = "<button class='btn btn-warning'>".$value["stock"]."</button>";
+                } else {
+                  $stock = "<button class='btn btn-success'>".$value["stock"]."</button>";
+                }
+                
+                $botones = "<div class='btn-group'>";
+                if(isset($_SESSION["perfil"])){
+                  if($_SESSION["perfil"] == "Administrador"){
+                    $botones .= "<button class='btn btn-warning btnEditarProducto' idProducto='".$value["id"]."' data-toggle='modal' data-target='#modalEditarProducto'><i class='fa fa-pencil'></i></button>";
+                  }
+                  if(($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor") && $value["es_divisible"] == 1){
+                    $botones .= "<button class='btn btn-info btnDividirProducto' idProducto='".$value["id"]."'><i class='fa fa-pie-chart'></i></button>";
+                  }
+                  if($_SESSION["perfil"] == "Administrador"){
+                    $botones .= "<button class='btn btn-danger btnEliminarProducto' idProducto='".$value["id"]."' codigo='".$value["codigo"]."' imagen='".$value["imagen"]."'><i class='fa fa-times'></i></button>";
+                  }
+                }
+                $botones .= "</div>";
+                
+                echo '<tr>
+                  <td>'.($key+1).'</td>
+                  <td>'.$imagen.'</td>
+                  <td>'.$value["codigo"].'</td>
+                  <td>'.$value["descripcion"].'</td>
+                  <td>'.$categorias["categoria"].'</td>
+                  <td>'.$stock.'</td>
+                  <td>$'.number_format($value["precio_venta"], 0, ',', '.').'</td>
+                  <td>'.$value["fecha"].'</td>
+                  <td>'.$botones.'</td>
+                </tr>';
+              }
+              
+          } else {
+              
+            echo '<tr>
+              <td colspan="9">No hay productos disponibles</td>
+            </tr>';
+            
+          }
+          
+          ?>
+
+        </tbody>
 
        </table>
 
