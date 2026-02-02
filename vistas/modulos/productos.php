@@ -52,7 +52,7 @@ if($_SESSION["perfil"] == "Vendedor" && !isset($_GET["ruta"])){
           <select class="form-control" id="filtroCategoria" name="filtroCategoria" style="display: inline-block; width: 250px;">
             <option value="">Todas las categorías</option>
             <?php
-            require_once "controladores/categorias.controlador.php";
+            require_once __DIR__ . "/../../controladores/categorias.controlador.php";
             $item = null;
             $valor = null;
             $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
