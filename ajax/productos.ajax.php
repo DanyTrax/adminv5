@@ -44,7 +44,13 @@ class AjaxProductos{
 			$orden = "id";
 		}
 		$respuesta = ControladorProductos::ctrMostrarProductos($item, $valor, $orden);
-		echo json_encode($respuesta);
+		
+		// Si no se encuentra el producto, devolver null en lugar de false
+		if($respuesta === false || $respuesta === null){
+			echo json_encode(null);
+		} else {
+			echo json_encode($respuesta);
+		}
 	}
 
 	// MÉTODO PARA DIVIDIR
