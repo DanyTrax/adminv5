@@ -30,7 +30,7 @@ $(document).ready(function() {
     /*=============================================
     EDITAR PRODUCTO (VERSIÓN CORREGIDA)
     =============================================*/
-    $(".tablas").on("click", "button.btnEditarProducto", function(e) {
+    $(document).on("click", "button.btnEditarProducto", function(e) {
         e.preventDefault();
         e.stopPropagation();
         
@@ -127,7 +127,7 @@ $(document).ready(function() {
     /*=============================================
     ELIMINAR PRODUCTO
     =============================================*/
-    $(".tablas").on("click", "button.btnEliminarProducto", function() {
+    $(document).on("click", "button.btnEliminarProducto", function() {
         var idProducto = $(this).attr("data-id-producto") || $(this).attr("idProducto");
         var codigo = $(this).attr("data-codigo") || $(this).attr("codigo");
         var imagen = $(this).attr("data-imagen") || $(this).attr("imagen");
@@ -148,7 +148,7 @@ $(document).ready(function() {
     /*=============================================
     DIVIDIR PRODUCTO (LÓGICA NUEVA)
     =============================================*/
-    $(".tablas").on("click", "button.btnDividirProducto", function() {
+    $(document).on("click", "button.btnDividirProducto", function() {
         var idProducto = $(this).attr("data-id-producto") || $(this).attr("idProducto");
         var datos = new FormData();
         datos.append("idProducto", idProducto);
