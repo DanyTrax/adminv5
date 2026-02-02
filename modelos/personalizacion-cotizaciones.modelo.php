@@ -182,7 +182,7 @@ class ModeloPersonalizacionCotizaciones {
                     footer_font_size,
                     activo,
                     usuario_creador
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
             ");
             
             $resultado = $stmt->execute([
@@ -199,7 +199,7 @@ class ModeloPersonalizacionCotizaciones {
                 $datos['header_color_fondo'] ?? '#873173',
                 $datos['header_color_texto'] ?? '#FFFFFF',
                 $datos['header_font_size'] ?? 14,
-                $datos['body_font_size'] ?? 13, // FALTABA ESTE CAMPO
+                $datos['body_font_size'] ?? 13,
                 $datos['footer_direccion'] ?? '',
                 $datos['footer_telefono'] ?? '',
                 $datos['footer_movil'] ?? '',
