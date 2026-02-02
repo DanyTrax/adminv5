@@ -19,7 +19,23 @@ $url = $protocol . $host . $script_name;
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <?php
     // --- LÓGICA PARA TÍTULO DINÁMICO ---
-    $nombreSitio = "RICAURTE";
+    // Obtener nombre de sucursal desde BD local
+    $nombreSitio = "Sistema";
+    try {
+        if (isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok") {
+            require_once "modelos/conexion.php";
+            $stmt = Conexion::conectar()->prepare("SELECT nombre FROM sucursal_local LIMIT 1");
+            $stmt->execute();
+            $sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($sucursal && !empty($sucursal["nombre"])) {
+                $nombreSitio = $sucursal["nombre"];
+            }
+        }
+    } catch (Exception $e) {
+        // Si hay error, mantener valor por defecto
+        error_log("Error obteniendo nombre de sucursal para título: " . $e->getMessage());
+    }
+    
     $tituloPagina = "Inicio";
     if (isset($_GET["ruta"])) {
         $tituloAmigable = str_replace("-", " ", $_GET["ruta"]);
