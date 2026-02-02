@@ -1,52 +1,10 @@
 $(document).ready(function() {
 
     /*=============================================
-    CARGAR LA TABLA DINÁMICA DE PRODUCTOS
+    CARGAR LA TABLA DE PRODUCTOS (RENDERIZADO DIRECTO DESDE PHP)
     =============================================*/
-    var perfilOculto = $("#perfilOculto").val();
-    
-    var tablaProductos = $('.tablaProductos').DataTable({
-        "ajax": function(data, callback, settings) {
-            // Leer el valor del filtro cada vez que se hace la petición
-            var filtroCategoria = $("#filtroCategoria").val() || "";
-            var url = "ajax/datatable-productos.ajax.php?perfilOculto=" + perfilOculto;
-            if (filtroCategoria) {
-                url += "&filtroCategoria=" + filtroCategoria;
-            }
-            
-            console.log("Cargando productos desde:", url);
-            
-            $.ajax({
-                url: url,
-                dataType: "json",
-                success: function(json) {
-                    console.log("Productos recibidos:", json.data ? json.data.length : 0);
-                    callback(json);
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error cargando productos:", error, xhr.responseText);
-                    callback({"data": []});
-                }
-            });
-        },
-        "deferRender": true,
-        "retrieve": true,
-        "processing": true,
-        "language": { "url": "//cdn.datatables.net/plug-ins/1.10.20/i18n/Spanish.json" }
-    });
-    
-    /*=============================================
-    FILTRO POR CATEGORÍA
-    =============================================*/
-    $(document).on("change", "#filtroCategoria", function() {
-        var categoriaSeleccionada = $(this).val();
-        console.log("Filtro cambiado a categoría:", categoriaSeleccionada);
-        
-        // Recargar la tabla - la función ajax leerá el nuevo valor del filtro
-        tablaProductos.ajax.reload(function(json) {
-            console.log("Tabla recargada con", json.data ? json.data.length : 0, "productos");
-        }, false); // false = mantener la página actual
-    });
+    // La tabla ahora se renderiza directamente desde PHP como en ventas
+    // No se usa DataTable con AJAX, se usa la clase "tablas" estándar
 
     /*=============================================
     SUBIENDO LA FOTO DEL PRODUCTO
