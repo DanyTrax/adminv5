@@ -4,24 +4,22 @@ $(document).ready(function() {
     CARGAR LA TABLA DINÁMICA DE PRODUCTOS
     =============================================*/
     var perfilOculto = $("#perfilOculto").val();
+    
+    // Función para obtener la URL con filtros
+    function obtenerUrlAjax() {
+        var filtroCategoria = $("#filtroCategoria").val() || "";
+        var url = "ajax/datatable-productos.ajax.php?perfilOculto=" + perfilOculto;
+        if (filtroCategoria) {
+            url += "&filtroCategoria=" + filtroCategoria;
+        }
+        return url;
+    }
+    
     var tablaProductos = $('.tablaProductos').DataTable({
-        "ajax": function(data, callback, settings) {
-            var filtroCategoria = $("#filtroCategoria").val() || "";
-            var url = "ajax/datatable-productos.ajax.php?perfilOculto=" + perfilOculto;
-            if (filtroCategoria) {
-                url += "&filtroCategoria=" + filtroCategoria;
-            }
-            $.ajax({
-                url: url,
-                dataType: "json",
-                success: function(json) {
-                    callback(json);
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error cargando productos:", error);
-                    callback({"data": []});
-                }
-            });
+        "ajax": {
+            "url": obtenerUrlAjax(),
+            "dataSrc": "data",
+            "type": "GET"
         },
         "deferRender": true,
         "retrieve": true,
@@ -35,9 +33,11 @@ $(document).ready(function() {
     $(document).on("change", "#filtroCategoria", function() {
         var categoriaSeleccionada = $(this).val();
         console.log("Filtro cambiado a categoría:", categoriaSeleccionada);
-        tablaProductos.ajax.reload(function(json) {
+        
+        // Actualizar la URL del AJAX y recargar
+        tablaProductos.ajax.url(obtenerUrlAjax()).load(function(json) {
             console.log("Tabla recargada con", json.data ? json.data.length : 0, "productos");
-        }, false); // false = mantener la página actual
+        }, false);
     });
 
     /*=============================================
