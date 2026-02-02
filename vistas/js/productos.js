@@ -16,6 +16,10 @@ $(document).ready(function() {
                 dataType: "json",
                 success: function(json) {
                     callback(json);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error cargando productos:", error);
+                    callback({"data": []});
                 }
             });
         },
@@ -28,8 +32,12 @@ $(document).ready(function() {
     /*=============================================
     FILTRO POR CATEGORÍA
     =============================================*/
-    $("#filtroCategoria").on("change", function() {
-        tablaProductos.ajax.reload(null, false); // false = mantener la página actual
+    $(document).on("change", "#filtroCategoria", function() {
+        var categoriaSeleccionada = $(this).val();
+        console.log("Filtro cambiado a categoría:", categoriaSeleccionada);
+        tablaProductos.ajax.reload(function(json) {
+            console.log("Tabla recargada con", json.data ? json.data.length : 0, "productos");
+        }, false); // false = mantener la página actual
     });
 
     /*=============================================
