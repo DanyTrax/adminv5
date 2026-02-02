@@ -1790,23 +1790,9 @@ $(document).ready(function() {
         }
     });
 
-    // Atajo para validar stock (Ctrl + Shift + V) - Cambiado para no interferir con Ctrl+V normal
-    $(document).on("keydown", function(e) {
-        // Solo activar si se presiona Ctrl+Shift+V (no Ctrl+V solo)
-        // Esto evita interferir con el pegado normal (Ctrl+V)
-        if(e.ctrlKey && e.shiftKey && e.keyCode === 86) {
-            // Verificar que estamos en un contexto relevante (no en un input/textarea)
-            var $target = $(e.target);
-            var esInput = $target.is('input, textarea, [contenteditable="true"]');
-            
-            // Solo ejecutar si NO está en un campo de entrada de texto
-            if(!esInput) {
-                e.preventDefault();
-                validarStockProductos();
-            }
-        }
-        // NO capturar Ctrl+V solo - permitir pegado normal en todos los campos
-    });
+    // ELIMINADO: Atajo de teclado para validar stock
+    // Se eliminó para evitar interferir con Ctrl+V (pegar) en cualquier parte de la página
+    // La validación de stock se puede realizar usando el botón correspondiente en la interfaz
 
     // Prevenir envío del formulario con Enter en campos de texto
     $("#numeroSolicitudBuscar, #filtroProductosLocal").on("keydown", function(e) {
