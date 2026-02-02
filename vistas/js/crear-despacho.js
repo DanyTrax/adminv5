@@ -281,19 +281,8 @@ ocultarResultadosSolicitudes();
         }
     });
 
-        // Event listener específico para Enter
-        $("#numeroSolicitudBuscar").on("keydown", function(e) {
-if(e.keyCode === 13) { // Enter
-e.preventDefault();
-                clearTimeout(timeoutBusqueda); // Cancelar timeout
-                var termino = $(this).val();
-                if(termino.length >= 3) {
-                    buscarSolicitudesStock(termino);
-                } else {
-ocultarResultadosSolicitudes();
-                }
-            }
-        });
+        // ELIMINADO: Event listener de Enter removido
+        // Se deja el comportamiento básico por defecto del navegador
 
         // Eventos de debugging
         $("#numeroSolicitudBuscar").on("focus", function() {
@@ -1661,13 +1650,8 @@ function configurarFiltroProductos() {
         }, 300);
     });
 
-    // Limpiar filtro con Escape
-    $("#filtroProductosLocal").on("keydown", function(e) {
-        if(e.keyCode === 27) { // Escape
-            $(this).val("");
-            filtrarProductosLocal("");
-        }
-    });
+    // ELIMINADO: Event listener de Escape removido
+    // Se deja el comportamiento básico por defecto del navegador
 }
 
 /*=============================================
@@ -1818,13 +1802,7 @@ $(document).ready(function() {
 
     // ELIMINADO: Todos los atajos de teclado han sido removidos
     // No se requieren atajos de teclado en el software por el momento
-
-    // Prevenir envío del formulario con Enter en campos de texto
-    $("#numeroSolicitudBuscar, #filtroProductosLocal").on("keydown", function(e) {
-        if(e.keyCode === 13) {
-            e.preventDefault();
-        }
-    });
+    // Se deja el comportamiento básico por defecto del navegador
 
 });
 

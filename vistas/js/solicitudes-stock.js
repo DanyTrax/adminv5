@@ -472,21 +472,9 @@ $(document).on('input', '#cantidadProductoModal', function() {
     }
 });
 
-$(document).on('keydown', '#cantidadProductoModal', function(e) {
-    // Permitir: backspace, delete, tab, escape, enter
-    if ($.inArray(e.keyCode, [46, 8, 9, 27, 13]) !== -1 ||
-        (e.keyCode === 65 && e.ctrlKey === true) || // Ctrl+A
-        (e.keyCode === 67 && e.ctrlKey === true) || // Ctrl+C
-        (e.keyCode === 86 && e.ctrlKey === true) || // Ctrl+V
-        (e.keyCode === 88 && e.ctrlKey === true) || // Ctrl+X
-        (e.keyCode >= 35 && e.keyCode <= 39)) { // home, end, left, right
-        return;
-    }
-    // Solo números
-    if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-        e.preventDefault();
-    }
-});
+// ELIMINADO: Event listener de keydown removido
+// Se deja el comportamiento básico por defecto del navegador
+// El campo puede usar atributos HTML como type="number" o pattern para validación
 
 /*=============================================
 CREAR DESPACHO DESDE SOLICITUD
