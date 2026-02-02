@@ -29,7 +29,7 @@ $(document).ready(function() {
     FILTRO POR CATEGORÍA
     =============================================*/
     $("#filtroCategoria").on("change", function() {
-        tablaProductos.ajax.reload();
+        tablaProductos.ajax.reload(null, false); // false = mantener la página actual
     });
 
     /*=============================================

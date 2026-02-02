@@ -27,7 +27,8 @@ class TablaProductos{
 
         $productos = ControladorProductos::ctrMostrarProductos($item, $valor, $orden);	
 
-        if(count($productos) == 0){
+        // Verificar si $productos es un array y si está vacío
+        if(!is_array($productos) || count($productos) == 0){
             echo '{"data": []}';
             return;
         }
