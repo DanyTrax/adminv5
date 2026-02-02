@@ -305,6 +305,7 @@ function crearTablasBD($pdo) {
         "CREATE TABLE IF NOT EXISTS categorias (
             id INT(11) NOT NULL AUTO_INCREMENT,
             categoria TEXT NOT NULL,
+            prefijo VARCHAR(10) NOT NULL DEFAULT '',
             fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_spanish_ci",
