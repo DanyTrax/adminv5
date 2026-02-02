@@ -746,13 +746,43 @@ class ModeloUsuariosCentral {
     static public function mdlObtenerSucursalActual() {
         
         try {
-            // Obtener configuración de la BD local desde config.php
-            $hostLocal = defined('HOST') ? HOST : 'localhost';
-            $nombreBDLocal = defined('DB') ? DB : 'epicosie_pruebas';
+            // Obtener código de sucursal desde tabla local
+            require_once __DIR__ . "/conexion.php";
+            $conexionLocal = Conexion::conectar();
+            
+            $stmt = $conexionLocal->prepare("SELECT codigo_sucursal FROM sucursal_local LIMIT 1");
+            $stmt->execute();
+            $sucursalLocal = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$sucursalLocal || empty($sucursalLocal['codigo_sucursal'])) {
+                error_log("No se encontró código de sucursal en sucursal_local");
+                return null;
+            }
+            
+            $codigoSucursal = $sucursalLocal['codigo_sucursal'];
+            
+            // Buscar la sucursal en la BD central usando el código
+            $conexionCentral = ConexionCentral::conectar();
+            $stmt = $conexionCentral->prepare("
+                SELECT host_bd, nombre_bd, id, nombre 
+                FROM sucursales 
+                WHERE codigo_sucursal = ? AND activo = 1 
+                LIMIT 1
+            ");
+            $stmt->execute([$codigoSucursal]);
+            $sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$sucursal) {
+                error_log("No se encontró sucursal en BD central con código: " . $codigoSucursal);
+                return null;
+            }
             
             return [
-                'host_bd' => $hostLocal,
-                'nombre_bd' => $nombreBDLocal
+                'host_bd' => $sucursal['host_bd'],
+                'nombre_bd' => $sucursal['nombre_bd'],
+                'id' => $sucursal['id'],
+                'nombre' => $sucursal['nombre'],
+                'codigo_sucursal' => $codigoSucursal
             ];
             
         } catch(Exception $e) {
