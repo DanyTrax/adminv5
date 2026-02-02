@@ -1,5 +1,11 @@
 console.log("📦 productos.js cargado correctamente");
 
+// Registrar eventos inmediatamente, sin esperar document.ready
+console.log("📝 Registrando eventos inmediatamente...");
+console.log("📝 Registrando evento para .btnEditarProducto");
+console.log("🗑️ Registrando evento para .btnEliminarProducto");
+console.log("✂️ Registrando evento para .btnDividirProducto");
+
 $(document).ready(function() {
     console.log("✅ $(document).ready ejecutado en productos.js");
 
@@ -156,7 +162,6 @@ $(document).ready(function() {
     /*=============================================
     ELIMINAR PRODUCTO
     =============================================*/
-    console.log("🗑️ Registrando evento para .btnEliminarProducto");
     $(document).on("click", "button.btnEliminarProducto", function() {
         console.log("🔴 BOTÓN ELIMINAR CLICKEADO");
         console.log("Elemento:", this);
@@ -185,7 +190,6 @@ $(document).ready(function() {
     /*=============================================
     DIVIDIR PRODUCTO (LÓGICA NUEVA)
     =============================================*/
-    console.log("✂️ Registrando evento para .btnDividirProducto");
     $(document).on("click", "button.btnDividirProducto", function() {
         console.log("🟢 BOTÓN DIVIDIR CLICKEADO");
         console.log("Elemento:", this);
