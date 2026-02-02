@@ -3,18 +3,28 @@ require_once "conexion.php";
 class ModeloProductos {
 	static public function mdlMostrarProductos($tabla, $item, $valor, $orden){
 		if($item != null){
-			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item ORDER BY id DESC");
-			$stmt -> bindParam(":".$item, $valor, PDO::PARAM_STR);
-			$stmt -> execute();
-			// Si el item es 'id', devolver un solo registro (fetch)
-			// Si es otro campo como 'id_categoria', devolver todos los registros (fetchAll)
+			// Si el item es 'id', devolver un solo registro (fetch) y ordenar por id DESC
 			if($item == "id"){
+				$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item ORDER BY id DESC");
+				$stmt -> bindParam(":".$item, $valor, PDO::PARAM_INT);
+				$stmt -> execute();
 				return $stmt -> fetch();
 			}else{
+				// Para otros campos como 'id_categoria', devolver todos los registros (fetchAll)
+				// Ordenar por codigo ASC dentro de la categoría
+				$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla WHERE $item = :$item ORDER BY codigo ASC");
+				// Usar PARAM_INT para id_categoria, PARAM_STR para otros campos
+				if($item == "id_categoria"){
+					$stmt -> bindParam(":".$item, $valor, PDO::PARAM_INT);
+				}else{
+					$stmt -> bindParam(":".$item, $valor, PDO::PARAM_STR);
+				}
+				$stmt -> execute();
 				return $stmt -> fetchAll();
 			}
 		}else{
-			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla ORDER BY id DESC");
+			// Sin filtro: ordenar primero por id_categoria ASC, luego por codigo ASC
+			$stmt = Conexion::conectar()->prepare("SELECT * FROM $tabla ORDER BY id_categoria ASC, codigo ASC");
 			$stmt -> execute();
 			return $stmt -> fetchAll();
 		}
