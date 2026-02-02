@@ -796,6 +796,24 @@ $(document).ready(function() {
         var textInput = colorInput.closest('.input-group').find('.color-text');
         textInput.val(colorInput.val());
     });
+    
+    // Asegurar que el formulario se envíe correctamente
+    $('#formNuevaConfiguracion').on('submit', function(e) {
+        // Verificar que el campo nombre de empresa esté lleno
+        if (!$('#nuevoHeaderNombreEmpresa').val() || $('#nuevoHeaderNombreEmpresa').val().trim() === '') {
+            e.preventDefault();
+            swal({
+                type: "error",
+                title: "Error",
+                text: "El nombre de empresa es obligatorio",
+                showConfirmButton: true,
+                confirmButtonText: "Cerrar"
+            });
+            return false;
+        }
+        // Permitir que el formulario se envíe normalmente
+        return true;
+    });
 });
 
 // Función para editar configuración

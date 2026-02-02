@@ -199,6 +199,7 @@ class ModeloPersonalizacionCotizaciones {
                 $datos['header_color_fondo'] ?? '#873173',
                 $datos['header_color_texto'] ?? '#FFFFFF',
                 $datos['header_font_size'] ?? 14,
+                $datos['body_font_size'] ?? 13, // FALTABA ESTE CAMPO
                 $datos['footer_direccion'] ?? '',
                 $datos['footer_telefono'] ?? '',
                 $datos['footer_movil'] ?? '',
