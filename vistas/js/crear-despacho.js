@@ -11,13 +11,19 @@ VERIFICACIÓN: SOLO EJECUTAR EN PÁGINA CREAR-DESPACHO
     
     if(typeof window !== 'undefined' && window.location) {
         var ruta = window.location.href || window.location.pathname || '';
-        if(ruta.indexOf('crear-despacho') !== -1 || ruta.indexOf('ruta=crear-despacho') !== -1) {
+        // Verificar múltiples formas de identificar la página
+        if(ruta.indexOf('crear-despacho') !== -1 || 
+           ruta.indexOf('ruta=crear-despacho') !== -1) {
             esPaginaCrearDespacho = true;
         }
     }
     
     // Si NO estamos en la página de crear-despacho, NO ejecutar NADA
     if(!esPaginaCrearDespacho) {
+        // Definir función vacía para evitar errores si se llama desde fuera
+        if(typeof window !== 'undefined') {
+            window.validarStockProductos = function() { return; };
+        }
         return; // Salir inmediatamente, no ejecutar nada más de este archivo
     }
 
@@ -1263,6 +1269,21 @@ function eliminarProductoDespacho(indice) {
 VALIDAR STOCK DE PRODUCTOS
 =============================================*/
 function validarStockProductos() {
+    
+    // VERIFICACIÓN CRÍTICA: Solo ejecutar si estamos en la página correcta
+    if(typeof window.location === 'undefined' || 
+       (window.location.href.indexOf('crear-despacho') === -1 && 
+        window.location.href.indexOf('ruta=crear-despacho') === -1)) {
+        // No estamos en la página de crear-despacho, salir inmediatamente
+        return;
+    }
+    
+    // Verificación adicional por elementos del DOM
+    if(typeof $ !== 'undefined' && 
+       $("#formCrearDespacho").length === 0 && 
+       $("#productosDespachoSeleccionados").length === 0) {
+        return;
+    }
 
     if(productosDespacho.length === 0) {
         swal({
