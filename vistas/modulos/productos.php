@@ -473,4 +473,16 @@ $(document).on("click", ".btnSincronizarProductos", function() {
         }
     });
 });
+
+/*=============================================
+FILTRO POR CATEGORÍA (RECARGAR PÁGINA COMO EN VENTAS)
+=============================================*/
+$(document).on("change", "#filtroCategoria", function() {
+    var categoriaSeleccionada = $(this).val();
+    var url = "index.php?ruta=productos";
+    if (categoriaSeleccionada) {
+        url += "&filtroCategoria=" + categoriaSeleccionada;
+    }
+    window.location = url;
+});
 </script>
