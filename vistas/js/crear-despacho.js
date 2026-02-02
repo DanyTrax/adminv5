@@ -1816,21 +1816,8 @@ $(document).ready(function() {
         }
     });
 
-    // Atajo de teclado para limpiar filtro (Ctrl + L) - Solo en crear-despacho
-    $(document).on("keydown", function(e) {
-        // Verificar que estamos en la página correcta
-        if($("#formCrearDespacho").length === 0) return;
-        
-        if(e.ctrlKey && e.keyCode === 76) {
-            e.preventDefault();
-            $("#filtroProductosLocal").val("").focus();
-            filtrarProductosLocal("");
-        }
-    });
-
-    // ELIMINADO: Atajo de teclado para validar stock
-    // Se eliminó para evitar interferir con Ctrl+V (pegar) en cualquier parte de la página
-    // La validación de stock se puede realizar usando el botón correspondiente en la interfaz
+    // ELIMINADO: Todos los atajos de teclado han sido removidos
+    // No se requieren atajos de teclado en el software por el momento
 
     // Prevenir envío del formulario con Enter en campos de texto
     $("#numeroSolicitudBuscar, #filtroProductosLocal").on("keydown", function(e) {
