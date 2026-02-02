@@ -43,6 +43,27 @@ if($_SESSION["perfil"] == "Vendedor" && !isset($_GET["ruta"])){
         ?>
         
         <!--=====================================
+        FILTRO POR CATEGORÍA
+        ======================================-->
+        <div class="form-group" style="display: inline-block; margin-right: 15px; margin-bottom: 0;">
+          <label for="filtroCategoria" style="margin-right: 10px; font-weight: normal;">
+            <i class="fa fa-filter"></i> Filtrar por categoría:
+          </label>
+          <select class="form-control" id="filtroCategoria" name="filtroCategoria" style="display: inline-block; width: 250px;">
+            <option value="">Todas las categorías</option>
+            <?php
+            require_once "controladores/categorias.controlador.php";
+            $item = null;
+            $valor = null;
+            $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
+            foreach ($categorias as $key => $value) {
+              echo '<option value="'.$value["id"].'">'.$value["categoria"].'</option>';
+            }
+            ?>
+          </select>
+        </div>
+        
+        <!--=====================================
         BOTONES DE SINCRONIZACIÓN Y BORRAR TODO
         ======================================-->
         <div class="btn-group pull-right" style="margin-left: 10px;">

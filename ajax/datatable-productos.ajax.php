@@ -12,8 +12,17 @@ class TablaProductos{
 
     public function mostrarTablaProductos(){
 
-        $item = null;
-        $valor = null;
+        // Obtener filtro de categoría si existe
+        $filtroCategoria = isset($_GET["filtroCategoria"]) && !empty($_GET["filtroCategoria"]) ? (int)$_GET["filtroCategoria"] : null;
+        
+        if ($filtroCategoria !== null) {
+            $item = "id_categoria";
+            $valor = $filtroCategoria;
+        } else {
+            $item = null;
+            $valor = null;
+        }
+        
         $orden = "id";
 
         $productos = ControladorProductos::ctrMostrarProductos($item, $valor, $orden);	

@@ -4,12 +4,32 @@ $(document).ready(function() {
     CARGAR LA TABLA DINÁMICA DE PRODUCTOS
     =============================================*/
     var perfilOculto = $("#perfilOculto").val();
-    $('.tablaProductos').DataTable({
-        "ajax": "ajax/datatable-productos.ajax.php?perfilOculto=" + perfilOculto,
+    var tablaProductos = $('.tablaProductos').DataTable({
+        "ajax": function(data, callback, settings) {
+            var filtroCategoria = $("#filtroCategoria").val() || "";
+            var url = "ajax/datatable-productos.ajax.php?perfilOculto=" + perfilOculto;
+            if (filtroCategoria) {
+                url += "&filtroCategoria=" + filtroCategoria;
+            }
+            $.ajax({
+                url: url,
+                dataType: "json",
+                success: function(json) {
+                    callback(json);
+                }
+            });
+        },
         "deferRender": true,
         "retrieve": true,
         "processing": true,
         "language": { "url": "//cdn.datatables.net/plug-ins/1.10.20/i18n/Spanish.json" }
+    });
+    
+    /*=============================================
+    FILTRO POR CATEGORÍA
+    =============================================*/
+    $("#filtroCategoria").on("change", function() {
+        tablaProductos.ajax.reload();
     });
 
     /*=============================================
