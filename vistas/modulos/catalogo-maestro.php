@@ -27,10 +27,6 @@
           <i class="fa fa-plus"></i> Agregar Producto Maestro
         </button>
 
-        <button class="btn btn-success" data-toggle="modal" data-target="#modalSincronizarCatalogo">
-          <i class="fa fa-refresh"></i> Sincronizar a Productos
-        </button>
-
         <button class="btn btn-info" data-toggle="modal" data-target="#modalImportarExcel">
           <i class="fa fa-upload"></i> Importar Excel
         </button>
