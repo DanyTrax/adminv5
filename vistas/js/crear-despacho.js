@@ -1,4 +1,27 @@
 /*=============================================
+VERIFICACIÓN: SOLO EJECUTAR EN PÁGINA CREAR-DESPACHO
+=============================================*/
+// Verificar ANTES de definir variables y funciones
+// Solo continuar si estamos en la página de crear-despacho
+(function() {
+    'use strict';
+    
+    // Verificar inmediatamente por URL (más rápido y confiable)
+    var esPaginaCrearDespacho = false;
+    
+    if(typeof window !== 'undefined' && window.location) {
+        var ruta = window.location.href || window.location.pathname || '';
+        if(ruta.indexOf('crear-despacho') !== -1 || ruta.indexOf('ruta=crear-despacho') !== -1) {
+            esPaginaCrearDespacho = true;
+        }
+    }
+    
+    // Si NO estamos en la página de crear-despacho, NO ejecutar NADA
+    if(!esPaginaCrearDespacho) {
+        return; // Salir inmediatamente, no ejecutar nada más de este archivo
+    }
+
+/*=============================================
 VARIABLES GLOBALES
 =============================================*/
 var productosDespacho = [];
@@ -17,6 +40,11 @@ if (typeof window.idUsuario === 'undefined') {
 INICIALIZACIÓN
 =============================================*/
 $(document).ready(function() {
+    
+    // Verificación adicional por si acaso
+    if($("#formCrearDespacho").length === 0 && $("#productosDespachoSeleccionados").length === 0) {
+        return;
+    }
 
 // Cargar inventario local
     cargarProductosInventario();
@@ -1773,6 +1801,13 @@ function imprimirListaProductosDespacho() {
 EVENTOS ESPECIALES
 =============================================*/
 $(document).ready(function() {
+    
+    // SOLO EJECUTAR SI ESTAMOS EN LA PÁGINA DE CREAR DESPACHO
+    // Verificar si existe algún elemento específico de la página crear-despacho
+    if($("#formCrearDespacho").length === 0 && $("#productosDespachoSeleccionados").length === 0) {
+        // No estamos en la página de crear-despacho, salir sin ejecutar nada
+        return;
+    }
 
     // Cerrar resultados al hacer clic fuera
     $(document).on("click", function(e) {
@@ -1781,8 +1816,11 @@ $(document).ready(function() {
         }
     });
 
-    // Atajo de teclado para limpiar filtro (Ctrl + L)
+    // Atajo de teclado para limpiar filtro (Ctrl + L) - Solo en crear-despacho
     $(document).on("keydown", function(e) {
+        // Verificar que estamos en la página correcta
+        if($("#formCrearDespacho").length === 0) return;
+        
         if(e.ctrlKey && e.keyCode === 76) {
             e.preventDefault();
             $("#filtroProductosLocal").val("").focus();
@@ -2088,3 +2126,5 @@ function mostrarResumenDisponibilidadSucursales(datos) {
         limpiarSolicitudSeleccionada();
     });
 }
+
+})(); // Cerrar función auto-ejecutable - Solo se ejecuta si estamos en la página crear-despacho
