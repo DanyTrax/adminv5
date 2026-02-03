@@ -1,29 +1,17 @@
-console.log("📦 productos.js cargado correctamente");
-
 /*=============================================
 REGISTRAR EVENTOS INMEDIATAMENTE (FUERA DE document.ready)
 =============================================*/
-console.log("📝 Registrando eventos para productos...");
 
 /*=============================================
 EDITAR PRODUCTO
 =============================================*/
 $(document).on("click", "button.btnEditarProducto", function(e) {
-    console.log("🔵 BOTÓN EDITAR CLICKEADO");
-    console.log("Elemento:", this);
-    console.log("jQuery object:", $(this));
-    console.log("Clases:", $(this).attr("class"));
-    
     e.preventDefault();
     e.stopPropagation();
     
     var idProducto = $(this).attr("data-id-producto") || $(this).attr("idProducto");
-    console.log("ID Producto (data-id-producto):", $(this).attr("data-id-producto"));
-    console.log("ID Producto (idProducto):", $(this).attr("idProducto"));
-    console.log("ID Producto final capturado:", idProducto);
     
     if (!idProducto || idProducto === "" || idProducto === undefined) {
-        console.error("❌ ERROR: No se pudo obtener el ID del producto");
         swal({
             type: "error",
             title: "Error",
@@ -31,8 +19,6 @@ $(document).on("click", "button.btnEditarProducto", function(e) {
         });
         return;
     }
-    
-    console.log("✅ ID válido, procediendo con AJAX...");
     
     var datos = new FormData();
     datos.append("idProducto", idProducto);
@@ -45,16 +31,9 @@ $(document).on("click", "button.btnEditarProducto", function(e) {
         contentType: false,
         processData: false,
         dataType: "json",
-        beforeSend: function() {
-            console.log("📤 Enviando petición AJAX a:", "ajax/productos.ajax.php");
-            console.log("📤 Datos enviados:", idProducto);
-        },
         success: function(respuesta) {
-            console.log("✅ Respuesta recibida:", respuesta);
-            
             // Validar que la respuesta sea válida
             if (!respuesta || respuesta === null || typeof respuesta !== "object") {
-                console.error("❌ ERROR: Respuesta inválida o producto no encontrado");
                 swal({
                     type: "error",
                     title: "Error",
@@ -62,8 +41,6 @@ $(document).on("click", "button.btnEditarProducto", function(e) {
                 });
                 return;
             }
-            
-            console.log("✅ Respuesta válida, llenando formulario...");
             
             // LLENAR INFORMACIÓN DE SOLO LECTURA
             $("#infoCodigo").text(respuesta["codigo"] || "");
@@ -109,11 +86,6 @@ $(document).on("click", "button.btnEditarProducto", function(e) {
             $("#modalEditarProducto").modal("show");
         },
         error: function(xhr, status, error) {
-            console.error("❌ ERROR AJAX:");
-            console.error("Status:", status);
-            console.error("Error:", error);
-            console.error("Response Text:", xhr.responseText);
-            console.error("Status Code:", xhr.status);
             swal({
                 type: "error",
                 title: "Error",
@@ -127,16 +99,10 @@ $(document).on("click", "button.btnEditarProducto", function(e) {
 ELIMINAR PRODUCTO
 =============================================*/
 $(document).on("click", "button.btnEliminarProducto", function() {
-    console.log("🔴 BOTÓN ELIMINAR CLICKEADO");
-    console.log("Elemento:", this);
-    
     var idProducto = $(this).attr("data-id-producto") || $(this).attr("idProducto");
     var codigo = $(this).attr("data-codigo") || $(this).attr("codigo");
     var imagen = $(this).attr("data-imagen") || $(this).attr("imagen");
     
-    console.log("ID Producto:", idProducto);
-    console.log("Código:", codigo);
-    console.log("Imagen:", imagen);
     swal({
         title: '¿Está seguro de borrar el producto?',
         text: "¡Si no lo está puede cancelar la acción!",
@@ -155,16 +121,10 @@ $(document).on("click", "button.btnEliminarProducto", function() {
 DIVIDIR PRODUCTO
 =============================================*/
 $(document).on("click", "button.btnDividirProducto", function() {
-    console.log("🟢 BOTÓN DIVIDIR CLICKEADO");
-    console.log("Elemento:", this);
-    
     var idProducto = $(this).attr("data-id-producto") || $(this).attr("idProducto");
-    console.log("ID Producto:", idProducto);
     
     var datos = new FormData();
     datos.append("idProducto", idProducto);
-    
-    console.log("📤 Enviando petición AJAX para dividir producto...");
 
     $.ajax({
         url: "ajax/productos.ajax.php",
@@ -217,13 +177,6 @@ $(document).on("click", "button.btnDividirProducto", function() {
 });
 
 $(document).ready(function() {
-    console.log("✅ $(document).ready ejecutado en productos.js");
-    
-    console.log("🔍 Verificando botones en la página...");
-    console.log("Botones .btnEditarProducto encontrados:", $("button.btnEditarProducto").length);
-    console.log("Botones .btnDividirProducto encontrados:", $("button.btnDividirProducto").length);
-    console.log("Botones .btnEliminarProducto encontrados:", $("button.btnEliminarProducto").length);
-
     /*=============================================
     SUBIENDO LA FOTO DEL PRODUCTO
     =============================================*/
