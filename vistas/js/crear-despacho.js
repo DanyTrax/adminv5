@@ -34,6 +34,9 @@ var productosDespacho = [];
 var inventarioLocal = [];
 var solicitudSeleccionada = null;
 
+// Exponer productosDespacho al scope global
+window.productosDespacho = productosDespacho;
+
 // Evitar redeclaración de variables globales
 if (typeof window.perfilUsuario === 'undefined') {
     window.perfilUsuario = document.body.dataset.perfil || 'Usuario';
@@ -878,6 +881,9 @@ swal({
     window.cargandoProductosSolicitud = false;
 }
 
+// Exponer función al scope global para onclick
+window.cargarProductosDeSolicitud = cargarProductosDeSolicitud;
+
 /*=============================================
 ABRIR MODAL PARA CANTIDAD
 =============================================*/
@@ -1664,6 +1670,9 @@ function limpiarSolicitudSeleccionada() {
     });
 }
 
+// Exponer función al scope global para onclick
+window.limpiarSolicitudSeleccionada = limpiarSolicitudSeleccionada;
+
 /*=============================================
 CONFIGURAR FILTRO DE PRODUCTOS
 =============================================*/
@@ -1939,28 +1948,7 @@ cargarProductosDeSolicitud();
     }
 }
 
-/*=============================================
-LIMPIAR SOLICITUD SELECCIONADA
-=============================================*/
-function limpiarSolicitudSeleccionada() {
-// Limpiar variable global
-    solicitudSeleccionada = null;
-
-    // Limpiar campo de búsqueda
-    $("#numeroSolicitudBuscar").val("");
-
-    // Ocultar sección de información de solicitud
-    $("#infoSolicitudEncontrada").hide();
-
-    // Limpiar contenido de la sección
-    $("#datosSolicitudEncontrada").html("");
-
-    // Limpiar campo oculto
-    $("#idSolicitudOrigenHidden").val("");
-
-    // Ocultar resultados de búsqueda si están visibles
-    ocultarResultadosSolicitudes();
-}
+// Esta función ya está definida arriba, no duplicar
 
 /*=============================================
 BUSCAR PRODUCTOS EN TODAS LAS SUCURSALES
