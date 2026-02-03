@@ -34,7 +34,7 @@ var productosDespacho = [];
 var inventarioLocal = [];
 var solicitudSeleccionada = null;
 
-// Exponer productosDespacho al scope global
+// Exponer productosDespacho al scope global (misma referencia)
 window.productosDespacho = productosDespacho;
 
 // Evitar redeclaración de variables globales
@@ -2111,5 +2111,8 @@ function mostrarResumenDisponibilidadSucursales(datos) {
         limpiarSolicitudSeleccionada();
     });
 }
+
+// Exponer funciones al scope global para onclick
+window.enviarFormularioDespacho = enviarFormularioDespacho;
 
 })(); // Cerrar función auto-ejecutable - Solo se ejecuta si estamos en la página crear-despacho
