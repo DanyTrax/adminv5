@@ -1910,38 +1910,15 @@ try {
     // Agregar modal al DOM
     $('body').append(modalHtml);
 
-    // Llenar tabla de productos
+    // Llenar tabla de productos inicialmente con stock 0 (se actualizará con AJAX)
     var tbodyHtml = '';
     productos.forEach(function(producto, index) {
-        // Buscar stock actual en inventarioLocal
-        var stockActual = 0;
-        var stockClass = 'text-danger';
-        var stockIcon = '<i class="fa fa-times-circle"></i> ';
-
-        if(window.inventarioLocal && window.inventarioLocal.length > 0) {
-            var productoInventario = window.inventarioLocal.find(function(p) {
-                return p.codigo === producto.codigo;
-            });
-
-            if(productoInventario) {
-                stockActual = productoInventario.stock || 0;
-
-                if(stockActual >= producto.cantidad) {
-                    stockClass = 'text-success';
-                    stockIcon = '<i class="fa fa-check-circle"></i> ';
-                } else if(stockActual > 0) {
-                    stockClass = 'text-warning';
-                    stockIcon = '<i class="fa fa-exclamation-triangle"></i> ';
-                }
-            }
-        }
-
         tbodyHtml += `
-            <tr>
+            <tr data-codigo="${producto.codigo}">
                 <td><strong>${producto.codigo}</strong></td>
                 <td>${producto.descripcion}</td>
-                <td class="text-center ${stockClass}">
-                    ${stockIcon}<strong>${stockActual}</strong>
+                <td class="text-center stock-actual" data-cantidad-solicitada="${producto.cantidad}">
+                    <i class="fa fa-spinner fa-spin"></i> <strong>Cargando...</strong>
                 </td>
                 <td class="text-center">
                     <span class="badge badge-primary">${producto.cantidad}</span>
@@ -1951,6 +1928,59 @@ try {
     });
 
     $('#listaProductosSeleccion').html(tbodyHtml);
+
+    // Obtener stock actual de la sucursal actual mediante AJAX
+    var codigos = productos.map(function(p) { return p.codigo; });
+    
+    $.ajax({
+        url: 'ajax/productos-despacho.ajax.php',
+        type: 'POST',
+        data: {
+            obtenerStockActual: 'ok',
+            codigos: codigos
+        },
+        dataType: 'json',
+        success: function(response) {
+            if(response.success && response.productos) {
+                // Actualizar stock en la tabla
+                response.productos.forEach(function(productoStock) {
+                    var $row = $('#listaProductosSeleccion tr[data-codigo="' + productoStock.codigo + '"]');
+                    var $stockCell = $row.find('.stock-actual');
+                    var cantidadSolicitada = parseInt($stockCell.data('cantidad-solicitada')) || 0;
+                    var stockActual = parseInt(productoStock.stock) || 0;
+                    
+                    var stockClass = 'text-danger';
+                    var stockIcon = '<i class="fa fa-times-circle"></i> ';
+                    
+                    if(stockActual >= cantidadSolicitada) {
+                        stockClass = 'text-success';
+                        stockIcon = '<i class="fa fa-check-circle"></i> ';
+                    } else if(stockActual > 0) {
+                        stockClass = 'text-warning';
+                        stockIcon = '<i class="fa fa-exclamation-triangle"></i> ';
+                    }
+                    
+                    $stockCell.removeClass('text-danger text-warning text-success').addClass(stockClass);
+                    $stockCell.html(stockIcon + '<strong>' + stockActual + '</strong>');
+                });
+            } else {
+                // Si falla, mostrar 0
+                $('#listaProductosSeleccion tr').each(function() {
+                    var $stockCell = $(this).find('.stock-actual');
+                    $stockCell.removeClass('text-danger text-warning text-success').addClass('text-danger');
+                    $stockCell.html('<i class="fa fa-times-circle"></i> <strong>0</strong>');
+                });
+            }
+        },
+        error: function() {
+            // Si hay error, mostrar 0
+            $('#listaProductosSeleccion tr').each(function() {
+                var $stockCell = $(this).find('.stock-actual');
+                $stockCell.removeClass('text-danger text-warning text-success').addClass('text-danger');
+                $stockCell.html('<i class="fa fa-times-circle"></i> <strong>0</strong>');
+            });
+        }
+    });
 
     // Configurar eventos
     configurarEventosModalSeleccion(url);
