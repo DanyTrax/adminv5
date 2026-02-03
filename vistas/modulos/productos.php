@@ -66,8 +66,9 @@ if($_SESSION["perfil"] == "Vendedor" && !isset($_GET["ruta"])){
         </div>
         
         <!--=====================================
-        BOTONES DE SINCRONIZACIÓN Y BORRAR TODO
+        BOTONES DE SINCRONIZACIÓN Y BORRAR TODO (SOLO PARA USUARIO "admin")
         ======================================-->
+        <?php if(isset($_SESSION["usuario"]) && $_SESSION["usuario"] == "admin"): ?>
         <div class="btn-group pull-right" style="margin-left: 10px;">
           <button type="button" class="btn btn-danger btnBorrarTodosProductos" title="Borrar todos los productos de esta sucursal">
             <i class="fa fa-trash"></i> Borrar Todo
@@ -76,6 +77,7 @@ if($_SESSION["perfil"] == "Vendedor" && !isset($_GET["ruta"])){
             <i class="fa fa-refresh"></i> Sincronizar con Catálogo Maestro
           </button>
         </div>
+        <?php endif; ?>
 
       </div>
 

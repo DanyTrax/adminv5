@@ -47,8 +47,9 @@ if($_SESSION["perfil"] == "Vendedor"){
         </button>
         
         <!--=====================================
-        BOTONES DE SINCRONIZACIÓN Y BORRAR TODO
+        BOTONES DE SINCRONIZACIÓN Y BORRAR TODO (SOLO PARA USUARIO "admin")
         ======================================-->
+        <?php if(isset($_SESSION["usuario"]) && $_SESSION["usuario"] == "admin"): ?>
         <div class="btn-group pull-right" style="margin-left: 10px;">
           <button type="button" class="btn btn-danger btnBorrarTodasCategorias" title="Borrar todas las categorías de esta sucursal">
             <i class="fa fa-trash"></i> Borrar Todo
@@ -57,6 +58,7 @@ if($_SESSION["perfil"] == "Vendedor"){
             <i class="fa fa-refresh"></i> Sincronizar con Categorías Centrales
           </button>
         </div>
+        <?php endif; ?>
 
       </div>
 
