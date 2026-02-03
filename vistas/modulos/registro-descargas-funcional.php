@@ -22,6 +22,14 @@
                             $urlDescarga .= "?fechaInicial=" . $_GET["fechaInicial"] . "&fechaFinal=" . $_GET["fechaFinal"];
                         }
                     ?>
+                    <!--=====================================
+                    BOTÓN BORRAR TODO (SOLO PARA USUARIO "admin")
+                    ======================================-->
+                    <?php if(isset($_SESSION["usuario"]) && $_SESSION["usuario"] == "admin"): ?>
+                    <button type="button" class="btn btn-danger btn-sm btnBorrarTodosRegistrosDescargas" style="margin-right: 15px;" title="Borrar todos los registros de descargas">
+                        <i class="fa fa-trash"></i> Borrar Todo
+                    </button>
+                    <?php endif; ?>
                     <a href="<?= $urlDescarga ?>" style="margin-left:10px;">
                         <button class="btn btn-success btn-sm" style="margin-right: 15px;">
                             <i class="fa fa-file-excel-o"></i> Exportar Excel
@@ -118,5 +126,39 @@ $(document).ready(function() {
     }
     
     // El filtro de fechas se activa automáticamente desde filtros-fechas.js
+
+    /*=============================================
+    BORRAR TODOS LOS REGISTROS DE DESCARGAS
+    =============================================*/
+    $(document).on("click", ".btnBorrarTodosRegistrosDescargas", function() {
+        swal({
+            title: "¿Está seguro?",
+            text: "¡Esta acción eliminará TODOS los registros de descargas! Esta acción no se puede deshacer.",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Sí, borrar todo",
+            cancelButtonText: "Cancelar"
+        }).then(function(result) {
+            if (result.value) {
+                var datos = new FormData();
+                datos.append("borrarTodosRegistrosDescargas", "ok");
+                
+                $.ajax({
+                    url: "ajax/registro-descargas.ajax.php",
+                    method: "POST",
+                    data: datos,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    success: function(respuesta) {
+                        // La respuesta viene del controlador con el swal incluido
+                        eval(respuesta);
+                    }
+                });
+            }
+        });
+    });
 });
 </script>
