@@ -295,9 +295,10 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
                 
                 <div class="alert alert-info">
                     <strong><i class="fa fa-info-circle"></i> Información:</strong><br>
-                    • El usuario será eliminado de todas las sucursales asignadas<br>
-                    • El usuario será eliminado de la lista de usuarios centrales<br>
-                    • Esta acción no se puede deshacer
+                    • Marca las sucursales donde también deseas eliminar al usuario.<br>
+                    • Si dejas una sucursal sin marcar, el usuario permanecerá activo en esa sucursal.<br>
+                    • El usuario será eliminado (desactivado) de la lista de usuarios centrales.<br>
+                    • Esta acción no se puede deshacer.
                 </div>
             </div>
             <div class="modal-footer">
@@ -312,5 +313,5 @@ $sucursales = ControladorUsuariosCentral::ctrObtenerSucursalesDisponibles();
     </div>
 </div>
 
-<!-- Incluir JavaScript específico para usuarios centrales -->
-<script src="vistas/js/usuarios-central.js"></script>
+<!-- Incluir JavaScript específico para usuarios centrales (con cache busting) -->
+<script src="vistas/js/usuarios-central.js?v=<?php echo time(); ?>"></script>
