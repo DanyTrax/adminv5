@@ -308,30 +308,93 @@ class ModeloUsuariosCentral {
             $stmt->execute();
             $idLocalExiste = $stmt->fetch();
             
-            // Verificar si el usuario ya existe
+            // Verificar si el usuario ya existe (incluyendo su estado "activo")
             if ($idLocalExiste) {
                 // Si existe id_local, verificar por usuario o id_local
                 $stmt = $conexion->prepare("
-                    SELECT id FROM usuarios_central 
+                    SELECT id, activo FROM usuarios_central 
                     WHERE usuario = :usuario OR id_local = :id_local
+                    LIMIT 1
                 ");
                 $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
                 $stmt->bindParam(":id_local", $usuario['id'], PDO::PARAM_INT);
             } else {
                 // Si no existe id_local, solo verificar por usuario
                 $stmt = $conexion->prepare("
-                    SELECT id FROM usuarios_central 
+                    SELECT id, activo FROM usuarios_central 
                     WHERE usuario = :usuario
+                    LIMIT 1
                 ");
                 $stmt->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
             }
             $stmt->execute();
             
-            if ($stmt->fetch()) {
-                return [
-                    'success' => false,
-                    'error' => 'El usuario ya existe en el sistema central'
-                ];
+            $usuarioExistente = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($usuarioExistente) {
+                // Si ya existe y está activo, no permitir duplicar
+                if ((int)$usuarioExistente['activo'] === 1) {
+                    return [
+                        'success' => false,
+                        'error' => 'El usuario ya existe en el sistema central'
+                    ];
+                }
+                
+                // Si existe pero está INACTIVO, lo reactivamos y actualizamos datos
+                $password = !empty($usuario['password']) ? $usuario['password'] : 'password123';
+                $telefono = !empty($usuario['telefono']) ? $usuario['telefono'] : '';
+                $direccion = !empty($usuario['direccion']) ? $usuario['direccion'] : '';
+                $foto = !empty($usuario['foto']) ? $usuario['foto'] : 'vistas/img/usuarios/default/anonymous.png';
+                
+                if ($idLocalExiste) {
+                    $stmt = $conexion->prepare("
+                        UPDATE usuarios_central
+                        SET nombre = :nombre,
+                            password = :password,
+                            perfil = :perfil,
+                            foto = :foto,
+                            telefono = :telefono,
+                            direccion = :direccion,
+                            id_local = :id_local,
+                            activo = 1,
+                            fecha_actualizacion = NOW()
+                        WHERE id = :id
+                    ");
+                    $stmt->bindParam(":id_local", $usuario['id'], PDO::PARAM_INT);
+                } else {
+                    $stmt = $conexion->prepare("
+                        UPDATE usuarios_central
+                        SET nombre = :nombre,
+                            password = :password,
+                            perfil = :perfil,
+                            foto = :foto,
+                            telefono = :telefono,
+                            direccion = :direccion,
+                            activo = 1,
+                            fecha_actualizacion = NOW()
+                        WHERE id = :id
+                    ");
+                }
+                
+                $stmt->bindParam(":id", $usuarioExistente['id'], PDO::PARAM_INT);
+                $stmt->bindParam(":nombre", $usuario['nombre'], PDO::PARAM_STR);
+                $stmt->bindParam(":password", $password, PDO::PARAM_STR);
+                $stmt->bindParam(":perfil", $usuario['perfil'], PDO::PARAM_STR);
+                $stmt->bindParam(":foto", $foto, PDO::PARAM_STR);
+                $stmt->bindParam(":telefono", $telefono, PDO::PARAM_STR);
+                $stmt->bindParam(":direccion", $direccion, PDO::PARAM_STR);
+                
+                if ($stmt->execute()) {
+                    return [
+                        'success' => true,
+                        'message' => 'Usuario reactivado y actualizado en el sistema central'
+                    ];
+                } else {
+                    return [
+                        'success' => false,
+                        'error' => 'Error al reactivar usuario en base de datos'
+                    ];
+                }
             }
             
             // Insertar usuario en usuarios_central
