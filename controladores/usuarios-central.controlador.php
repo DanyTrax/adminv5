@@ -177,9 +177,9 @@ class ControladorUsuariosCentral {
     /*=============================================
     ELIMINAR USUARIO CENTRAL
     =============================================*/
-    static public function ctrEliminarUsuarioCentral($id) {
+    static public function ctrEliminarUsuarioCentral($id, $sucursalesEliminar = []) {
         try {
-            return ModeloUsuariosCentral::mdlEliminarUsuarioCentral($id);
+            return ModeloUsuariosCentral::mdlEliminarUsuarioCentral($id, $sucursalesEliminar);
         } catch (Exception $e) {
             error_log("Error en ctrEliminarUsuarioCentral: " . $e->getMessage());
             return [

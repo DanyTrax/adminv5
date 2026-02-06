@@ -589,13 +589,70 @@ class ModeloUsuariosCentral {
     /*=============================================
     ELIMINAR USUARIO CENTRAL
     =============================================*/
-    static public function mdlEliminarUsuarioCentral($usuarioId) {
+    static public function mdlEliminarUsuarioCentral($usuarioId, $sucursalesEliminar = []) {
         
         try {
             $conexion = ConexionCentral::conectar();
             
-            // Solo marcar el usuario como inactivo en la base de datos central.
-            // NO se elimina ni se modifica ningún usuario en las sucursales.
+            // Obtener información básica del usuario (para borrar en sucursales si se solicita)
+            $stmt = $conexion->prepare("
+                SELECT usuario 
+                FROM usuarios_central 
+                WHERE id = ? AND activo = 1
+            ");
+            $stmt->execute([$usuarioId]);
+            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$usuario) {
+                return [
+                    'success' => false,
+                    'error' => 'Usuario no encontrado o ya eliminado'
+                ];
+            }
+            
+            // Si se enviaron sucursales a eliminar, borrar SOLO en esas sucursales
+            if (!empty($sucursalesEliminar)) {
+                foreach ($sucursalesEliminar as $sucursalId) {
+                    $sucursalId = trim($sucursalId);
+                    if ($sucursalId === '') {
+                        continue;
+                    }
+                    
+                    try {
+                        // Obtener datos de conexión de la sucursal
+                        $stmtSucursal = $conexion->prepare("
+                            SELECT nombre, host_bd, usuario_bd, password_bd, nombre_bd, puerto_bd
+                            FROM sucursales 
+                            WHERE id = ? AND activo = 1
+                        ");
+                        $stmtSucursal->execute([$sucursalId]);
+                        $sucursal = $stmtSucursal->fetch(PDO::FETCH_ASSOC);
+                        
+                        if ($sucursal) {
+                            // Conectar a la sucursal
+                            $dsn = "mysql:host={$sucursal['host_bd']};port={$sucursal['puerto_bd']};dbname={$sucursal['nombre_bd']};charset=utf8";
+                            $pdoSucursal = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd']);
+                            $pdoSucursal->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                            
+                            // Eliminar usuario de la sucursal (por nombre de usuario o id local si coincide)
+                            $stmtEliminar = $pdoSucursal->prepare("
+                                DELETE FROM usuarios 
+                                WHERE usuario = :usuario OR id = :id_central
+                            ");
+                            $stmtEliminar->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
+                            $stmtEliminar->bindParam(":id_central", $usuarioId, PDO::PARAM_INT);
+                            $stmtEliminar->execute();
+                            
+                            error_log("Usuario '{$usuario['usuario']}' eliminado de sucursal '{$sucursal['nombre']}' (acción solicitada desde central)");
+                        }
+                    } catch (Exception $e) {
+                        // Registrar el error pero continuar con las demás sucursales
+                        error_log("Error eliminando usuario de sucursal {$sucursalId}: " . $e->getMessage());
+                    }
+                }
+            }
+            
+            // Marcar el usuario como inactivo en la base de datos central
             $stmt = $conexion->prepare("
                 UPDATE usuarios_central 
                 SET activo = 0, fecha_actualizacion = NOW()
@@ -605,7 +662,7 @@ class ModeloUsuariosCentral {
             if ($stmt->execute([$usuarioId])) {
                 return [
                     'success' => true,
-                    'message' => 'Usuario desactivado correctamente en el sistema central (las sucursales no se han tocado)'
+                    'message' => 'Usuario desactivado correctamente en el sistema central'
                 ];
             } else {
                 return [

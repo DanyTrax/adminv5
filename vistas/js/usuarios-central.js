@@ -497,8 +497,12 @@ mostrarError("Error de conexión sincronizando usuarios");
 
                     if (sucursal) {
                         html += '<div class="col-md-6">';
-                        html += '<div class="alert alert-warning">';
+                        html += '<div class="checkbox">';
+                        html += '<label>';
+                        // Checkbox marcado por defecto: si el usuario NO quiere borrar en esa sucursal, puede desmarcarlo
+                        html += '<input type="checkbox" class="checkbox-sucursal-eliminar" value="' + sucursal.id + '" checked> ';
                         html += '<i class="fa fa-building"></i> <strong>' + sucursal.nombre + '</strong>';
+                        html += '</label>';
                         html += '</div>';
                         html += '</div>';
                     }
@@ -516,7 +520,14 @@ mostrarError("Error de conexión sincronizando usuarios");
             mostrarError("No se ha seleccionado un usuario para eliminar");
             return;
         }
-// Mostrar loading
+
+        // Recopilar sucursales seleccionadas para eliminar
+        var sucursalesEliminar = [];
+        $(".checkbox-sucursal-eliminar:checked").each(function() {
+            sucursalesEliminar.push($(this).val());
+        });
+
+        // Mostrar loading
         $("#btnConfirmarEliminacion").html('<i class="fa fa-spinner fa-spin"></i> Eliminando...');
         $("#btnConfirmarEliminacion").prop('disabled', true);
 
@@ -524,14 +535,18 @@ mostrarError("Error de conexión sincronizando usuarios");
             url: "ajax/usuarios-central.ajax.php",
             method: "POST",
             data: {
-
                 accion: "eliminar_usuario_central",
-                id: usuarioId
+                id: usuarioId,
+                sucursales_eliminar: JSON.stringify(sucursalesEliminar)
             },
             dataType: "json",
             success: function(respuesta) {
                 if (respuesta.success) {
-                    mostrarExito("Usuario eliminado exitosamente de todas las sucursales y del sistema central");
+                    var msg = "Usuario eliminado correctamente del sistema central";
+                    if (sucursalesEliminar.length > 0) {
+                        msg += " y de las sucursales seleccionadas";
+                    }
+                    mostrarExito(msg);
                     $("#modalConfirmarEliminacion").modal("hide");
                     cargarUsuariosCentrales();
                     cargarEstadisticas();
@@ -540,7 +555,7 @@ mostrarError("Error de conexión sincronizando usuarios");
                 }
             },
             error: function(xhr, status, error) {
-mostrarError("Error eliminando usuario: Error de conexión");
+                mostrarError("Error eliminando usuario: Error de conexión");
             },
             complete: function() {
                 // Restaurar botón

@@ -110,7 +110,14 @@ try {
             
         case "eliminar_usuario_central":
             $id = $_POST['id'];
-            $resultado = ControladorUsuariosCentral::ctrEliminarUsuarioCentral($id);
+            $sucursalesEliminar = [];
+            if (isset($_POST['sucursales_eliminar'])) {
+                $decoded = json_decode($_POST['sucursales_eliminar'], true);
+                if (is_array($decoded)) {
+                    $sucursalesEliminar = $decoded;
+                }
+            }
+            $resultado = ControladorUsuariosCentral::ctrEliminarUsuarioCentral($id, $sucursalesEliminar);
             echo json_encode($resultado);
             break;
             
