@@ -594,65 +594,8 @@ class ModeloUsuariosCentral {
         try {
             $conexion = ConexionCentral::conectar();
             
-            // Obtener información del usuario antes de eliminarlo
-            $stmt = $conexion->prepare("
-                SELECT usuario, sucursales_asignadas 
-                FROM usuarios_central 
-                WHERE id = ? AND activo = 1
-            ");
-            $stmt->execute([$usuarioId]);
-            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if (!$usuario) {
-                return [
-                    'success' => false,
-                    'error' => 'Usuario no encontrado o ya eliminado'
-                ];
-            }
-            
-            // Eliminar usuario de todas las sucursales asignadas
-            if (!empty($usuario['sucursales_asignadas'])) {
-                $sucursalesIds = explode(',', $usuario['sucursales_asignadas']);
-                
-                foreach ($sucursalesIds as $sucursalId) {
-                    $sucursalId = trim($sucursalId);
-                    if ($sucursalId !== '') {
-                        try {
-                            // Obtener datos de conexión de la sucursal
-                            $stmtSucursal = $conexion->prepare("
-                                SELECT nombre, host_bd, usuario_bd, password_bd, nombre_bd, puerto_bd
-                                FROM sucursales 
-                                WHERE id = ? AND activo = 1
-                            ");
-                            $stmtSucursal->execute([$sucursalId]);
-                            $sucursal = $stmtSucursal->fetch(PDO::FETCH_ASSOC);
-                            
-                            if ($sucursal) {
-                                // Conectar a la sucursal
-                                $dsn = "mysql:host={$sucursal['host_bd']};port={$sucursal['puerto_bd']};dbname={$sucursal['nombre_bd']};charset=utf8";
-                                $pdoSucursal = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd']);
-                                $pdoSucursal->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                                
-                                // Eliminar usuario de la sucursal
-                                $stmtEliminar = $pdoSucursal->prepare("
-                                    DELETE FROM usuarios 
-                                    WHERE usuario = :usuario OR id = :id_central
-                                ");
-                                $stmtEliminar->bindParam(":usuario", $usuario['usuario'], PDO::PARAM_STR);
-                                $stmtEliminar->bindParam(":id_central", $usuarioId, PDO::PARAM_INT);
-                                $stmtEliminar->execute();
-                                
-                                error_log("Usuario '{$usuario['usuario']}' eliminado de sucursal '{$sucursal['nombre']}'");
-                            }
-                        } catch (Exception $e) {
-                            error_log("Error eliminando usuario de sucursal {$sucursalId}: " . $e->getMessage());
-                            // Continuar con las demás sucursales aunque falle una
-                        }
-                    }
-                }
-            }
-            
-            // Eliminar usuario de la base de datos central
+            // Solo marcar el usuario como inactivo en la base de datos central.
+            // NO se elimina ni se modifica ningún usuario en las sucursales.
             $stmt = $conexion->prepare("
                 UPDATE usuarios_central 
                 SET activo = 0, fecha_actualizacion = NOW()
@@ -662,12 +605,12 @@ class ModeloUsuariosCentral {
             if ($stmt->execute([$usuarioId])) {
                 return [
                     'success' => true,
-                    'message' => 'Usuario eliminado exitosamente de todas las sucursales y del sistema central'
+                    'message' => 'Usuario desactivado correctamente en el sistema central (las sucursales no se han tocado)'
                 ];
             } else {
                 return [
                     'success' => false,
-                    'error' => 'Error eliminando usuario del sistema central'
+                    'error' => 'Error desactivando usuario en el sistema central'
                 ];
             }
             
@@ -845,9 +788,11 @@ class ModeloUsuariosCentral {
             ]);
             
             // Consultar usuarios de la sucursal remota
+            // Importante: incluir el campo password para que al importar al central
+            // se conserve la misma contraseña (ya encriptada) que usa la sucursal.
             $stmt = $conexionRemota->prepare("
                 SELECT 
-                    id, nombre, usuario, perfil, foto, estado, ultimo_login, fecha, empresa, telefono, direccion
+                    id, nombre, usuario, password, perfil, foto, estado, ultimo_login, fecha, empresa, telefono, direccion
                 FROM usuarios 
                 ORDER BY nombre
             ");
@@ -891,8 +836,10 @@ class ModeloUsuariosCentral {
         try {
             $conexionLocal = Conexion::conectar();
             
+            // También aquí incluimos password para mantener la misma contraseña
+            // cuando se importen usuarios locales al sistema central.
             $stmt = $conexionLocal->prepare("
-                SELECT id, nombre, usuario, perfil, foto, estado, ultimo_login, fecha, empresa, telefono, direccion
+                SELECT id, nombre, usuario, password, perfil, foto, estado, ultimo_login, fecha, empresa, telefono, direccion
                 FROM usuarios 
                 ORDER BY nombre
             ");
