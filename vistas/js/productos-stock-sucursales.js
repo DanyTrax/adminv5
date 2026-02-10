@@ -1,5 +1,5 @@
 /*=============================================
-  STOCK POR SUCURSALES - Tabla filtrable con totales
+  STOCK POR SUCURSALES - Catálogo maestro y stock por sucursales activas (carga automática)
 =============================================*/
 $(function () {
   'use strict';
@@ -7,16 +7,23 @@ $(function () {
   var tablaStockSuc = null;
   var datosActuales = { sucursales: [], productos: [] };
 
-  $('#btnCargarStockSucursales').on('click', function () {
+  function enPaginaStockSucursales() {
+    return $('#tbodyStockPorSucursales').length > 0;
+  }
+
+  $('#btnActualizarStockSucursales').on('click', function () {
+    cargarStockPorSucursales();
+  });
+  $('#filtroCategoriaStockSuc').on('change', function () {
     cargarStockPorSucursales();
   });
 
   function cargarStockPorSucursales() {
-    var $btn = $('#btnCargarStockSucursales');
+    var $btn = $('#btnActualizarStockSucursales');
     var $estado = $('#estadoCargaStockSuc');
     var idCategoria = $('#filtroCategoriaStockSuc').val() || '';
 
-    $btn.prop('disabled', true);
+    if ($btn.length) $btn.prop('disabled', true);
     $estado.text('Cargando...').removeClass('text-danger text-success').addClass('text-muted');
 
     $.ajax({
@@ -28,7 +35,7 @@ $(function () {
       },
       dataType: 'json',
       success: function (resp) {
-        $btn.prop('disabled', false);
+        if ($btn.length) $btn.prop('disabled', false);
         if (resp.success) {
           datosActuales = { sucursales: resp.sucursales || [], productos: resp.productos || [] };
           renderizarTabla(datosActuales);
@@ -43,7 +50,7 @@ $(function () {
         }
       },
       error: function (xhr) {
-        $btn.prop('disabled', false);
+        if ($btn.length) $btn.prop('disabled', false);
         var msg = 'Error de conexión al servidor.';
         if (xhr && xhr.responseText) {
           try {
@@ -129,4 +136,7 @@ $(function () {
     return div.innerHTML;
   }
 
+  if (enPaginaStockSucursales()) {
+    cargarStockPorSucursales();
+  }
 });

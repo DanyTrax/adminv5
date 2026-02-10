@@ -24,27 +24,24 @@ $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
   <section class="content">
     <div class="box box-primary">
       <div class="box-header with-border">
-        <h3 class="box-title"><i class="fa fa-filter"></i> Filtros y datos</h3>
+        <h3 class="box-title"><i class="fa fa-filter"></i> Filtro por categoría (opcional)</h3>
+        <div class="box-tools pull-right">
+          <span id="estadoCargaStockSuc" class="text-muted small"></span>
+          <button type="button" class="btn btn-default btn-sm" id="btnActualizarStockSucursales" title="Actualizar datos">
+            <i class="fa fa-refresh"></i>
+          </button>
+        </div>
       </div>
       <div class="box-body">
-        <div class="row">
-          <div class="col-md-4">
-            <div class="form-group">
-              <label for="filtroCategoriaStockSuc"><i class="fa fa-th"></i> Categoría (opcional)</label>
-              <select class="form-control" id="filtroCategoriaStockSuc" name="filtroCategoriaStockSuc">
-                <option value="">Todas las categorías</option>
-                <?php foreach ($categorias as $cat): ?>
-                  <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['categoria']); ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-          </div>
-          <div class="col-md-4" style="padding-top: 25px;">
-            <button type="button" class="btn btn-primary" id="btnCargarStockSucursales">
-              <i class="fa fa-refresh"></i> Cargar stock por sucursales
-            </button>
-            <span id="estadoCargaStockSuc" class="text-muted small" style="margin-left: 10px;"></span>
-          </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="filtroCategoriaStockSuc"><i class="fa fa-th"></i> Categoría</label>
+          <select class="form-control" id="filtroCategoriaStockSuc" name="filtroCategoriaStockSuc" style="max-width: 300px;">
+            <option value="">Todas las categorías (catálogo maestro)</option>
+            <?php foreach ($categorias as $cat): ?>
+              <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['categoria']); ?></option>
+            <?php endforeach; ?>
+          </select>
+          <small class="text-muted">Al cambiar la categoría se vuelven a cargar los datos.</small>
         </div>
       </div>
     </div>
@@ -70,7 +67,7 @@ $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
             <tbody id="tbodyStockPorSucursales">
               <tr>
                 <td colspan="10" class="text-center text-muted">
-                  <i class="fa fa-info-circle"></i> Use el botón "Cargar stock por sucursales" para ver los datos.
+                  <i class="fa fa-spinner fa-spin"></i> Cargando catálogo maestro y stock por sucursales activas...
                 </td>
               </tr>
             </tbody>
