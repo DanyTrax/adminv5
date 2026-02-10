@@ -45,6 +45,7 @@ $url = $protocol . $host . $script_name;
   <title><?php echo $nombreSitio . " - " . $tituloPagina; ?></title>
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
   <link rel="icon" href="<?php echo $url; ?>vistas/img/plantilla/icono-negro.png ">
+  <!-- CDN reemplazados por vistas/lib (toastr, moment-timezone, xlsx) para evitar CORS. Si algo deja de funcionar (toastr, fechas, exportar Excel), revertir en plantilla.php a: toastr→cdnjs, moment-timezone→cdnjs, xlsx→unpkg.com/xlsx. Beacon.min.js en consola lo inyecta hosting/Cloudflare. -->
   
   <!-- (Aquí van todos tus enlaces a CSS y scripts de librerías) -->
   <link rel="stylesheet" href="<?php echo $url; ?>vistas/bower_components/bootstrap/dist/css/bootstrap.min.css">
@@ -52,21 +53,16 @@ $url = $protocol . $host . $script_name;
   <link rel="stylesheet" href="<?php echo $url; ?>vistas/bower_components/Ionicons/css/ionicons.min.css">
   <link rel="stylesheet" href="<?php echo $url; ?>vistas/dist/css/AdminLTE.css">
   <link rel="stylesheet" href="<?php echo $url; ?>vistas/dist/css/skins/_all-skins.min.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
   <link rel="stylesheet" href="<?php echo $url; ?>vistas/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
   <link rel="stylesheet" href="<?php echo $url; ?>vistas/bower_components/datatables.net-bs/css/responsive.bootstrap.min.css">
   <link rel="stylesheet" href="<?php echo $url; ?>vistas/plugins/iCheck/all.css">
   <link rel="stylesheet" href="<?php echo $url; ?>vistas/bower_components/bootstrap-daterangepicker/daterangepicker.css">
   <link rel="stylesheet" href="<?php echo $url; ?>vistas/bower_components/morris.js/morris.css">
-  <!-- Toastr CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+  <link rel="stylesheet" href="<?php echo $url; ?>vistas/lib/toastr.min.css">
 
   <!-- CSS DINÁMICO GLOBAL -->
   <?php include_once "css-dinamico-global.php"; ?>
-
-  <!-- Moment.js con zona horaria -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.43/moment-timezone-with-data.min.js"></script>
 
   <script src="<?php echo $url; ?>vistas/bower_components/jquery/dist/jquery.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
@@ -77,20 +73,19 @@ $url = $protocol . $host . $script_name;
   <script src="<?php echo $url; ?>vistas/bower_components/datatables.net-bs/js/dataTables.responsive.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/datatables.net-bs/js/responsive.bootstrap.min.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/sweetalert2/sweetalert2.all.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/core-js/2.4.1/core.js"></script>
-  <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="<?php echo $url; ?>vistas/lib/xlsx.full.min.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/iCheck/icheck.min.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/input-mask/jquery.inputmask.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/input-mask/jquery.inputmask.extensions.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/jqueryNumber/jquerynumber.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/moment/min/moment.min.js"></script>
+  <script src="<?php echo $url; ?>vistas/lib/moment-timezone-with-data.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/raphael/raphael.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/morris.js/morris.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/Chart.js/Chart.js"></script>
-  <!-- Toastr JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  <script src="<?php echo $url; ?>vistas/lib/toastr.min.js"></script>
 
   <!-- =============================================
   INICIO DE LA CORRECCIÓN
