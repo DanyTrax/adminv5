@@ -22,6 +22,75 @@ if (!isset($_SESSION["perfil"])) {
 $accion = $_POST["accion"] ?? "";
 
 switch ($accion) {
+
+    case "obtener_stock_todas_sucursales":
+        try {
+            $idCategoria = isset($_POST["id_categoria"]) && $_POST["id_categoria"] !== '' ? (int)$_POST["id_categoria"] : null;
+
+            $sucursales = ControladorSucursales::ctrObtenerSucursalesDisponibles();
+            if (!$sucursales || !$sucursales['success'] || empty($sucursales['data'])) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No se encontraron sucursales activas'
+                ]);
+                exit;
+            }
+
+            $sucursalesConectadas = array_filter($sucursales['data'], function ($s) {
+                return isset($s['estado_conexion']) && $s['estado_conexion'] === 'conectado';
+            });
+            $sucursalesConectadas = array_values($sucursalesConectadas);
+
+            if (empty($sucursalesConectadas)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No hay sucursales con conexión disponible'
+                ]);
+                exit;
+            }
+
+            $listaSucursales = array_map(function ($s) {
+                return ['id' => (int)$s['id'], 'nombre' => $s['nombre']];
+            }, $sucursalesConectadas);
+
+            $productos = $idCategoria
+                ? ControladorProductos::ctrMostrarProductos("id_categoria", $idCategoria, "codigo")
+                : ControladorProductos::ctrMostrarProductos(null, null, "id");
+            if (!is_array($productos)) {
+                $productos = [];
+            }
+
+            $resultadoProductos = [];
+            foreach ($productos as $prod) {
+                $codigo = $prod['codigo'] ?? '';
+                $descripcion = $prod['descripcion'] ?? '';
+                $stocks = [];
+                $total = 0;
+                foreach ($sucursalesConectadas as $suc) {
+                    $cant = consultarStockProductoEnSucursal($suc, $codigo);
+                    $stocks[(string)$suc['id']] = $cant;
+                    $total += $cant;
+                }
+                $resultadoProductos[] = [
+                    'codigo' => $codigo,
+                    'descripcion' => $descripcion,
+                    'stocks' => $stocks,
+                    'total' => $total
+                ];
+            }
+
+            echo json_encode([
+                'success' => true,
+                'sucursales' => $listaSucursales,
+                'productos' => $resultadoProductos
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+        break;
     
     case "consultar_stock_sucursales":
         try {

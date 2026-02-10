@@ -64,6 +64,11 @@ if($_SESSION["perfil"] == "Vendedor" && !isset($_GET["ruta"])){
             ?>
           </select>
         </div>
+        <div class="form-group" style="display: inline-block; margin-left: 10px; margin-bottom: 0;">
+          <a href="productos-stock-sucursales" class="btn btn-info btn-sm" title="Ver stock de todos los productos en cada sucursal activa">
+            <i class="fa fa-building-o"></i> Stock por sucursales
+          </a>
+        </div>
         
         <!--=====================================
         BOTONES DE SINCRONIZACIÓN Y BORRAR TODO (SOLO PARA USUARIO "admin")

@@ -163,6 +163,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "categorias" => ["Administrador", "Especial", "Vendedor"],
         "catalogo-maestro" => ["Administrador", "Especial"],
         "productos" => ["Administrador", "Especial", "Vendedor"],
+        "productos-stock-sucursales" => ["Administrador", "Especial", "Vendedor"],
         "clientes" => ["Administrador", "Vendedor", "Contador"],
         "ventas" => ["Administrador", "Vendedor", "Contador"],
         "crear-venta" => ["Administrador", "Vendedor", "Contador"],
@@ -234,7 +235,8 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
   <script src="<?php echo $url; ?>vistas/js/plantilla.js"></script>
   <script src="<?php echo $url; ?>vistas/js/usuarios.js"></script>
   <script src="<?php echo $url; ?>vistas/js/categorias.js"></script>
-  <script src="<?php echo $url; ?>vistas/js/productos.js?v=<?php echo time(); ?>"></script> 
+  <script src="<?php echo $url; ?>vistas/js/productos.js?v=<?php echo time(); ?>"></script>
+  <script src="<?php echo $url; ?>vistas/js/productos-stock-sucursales.js"></script> 
   <script src="<?php echo $url; ?>vistas/js/clientes.js"></script>
   <script src="<?php echo $url; ?>vistas/js/ventas.js"></script>
   <script src="<?php echo $url; ?>vistas/js/contabilidad.js"></script>
