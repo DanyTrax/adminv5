@@ -861,40 +861,37 @@ $(document).ready(function() {
         console.log("📊 Contadores actualizados - Productos:", totalProductos, "Cantidad:", totalCantidad);
     }
     
+    // Función para que onchange en la tabla (modo edición) pueda actualizar cantidad
+    function actualizarCantidadProductoDespacho(input, indice) {
+        var nuevaCantidad = parseInt($(input).val(), 10);
+        if (indice < 0 || indice >= productosDespacho.length) return;
+        var stockDisponible = productosDespacho[indice].stock_disponible || 9999;
+        
+        if(isNaN(nuevaCantidad) || nuevaCantidad < 1) {
+            $(input).val(productosDespacho[indice].cantidad);
+            return;
+        }
+        if(nuevaCantidad > stockDisponible) {
+            swal({
+                title: "Stock insuficiente",
+                text: "Solo hay " + stockDisponible + " unidades disponibles actualmente",
+                type: "warning",
+                confirmButtonText: "Entendido"
+            });
+            $(input).val(productosDespacho[indice].cantidad);
+            return;
+        }
+        productosDespacho[indice].cantidad = nuevaCantidad;
+        actualizarContadoresEdicion();
+    }
+    
+    // Exponer a window para que onclick/onchange en la tabla los encuentren
+    window.actualizarCantidadProductoDespacho = actualizarCantidadProductoDespacho;
+    window.actualizarContadoresEdicion = actualizarContadoresEdicion;
+    
     <?php endif; ?>
     
 });
-
-// FUNCIÓN GLOBAL: Actualizar cantidad de producto en edición
-function actualizarCantidadProductoDespacho(input, indice) {
-    
-    var nuevaCantidad = parseInt($(input).val());
-    var stockDisponible = productosDespacho[indice].stock_disponible;
-    
-    if(nuevaCantidad > stockDisponible) {
-        swal({
-            title: "Stock insuficiente",
-            text: `Solo hay ${stockDisponible} unidades disponibles actualmente`,
-            type: "warning",
-            confirmButtonText: "Entendido"
-        });
-        $(input).val(productosDespacho[indice].cantidad);
-        return;
-    }
-    
-    if(nuevaCantidad < 1) {
-        $(input).val(1);
-        nuevaCantidad = 1;
-    }
-    
-    // Actualizar en el array
-    productosDespacho[indice].cantidad = nuevaCantidad;
-    
-    // Actualizar resumen usando la función correcta
-    actualizarContadoresEdicion();
-    
-    console.log("✅ Cantidad actualizada:", productosDespacho[indice].codigo, "Nueva cantidad:", nuevaCantidad);
-}
 /*=============================================
 FUNCIÓN: ENVIAR FORMULARIO DE DESPACHO
 =============================================*/

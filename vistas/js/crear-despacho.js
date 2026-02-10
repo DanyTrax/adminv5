@@ -940,12 +940,33 @@ function validarCantidadModal() {
 CONFIRMAR AGREGAR PRODUCTO - VERSIÓN CORREGIDA
 =============================================*/
 function confirmarAgregarProducto() {
-var codigo = $("#codigoProductoDespachoModal").val();
+    var codigo = $("#codigoProductoDespachoModal").val();
     var descripcion = $("#descripcionProductoDespachoModal").val();
-    var cantidadNueva = parseInt($("#cantidadProductoDespachoModal").val());
-    var stock = parseInt($("#stockActualProductoDespachoModal").val());
-    var observacionNueva = $("#observacionProductoDespachoModal").val();
-// Validar que no exista ya el producto
+    var cantidadNueva = parseInt($("#cantidadProductoDespachoModal").val(), 10) || 0;
+    var stock = parseInt($("#stockActualProductoDespachoModal").val(), 10) || 0;
+    var observacionNueva = ($("#observacionProductoDespachoModal").val() || "").trim();
+
+    if (cantidadNueva < 1) {
+        swal({
+            title: "Cantidad inválida",
+            text: "La cantidad debe ser mayor a 0.",
+            type: "warning",
+            confirmButtonText: "Entendido"
+        });
+        $("#cantidadProductoDespachoModal").focus();
+        return;
+    }
+    if (cantidadNueva > stock) {
+        swal({
+            title: "Stock insuficiente",
+            text: "La cantidad no puede superar el stock disponible (" + stock + ").",
+            type: "warning",
+            confirmButtonText: "Entendido"
+        });
+        return;
+    }
+
+    // Validar que no exista ya el producto
     var existente = productosDespacho.find(function(p) {
         return p.codigo === codigo;
     });
@@ -1112,6 +1133,10 @@ if(productosDespacho.length === 0) {
             claseStock = 'text-warning';
         }
 
+        var cantidad = parseInt(producto.cantidad, 10) || 1;
+        var stockMax = parseInt(producto.stock_disponible, 10);
+        if (isNaN(stockMax) || stockMax < 1) stockMax = 99999;
+
         html += `
             <tr class="producto-agregado">
                 <td>
@@ -1124,11 +1149,11 @@ if(productosDespacho.length === 0) {
 
                            class="form-control input-sm text-center"
 
-                           value="${producto.cantidad}"
+                           value="${cantidad}"
 
                            min="1"
 
-                           max="${producto.stock_disponible}"
+                           max="${stockMax}"
                            onchange="actualizarCantidadProducto(${index}, this.value)"
                            style="width: 70px;">
                 </td>
@@ -2122,6 +2147,8 @@ window.actualizarInventarioLocal = actualizarInventarioLocal;
 window.limpiarFiltroLocal = limpiarFiltroLocal;
 window.abrirModalCantidad = abrirModalCantidad;
 window.eliminarProductoDespacho = eliminarProductoDespacho;
+window.actualizarCantidadProducto = actualizarCantidadProducto;
+window.actualizarVistaProductosDespacho = actualizarVistaProductosDespacho;
 window.enviarFormularioDespacho = enviarFormularioDespacho;
 
 })(); // Cerrar función auto-ejecutable - Solo se ejecuta si estamos en la página crear-despacho
