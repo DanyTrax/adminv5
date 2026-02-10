@@ -34,6 +34,7 @@ $(function () {
         id_categoria: idCategoria
       },
       dataType: 'json',
+      timeout: 120000,
       success: function (resp) {
         if ($btn.length) $btn.prop('disabled', false);
         if (resp.success) {
@@ -49,9 +50,9 @@ $(function () {
           );
         }
       },
-      error: function (xhr) {
+      error: function (xhr, status) {
         if ($btn.length) $btn.prop('disabled', false);
-        var msg = 'Error de conexión al servidor.';
+        var msg = status === 'timeout' ? 'Tiempo de espera agotado. El catálogo es muy grande; intente filtrar por categoría.' : 'Error de conexión al servidor.';
         if (xhr && xhr.responseText) {
           try {
             var json = JSON.parse(xhr.responseText);

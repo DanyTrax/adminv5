@@ -75,6 +75,16 @@ switch ($accion) {
                 $productos = [];
             }
 
+            $codigos = array_values(array_unique(array_filter(array_map(function ($p) {
+                return isset($p['codigo']) ? trim($p['codigo']) : '';
+            }, $productos))));
+
+            $stockPorSucursal = [];
+            foreach ($sucursalesConectadas as $suc) {
+                $sid = isset($suc['id']) ? (string)$suc['id'] : '';
+                $stockPorSucursal[$sid] = consultarStockTodosProductosEnSucursal($suc, $codigos);
+            }
+
             $resultadoProductos = [];
             foreach ($productos as $prod) {
                 $codigo = isset($prod['codigo']) ? $prod['codigo'] : '';
@@ -82,8 +92,8 @@ switch ($accion) {
                 $stocks = [];
                 $total = 0;
                 foreach ($sucursalesConectadas as $suc) {
-                    $cant = consultarStockProductoEnSucursal($suc, $codigo);
                     $sid = isset($suc['id']) ? (string)$suc['id'] : '';
+                    $cant = isset($stockPorSucursal[$sid][$codigo]) ? (int)$stockPorSucursal[$sid][$codigo] : 0;
                     $stocks[$sid] = $cant;
                     $total += $cant;
                 }
@@ -192,9 +202,14 @@ switch ($accion) {
 }
 
 /*=============================================
-CONSULTAR STOCK DE UN PRODUCTO EN UNA SUCURSAL
+CONSULTAR STOCK DE TODOS LOS PRODUCTOS EN UNA SUCURSAL (una sola query)
 =============================================*/
-function consultarStockProductoEnSucursal($sucursal, $codigoProducto) {
+function consultarStockTodosProductosEnSucursal($sucursal, $codigos) {
+    $out = [];
+    if (empty($codigos)) {
+        return $out;
+    }
+    $codigos = array_values(array_unique($codigos));
     try {
         $host = isset($sucursal['host_bd']) ? $sucursal['host_bd'] : '';
         $nombreBd = isset($sucursal['nombre_bd']) ? $sucursal['nombre_bd'] : '';
@@ -202,23 +217,37 @@ function consultarStockProductoEnSucursal($sucursal, $codigoProducto) {
         $usuario = isset($sucursal['usuario_bd']) ? $sucursal['usuario_bd'] : '';
         $password = isset($sucursal['password_bd']) ? $sucursal['password_bd'] : '';
         if (empty($host) || empty($nombreBd) || empty($usuario)) {
-            return 0;
+            return $out;
         }
-        $dsn = "mysql:host=" . $host . ";dbname=" . $nombreBd . ";port=" . $puerto;
+        $dsn = "mysql:host=" . $host . ";dbname=" . $nombreBd . ";port=" . $puerto . ";charset=utf8mb4";
         $pdo = new PDO($dsn, $usuario, $password);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        $stmt = $pdo->prepare("SELECT stock FROM productos WHERE codigo = :codigo");
-        $stmt->bindParam(":codigo", $codigoProducto, PDO::PARAM_STR);
-        $stmt->execute();
-
-        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-        return ($resultado && isset($resultado['stock'])) ? (int)$resultado['stock'] : 0;
+        $chunkSize = 400;
+        $chunks = array_chunk($codigos, $chunkSize);
+        foreach ($chunks as $chunk) {
+            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+            $stmt = $pdo->prepare("SELECT codigo, stock FROM productos WHERE codigo IN ($placeholders)");
+            $stmt->execute(array_values($chunk));
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $out[$row['codigo']] = (int)$row['stock'];
+            }
+        }
+        return $out;
     } catch (Exception $e) {
         $nombreSuc = isset($sucursal['nombre']) ? $sucursal['nombre'] : 'sucursal';
         error_log("Error consultando stock en sucursal {$nombreSuc}: " . $e->getMessage());
-        return 0;
+        return $out;
     }
+}
+
+/*=============================================
+CONSULTAR STOCK DE UN PRODUCTO EN UNA SUCURSAL
+=============================================*/
+function consultarStockProductoEnSucursal($sucursal, $codigoProducto) {
+    $codigos = array($codigoProducto);
+    $res = consultarStockTodosProductosEnSucursal($sucursal, $codigos);
+    return isset($res[$codigoProducto]) ? $res[$codigoProducto] : 0;
 }
 
 ?>
