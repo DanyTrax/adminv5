@@ -25,10 +25,23 @@ switch ($accion) {
 
     case "obtener_stock_todas_sucursales":
         try {
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json; charset=utf-8');
+
             $idCategoria = isset($_POST["id_categoria"]) && $_POST["id_categoria"] !== '' ? (int)$_POST["id_categoria"] : null;
 
             $sucursales = ControladorSucursales::ctrObtenerSucursalesDisponibles();
-            if (!$sucursales || !$sucursales['success'] || empty($sucursales['data'])) {
+            if (!$sucursales || !$sucursales['success']) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => $sucursales['message'] ?? 'No se encontraron sucursales activas'
+                ]);
+                exit;
+            }
+            $dataSuc = isset($sucursales['data']) && is_array($sucursales['data']) ? $sucursales['data'] : [];
+            if (empty($dataSuc)) {
                 echo json_encode([
                     'success' => false,
                     'message' => 'No se encontraron sucursales activas'
@@ -36,7 +49,7 @@ switch ($accion) {
                 exit;
             }
 
-            $sucursalesConectadas = array_filter($sucursales['data'], function ($s) {
+            $sucursalesConectadas = array_filter($dataSuc, function ($s) {
                 return isset($s['estado_conexion']) && $s['estado_conexion'] === 'conectado';
             });
             $sucursalesConectadas = array_values($sucursalesConectadas);
@@ -44,13 +57,15 @@ switch ($accion) {
             if (empty($sucursalesConectadas)) {
                 echo json_encode([
                     'success' => false,
-                    'message' => 'No hay sucursales con conexión disponible'
+                    'message' => 'No hay sucursales con conexión disponible. Verifique que las sucursales tengan host_bd, nombre_bd, usuario_bd y password_bd configurados en la BD central.'
                 ]);
                 exit;
             }
 
             $listaSucursales = array_map(function ($s) {
-                return ['id' => (int)$s['id'], 'nombre' => $s['nombre']];
+                $id = isset($s['id']) ? (int)$s['id'] : 0;
+                $nombre = isset($s['nombre']) ? $s['nombre'] : (isset($s['codigo_sucursal']) ? $s['codigo_sucursal'] : 'Sucursal');
+                return ['id' => $id, 'nombre' => $nombre];
             }, $sucursalesConectadas);
 
             $productos = $idCategoria
@@ -62,13 +77,14 @@ switch ($accion) {
 
             $resultadoProductos = [];
             foreach ($productos as $prod) {
-                $codigo = $prod['codigo'] ?? '';
-                $descripcion = $prod['descripcion'] ?? '';
+                $codigo = isset($prod['codigo']) ? $prod['codigo'] : '';
+                $descripcion = isset($prod['descripcion']) ? $prod['descripcion'] : '';
                 $stocks = [];
                 $total = 0;
                 foreach ($sucursalesConectadas as $suc) {
                     $cant = consultarStockProductoEnSucursal($suc, $codigo);
-                    $stocks[(string)$suc['id']] = $cant;
+                    $sid = isset($suc['id']) ? (string)$suc['id'] : '';
+                    $stocks[$sid] = $cant;
                     $total += $cant;
                 }
                 $resultadoProductos[] = [
@@ -84,13 +100,18 @@ switch ($accion) {
                 'sucursales' => $listaSucursales,
                 'productos' => $resultadoProductos
             ]);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            header('Content-Type: application/json; charset=utf-8');
+            error_log("obtener_stock_todas_sucursales: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
             echo json_encode([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()
             ]);
         }
-        break;
+        exit;
     
     case "consultar_stock_sucursales":
         try {
@@ -175,26 +196,27 @@ CONSULTAR STOCK DE UN PRODUCTO EN UNA SUCURSAL
 =============================================*/
 function consultarStockProductoEnSucursal($sucursal, $codigoProducto) {
     try {
-        // Conectar a la sucursal
-        $dsn = "mysql:host={$sucursal['host_bd']};dbname={$sucursal['nombre_bd']};port={$sucursal['puerto_bd']}";
-        $pdo = new PDO($dsn, $sucursal['usuario_bd'], $sucursal['password_bd']);
+        $host = isset($sucursal['host_bd']) ? $sucursal['host_bd'] : '';
+        $nombreBd = isset($sucursal['nombre_bd']) ? $sucursal['nombre_bd'] : '';
+        $puerto = isset($sucursal['puerto_bd']) ? $sucursal['puerto_bd'] : 3306;
+        $usuario = isset($sucursal['usuario_bd']) ? $sucursal['usuario_bd'] : '';
+        $password = isset($sucursal['password_bd']) ? $sucursal['password_bd'] : '';
+        if (empty($host) || empty($nombreBd) || empty($usuario)) {
+            return 0;
+        }
+        $dsn = "mysql:host=" . $host . ";dbname=" . $nombreBd . ";port=" . $puerto;
+        $pdo = new PDO($dsn, $usuario, $password);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        
-        // Consultar stock del producto
+
         $stmt = $pdo->prepare("SELECT stock FROM productos WHERE codigo = :codigo");
         $stmt->bindParam(":codigo", $codigoProducto, PDO::PARAM_STR);
         $stmt->execute();
-        
+
         $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($resultado) {
-            return (int)$resultado['stock'];
-        } else {
-            return 0;
-        }
-        
+        return ($resultado && isset($resultado['stock'])) ? (int)$resultado['stock'] : 0;
     } catch (Exception $e) {
-        error_log("Error consultando stock en sucursal {$sucursal['nombre']}: " . $e->getMessage());
+        $nombreSuc = isset($sucursal['nombre']) ? $sucursal['nombre'] : 'sucursal';
+        error_log("Error consultando stock en sucursal {$nombreSuc}: " . $e->getMessage());
         return 0;
     }
 }

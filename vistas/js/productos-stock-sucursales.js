@@ -42,11 +42,18 @@ $(function () {
           );
         }
       },
-      error: function () {
+      error: function (xhr) {
         $btn.prop('disabled', false);
-        $estado.text('Error de conexión').removeClass('text-success').addClass('text-danger');
+        var msg = 'Error de conexión al servidor.';
+        if (xhr && xhr.responseText) {
+          try {
+            var json = JSON.parse(xhr.responseText);
+            if (json.message) msg = json.message;
+          } catch (e) {}
+        }
+        $estado.text('Error').removeClass('text-success').addClass('text-danger');
         $('#tbodyStockPorSucursales').html(
-          '<tr><td colspan="10" class="text-center text-danger">Error de conexión al servidor.</td></tr>'
+          '<tr><td colspan="10" class="text-center text-danger">' + escapeHtml(msg) + '</td></tr>'
         );
       }
     });
