@@ -23,8 +23,8 @@ class ConexionCentral {
             return $link;
 
         } catch (PDOException $e) {
-            // Manejar el error de conexión
-            die("Error de conexión: " . $e->getMessage());
+            // Lanzar para que el llamador pueda devolver JSON en lugar de HTML (evita romper peticiones AJAX)
+            throw $e;
         }
     }
 }

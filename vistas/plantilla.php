@@ -92,12 +92,12 @@ $url = $protocol . $host . $script_name;
   ============================================== -->
   <script>
     <?php
+      // URL base para que AJAX y enlaces relativos funcionen con rutas amigables (ej: /productos-stock-sucursales).
+      echo 'var BASE_URL = "' . str_replace(['\\', '"'], ['\\\\', '\\"'], rtrim($url, '/')) . '/";';
       // Se define una variable de JavaScript con la ruta actual
-      // para que todos los scripts puedan saber en qué página están.
       if (isset($_GET["ruta"])) {
-        echo 'var RUTA_ACTUAL = "' . $_GET["ruta"] . '";';
+        echo 'var RUTA_ACTUAL = "' . addslashes($_GET["ruta"]) . '";';
       } else {
-        // Si no hay ruta, asumimos que es la página de inicio
         echo 'var RUTA_ACTUAL = "inicio";';
       }
     ?>

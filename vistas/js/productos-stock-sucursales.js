@@ -26,8 +26,9 @@ $(function () {
     if ($btn.length) $btn.prop('disabled', true);
     $estado.text('Cargando...').removeClass('text-danger text-success').addClass('text-muted');
 
+    var urlAjax = (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + 'ajax/stock-disponible-sucursales.ajax.php';
     $.ajax({
-      url: 'ajax/stock-disponible-sucursales.ajax.php',
+      url: urlAjax,
       method: 'POST',
       data: {
         accion: 'obtener_stock_todas_sucursales',
@@ -57,12 +58,18 @@ $(function () {
           try {
             var json = JSON.parse(xhr.responseText);
             if (json.message) msg = json.message;
-          } catch (e) {}
+          } catch (e) {
+            if (xhr.responseText.indexOf('<') !== -1) {
+              msg = 'Error del servidor (posible fallo de conexión a la BD central). Reintente o contacte al administrador.';
+            }
+          }
         }
         $estado.text('Error').removeClass('text-success').addClass('text-danger');
         $('#tbodyStockPorSucursales').html(
-          '<tr><td colspan="20" class="text-center text-danger">' + escapeHtml(msg) + '</td></tr>'
+          '<tr><td colspan="20" class="text-center text-danger">' + escapeHtml(msg) +
+          ' <button type="button" class="btn btn-sm btn-default" id="btnReintentarStockSuc">Reintentar</button></td></tr>'
         );
+        $('#btnReintentarStockSuc').off('click').on('click', function () { cargarStockPorSucursales(); });
       }
     });
   }
@@ -150,6 +157,7 @@ $(function () {
   }
 
   if (enPaginaStockSucursales()) {
-    cargarStockPorSucursales();
+    // Pequeño retraso para que el beacon de Cloudflare no bloquee la ejecución
+    setTimeout(function () { cargarStockPorSucursales(); }, 100);
   }
 });
