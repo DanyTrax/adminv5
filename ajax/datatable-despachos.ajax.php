@@ -146,6 +146,28 @@ private function obtenerNombreSucursal($codigoSucursal) {
 }
 
 /*=============================================
+OBTENER NOMBRE DE SUCURSAL ACTUAL (LA QUE ESTÁ LOGUEADA)
+=============================================*/
+private function obtenerSucursalActualNombre() {
+    try {
+        require_once "../modelos/conexion.php";
+        $stmt = Conexion::conectar()->prepare("SELECT nombre FROM sucursal_local LIMIT 1");
+        $stmt->execute();
+        $row = $stmt->fetch();
+        if ($row && !empty($row["nombre"])) {
+            return trim($row["nombre"]);
+        }
+        // Fallback: algunas instalaciones usan nombre_sucursal
+        $stmt = Conexion::conectar()->prepare("SELECT nombre_sucursal FROM sucursal_local LIMIT 1");
+        $stmt->execute();
+        $row = $stmt->fetch();
+        return ($row && !empty($row["nombre_sucursal"])) ? trim($row["nombre_sucursal"]) : '';
+    } catch (Exception $e) {
+        return '';
+    }
+}
+
+/*=============================================
 GENERAR BOTONES DE ACCIÓN - VERSIÓN CORREGIDA
 =============================================*/
 private function generarBotonesAccion($despacho) {
@@ -154,16 +176,27 @@ private function generarBotonesAccion($despacho) {
     $perfil = isset($_SESSION["perfil"]) ? $_SESSION["perfil"] : 'Usuario';
     $estado = $despacho["estado"];
     
+    // Saber si la sucursal actual es la de origen del despacho (la que sacó el producto)
+    $sucursalActual = $this->obtenerSucursalActualNombre();
+    $sucursalOrigenDespacho = isset($despacho["sucursal_origen"]) ? trim($despacho["sucursal_origen"]) : '';
+    $esSucursalOrigen = ($sucursalActual !== '' && $sucursalOrigenDespacho !== '' && $sucursalActual === $sucursalOrigenDespacho);
+    
+    // Puede aceptar: Admin/Transportador siempre, o si es la sucursal de origen también Especial/Contador/Vendedor
+    $puedeAceptar = $estado == "pendiente" && (
+        ($perfil == "Administrador" || $perfil == "Transportador") ||
+        ($esSucursalOrigen && in_array($perfil, ["Administrador", "Especial", "Contador", "Vendedor"], true))
+    );
+    
     // Botón Ver detalles
     $botones .= '<button class=\"btn btn-info btn-xs btnVerDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Ver detalles\"><i class=\"fa fa-eye\"></i></button>';
     
-    // Botón Aceptar (para Transportadores y Administradores) - Solo pendientes
-    if(($perfil == "Administrador" || $perfil == "Transportador") && $estado == "pendiente") {
+    // Botón Aceptar - Solo pendientes (Transportador/Admin o sucursal de origen con perfiles permitidos)
+    if($puedeAceptar) {
         $botones .= ' <button class=\"btn btn-success btn-xs btnAceptarDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Aceptar despacho\"><i class=\"fa fa-check\"></i></button>';
     }
     
-    // Botón Cancelar (para Administradores y Transportadores) - Solo pendientes
-    if(($perfil == "Administrador" || $perfil == "Transportador") && $estado == "pendiente") {
+    // Botón Cancelar - mismos criterios que Aceptar
+    if($puedeAceptar) {
         $botones .= ' <button class=\"btn btn-warning btn-xs btnCancelarDespacho\" idDespacho=\"' . $despacho["id"] . '\" estadoDespacho=\"' . $estado . '\" title=\"Cancelar despacho\"><i class=\"fa fa-ban\"></i></button>';
     }
     
