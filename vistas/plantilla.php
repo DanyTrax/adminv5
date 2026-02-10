@@ -17,6 +17,8 @@ $url = $protocol . $host . $script_name;
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <!-- Bloquear script de Cloudflare Insights (beacon.min.js) inyectado por hosting/proxy: evita errores MIME/CORS/integrity en consola. -->
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval';">
   <?php
     // --- LÓGICA PARA TÍTULO DINÁMICO ---
     // Obtener nombre de sucursal desde BD local
@@ -45,7 +47,7 @@ $url = $protocol . $host . $script_name;
   <title><?php echo $nombreSitio . " - " . $tituloPagina; ?></title>
   <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
   <link rel="icon" href="<?php echo $url; ?>vistas/img/plantilla/icono-negro.png ">
-  <!-- CDN reemplazados por vistas/lib (toastr, moment-timezone, xlsx) para evitar CORS. Si algo deja de funcionar (toastr, fechas, exportar Excel), revertir en plantilla.php a: toastr→cdnjs, moment-timezone→cdnjs, xlsx→unpkg.com/xlsx. Beacon.min.js en consola lo inyecta hosting/Cloudflare. -->
+  <!-- CDN reemplazados por vistas/lib (toastr, moment-timezone, xlsx) para evitar CORS. Beacon: lo inyecta Cloudflare/hosting; se bloquea con CSP más abajo. Para quitarlo del todo: Cloudflare Dashboard → Analytics → Web Analytics → desactivar. -->
   
   <!-- (Aquí van todos tus enlaces a CSS y scripts de librerías) -->
   <link rel="stylesheet" href="<?php echo $url; ?>vistas/bower_components/bootstrap/dist/css/bootstrap.min.css">
