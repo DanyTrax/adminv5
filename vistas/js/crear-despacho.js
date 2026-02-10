@@ -2112,7 +2112,16 @@ function mostrarResumenDisponibilidadSucursales(datos) {
     });
 }
 
-// Exponer funciones al scope global para onclick
+// Exponer funciones al scope global para onclick (vista y HTML dinámico)
+window.seleccionarSolicitud = seleccionarSolicitud;
+window.limpiarSolicitudSeleccionada = limpiarSolicitudSeleccionada;
+window.cargarProductosDeSolicitud = cargarProductosDeSolicitud;
+window.buscarSolicitudesStock = buscarSolicitudesStock;
+window.validarStockProductos = validarStockProductos;
+window.actualizarInventarioLocal = actualizarInventarioLocal;
+window.limpiarFiltroLocal = limpiarFiltroLocal;
+window.abrirModalCantidad = abrirModalCantidad;
+window.eliminarProductoDespacho = eliminarProductoDespacho;
 window.enviarFormularioDespacho = enviarFormularioDespacho;
 
 })(); // Cerrar función auto-ejecutable - Solo se ejecuta si estamos en la página crear-despacho
