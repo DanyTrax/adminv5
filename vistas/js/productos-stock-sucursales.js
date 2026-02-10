@@ -45,7 +45,7 @@ $(function () {
         } else {
           $estado.text(resp.message || 'Error').removeClass('text-success').addClass('text-danger');
           $('#tbodyStockPorSucursales').html(
-            '<tr><td colspan="10" class="text-center text-danger">' +
+            '<tr><td colspan="20" class="text-center text-danger">' +
             (resp.message || 'Error al cargar datos') + '</td></tr>'
           );
         }
@@ -61,45 +61,60 @@ $(function () {
         }
         $estado.text('Error').removeClass('text-success').addClass('text-danger');
         $('#tbodyStockPorSucursales').html(
-          '<tr><td colspan="10" class="text-center text-danger">' + escapeHtml(msg) + '</td></tr>'
+          '<tr><td colspan="20" class="text-center text-danger">' + escapeHtml(msg) + '</td></tr>'
         );
       }
     });
+  }
+
+  function iconoStock(cantidad) {
+    var cls, icon;
+    if (cantidad <= 0) {
+      cls = 'text-danger';
+      icon = '<i class="fa fa-times-circle"></i> ';
+    } else if (cantidad <= 10) {
+      cls = 'text-warning';
+      icon = '<i class="fa fa-exclamation-triangle"></i> ';
+    } else {
+      cls = 'text-success';
+      icon = '<i class="fa fa-check-circle"></i> ';
+    }
+    return { class: cls, icon: icon };
   }
 
   function renderizarTabla(datos) {
     var sucursales = datos.sucursales;
     var productos = datos.productos;
 
-    var $thead = $('#theadStockSucursales');
-    $thead.find('th:not(:first):not(:last)').remove();
-    var $thTotal = $thead.find('th.bg-primary');
-    sucursales.forEach(function (s, i) {
-      $thTotal.before('<th class="text-center">' + escapeHtml(s.nombre) + '</th>');
+    var headerHtml = '<th style="width: 10px;">#</th><th>Código</th><th>Descripción</th>';
+    sucursales.forEach(function (s) {
+      headerHtml += '<th class="text-center" style="min-width: 80px;">' + escapeHtml(s.nombre) + '</th>';
     });
+    headerHtml += '<th class="text-center bg-primary" style="min-width: 80px;">Total</th>';
+    $('#theadStockSucursales').html(headerHtml);
 
     var $tbody = $('#tbodyStockPorSucursales');
     $tbody.empty();
 
     if (productos.length === 0) {
-      $tbody.append(
-        '<tr><td colspan="' + (2 + sucursales.length + 1) + '" class="text-center text-muted">No hay productos para mostrar.</td></tr>'
-      );
+      var cols = 3 + sucursales.length + 1;
+      $tbody.append('<tr><td colspan="' + cols + '" class="text-center text-muted">No hay productos para mostrar.</td></tr>');
     } else {
-      productos.forEach(function (p) {
-        var cells = [
-          '<td><code>' + escapeHtml(p.codigo) + '</code></td>',
-          '<td>' + escapeHtml(p.descripcion) + '</td>'
-        ];
+      productos.forEach(function (p, index) {
+        var fila = '<tr>';
+        fila += '<td class="text-center"><strong>' + (index + 1) + '</strong></td>';
+        fila += '<td><code>' + escapeHtml(p.codigo) + '</code></td>';
+        fila += '<td>' + escapeHtml(p.descripcion) + '</td>';
         sucursales.forEach(function (s) {
-          var q = (p.stocks && p.stocks[s.id] !== undefined) ? p.stocks[s.id] : 0;
-          var cls = q <= 0 ? 'text-muted' : (q <= 10 ? 'text-warning' : 'text-success');
-          cells.push('<td class="text-center ' + cls + '">' + q + '</td>');
+          var q = (p.stocks && p.stocks[s.id] !== undefined) ? parseInt(p.stocks[s.id], 10) : 0;
+          var o = iconoStock(q);
+          fila += '<td class="text-center ' + o.class + '">' + o.icon + '<strong>' + q + '</strong></td>';
         });
         var total = p.total || 0;
-        var totalCls = total <= 0 ? 'text-muted' : 'text-primary';
-        cells.push('<td class="text-center font-weight-bold ' + totalCls + '">' + total + '</td>');
-        $tbody.append('<tr>' + cells.join('') + '</tr>');
+        var oTotal = iconoStock(total);
+        fila += '<td class="text-center ' + oTotal.class + '"><strong>' + total + '</strong></td>';
+        fila += '</tr>';
+        $tbody.append(fila);
       });
     }
 
@@ -108,7 +123,6 @@ $(function () {
       tablaStockSuc = null;
     }
 
-    var numCols = 2 + sucursales.length + 1;
     tablaStockSuc = $('#tablaStockPorSucursales').DataTable({
       responsive: true,
       language: {
@@ -121,10 +135,8 @@ $(function () {
         paginate: { first: 'Primera', last: 'Última', next: 'Siguiente', previous: 'Anterior' }
       },
       pageLength: 25,
-      order: [[0, 'asc']],
+      order: [[1, 'asc']],
       columnDefs: [
-        { orderable: true, targets: 0 },
-        { orderable: true, targets: 1 },
         { orderable: true, targets: '_all' }
       ]
     });

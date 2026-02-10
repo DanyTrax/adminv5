@@ -48,25 +48,30 @@ $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
 
     <div class="box box-success">
       <div class="box-header with-border">
-        <h3 class="box-title"><i class="fa fa-table"></i> Tabla de productos y stock por sucursal</h3>
+        <h3 class="box-title"><i class="fa fa-warehouse"></i> Stock disponible por sucursal</h3>
         <div class="box-tools pull-right">
           <span class="label label-info" id="resumenProductosStockSuc">0 productos</span>
         </div>
       </div>
       <div class="box-body">
+        <div class="alert alert-info">
+          <i class="fa fa-info-circle"></i>
+          <strong>Información:</strong> Esta tabla muestra el stock disponible de <strong>todos los productos del catálogo maestro</strong> en cada sucursal activa. Igual que en Detalles de la Solicitud, con una columna por sucursal y al final el <strong>Total</strong> por producto. Solo consulta.
+        </div>
         <div class="table-responsive">
-          <table class="table table-bordered table-striped table-hover" id="tablaStockPorSucursales" width="100%">
+          <table class="table table-bordered table-striped" id="tablaStockPorSucursales" width="100%">
             <thead>
               <tr id="theadStockSucursales">
+                <th style="width: 10px;">#</th>
                 <th>Código</th>
                 <th>Descripción</th>
                 <!-- Columnas de sucursales se insertan por JS -->
-                <th class="text-center bg-primary">Total</th>
+                <th class="text-center bg-primary" style="min-width: 80px;">Total</th>
               </tr>
             </thead>
             <tbody id="tbodyStockPorSucursales">
               <tr>
-                <td colspan="10" class="text-center text-muted">
+                <td colspan="20" class="text-center text-muted">
                   <i class="fa fa-spinner fa-spin"></i> Cargando catálogo maestro y stock por sucursales activas...
                 </td>
               </tr>
