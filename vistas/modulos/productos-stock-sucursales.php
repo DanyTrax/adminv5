@@ -36,7 +36,7 @@ $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
         <div class="form-group" style="margin-bottom: 0;">
           <label for="filtroCategoriaStockSuc"><i class="fa fa-th"></i> Categoría</label>
           <select class="form-control" id="filtroCategoriaStockSuc" name="filtroCategoriaStockSuc" style="max-width: 300px;">
-            <option value="">Todas las categorías (catálogo maestro)</option>
+            <option value="">Todas las categorías</option>
             <?php foreach ($categorias as $cat): ?>
               <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['categoria']); ?></option>
             <?php endforeach; ?>
@@ -56,7 +56,7 @@ $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
       <div class="box-body">
         <div class="alert alert-info">
           <i class="fa fa-info-circle"></i>
-          <strong>Información:</strong> Esta tabla muestra el stock disponible de <strong>todos los productos del catálogo maestro</strong> en cada sucursal activa. Igual que en Detalles de la Solicitud, con una columna por sucursal y al final el <strong>Total</strong> por producto. Solo consulta.
+          <strong>Información:</strong> Misma consulta que en Detalles de la Solicitud (Stock Sucursales): se listan <strong>todos los productos de esta sucursal</strong>, una columna por cada sucursal activa con las cantidades y al final el <strong>Total</strong> por producto. Solo consulta.
         </div>
         <div class="table-responsive">
           <table class="table table-bordered table-striped" id="tablaStockPorSucursales" width="100%">
@@ -72,7 +72,7 @@ $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
             <tbody id="tbodyStockPorSucursales">
               <tr>
                 <td colspan="20" class="text-center text-muted">
-                  <i class="fa fa-spinner fa-spin"></i> Cargando catálogo maestro y stock por sucursales activas...
+                  <i class="fa fa-spinner fa-spin"></i> Cargando productos y stock por sucursales activas...
                 </td>
               </tr>
             </tbody>

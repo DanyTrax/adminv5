@@ -3,7 +3,7 @@
 session_start();
 
 require_once __DIR__ . "/../controladores/sucursales.controlador.php";
-require_once __DIR__ . "/../modelos/catalogo-maestro.modelo.php";
+require_once __DIR__ . "/../modelos/productos.modelo.php";
 
 // Limpiar cualquier salida previa si existe buffer
 if (ob_get_level()) {
@@ -69,8 +69,8 @@ switch ($accion) {
             }, $sucursalesConectadas);
 
             $productos = $idCategoria
-                ? ModeloCatalogoMaestro::mdlMostrarCatalogoMaestro("id_categoria", $idCategoria)
-                : ModeloCatalogoMaestro::mdlMostrarCatalogoMaestro(null, null);
+                ? ModeloProductos::mdlMostrarProductos("productos", "id_categoria", $idCategoria, "codigo")
+                : ModeloProductos::mdlMostrarProductos("productos", null, null, "id");
             if (!is_array($productos)) {
                 $productos = [];
             }
