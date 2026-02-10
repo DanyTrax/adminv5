@@ -3,6 +3,7 @@
 session_start();
 
 require_once __DIR__ . "/../controladores/sucursales.controlador.php";
+require_once __DIR__ . "/../modelos/sucursales.modelo.php";
 require_once __DIR__ . "/../modelos/productos.modelo.php";
 
 // Limpiar cualquier salida previa si existe buffer
@@ -32,33 +33,46 @@ switch ($accion) {
 
             $idCategoria = isset($_POST["id_categoria"]) && $_POST["id_categoria"] !== '' ? (int)$_POST["id_categoria"] : null;
 
+            // 1) Obtener sucursales activas: mismo origen que la pantalla Sucursales (BD central).
+            //    Cada sucursal tiene host_bd, nombre_bd, usuario_bd, password_bd para conectar a su propia BD y leer tabla productos (codigo, stock).
             $sucursales = ControladorSucursales::ctrObtenerSucursalesDisponibles();
-            if (!$sucursales || !$sucursales['success']) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => $sucursales['message'] ?? 'No se encontraron sucursales activas'
-                ]);
-                exit;
-            }
-            $dataSuc = isset($sucursales['data']) && is_array($sucursales['data']) ? $sucursales['data'] : [];
-            if (empty($dataSuc)) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'No se encontraron sucursales activas'
-                ]);
-                exit;
+            $dataSuc = (isset($sucursales['success']) && $sucursales['success'] && isset($sucursales['data']) && is_array($sucursales['data']))
+                ? $sucursales['data']
+                : [];
+
+            $sucursalesConectadas = [];
+            if (!empty($dataSuc)) {
+                $sucursalesConectadas = array_values(array_filter($dataSuc, function ($s) {
+                    return isset($s['estado_conexion']) && $s['estado_conexion'] === 'conectado';
+                }));
             }
 
-            $sucursalesConectadas = array_filter($dataSuc, function ($s) {
-                return isset($s['estado_conexion']) && $s['estado_conexion'] === 'conectado';
-            });
-            $sucursalesConectadas = array_values($sucursalesConectadas);
+            // 2) Si el central no devolvió sucursales o ninguna está conectada: usar sucursal local (esta sucursal).
+            //    Los datos de conexión están en sucursal_local (misma idea que en Sucursales: una BD por sucursal).
+            if (empty($sucursalesConectadas)) {
+                $local = ModeloSucursales::mdlObtenerConfiguracionLocal();
+                if ($local && !empty($local['host_bd']) && !empty($local['nombre_bd']) && !empty($local['usuario_bd'])) {
+                    $sucursalesConectadas = [[
+                        'id' => 0,
+                        'nombre' => isset($local['nombre']) ? $local['nombre'] : (isset($local['codigo_sucursal']) ? $local['codigo_sucursal'] : 'Esta sucursal'),
+                        'codigo_sucursal' => isset($local['codigo_sucursal']) ? $local['codigo_sucursal'] : '',
+                        'host_bd' => $local['host_bd'],
+                        'nombre_bd' => $local['nombre_bd'],
+                        'usuario_bd' => $local['usuario_bd'],
+                        'password_bd' => isset($local['password_bd']) ? $local['password_bd'] : '',
+                        'puerto_bd' => isset($local['puerto_bd']) ? (int)$local['puerto_bd'] : 3306,
+                        'estado_conexion' => 'conectado'
+                    ]];
+                }
+            }
 
             if (empty($sucursalesConectadas)) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'No hay sucursales con conexión disponible. Verifique que las sucursales tengan host_bd, nombre_bd, usuario_bd y password_bd configurados en la BD central.'
-                ]);
+                $msg = 'No hay sucursales con conexión disponible. ';
+                if (empty($dataSuc)) {
+                    $msg .= 'No se pudo obtener la lista del central; verifique conexión a la BD central. ';
+                }
+                $msg .= 'En Sucursales debe haber activas con host_bd, nombre_bd, usuario_bd y password_bd. Para ver al menos esta sucursal, configure sucursal_local.';
+                echo json_encode(['success' => false, 'message' => $msg]);
                 exit;
             }
 
