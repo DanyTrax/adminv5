@@ -187,8 +187,8 @@ private function generarBotonesAccion($despacho) {
         ($esSucursalOrigen && in_array($perfil, ["Administrador", "Especial", "Contador", "Vendedor"], true))
     );
     
-    // Botón Ver detalles
-    $botones .= '<button class=\"btn btn-info btn-xs btnVerDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Ver detalles\"><i class=\"fa fa-eye\"></i></button>';
+    // Botón Ver detalles (onclick directo para evitar fallos de delegación)
+    $botones .= '<button class=\"btn btn-info btn-xs btnVerDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Ver detalles\" onclick=\"verDespacho(' . intval($despacho["id"]) . '); return false;\"><i class=\"fa fa-eye\"></i></button>';
     
     // Botón Aceptar - Solo pendientes (Transportador/Admin o sucursal de origen con perfiles permitidos)
     if($puedeAceptar) {
@@ -205,9 +205,11 @@ private function generarBotonesAccion($despacho) {
         $botones .= ' <button class=\"btn btn-warning btn-xs btnEditarDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Editar despacho\" onclick=\"editarDespacho(' . $despacho["id"] . ')\"><i class=\"fa fa-pencil\"></i></button>';
     }
     
-    // Botón Cambiar estado (solo Administrador - en cualquier estado)
+    // Botón Cambiar estado (solo Administrador - en cualquier estado, onclick directo)
     if($perfil == "Administrador") {
-        $botones .= ' <button class=\"btn btn-primary btn-xs btnCambiarEstadoDespacho\" idDespacho=\"' . $despacho["id"] . '\" numeroDespacho=\"' . htmlspecialchars($despacho["numero_despacho"]) . '\" estadoDespacho=\"' . $estado . '\" title=\"Cambiar estado\"><i class=\"fa fa-exchange\"></i></button>';
+        $numDesp = addslashes($despacho["numero_despacho"]);
+        $estadoEsc = addslashes($estado);
+        $botones .= ' <button class=\"btn btn-primary btn-xs btnCambiarEstadoDespacho\" idDespacho=\"' . $despacho["id"] . '\" numeroDespacho=\"' . htmlspecialchars($despacho["numero_despacho"]) . '\" estadoDespacho=\"' . $estado . '\" title=\"Cambiar estado\" onclick=\"abrirModalCambiarEstado(' . intval($despacho["id"]) . ', \'' . $numDesp . '\', \'' . $estadoEsc . '\'); return false;\"><i class=\"fa fa-exchange\"></i></button>';
     }
     
     // Botón Eliminar (pendientes para Administrador/Especial/Contador, cualquier estado solo para Administrador)
@@ -217,8 +219,9 @@ private function generarBotonesAccion($despacho) {
         $textoEliminar = $estado == "pendiente" ? "Eliminar" : "Eliminar (Admin)";
         $claseBoton = $estado == "pendiente" ? "btn-danger" : "btn-warning";
         $titulo = $estado == "pendiente" ? "Eliminar despacho" : "Eliminar despacho (Admin)";
-        
-        $botones .= ' <button class=\"btn ' . $claseBoton . ' btn-xs btnEliminarDespacho\" idDespacho=\"' . $despacho["id"] . '\" numeroDespacho=\"' . $despacho["numero_despacho"] . '\" estadoDespacho=\"' . $estado . '\" title=\"' . $titulo . '\"><i class=\"fa fa-trash\"></i></button>';
+        $numDespDel = addslashes($despacho["numero_despacho"]);
+        $estadoDel = addslashes($estado);
+        $botones .= ' <button class=\"btn ' . $claseBoton . ' btn-xs btnEliminarDespacho\" idDespacho=\"' . $despacho["id"] . '\" numeroDespacho=\"' . $despacho["numero_despacho"] . '\" estadoDespacho=\"' . $estado . '\" title=\"' . $titulo . '\" onclick=\"eliminarDespachoDirecto(' . intval($despacho["id"]) . ', \'' . $numDespDel . '\', \'' . $estadoDel . '\'); return false;\"><i class=\"fa fa-trash\"></i></button>';
     }
     
     return $botones;

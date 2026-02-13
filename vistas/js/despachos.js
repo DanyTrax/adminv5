@@ -33,12 +33,10 @@ $('.tablaDespachos').DataTable({
 });
 
 /*=============================================
-VER DETALLES DE DESPACHO
+VER DETALLES DE DESPACHO (función global para onclick)
 =============================================*/
-$(document).on("click", ".btnVerDespacho", function(){
-
-    var idDespacho = $(this).attr("idDespacho");
-var datos = new FormData();
+function verDespacho(idDespacho) {
+    var datos = new FormData();
     datos.append("idDespacho", idDespacho);
 
     $.ajax({
@@ -70,6 +68,10 @@ swal({
             });
         }
     });
+}
+
+$(document).on("click", ".btnVerDespacho", function(){
+    verDespacho($(this).attr("idDespacho"));
 });
 
 /*=============================================
