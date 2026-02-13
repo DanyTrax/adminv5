@@ -67,6 +67,9 @@
                             <th>Sucursal</th>
                             <th>Despacho</th>
                             <th>Observaciones</th>
+                            <?php if(isset($_SESSION["perfil"]) && $_SESSION["perfil"] == "Administrador"): ?>
+                            <th>Acción</th>
+                            <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody>
@@ -114,11 +117,13 @@ $(document).ready(function() {
             },
             "order": [[0, "desc"]], // Ordenar por ID descendente
             "columnDefs": [
-                { "orderable": false, "targets": [] }, // Todas las columnas ordenables
-                { "width": "60px", "targets": 0 }, // ID
-                { "width": "120px", "targets": 1 }, // Fecha
-                { "width": "100px", "targets": 2 }, // Código
-                { "width": "80px", "targets": 4 }  // Cantidad
+                { "width": "60px", "targets": 0 },
+                { "width": "120px", "targets": 1 },
+                { "width": "100px", "targets": 2 },
+                { "width": "80px", "targets": 4 }
+                <?php if(isset($_SESSION["perfil"]) && $_SESSION["perfil"] == "Administrador"): ?>
+                ,{ "orderable": false, "width": "70px", "targets": 10, "className": "text-center" }
+                <?php endif; ?>
             ],
             "initComplete": function() {
             }
@@ -126,6 +131,50 @@ $(document).ready(function() {
     }
     
     // El filtro de fechas se activa automáticamente desde filtros-fechas.js
+
+    /*=============================================
+    BORRAR UN REGISTRO DE DESCARGA (SOLO ADMIN)
+    =============================================*/
+    $(document).on("click", ".btnEliminarRegistroDescarga", function() {
+        var id = $(this).data("id");
+        var $btn = $(this);
+        swal({
+            title: "¿Eliminar este registro?",
+            text: "Esta acción no se puede deshacer.",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar"
+        }).then(function(result) {
+            if (result.value) {
+                var datos = new FormData();
+                datos.append("eliminarRegistroDescarga", id);
+                $.ajax({
+                    url: "ajax/registro-descargas.ajax.php",
+                    method: "POST",
+                    data: datos,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    dataType: "json",
+                    success: function(respuesta) {
+                        if (respuesta.success) {
+                            var table = $('.tablaRegistroDescargas').DataTable();
+                            table.row($btn.closest("tr")).remove().draw();
+                            swal("Eliminado", respuesta.message, "success");
+                        } else {
+                            swal("Error", respuesta.message || "No se pudo eliminar", "error");
+                        }
+                    },
+                    error: function() {
+                        swal("Error", "Error de conexión", "error");
+                    }
+                });
+            }
+        });
+    });
 
     /*=============================================
     BORRAR TODOS LOS REGISTROS DE DESCARGAS

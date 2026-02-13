@@ -52,6 +52,26 @@ class ControladorRegistroDescargas {
             }
         }
     }
+
+    /*=============================================
+    BORRAR UN REGISTRO DE DESCARGA (SOLO ADMIN)
+    =============================================*/
+    static public function ctrBorrarRegistroDescarga() {
+        if (!isset($_POST["eliminarRegistroDescarga"]) || !is_numeric($_POST["eliminarRegistroDescarga"])) {
+            return;
+        }
+        if (!isset($_SESSION["perfil"]) || $_SESSION["perfil"] != "Administrador") {
+            echo json_encode(["success" => false, "message" => "Solo el perfil Administrador puede eliminar registros"]);
+            return;
+        }
+        $id = (int) $_POST["eliminarRegistroDescarga"];
+        $respuesta = ModeloRegistroDescargas::mdlBorrarRegistroDescarga($id);
+        if ($respuesta == "ok") {
+            echo json_encode(["success" => true, "message" => "Registro eliminado correctamente"]);
+        } else {
+            echo json_encode(["success" => false, "message" => $respuesta]);
+        }
+    }
 }
 
 ?>

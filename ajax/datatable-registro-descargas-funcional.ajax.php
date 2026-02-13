@@ -96,10 +96,13 @@ try {
     $stmt->execute();
     $datos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Columna Acción solo para Administrador
+    $esAdmin = isset($_SESSION["perfil"]) && $_SESSION["perfil"] == "Administrador";
+
     // Formatear datos para DataTable
     $data = [];
     foreach($datos as $dato) {
-        $data[] = [
+        $fila = [
             $dato['id'],
             $dato['fecha_hora'],
             $dato['codigo_producto'],
@@ -111,6 +114,10 @@ try {
             $dato['numero_despacho'],
             $dato['observaciones']
         ];
+        if ($esAdmin) {
+            $fila[] = '<button type="button" class="btn btn-danger btn-xs btnEliminarRegistroDescarga" data-id="' . intval($dato['id']) . '" title="Eliminar registro"><i class="fa fa-trash"></i></button>';
+        }
+        $data[] = $fila;
     }
 
     // Respuesta para DataTable
