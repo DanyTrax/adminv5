@@ -37,9 +37,9 @@ function sendJsonResponse($data) {
 }
 
 /*=============================================
-VER DESPACHO
+VER DESPACHO (solo cuando NO es cambiarEstado - evitar conflicto)
 =============================================*/
-if(isset($_POST["idDespacho"])){
+if(isset($_POST["idDespacho"]) && !isset($_POST["cambiarEstado"])){
 
     $item = "id";
     $valor = $_POST["idDespacho"];
