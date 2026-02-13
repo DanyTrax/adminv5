@@ -1,6 +1,22 @@
 /*=============================================
-CARGAR DATATABLE DE DESPACHOS
+FUNCIONES GLOBALES PARA ONCLICK (definir primero para evitar ReferenceError)
 =============================================*/
+function abrirModalCambiarEstado(idDespacho, numeroDespacho, estadoActual) {
+    if (typeof $ === 'undefined') return;
+    $("#modalVerDespacho").modal("hide");
+    $("#idDespachoCambiarEstado").val(idDespacho);
+    $("#numeroDespachoCambiarEstado").text(numeroDespacho || '');
+    $("#estadoActualCambiar").text((estadoActual || "").toUpperCase());
+    $("#nuevoEstadoDespacho").val("");
+    $("#observacionesCambiarEstado").val("");
+    $("#modalCambiarEstadoDespacho").modal("show");
+}
+window.abrirModalCambiarEstado = abrirModalCambiarEstado;
+
+/*=============================================
+CARGAR DATATABLE DE DESPACHOS (solo si la tabla existe)
+=============================================*/
+if ($('.tablaDespachos').length) {
 $('.tablaDespachos').DataTable({
     "ajax": "ajax/datatable-despachos.ajax.php",
     "deferRender": true,
@@ -31,6 +47,7 @@ $('.tablaDespachos').DataTable({
         }
     }
 });
+}
 
 /*=============================================
 VER DETALLES DE DESPACHO (función global para onclick)
@@ -69,6 +86,7 @@ swal({
         }
     });
 }
+window.verDespacho = verDespacho;
 
 $(document).on("click", ".btnVerDespacho", function(){
     verDespacho($(this).attr("idDespacho"));
@@ -648,19 +666,6 @@ $(document).on("click", ".btnCambiarEstadoDespacho", function(e){
 });
 
 /*=============================================
-ABRIR MODAL CAMBIAR ESTADO
-=============================================*/
-function abrirModalCambiarEstado(idDespacho, numeroDespacho, estadoActual) {
-    $("#modalVerDespacho").modal("hide");
-    $("#idDespachoCambiarEstado").val(idDespacho);
-    $("#numeroDespachoCambiarEstado").text(numeroDespacho);
-    $("#estadoActualCambiar").text((estadoActual || "").toUpperCase());
-    $("#nuevoEstadoDespacho").val("");
-    $("#observacionesCambiarEstado").val("");
-    $("#modalCambiarEstadoDespacho").modal("show");
-}
-
-/*=============================================
 CONFIRMAR Y EJECUTAR CAMBIO DE ESTADO
 =============================================*/
 function confirmarCambiarEstadoDespacho() {
@@ -764,6 +769,7 @@ var titulo = "¿Eliminar despacho " + numeroDespacho + "?";
         }
     });
 }
+window.eliminarDespachoDirecto = eliminarDespachoDirecto;
 
 /*=============================================
 ELIMINAR DESPACHO DESDE MODAL
