@@ -75,6 +75,23 @@ $url = $protocol . $host . $script_name;
   <script src="<?php echo $url; ?>vistas/bower_components/datatables.net-bs/js/dataTables.responsive.min.js"></script>
   <script src="<?php echo $url; ?>vistas/bower_components/datatables.net-bs/js/responsive.bootstrap.min.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/sweetalert2/sweetalert2.all.js"></script>
+  <!-- Shim compatibilidad swal/SweetAlert2: asegurar API swal() y swal.close() para popups/modales -->
+  <script>
+  (function() {
+    var Sw = window.Sweetalert2 || window.Swal;
+    if (Sw) {
+      window.swal = function(opts) {
+        if (opts && opts.type && !opts.icon) opts.icon = opts.type;
+        return typeof Sw === 'function' ? Sw(opts) : (Sw.fire || Sw)(opts);
+      };
+      window.swal.close = Sw.close || Sw.closePopup || Sw.closeModal || function(){};
+      if (typeof window.Swal === 'undefined') window.Swal = Sw;
+    } else if (typeof window.swal === 'undefined') {
+      window.swal = function(){ return Promise.resolve({value:true}); };
+      window.swal.close = function(){};
+    }
+  })();
+  </script>
   <script src="<?php echo $url; ?>vistas/lib/xlsx.full.min.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/iCheck/icheck.min.js"></script>
   <script src="<?php echo $url; ?>vistas/plugins/input-mask/jquery.inputmask.js"></script>
