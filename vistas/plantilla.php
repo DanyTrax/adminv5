@@ -18,7 +18,7 @@ $url = $protocol . $host . $script_name;
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <!-- Bloquear script de Cloudflare Insights (beacon.min.js) inyectado por hosting/proxy: evita errores MIME/CORS/integrity en consola. -->
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval';">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com;">
   <?php
     // --- LÓGICA PARA TÍTULO DINÁMICO ---
     // Obtener nombre de sucursal desde BD local
@@ -263,6 +263,21 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
   <script src="<?php echo $url; ?>vistas/js/crear-solicitud-stock.js"></script>  
   <script src="<?php echo $url; ?>vistas/js/catalogo-maestro.js"></script>
   <script src="<?php echo $url; ?>vistas/js/clientes-central.js"></script>
+  <?php if(isset($_GET["ruta"]) && $_GET["ruta"] == "despachos"): ?>
+  <script>
+  window.abrirModalCambiarEstado = function(idDespacho, numeroDespacho, estadoActual) {
+    if (typeof jQuery !== 'undefined') {
+      jQuery("#modalVerDespacho").modal("hide");
+      jQuery("#idDespachoCambiarEstado").val(idDespacho);
+      jQuery("#numeroDespachoCambiarEstado").text(numeroDespacho || '');
+      jQuery("#estadoActualCambiar").text((estadoActual || "").toUpperCase());
+      jQuery("#nuevoEstadoDespacho").val("");
+      jQuery("#observacionesCambiarEstado").val("");
+      jQuery("#modalCambiarEstadoDespacho").modal("show");
+    }
+  };
+  </script>
+  <?php endif; ?>
   <script src="<?php echo $url; ?>vistas/js/despachos.js"></script>
   <script src="<?php echo $url; ?>vistas/js/crear-despacho.js"></script>
   <!-- <script src="<?php echo $url; ?>vistas/js/stock-transito.js"></script> --> <!-- Comentado: se usa stock-transito-unificado.js -->
