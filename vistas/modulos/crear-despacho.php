@@ -662,8 +662,10 @@ $(document).ready(function() {
         
         if(productosGuardados && productosGuardados.length > 0) {
             
-            // Limpiar productos actuales
-            productosDespacho = [];
+            // Usar el MISMO array que crear-despacho.js (evita que se borren productos al agregar)
+            var arr = window.productosDespacho;
+            if (!arr) { arr = []; window.productosDespacho = arr; }
+            arr.splice(0, arr.length);
             $("#productosDespachoSeleccionados").empty();
             $("#sinProductosDespacho").remove();
             
@@ -730,8 +732,8 @@ $(document).ready(function() {
                         
                         console.log("➕ Agregando producto con stock actualizado:", productoObj);
                         
-                        // Agregar al array global
-                        productosDespacho.push(productoObj);
+                        // Agregar al mismo array que usa confirmarAgregarProducto
+                        (window.productosDespacho || []).push(productoObj);
                         
                         // Crear fila en la tabla
                         agregarFilaProductoDespacho(productoObj, index);
@@ -743,7 +745,7 @@ $(document).ready(function() {
                     // Habilitar botón guardar
                     $("#btnCrearDespacho").prop("disabled", false);
                     
-                    console.log("✅ Productos cargados en modo edición:", productosDespacho.length);
+                    console.log("✅ Productos cargados en modo edición:", (window.productosDespacho || []).length);
                     
                 } else {
                     console.error("Error obteniendo stock actual:", respuesta.error);
@@ -773,7 +775,7 @@ $(document).ready(function() {
                 precio_venta: 0
             };
             
-            productosDespacho.push(productoObj);
+            (window.productosDespacho || []).push(productoObj);
             agregarFilaProductoDespacho(productoObj, index);
         });
         
@@ -836,7 +838,7 @@ $(document).ready(function() {
     
     // FUNCIÓN: Actualizar contadores en modo edición
     function actualizarContadoresEdicion() {
-        
+        var productosDespacho = window.productosDespacho || [];
         // Mostrar resumen si hay productos
         if(productosDespacho.length > 0) {
             $("#resumenDespacho").show();
@@ -864,6 +866,7 @@ $(document).ready(function() {
     
     // Función para que onchange en la tabla (modo edición) pueda actualizar cantidad
     function actualizarCantidadProductoDespacho(input, indice) {
+        var productosDespacho = window.productosDespacho || [];
         var nuevaCantidad = parseInt($(input).val(), 10);
         if (indice < 0 || indice >= productosDespacho.length) return;
         var stockDisponible = productosDespacho[indice].stock_disponible || 9999;
@@ -888,6 +891,7 @@ $(document).ready(function() {
     
     // FUNCIÓN: Abrir modal para editar cantidad de producto
     function editarProductoDespacho(indice) {
+        var productosDespacho = window.productosDespacho || [];
         if (indice < 0 || indice >= productosDespacho.length) return;
         var producto = productosDespacho[indice];
         $("#nombreProductoEditarModal").text(producto.descripcion);
@@ -900,6 +904,7 @@ $(document).ready(function() {
     
     // FUNCIÓN: Confirmar edición de cantidad desde el modal
     function confirmarEditarCantidad() {
+        var productosDespacho = window.productosDespacho || [];
         var indice = parseInt($("#indiceProductoEditar").val(), 10);
         var nuevaCantidad = parseInt($("#nuevaCantidadEditar").val(), 10);
         if (indice < 0 || indice >= productosDespacho.length) {
