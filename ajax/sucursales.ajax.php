@@ -91,6 +91,14 @@ class AjaxSucursales {
                     // Acciones
                     $acciones = '<div class="btn-group">';
                     
+                    // Botón Ir a sucursal (solo activas, excluir actual)
+                    if ($sucursal['activo'] && $sucursal['codigo_sucursal'] !== $codigoActual && !empty($sucursal['url_base'])) {
+                        $urlSucursal = rtrim($sucursal['url_base'], '/') . '/';
+                        $acciones .= '<a href="' . htmlspecialchars($urlSucursal) . '" target="_blank" class="btn btn-success btn-xs" title="Ir a esta sucursal">
+                                        <i class="fa fa-external-link"></i>
+                                      </a>';
+                    }
+                    
                     // Botón probar conexión
                     if ($sucursal['codigo_sucursal'] !== $codigoActual) {
                         $acciones .= '<button class="btn btn-info btn-xs btnProbarConexion" 
