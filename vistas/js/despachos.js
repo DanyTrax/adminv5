@@ -393,6 +393,15 @@ html += `
     } else {
 }
 
+    // BOTÓN CAMBIAR ESTADO (solo Administrador - en cualquier estado)
+    if(perfilUsuario === 'Administrador') {
+        html += `
+            <button type="button" class="btn btn-primary" onclick="abrirModalCambiarEstado(${despacho.id}, '${despacho.numero_despacho}', '${despacho.estado}')">
+                <i class="fa fa-exchange"></i> Cambiar Estado
+            </button>
+        `;
+    }
+
     // BOTÓN ELIMINAR (pendientes solo para Administrador/Especial/Contador, cualquier estado solo para administradores)
     var puedeEliminar = (despacho.estado === 'pendiente' && (perfilUsuario === 'Administrador' || perfilUsuario === 'Especial' || perfilUsuario === 'Contador')) || perfilUsuario === 'Administrador';
 if(puedeEliminar) {
@@ -618,6 +627,96 @@ swal({
 swal({
                 title: "Error de conexión",
                 text: "No se pudo cancelar el despacho",
+                type: "error",
+                confirmButtonText: "Cerrar"
+            });
+        }
+    });
+}
+
+/*=============================================
+CAMBIAR ESTADO DESDE TABLA (SOLO ADMIN)
+=============================================*/
+$(document).on("click", ".btnCambiarEstadoDespacho", function(e){
+    e.preventDefault();
+    var idDespacho = $(this).attr("idDespacho");
+    var numeroDespacho = $(this).attr("numeroDespacho");
+    var estadoDespacho = $(this).attr("estadoDespacho");
+    abrirModalCambiarEstado(idDespacho, numeroDespacho, estadoDespacho);
+});
+
+/*=============================================
+ABRIR MODAL CAMBIAR ESTADO
+=============================================*/
+function abrirModalCambiarEstado(idDespacho, numeroDespacho, estadoActual) {
+    $("#modalVerDespacho").modal("hide");
+    $("#idDespachoCambiarEstado").val(idDespacho);
+    $("#numeroDespachoCambiarEstado").text(numeroDespacho);
+    $("#estadoActualCambiar").text((estadoActual || "").toUpperCase());
+    $("#nuevoEstadoDespacho").val("");
+    $("#observacionesCambiarEstado").val("");
+    $("#modalCambiarEstadoDespacho").modal("show");
+}
+
+/*=============================================
+CONFIRMAR Y EJECUTAR CAMBIO DE ESTADO
+=============================================*/
+function confirmarCambiarEstadoDespacho() {
+    var idDespacho = $("#idDespachoCambiarEstado").val();
+    var nuevoEstado = $("#nuevoEstadoDespacho").val();
+    var observaciones = $("#observacionesCambiarEstado").val();
+
+    if(!nuevoEstado) {
+        swal({
+            title: "Campo requerido",
+            text: "Debe seleccionar el nuevo estado",
+            type: "warning",
+            confirmButtonText: "Cerrar"
+        });
+        return;
+    }
+
+    var datos = new FormData();
+    datos.append("cambiarEstado", "1");
+    datos.append("idDespacho", idDespacho);
+    datos.append("nuevoEstado", nuevoEstado);
+    datos.append("observaciones", observaciones);
+
+    $.ajax({
+        url: "ajax/despachos.ajax.php",
+        method: "POST",
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: "json",
+        success: function(respuesta) {
+            if(respuesta.success) {
+                $("#modalCambiarEstadoDespacho").modal("hide");
+                swal({
+                    title: "¡Estado actualizado!",
+                    text: respuesta.message,
+                    type: "success",
+                    confirmButtonText: "Cerrar"
+                }).then(function() {
+                    $('.tablaDespachos').DataTable().ajax.reload();
+                    if(typeof $("#modalVerDespacho").modal === 'function' && $("#modalVerDespacho").hasClass('in')) {
+                        $("#modalVerDespacho").modal("hide");
+                    }
+                });
+            } else {
+                swal({
+                    title: "Error",
+                    text: respuesta.error || "No se pudo cambiar el estado",
+                    type: "error",
+                    confirmButtonText: "Cerrar"
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            swal({
+                title: "Error de conexión",
+                text: "No se pudo conectar con el servidor",
                 type: "error",
                 confirmButtonText: "Cerrar"
             });

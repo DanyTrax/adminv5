@@ -205,6 +205,11 @@ private function generarBotonesAccion($despacho) {
         $botones .= ' <button class=\"btn btn-warning btn-xs btnEditarDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Editar despacho\" onclick=\"editarDespacho(' . $despacho["id"] . ')\"><i class=\"fa fa-pencil\"></i></button>';
     }
     
+    // Botón Cambiar estado (solo Administrador - en cualquier estado)
+    if($perfil == "Administrador") {
+        $botones .= ' <button class=\"btn btn-primary btn-xs btnCambiarEstadoDespacho\" idDespacho=\"' . $despacho["id"] . '\" numeroDespacho=\"' . htmlspecialchars($despacho["numero_despacho"]) . '\" estadoDespacho=\"' . $estado . '\" title=\"Cambiar estado\"><i class=\"fa fa-exchange\"></i></button>';
+    }
+    
     // Botón Eliminar (pendientes para Administrador/Especial/Contador, cualquier estado solo para Administrador)
     $puedeEliminar = (($perfil == "Administrador" || $perfil == "Especial" || $perfil == "Contador") && $estado == "pendiente") || ($perfil == "Administrador");
     

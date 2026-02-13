@@ -384,6 +384,68 @@ if(isset($_POST["cancelarDespacho"])){
 }
 
 /*=============================================
+CAMBIAR ESTADO DE DESPACHO (SOLO ADMIN - CUALQUIER ESTADO)
+=============================================*/
+if(isset($_POST["cambiarEstado"])){
+
+    try {
+        $perfilUsuario = $_SESSION["perfil"] ?? "";
+        
+        if($perfilUsuario != "Administrador") {
+            sendJsonResponse(["success" => false, "error" => "Solo el perfil Administrador puede cambiar el estado de un despacho en cualquier momento"]);
+        }
+
+        $idDespacho = $_POST["idDespacho"] ?? null;
+        $nuevoEstado = $_POST["nuevoEstado"] ?? null;
+        $observaciones = $_POST["observaciones"] ?? "";
+        
+        if(empty($idDespacho) || empty($nuevoEstado)) {
+            sendJsonResponse(["success" => false, "error" => "Datos incompletos: idDespacho y nuevoEstado son requeridos"]);
+        }
+
+        $estadosPermitidos = ["pendiente", "aceptado", "en_transito", "entregado", "finalizado", "cancelado"];
+        if(!in_array($nuevoEstado, $estadosPermitidos)) {
+            sendJsonResponse(["success" => false, "error" => "Estado inválido. Permitidos: pendiente, aceptado, en_transito, entregado, finalizado, cancelado"]);
+        }
+
+        $despacho = ControladorDespachos::ctrMostrarDespachos("id", $idDespacho);
+        
+        if(!$despacho) {
+            sendJsonResponse(["success" => false, "error" => "Despacho no encontrado"]);
+        }
+
+        // Normalizar entregado/finalizado
+        if($nuevoEstado == "finalizado") {
+            $nuevoEstado = "entregado";
+        }
+
+        $datos = ["estado" => $nuevoEstado];
+
+        if($nuevoEstado == "cancelado" && !empty($observaciones)) {
+            $datos["motivo_cancelacion"] = $observaciones;
+            $datos["usuario_cancelacion"] = $_SESSION["nombre"] ?? "Administrador";
+        } elseif(!empty($observaciones)) {
+            $datos["observaciones"] = $observaciones;
+        }
+
+        $respuesta = ModeloDespachos::mdlActualizarDespacho("despachos", $datos, "id", $idDespacho);
+
+        if($respuesta == "ok") {
+            sendJsonResponse([
+                "success" => true,
+                "message" => "Estado del despacho actualizado correctamente",
+                "nuevoEstado" => $nuevoEstado
+            ]);
+        } else {
+            sendJsonResponse(["success" => false, "error" => "Error al actualizar el estado: " . $respuesta]);
+        }
+        
+    } catch(Exception $e) {
+        sendJsonResponse(["success" => false, "error" => $e->getMessage()]);
+    }
+}
+
+/*=============================================
 ELIMINAR DESPACHO
 =============================================*/
 if(isset($_POST["eliminarDespacho"])){

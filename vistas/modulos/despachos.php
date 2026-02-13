@@ -503,6 +503,58 @@
 </div>
 <?php endif; ?>
 
+<!-- MODAL CAMBIAR ESTADO (SOLO ADMINISTRADOR) -->
+<?php if($_SESSION["perfil"] == "Administrador"): ?>
+<div class="modal fade" id="modalCambiarEstadoDespacho" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title text-white">
+                    <i class="fa fa-exchange"></i> Cambiar Estado del Despacho
+                    <span id="numeroDespachoCambiarEstado" class="label label-default"></span>
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fa fa-info-circle"></i>
+                    Como administrador puede cambiar el estado del despacho en cualquier momento.
+                </div>
+                <div class="form-group">
+                    <label>Estado actual:</label>
+                    <p id="estadoActualCambiar" class="form-control-static text-muted"></p>
+                </div>
+                <div class="form-group">
+                    <label>Nuevo estado <span class="text-danger">*</span>:</label>
+                    <select class="form-control" id="nuevoEstadoDespacho" required>
+                        <option value="">Seleccione el nuevo estado</option>
+                        <option value="pendiente">Pendiente</option>
+                        <option value="aceptado">Aceptado</option>
+                        <option value="en_transito">En Tránsito</option>
+                        <option value="entregado">Entregado</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Observaciones / Motivo (opcional):</label>
+                    <textarea class="form-control" id="observacionesCambiarEstado" rows="3" 
+                             placeholder="Observaciones o motivo de cancelación si aplica..."></textarea>
+                </div>
+                <input type="hidden" id="idDespachoCambiarEstado">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="confirmarCambiarEstadoDespacho()">
+                    <i class="fa fa-check"></i> Cambiar Estado
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- MODAL FILTROS AVANZADOS PARA EXPORTAR -->
 <div class="modal fade" id="modalFiltrosExportar" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
