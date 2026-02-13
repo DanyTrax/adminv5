@@ -805,6 +805,7 @@ $(document).ready(function() {
                            value="${producto.cantidad}" 
                            min="1" 
                            data-indice="${indice}"
+                           oninput="actualizarCantidadProductoDespacho(this, ${indice})"
                            onchange="actualizarCantidadProductoDespacho(this, ${indice})"
                            style="width: 70px;">
                 </td>
@@ -885,9 +886,49 @@ $(document).ready(function() {
         actualizarContadoresEdicion();
     }
     
+    // FUNCIÓN: Abrir modal para editar cantidad de producto
+    function editarProductoDespacho(indice) {
+        if (indice < 0 || indice >= productosDespacho.length) return;
+        var producto = productosDespacho[indice];
+        $("#nombreProductoEditarModal").text(producto.descripcion);
+        $("#stockDisponibleEditar").text(producto.stock_disponible);
+        $("#nuevaCantidadEditar").val(producto.cantidad).attr("min", 1).attr("max", producto.stock_disponible);
+        $("#indiceProductoEditar").val(indice);
+        $("#modalEditarCantidadDespacho").modal("show");
+        setTimeout(function() { $("#nuevaCantidadEditar").focus().select(); }, 400);
+    }
+    
+    // FUNCIÓN: Confirmar edición de cantidad desde el modal
+    function confirmarEditarCantidad() {
+        var indice = parseInt($("#indiceProductoEditar").val(), 10);
+        var nuevaCantidad = parseInt($("#nuevaCantidadEditar").val(), 10);
+        if (indice < 0 || indice >= productosDespacho.length) {
+            $("#modalEditarCantidadDespacho").modal("hide");
+            return;
+        }
+        var producto = productosDespacho[indice];
+        var stockMax = producto.stock_disponible || 9999;
+        if (isNaN(nuevaCantidad) || nuevaCantidad < 1) {
+            swal({ title: "Cantidad inválida", text: "La cantidad debe ser mayor a 0.", type: "warning", confirmButtonText: "Entendido" });
+            return;
+        }
+        if (nuevaCantidad > stockMax) {
+            swal({ title: "Stock insuficiente", text: "Solo hay " + stockMax + " unidades disponibles.", type: "warning", confirmButtonText: "Entendido" });
+            return;
+        }
+        productosDespacho[indice].cantidad = nuevaCantidad;
+        var $fila = $("#productosDespachoSeleccionados tr[data-indice='" + indice + "']");
+        if ($fila.length) $fila.find("input.cantidad-producto").val(nuevaCantidad);
+        actualizarContadoresEdicion();
+        $("#modalEditarCantidadDespacho").modal("hide");
+        if (typeof toastr !== "undefined") toastr.success("Cantidad actualizada: " + nuevaCantidad + " unidades", "Actualizado", { timeOut: 2000 });
+    }
+    
     // Exponer a window para que onclick/onchange en la tabla los encuentren
     window.actualizarCantidadProductoDespacho = actualizarCantidadProductoDespacho;
     window.actualizarContadoresEdicion = actualizarContadoresEdicion;
+    window.editarProductoDespacho = editarProductoDespacho;
+    window.confirmarEditarCantidad = confirmarEditarCantidad;
     
     <?php endif; ?>
     

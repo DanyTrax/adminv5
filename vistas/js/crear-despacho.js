@@ -1138,7 +1138,7 @@ if(productosDespacho.length === 0) {
         if (isNaN(stockMax) || stockMax < 1) stockMax = 99999;
 
         html += `
-            <tr class="producto-agregado">
+            <tr class="producto-agregado" data-indice="${index}">
                 <td>
                     <strong>${producto.codigo}</strong><br>
                     <small class="text-muted">${producto.descripcion}</small>
@@ -1147,13 +1147,14 @@ if(productosDespacho.length === 0) {
                 <td class="text-center">
                     <input type="number"
 
-                           class="form-control input-sm text-center"
+                           class="form-control input-sm text-center cantidad-producto"
 
                            value="${cantidad}"
 
                            min="1"
 
                            max="${stockMax}"
+                           oninput="actualizarCantidadProducto(${index}, this.value)"
                            onchange="actualizarCantidadProducto(${index}, this.value)"
                            style="width: 70px;">
                 </td>
@@ -1161,6 +1162,7 @@ if(productosDespacho.length === 0) {
                     <strong>${producto.stock_disponible}</strong>
                 </td>
                 <td class="text-center">
+                    ${window.modoEdicionActivo ? '<button type="button" class="btn btn-warning btn-xs" onclick="editarProductoDespacho(' + index + ')" data-toggle="tooltip" title="Editar producto"><i class="fa fa-edit"></i></button> ' : ''}
                     <button type="button"
 
                             class="btn btn-danger btn-xs"
@@ -1216,8 +1218,7 @@ function actualizarCantidadProducto(indice, nuevaCantidad) {
             if(result.value) {
                 eliminarProductoDespacho(indice);
             } else {
-                // Restaurar cantidad anterior
-                $(`#productosDespachoSeleccionados tr:eq(${indice}) input`).val(producto.cantidad);
+                $(`#productosDespachoSeleccionados tr[data-indice="${indice}"] input.cantidad-producto`).val(producto.cantidad);
             }
         });
         return;
@@ -1230,8 +1231,7 @@ function actualizarCantidadProducto(indice, nuevaCantidad) {
             type: "warning",
             confirmButtonText: "Cerrar"
         }).then(function() {
-            // Restaurar cantidad anterior
-            $(`#productosDespachoSeleccionados tr:eq(${indice}) input`).val(producto.cantidad);
+            $(`#productosDespachoSeleccionados tr[data-indice="${indice}"] input.cantidad-producto`).val(producto.cantidad);
         });
         return;
     }
@@ -1251,14 +1251,17 @@ function actualizarCantidadProducto(indice, nuevaCantidad) {
         }
     }
 
-    // Actualizar vista
-    actualizarVistaProductosDespacho();
+    // Actualizar solo contadores (evita re-render completo que pierde foco del input)
+    var totalUnidades = productosDespacho.reduce(function(s, p) { return s + parseInt(p.cantidad, 10); }, 0);
+    $("#totalProductosResumen").text(productosDespacho.length);
+    $("#totalUnidadesResumen").text(totalUnidades);
+    $("#contadorProductosDespacho").text(productosDespacho.length);
+    $("#productosDespachoHidden").val(JSON.stringify(productosDespacho));
+    $("#totalProductosHidden").val(productosDespacho.length);
+    $("#totalCantidadHidden").val(totalUnidades);
 
-    // Mostrar confirmación
     if(typeof toastr !== 'undefined') {
-        toastr.success(`Cantidad actualizada: ${cantidad} unidades`, "✅ Actualizado", {
-            timeOut: 2000
-        });
+        toastr.success(`Cantidad actualizada: ${cantidad} unidades`, "✅ Actualizado", { timeOut: 2000 });
     }
 }
 
@@ -1267,6 +1270,7 @@ ELIMINAR PRODUCTO DEL DESPACHO
 =============================================*/
 function eliminarProductoDespacho(indice) {
 
+    if (indice < 0 || indice >= productosDespacho.length) return;
     var producto = productosDespacho[indice];
 
     swal({
