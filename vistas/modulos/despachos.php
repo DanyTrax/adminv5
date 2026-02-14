@@ -172,6 +172,38 @@
     </section>
 </div>
 
+<!-- Script filtro de fecha (mismo patrón que gastos.php y contabilidad) -->
+<script>
+$(document).ready(function() {
+    if ($('#daterange-btn-despachos').length && typeof $.fn.daterangepicker !== 'undefined') {
+        $('#daterange-btn-despachos').daterangepicker(
+            {
+                ranges: {
+                    'Hoy': [moment(), moment()],
+                    'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+                    'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
+                    'Este mes': [moment().startOf('month'), moment().endOf('month')],
+                    'Mes anterior': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                },
+                startDate: moment(),
+                endDate: moment(),
+                locale: { applyLabel: 'Aplicar', cancelLabel: 'Cancelar' }
+            },
+            function(start, end) {
+                $('#daterange-btn-despachos span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                var fechaInicial = start.format('YYYY-MM-DD');
+                var fechaFinal = end.format('YYYY-MM-DD');
+                window.location = "index.php?ruta=despachos&fechaInicial=" + fechaInicial + "&fechaFinal=" + fechaFinal;
+            }
+        );
+        $('#daterange-btn-despachos').on('cancel.daterangepicker', function(ev, picker) {
+            window.location = "index.php?ruta=despachos";
+        });
+    }
+});
+</script>
+
 <!-- MODAL VER DETALLES DE DESPACHO -->
 <div class="modal fade" id="modalVerDespacho" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">

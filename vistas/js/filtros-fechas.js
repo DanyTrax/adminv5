@@ -74,6 +74,6 @@ $(document).ready(function() {
     activarDateRangePicker('daterange-btn-contabilidad', 'contabilidad', 'capturarRangoContabilidad');
     activarDateRangePicker('daterange-btn-registro-descargas', 'registro-descargas-funcional', 'capturarRangoRegistroDescargas');
     activarDateRangePicker('daterange-btn-salidas', 'salidas-inventario', 'capturarRangoSalidas');
-    activarDateRangePicker('daterange-btn-despachos', 'despachos', 'capturarRangoDespachos');
+    // Despachos: init inline en despachos.php (mismo patrón que gastos) para evitar conflictos
 
 });
