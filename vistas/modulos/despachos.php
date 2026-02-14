@@ -106,8 +106,8 @@
                             </ul>
                         </div>
                         <?php endif; ?>
-                        <!-- FILTRO DE FECHA (como contabilidad: pull-right) -->
-                        <button type="button" class="btn btn-default pull-right" id="daterange-btn-despachos" style="margin-left: 10px;">
+                        <!-- FILTRO DE FECHA (junto a Exportar) -->
+                        <button type="button" class="btn btn-default btn-sm" id="daterange-btn-despachos" style="margin-left: 10px;">
                             <span>
                                 <i class="fa fa-calendar"></i>
                                 <?php
