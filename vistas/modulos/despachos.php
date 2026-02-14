@@ -178,7 +178,7 @@
     </section>
 </div>
 
-<!-- Script filtro de fecha (como contabilidad: moment.tz Bogota para Hoy) -->
+<!-- Script filtro de fecha (como contabilidad: handler explícito para "Hoy") -->
 <script>
 $(document).ready(function() {
     if ($('#daterange-btn-despachos').length && typeof $.fn.daterangepicker !== 'undefined') {
@@ -208,6 +208,14 @@ $(document).ready(function() {
         );
         $('#daterange-btn-despachos').on('cancel.daterangepicker', function(ev, picker) {
             window.location = "index.php?ruta=despachos";
+        });
+        // Fix "Hoy": cuando startDate=endDate=hoy, el callback no se ejecuta. Clic directo en "Hoy" redirige.
+        $(document).on('click', '.daterangepicker .ranges li[data-range-key="Hoy"]', function() {
+            if ($('#daterange-btn-despachos').length) {
+                var hoy = (typeof moment.tz !== 'undefined') ? moment.tz('America/Bogota') : moment();
+                var fecha = hoy.format('YYYY-MM-DD');
+                window.location = "index.php?ruta=despachos&fechaInicial=" + fecha + "&fechaFinal=" + fecha;
+            }
         });
     }
 });
