@@ -181,11 +181,8 @@ private function generarBotonesAccion($despacho) {
     $sucursalOrigenDespacho = isset($despacho["sucursal_origen"]) ? trim($despacho["sucursal_origen"]) : '';
     $esSucursalOrigen = ($sucursalActual !== '' && $sucursalOrigenDespacho !== '' && $sucursalActual === $sucursalOrigenDespacho);
     
-    // Puede aceptar: Admin/Transportador siempre, o si es la sucursal de origen también Especial/Contador/Vendedor
-    $puedeAceptar = $estado == "pendiente" && (
-        ($perfil == "Administrador" || $perfil == "Transportador") ||
-        ($esSucursalOrigen && in_array($perfil, ["Administrador", "Especial", "Contador", "Vendedor"], true))
-    );
+    // Puede aceptar: solo Administrador y Transportador
+    $puedeAceptar = $estado == "pendiente" && ($perfil == "Administrador" || $perfil == "Transportador");
     
     // Botón Ver detalles (onclick directo para evitar fallos de delegación)
     $botones .= '<button class=\"btn btn-info btn-xs btnVerDespacho\" idDespacho=\"' . $despacho["id"] . '\" title=\"Ver detalles\" onclick=\"verDespacho(' . intval($despacho["id"]) . '); return false;\"><i class=\"fa fa-eye\"></i></button>';

@@ -86,15 +86,12 @@ if(isset($_POST["aceptarDespacho"])){
             sendJsonResponse(["success" => false, "error" => "Solo se pueden aceptar despachos pendientes"]);
         }
         
-        // 2b. Solo puede aceptar la sucursal de origen (donde está el stock) o un Transportador/Administrador
+        // 2b. Solo Administrador y Transportador pueden aceptar
         $perfil = isset($_SESSION["perfil"]) ? $_SESSION["perfil"] : '';
-        $sucursalActual = ModeloDespachos::mdlObtenerSucursalLocal();
-        $sucursalOrigen = isset($despacho["sucursal_origen"]) ? trim($despacho["sucursal_origen"]) : '';
-        $esSucursalOrigen = ($sucursalActual !== '' && $sucursalOrigen !== '' && $sucursalActual === $sucursalOrigen);
-        $puedeAceptar = ($perfil === "Administrador" || $perfil === "Transportador") || $esSucursalOrigen;
+        $puedeAceptar = ($perfil === "Administrador" || $perfil === "Transportador");
         if (!$puedeAceptar) {
-            Logger::warning("Intento de aceptar despacho desde sucursal no autorizada. Actual: $sucursalActual, Origen: $sucursalOrigen", "despachos.ajax.php", "aceptarDespacho");
-            sendJsonResponse(["success" => false, "error" => "Solo la sucursal de origen del despacho o un transportador/administrador pueden aceptar este despacho."]);
+            Logger::warning("Intento de aceptar despacho sin permiso. Perfil: $perfil", "despachos.ajax.php", "aceptarDespacho");
+            sendJsonResponse(["success" => false, "error" => "Solo el perfil Administrador o Transportador puede aceptar despachos."]);
         }
         
         // 3. Decodificar productos del despacho
