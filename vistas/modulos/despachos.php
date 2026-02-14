@@ -106,11 +106,8 @@
                             </ul>
                         </div>
                         <?php endif; ?>
-                    </div>
-                    
-                    <div class="col-md-6 text-right">
-                        <!-- FILTRO DE FECHA -->
-                        <button type="button" class="btn btn-default btn-sm" id="daterange-btn-despachos" style="margin-right: 10px;">
+                        <!-- FILTRO DE FECHA (después de Exportar) -->
+                        <button type="button" class="btn btn-default btn-sm" id="daterange-btn-despachos" style="margin-left: 10px;">
                             <span>
                                 <i class="fa fa-calendar"></i>
                                 <?php
@@ -123,6 +120,9 @@
                             </span>
                             <i class="fa fa-caret-down"></i>
                         </button>
+                    </div>
+                    
+                    <div class="col-md-6 text-right">
                         <!-- FILTROS RÁPIDOS -->
                         <div class="btn-group btn-group-sm">
                             <button type="button" class="btn btn-default btnFiltroEstado" data-estado="">
