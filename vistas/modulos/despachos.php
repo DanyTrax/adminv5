@@ -106,8 +106,8 @@
                             </ul>
                         </div>
                         <?php endif; ?>
-                        <!-- FILTRO DE FECHA (después de Exportar) -->
-                        <button type="button" class="btn btn-default btn-sm" id="daterange-btn-despachos" style="margin-left: 10px;">
+                        <!-- FILTRO DE FECHA (como contabilidad: pull-right) -->
+                        <button type="button" class="btn btn-default pull-right" id="daterange-btn-despachos" style="margin-left: 10px;">
                             <span>
                                 <i class="fa fa-calendar"></i>
                                 <?php
@@ -146,9 +146,15 @@
                 
             </div>
 
-            <!-- TABLA DE DESPACHOS -->
+            <!-- TABLA DE DESPACHOS (data-fecha como contabilidad) -->
             <div class="box-body">
-                <table class="table table-bordered table-striped dt-responsive tablaDespachos" width="100%">
+                <?php
+                    $fechaInicialDesp = isset($_GET["fechaInicial"]) ? $_GET["fechaInicial"] : '';
+                    $fechaFinalDesp = isset($_GET["fechaFinal"]) ? $_GET["fechaFinal"] : '';
+                ?>
+                <table class="table table-bordered table-striped dt-responsive tablaDespachos" width="100%"
+                       data-fecha-inicial="<?= htmlspecialchars($fechaInicialDesp) ?>"
+                       data-fecha-final="<?= htmlspecialchars($fechaFinalDesp) ?>">
                     <thead>
                         <tr>
                             <th style="width:10px">#</th>
@@ -172,22 +178,25 @@
     </section>
 </div>
 
-<!-- Script filtro de fecha (mismo patrón que gastos.php y contabilidad) -->
+<!-- Script filtro de fecha (como contabilidad: moment.tz Bogota para Hoy) -->
 <script>
 $(document).ready(function() {
     if ($('#daterange-btn-despachos').length && typeof $.fn.daterangepicker !== 'undefined') {
+        var tz = (typeof moment.tz !== 'undefined') ? 'America/Bogota' : null;
+        var now = tz ? moment.tz(tz) : moment();
+        var ranges = {
+            'Hoy': [now.clone(), now.clone()],
+            'Ayer': [now.clone().subtract(1, 'days'), now.clone().subtract(1, 'days')],
+            'Últimos 7 días': [now.clone().subtract(6, 'days'), now.clone()],
+            'Últimos 30 días': [now.clone().subtract(29, 'days'), now.clone()],
+            'Este mes': [now.clone().startOf('month'), now.clone().endOf('month')],
+            'Mes anterior': [now.clone().subtract(1, 'month').startOf('month'), now.clone().subtract(1, 'month').endOf('month')]
+        };
         $('#daterange-btn-despachos').daterangepicker(
             {
-                ranges: {
-                    'Hoy': [moment(), moment()],
-                    'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                    'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
-                    'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
-                    'Este mes': [moment().startOf('month'), moment().endOf('month')],
-                    'Mes anterior': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-                },
-                startDate: moment(),
-                endDate: moment(),
+                ranges: ranges,
+                startDate: now,
+                endDate: now,
                 locale: { applyLabel: 'Aplicar', cancelLabel: 'Cancelar' }
             },
             function(start, end) {

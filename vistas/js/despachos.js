@@ -17,9 +17,9 @@ window.abrirModalCambiarEstado = abrirModalCambiarEstado;
 CARGAR DATATABLE DE DESPACHOS (solo si la tabla existe)
 =============================================*/
 if ($('.tablaDespachos').length) {
-    var params = new URLSearchParams(window.location.search);
-    var fechaInicial = params.get('fechaInicial') || '';
-    var fechaFinal = params.get('fechaFinal') || '';
+    var tabla = $('.tablaDespachos');
+    var fechaInicial = tabla.attr('data-fecha-inicial') || new URLSearchParams(window.location.search).get('fechaInicial') || '';
+    var fechaFinal = tabla.attr('data-fecha-final') || new URLSearchParams(window.location.search).get('fechaFinal') || '';
     var ajaxUrl = "ajax/datatable-despachos.ajax.php";
     if (fechaInicial && fechaFinal) {
         ajaxUrl += "?fechaInicial=" + encodeURIComponent(fechaInicial) + "&fechaFinal=" + encodeURIComponent(fechaFinal);
