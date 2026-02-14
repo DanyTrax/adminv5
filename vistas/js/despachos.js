@@ -14,11 +14,55 @@ function abrirModalCambiarEstado(idDespacho, numeroDespacho, estadoActual) {
 window.abrirModalCambiarEstado = abrirModalCambiarEstado;
 
 /*=============================================
+FILTRO DE RANGO DE FECHAS (inicializar aquí para garantizar que funcione)
+=============================================*/
+$(document).ready(function() {
+    if ($('#daterange-btn-despachos').length && typeof $.fn.daterangepicker !== 'undefined') {
+        var btn = $('#daterange-btn-despachos');
+        var key = 'capturarRangoDespachos';
+        if (localStorage.getItem(key)) {
+            btn.find('span').html(localStorage.getItem(key));
+        } else {
+            btn.find('span').html('<i class="fa fa-calendar"></i> Rango de fecha');
+        }
+        btn.daterangepicker({
+            ranges: {
+                'Hoy': [moment(), moment()],
+                'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+                'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
+                'Este mes': [moment().startOf('month'), moment().endOf('month')],
+                'Mes anterior': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+            },
+            startDate: moment(),
+            endDate: moment(),
+            locale: { applyLabel: 'Aplicar', cancelLabel: 'Cancelar' }
+        }, function(start, end) {
+            var capturarRango = start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY');
+            btn.find('span').html(capturarRango);
+            localStorage.setItem(key, capturarRango);
+            window.location = "index.php?ruta=despachos&fechaInicial=" + start.format('YYYY-MM-DD') + "&fechaFinal=" + end.format('YYYY-MM-DD');
+        });
+        btn.on('cancel.daterangepicker', function() {
+            localStorage.removeItem(key);
+            window.location = "index.php?ruta=despachos";
+        });
+    }
+});
+
+/*=============================================
 CARGAR DATATABLE DE DESPACHOS (solo si la tabla existe)
 =============================================*/
 if ($('.tablaDespachos').length) {
+    var params = new URLSearchParams(window.location.search);
+    var fechaInicial = params.get('fechaInicial') || '';
+    var fechaFinal = params.get('fechaFinal') || '';
+    var ajaxUrl = "ajax/datatable-despachos.ajax.php";
+    if (fechaInicial && fechaFinal) {
+        ajaxUrl += "?fechaInicial=" + encodeURIComponent(fechaInicial) + "&fechaFinal=" + encodeURIComponent(fechaFinal);
+    }
 $('.tablaDespachos').DataTable({
-    "ajax": "ajax/datatable-despachos.ajax.php",
+    "ajax": ajaxUrl,
     "deferRender": true,
     "retrieve": true,
     "processing": true,
