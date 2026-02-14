@@ -109,6 +109,20 @@
                     </div>
                     
                     <div class="col-md-6 text-right">
+                        <!-- FILTRO DE FECHA -->
+                        <button type="button" class="btn btn-default btn-sm" id="daterange-btn-despachos" style="margin-right: 10px;">
+                            <span>
+                                <i class="fa fa-calendar"></i>
+                                <?php
+                                if (isset($_GET["fechaInicial"])) {
+                                    echo htmlspecialchars($_GET["fechaInicial"] . " - " . $_GET["fechaFinal"]);
+                                } else {
+                                    echo 'Rango de fecha';
+                                }
+                                ?>
+                            </span>
+                            <i class="fa fa-caret-down"></i>
+                        </button>
                         <!-- FILTROS RÁPIDOS -->
                         <div class="btn-group btn-group-sm">
                             <button type="button" class="btn btn-default btnFiltroEstado" data-estado="">

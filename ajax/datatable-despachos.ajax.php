@@ -31,7 +31,34 @@ MOSTRAR LA TABLA DE DESPACHOS - SIN JOIN A BD LOCAL
 public function mostrarTablaDespachos() {
 
     try {
-        $stmt = ConexionCentral::conectar()->prepare("
+        // Obtener parámetros de fecha desde la URL (referer o GET)
+        $fechaInicial = null;
+        $fechaFinal = null;
+        if (isset($_SERVER['HTTP_REFERER'])) {
+            $referer = $_SERVER['HTTP_REFERER'];
+            if (preg_match('/fechaInicial=([^&]+)/', $referer, $matches)) {
+                $fechaInicial = $matches[1];
+            }
+            if (preg_match('/fechaFinal=([^&]+)/', $referer, $matches)) {
+                $fechaFinal = $matches[1];
+            }
+        }
+        if (!$fechaInicial && isset($_GET["fechaInicial"])) {
+            $fechaInicial = $_GET["fechaInicial"];
+        }
+        if (!$fechaFinal && isset($_GET["fechaFinal"])) {
+            $fechaFinal = $_GET["fechaFinal"];
+        }
+
+        $whereClause = "";
+        $params = [];
+        if ($fechaInicial && $fechaFinal) {
+            $whereClause = "WHERE DATE(d.fecha_creacion) BETWEEN :fechaInicial AND :fechaFinal";
+            $params[":fechaInicial"] = $fechaInicial;
+            $params[":fechaFinal"] = $fechaFinal;
+        }
+
+        $sql = "
             SELECT 
                 d.*,
                 CASE 
@@ -42,9 +69,14 @@ public function mostrarTablaDespachos() {
                     ELSE 4
                 END as orden_estado
             FROM despachos d 
+            $whereClause
             ORDER BY orden_estado ASC, d.fecha_creacion DESC
-        ");
+        ";
 
+        $stmt = ConexionCentral::conectar()->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
         $stmt->execute();
         $despachos = $stmt->fetchAll();
 
