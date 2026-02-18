@@ -195,61 +195,57 @@ static public function mdlGenerarNumeroDespacho() {
     }
 
     /*=============================================
-    VERIFICAR STOCK LOCAL DISPONIBLE
+    VERIFICAR STOCK LOCAL DISPONIBLE (usa conexión local actual)
     =============================================*/
     static public function mdlVerificarStockLocal($codigoProducto, $cantidadRequerida) {
-        
+        return self::mdlVerificarStockEnSucursal(Conexion::conectar(), $codigoProducto, $cantidadRequerida);
+    }
+
+    /*=============================================
+    VERIFICAR STOCK EN SUCURSAL (conexión explícita - para sucursal_origen)
+    =============================================*/
+    static public function mdlVerificarStockEnSucursal($pdo, $codigoProducto, $cantidadRequerida) {
         try {
-            $stmt = Conexion::conectar()->prepare("
+            $stmt = $pdo->prepare("
                 SELECT stock FROM productos 
                 WHERE codigo = :codigo AND stock >= :cantidad
             ");
-            
             $stmt->bindParam(":codigo", $codigoProducto, PDO::PARAM_STR);
             $stmt->bindParam(":cantidad", $cantidadRequerida, PDO::PARAM_INT);
             $stmt->execute();
-            
             return $stmt->fetch() ? true : false;
-
         } catch(Exception $e) {
             return false;
         }
     }
 
     /*=============================================
-    DESCONTAR STOCK LOCAL
+    DESCONTAR STOCK LOCAL (usa conexión local actual)
     =============================================*/
     static public function mdlDescontarStockLocal($productos) {
-        
-        $conexion = null;
-        
-        try {
-            $conexion = Conexion::conectar();
-            $conexion->beginTransaction();
+        return self::mdlDescontarStockEnSucursal(Conexion::conectar(), $productos);
+    }
 
+    /*=============================================
+    DESCONTAR STOCK EN SUCURSAL (conexión explícita - para sucursal_origen)
+    El caller debe gestionar beginTransaction/commit/rollBack
+    =============================================*/
+    static public function mdlDescontarStockEnSucursal($pdo, $productos) {
+        try {
             foreach($productos as $producto) {
-                $stmt = $conexion->prepare("
+                $stmt = $pdo->prepare("
                     UPDATE productos 
                     SET stock = stock - :cantidad 
                     WHERE codigo = :codigo
                 ");
-                
                 $stmt->bindParam(":cantidad", $producto["cantidad"], PDO::PARAM_INT);
                 $stmt->bindParam(":codigo", $producto["codigo"], PDO::PARAM_STR);
-                
                 if(!$stmt->execute()) {
-                    $conexion->rollBack();
                     return false;
                 }
             }
-
-            $conexion->commit();
             return true;
-
         } catch(Exception $e) {
-            if($conexion) {
-                $conexion->rollBack();
-            }
             return false;
         }
     }

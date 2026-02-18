@@ -13,10 +13,12 @@ if (!isset($_SESSION['perfil'])) {
     sendJsonResponse(["success" => false, "error" => "Sesión no iniciada. Por favor, inicie sesión nuevamente."]);
 }
 
+require_once __DIR__ . "/../config.php";
 require_once __DIR__ . "/../modelos/conexion.php";
 require_once __DIR__ . "/../api-transferencias/conexion-central.php";
 require_once __DIR__ . "/../controladores/despachos.controlador.php";
 require_once __DIR__ . "/../modelos/despachos.modelo.php";
+require_once __DIR__ . "/../modelos/sucursales.modelo.php";
 require_once __DIR__ . "/../modelos/productos.modelo.php";
 require_once __DIR__ . "/../src/Logger.php";
 
@@ -104,38 +106,68 @@ if(isset($_POST["aceptarDespacho"])){
         
         Logger::info("Productos del despacho: " . json_encode($productosDespacho), "despachos.ajax.php", "aceptarDespacho");
         
-        // 4. Verificar stock local disponible
+        // 4. Obtener conexión a la sucursal que despacha (sucursal_origen) - NO la del transportador actual
+        $sucursalOrigen = $despacho["sucursal_origen"] ?? '';
+        $conexionSucursalOrigen = null;
+        
+        if (empty($sucursalOrigen)) {
+            Logger::error("Despacho sin sucursal_origen", "despachos.ajax.php", "aceptarDespacho");
+            sendJsonResponse(["success" => false, "error" => "Despacho sin sucursal de origen"]);
+        }
+        
+        $nombreSucursalActual = defined('NOMBRE_SUCURSAL') ? NOMBRE_SUCURSAL : '';
+        if ($sucursalOrigen === $nombreSucursalActual) {
+            $conexionSucursalOrigen = Conexion::conectar();
+            Logger::info("Usando BD local (sucursal_origen = sucursal actual)", "despachos.ajax.php", "aceptarDespacho");
+        } else {
+            $sucursalConfig = ModeloSucursales::mdlObtenerSucursalPorNombre($sucursalOrigen);
+            if (!$sucursalConfig || empty($sucursalConfig['host_bd']) || empty($sucursalConfig['nombre_bd'])) {
+                Logger::error("No se pudo conectar a sucursal origen: $sucursalOrigen", "despachos.ajax.php", "aceptarDespacho");
+                sendJsonResponse(["success" => false, "error" => "No se pudo conectar a la sucursal que despacha ($sucursalOrigen)"]);
+            }
+            try {
+                $puerto = $sucursalConfig['puerto_bd'] ?? 3306;
+                $dsn = "mysql:host={$sucursalConfig['host_bd']};dbname={$sucursalConfig['nombre_bd']};port=$puerto;charset=utf8mb4";
+                $conexionSucursalOrigen = new PDO($dsn, $sucursalConfig['usuario_bd'], $sucursalConfig['password_bd']);
+                $conexionSucursalOrigen->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                Logger::info("Conectado a BD de sucursal origen: $sucursalOrigen", "despachos.ajax.php", "aceptarDespacho");
+            } catch (Exception $e) {
+                Logger::error("Error conectando a $sucursalOrigen: " . $e->getMessage(), "despachos.ajax.php", "aceptarDespacho");
+                sendJsonResponse(["success" => false, "error" => "No se pudo conectar a la sucursal $sucursalOrigen"]);
+            }
+        }
+        
+        // 5. Verificar stock en la sucursal que despacha
         foreach($productosDespacho as $producto) {
-            $stockDisponible = ModeloDespachos::mdlVerificarStockLocal($producto["codigo"], $producto["cantidad"]);
+            $stockDisponible = ModeloDespachos::mdlVerificarStockEnSucursal($conexionSucursalOrigen, $producto["codigo"], $producto["cantidad"]);
             Logger::stock("VERIFICAR", $producto["codigo"], $producto["cantidad"], "despachos.ajax.php", "aceptarDespacho");
             
             if(!$stockDisponible) {
-                Logger::error("Stock insuficiente para producto: " . $producto["codigo"], "despachos.ajax.php", "aceptarDespacho");
+                Logger::error("Stock insuficiente para producto: " . $producto["codigo"] . " en $sucursalOrigen", "despachos.ajax.php", "aceptarDespacho");
                 sendJsonResponse([
                     "success" => false, 
-                    "error" => "Stock insuficiente para el producto: " . $producto["codigo"]
+                    "error" => "Stock insuficiente para el producto " . $producto["codigo"] . " en la sucursal $sucursalOrigen"
                 ]);
             }
         }
         
-        // 5. Iniciar transacción
-        $conexionLocal = Conexion::conectar();
+        // 6. Iniciar transacciones
         $conexionCentral = ConexionCentral::conectar();
         
         Logger::transaction("BEGIN", "despachos", [], "despachos.ajax.php", "aceptarDespacho");
         
-        $conexionLocal->beginTransaction();
+        $conexionSucursalOrigen->beginTransaction();
         $conexionCentral->beginTransaction();
         
         try {
-            // 6. Descontar stock local
-            Logger::info("Iniciando descuento de stock local para " . count($productosDespacho) . " productos", "despachos.ajax.php", "aceptarDespacho");
-            $descuentoStock = ModeloDespachos::mdlDescontarStockLocal($productosDespacho);
+            // 7. Descontar stock en la sucursal que despacha (sucursal_origen)
+            Logger::info("Descontando stock en sucursal origen ($sucursalOrigen) para " . count($productosDespacho) . " productos", "despachos.ajax.php", "aceptarDespacho");
+            $descuentoStock = ModeloDespachos::mdlDescontarStockEnSucursal($conexionSucursalOrigen, $productosDespacho);
             Logger::info("Resultado descuento stock local: " . ($descuentoStock ? 'true' : 'false'), "despachos.ajax.php", "aceptarDespacho");
             
             if(!$descuentoStock) {
-                Logger::error("Error descontando stock local", "despachos.ajax.php", "aceptarDespacho");
-                throw new Exception("Error descontando stock local");
+                Logger::error("Error descontando stock en sucursal origen: $sucursalOrigen", "despachos.ajax.php", "aceptarDespacho");
+                throw new Exception("Error descontando stock en la sucursal $sucursalOrigen");
             }
             
             // 7. Actualizar estado del despacho a "en_transito"
@@ -279,7 +311,7 @@ if(isset($_POST["aceptarDespacho"])){
             
             // 10. Confirmar transacciones
             Logger::transaction("COMMIT", "despachos", [], "despachos.ajax.php", "aceptarDespacho");
-            $conexionLocal->commit();
+            $conexionSucursalOrigen->commit();
             $conexionCentral->commit();
             
             Logger::info("Despacho aceptado exitosamente: ID $idDespacho", "despachos.ajax.php", "aceptarDespacho");
@@ -292,7 +324,7 @@ if(isset($_POST["aceptarDespacho"])){
             // Rollback en caso de error
             Logger::error("Error en transacción, haciendo rollback: " . $e->getMessage(), "despachos.ajax.php", "aceptarDespacho");
             Logger::transaction("ROLLBACK", "despachos", [], "despachos.ajax.php", "aceptarDespacho");
-            $conexionLocal->rollBack();
+            $conexionSucursalOrigen->rollBack();
             $conexionCentral->rollBack();
             throw $e;
         }

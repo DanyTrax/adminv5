@@ -55,6 +55,27 @@ class ModeloSucursales {
     }
 
     /*=============================================
+    OBTENER SUCURSAL POR NOMBRE (para conectar a BD de sucursal_origen)
+    =============================================*/
+    static public function mdlObtenerSucursalPorNombre($nombreSucursal) {
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            $stmt = ConexionCentral::conectar()->prepare("
+                SELECT id, nombre, host_bd, nombre_bd, usuario_bd, password_bd, puerto_bd
+                FROM sucursales 
+                WHERE nombre = :nombre AND activo = 1
+                LIMIT 1
+            ");
+            $stmt->bindParam(":nombre", $nombreSucursal, PDO::PARAM_STR);
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Error mdlObtenerSucursalPorNombre: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /*=============================================
     CONFIGURAR SUCURSAL LOCAL (TABLA LOCAL)
     =============================================*/
     static public function mdlConfigurarSucursalLocal($tabla, $datos) {
