@@ -109,7 +109,7 @@ $modulos_disponibles = [
         "titulo" => "Salidas Inventario",
         "descripcion" => "Control de salidas de inventario",
         "color" => "bg-purple",
-        "perfiles" => ["Administrador", "Especial"]
+        "perfiles" => ["Administrador", "Especial", "Vendedor"]
     ],
     "sucursales" => [
         "icono" => "fa-building",

@@ -332,8 +332,8 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Contador" 
             </li>';
     }
     
-    // Salidas de Inventario - Administrador, Especial
-    if($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial"){
+    // Salidas de Inventario - Administrador, Especial, Vendedor
+    if($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Vendedor"){
         echo '<li class="">
                 <a href="salidas-inventario">
                     <i class="fa fa-sign-out"></i>
