@@ -19,6 +19,7 @@ require_once __DIR__ . "/../api-transferencias/conexion-central.php";
 require_once __DIR__ . "/../controladores/despachos.controlador.php";
 require_once __DIR__ . "/../modelos/despachos.modelo.php";
 require_once __DIR__ . "/../modelos/sucursales.modelo.php";
+require_once __DIR__ . "/../modelos/solicitudes-stock.modelo.php";
 require_once __DIR__ . "/../modelos/productos.modelo.php";
 require_once __DIR__ . "/../src/Logger.php";
 
@@ -210,27 +211,35 @@ if(isset($_POST["aceptarDespacho"])){
                 'productos' => count($productosDespacho)
             ];
             
+            $idSolicitudOrigen = !empty($despacho["id_solicitud_origen"]) ? (int)$despacho["id_solicitud_origen"] : null;
+            $numeroSolicitud = null;
+            if ($idSolicitudOrigen) {
+                $stmtNum = $conexionCentral->prepare("SELECT numero_solicitud FROM solicitudes_stock WHERE id = ?");
+                $stmtNum->execute([$idSolicitudOrigen]);
+                $numeroSolicitud = $stmtNum->fetchColumn() ?: null;
+            }
+            
             foreach($productosDespacho as $producto) {
                 Logger::stock("AGREGAR_TRANSITO", $producto["codigo"], $producto["cantidad"], "despachos.ajax.php", "aceptarDespacho");
                 
-                // Verificar si el producto ya existe en stock_transito
+                // Verificar si existe: agrupar por transportador + producto + solicitud (no mezclar solicitudes)
                 $stmtCheck = $conexionCentral->prepare("
                     SELECT id, cantidad_disponible, orden_carga, cronologia_carga
                     FROM stock_transito 
-                    WHERE codigo_producto = ? AND transportador_id = ?
+                    WHERE codigo_producto = ? AND transportador_id = ? 
+                    AND (id_solicitud_origen <=> ?)
                     ORDER BY orden_carga DESC
                     LIMIT 1
                 ");
-                
                 $stmtCheck->execute([
                     $producto["codigo"],
-                    $_SESSION["id"]
+                    $_SESSION["id"],
+                    $idSolicitudOrigen
                 ]);
                 
                 $productoExistente = $stmtCheck->fetch();
                 
                 if($productoExistente) {
-                    // Si existe, actualizar cronología y cantidad
                     $cronologiaActual = json_decode($productoExistente['cronologia_carga'], true) ?: [];
                     $cronologiaActual[] = [
                         'fecha' => date('Y-m-d H:i:s'),
@@ -244,43 +253,36 @@ if(isset($_POST["aceptarDespacho"])){
                         UPDATE stock_transito 
                         SET cantidad_disponible = cantidad_disponible + ?,
                             cronologia_carga = ?,
+                            numero_solicitud = COALESCE(numero_solicitud, ?),
                             fecha_actualizacion = NOW()
                         WHERE id = ?
                     ");
-                    
                     $stmtUpdate->execute([
                         $producto["cantidad"],
                         json_encode($cronologiaActual),
+                        $numeroSolicitud,
                         $productoExistente["id"]
                     ]);
                     
-                    Logger::info("✅ Stock actualizado - Código: {$producto['codigo']}, Cantidad agregada: {$producto['cantidad']}, Orden: $siguienteOrden", "despachos.ajax.php", "aceptarDespacho");
+                    Logger::info("✅ Stock actualizado - Código: {$producto['codigo']}, Solicitud: $idSolicitudOrigen, Orden: $siguienteOrden", "despachos.ajax.php", "aceptarDespacho");
                 } else {
-                    // Si no existe, crear nuevo registro con cronología
                     $stmtInsert = $conexionCentral->prepare("
                         INSERT INTO stock_transito (
-                            codigo_producto, 
-                            descripcion_producto, 
-                            cantidad_disponible, 
-                            numero_despacho_origen, 
-                            id_despacho_origen,
-                            transportador_id, 
-                            nombre_transportador,
-                            sucursal_origen,
-                            orden_carga,
-                            cronologia_carga,
-                            sucursal_carga,
-                            fecha_carga_original,
-                            fecha_carga
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                            codigo_producto, descripcion_producto, cantidad_disponible,
+                            numero_despacho_origen, id_despacho_origen, id_solicitud_origen, numero_solicitud,
+                            transportador_id, nombre_transportador, sucursal_origen,
+                            orden_carga, cronologia_carga, sucursal_carga,
+                            fecha_carga_original, fecha_carga
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
                     ");
-                    
                     $stmtInsert->execute([
                         $producto["codigo"],
                         $producto["descripcion"],
                         $producto["cantidad"],
                         $despacho["numero_despacho"],
                         $idDespacho,
+                        $idSolicitudOrigen,
+                        $numeroSolicitud,
                         $_SESSION["id"],
                         $_SESSION["nombre"],
                         $despacho["sucursal_origen"],
@@ -289,8 +291,13 @@ if(isset($_POST["aceptarDespacho"])){
                         $despacho["sucursal_origen"]
                     ]);
                     
-                    Logger::info("✅ Nuevo stock creado - Código: {$producto['codigo']}, Cantidad: {$producto['cantidad']}, Despacho: {$despacho['numero_despacho']}, Orden: $siguienteOrden", "despachos.ajax.php", "aceptarDespacho");
+                    Logger::info("✅ Nuevo stock - Código: {$producto['codigo']}, Solicitud: $idSolicitudOrigen, Orden: $siguienteOrden", "despachos.ajax.php", "aceptarDespacho");
                 }
+            }
+            
+            // Verificar si la solicitud debe pasar a finalizado (todos los productos ya despachados)
+            if ($idSolicitudOrigen) {
+                ModeloSolicitudesStock::mdlVerificarYFinalizarSolicitud($idSolicitudOrigen);
             }
             
             // 9. Actualizar el despacho con el transportador_id

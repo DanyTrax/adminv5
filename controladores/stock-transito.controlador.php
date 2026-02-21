@@ -281,10 +281,12 @@ class ControladorStockTransito {
                     $_SESSION["nombre"],
                     $solicitud["id_usuario_solicitante"],
                     $solicitud["nombre_usuario_solicitante"],
-                    null,
-                    null,
+                    $stockActual["id_despacho_origen"] ?? null,
+                    $stockActual["numero_despacho_origen"] ?? null,
                     $idSolicitud,
-                    "Descarga confirmada: " . $solicitud["cantidad_solicitada"] . " unidades"
+                    "Descarga confirmada: " . $solicitud["cantidad_solicitada"] . " unidades",
+                    $stockActual["id_solicitud_origen"] ?? null,
+                    $stockActual["numero_solicitud"] ?? null
                 );
 
                 // ✅ CONFIRMAR TRANSACCIONES
@@ -689,7 +691,7 @@ class ControladorStockTransito {
     /*=============================================
     REGISTRAR HISTÓRICO DE TRÁNSITO
     =============================================*/
-    static public function registrarHistoricoTransito($codigo, $descripcion, $cantidad, $tipoMovimiento, $transportadorId, $nombreTransportador, $sucursalOrigen, $sucursalDestino, $usuarioOrigen, $nombreUsuarioOrigen, $usuarioDestino, $nombreUsuarioDestino, $idDespacho, $numeroDespacho, $idSolicitudDescarga, $observaciones) {
+    static public function registrarHistoricoTransito($codigo, $descripcion, $cantidad, $tipoMovimiento, $transportadorId, $nombreTransportador, $sucursalOrigen, $sucursalDestino, $usuarioOrigen, $nombreUsuarioOrigen, $usuarioDestino, $nombreUsuarioDestino, $idDespacho, $numeroDespacho, $idSolicitudDescarga, $observaciones, $idSolicitudOrigen = null, $numeroSolicitud = null) {
         
         try {
             require_once __DIR__ . "/../api-transferencias/conexion-central.php";
@@ -711,12 +713,14 @@ class ControladorStockTransito {
                         transportador_id,
                         transportador_nombre,
                         numero_despacho,
+                        id_solicitud_origen,
+                        numero_solicitud,
                         observaciones,
                         fecha_descarga,
                         ip_usuario,
                         user_agent,
                         created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, NOW())
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?, NOW())
                 ");
                 
                 $stmt->execute([
@@ -730,6 +734,8 @@ class ControladorStockTransito {
                     $transportadorId ?? 1,
                     $nombreTransportador ?? "Sin transportador",
                     $numeroDespacho ?? "Sin despacho",
+                    $idSolicitudOrigen,
+                    $numeroSolicitud,
                     $observaciones ?? "Descarga registrada",
                     $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
                     $_SERVER['HTTP_USER_AGENT'] ?? 'Sistema'
@@ -811,10 +817,12 @@ class ControladorStockTransito {
                     $_SESSION["nombre"],
                     $_SESSION["id"],
                     $_SESSION["nombre"],
+                    $stockActual["id_despacho_origen"] ?? null,
+                    $stockActual["numero_despacho_origen"] ?? null,
                     null,
-                    null,
-                    null,
-                    "Descarga forzada por administrador. Motivo: " . $motivoForzado
+                    "Descarga forzada por administrador. Motivo: " . $motivoForzado,
+                    $stockActual["id_solicitud_origen"] ?? null,
+                    $stockActual["numero_solicitud"] ?? null
                 );
 
                 // ✅ CONFIRMAR TRANSACCIONES
@@ -1064,7 +1072,9 @@ class ControladorStockTransito {
                             'despacho' => $stock["numero_despacho"],
                             'sucursal' => $stock["sucursal_origen"],
                             'cantidad' => $cantidadADescontar,
-                            'id_despacho' => $stock["id_despacho_origen"]
+                            'id_despacho' => $stock["id_despacho_origen"],
+                            'id_solicitud_origen' => $stock["id_solicitud_origen"] ?? null,
+                            'numero_solicitud' => $stock["numero_solicitud"] ?? null
                         ];
                         
                         $cantidadRestante -= $cantidadADescontar;
@@ -1105,7 +1115,9 @@ class ControladorStockTransito {
                     $despachosAfectados[0]["id_despacho"] ?? null,
                     $despachosStr,
                     null, // No hay solicitud de descarga
-                    $observaciones . " | Despachos: " . $despachosStr
+                    $observaciones . " | Despachos: " . $despachosStr,
+                    $despachosAfectados[0]["id_solicitud_origen"] ?? null,
+                    $despachosAfectados[0]["numero_solicitud"] ?? null
                 );
                 
                 // Verificar si se completaron despachos
@@ -1230,7 +1242,9 @@ class ControladorStockTransito {
                 $stock["id_despacho_origen"],
                 $stock["numero_despacho_origen"],
                 null, // No hay solicitud de descarga
-                $observaciones
+                $observaciones,
+                $stock["id_solicitud_origen"] ?? null,
+                $stock["numero_solicitud"] ?? null
             );
             
             // 6. Verificar si el despacho se completó
@@ -1343,7 +1357,9 @@ class ControladorStockTransito {
                     $stocks[0]["id_despacho_origen"] ?? null,
                     $despachosStr,
                     null, // No hay solicitud de descarga
-                    "ELIMINACIÓN ADMINISTRATIVA: " . $motivoEliminacion . " | Despachos afectados: " . $despachosStr
+                    "ELIMINACIÓN ADMINISTRATIVA: " . $motivoEliminacion . " | Despachos afectados: " . $despachosStr,
+                    $stocks[0]["id_solicitud_origen"] ?? null,
+                    $stocks[0]["numero_solicitud"] ?? null
                 );
                 
                 // Confirmar transacción

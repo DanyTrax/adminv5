@@ -175,6 +175,75 @@ static public function mdlCrearSolicitud($tabla, $datos) {
     }
 
     /*=============================================
+    VERIFICAR Y FINALIZAR SOLICITUD - cuando todos los productos ya fueron despachados
+    =============================================*/
+    static public function mdlVerificarYFinalizarSolicitud($idSolicitud) {
+        try {
+            $conexion = ConexionCentral::conectar();
+            $conexion->beginTransaction();
+        
+            $stmt = $conexion->prepare("SELECT productos_solicitados, estado FROM solicitudes_stock WHERE id = ?");
+            $stmt->execute([$idSolicitud]);
+            $solicitud = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$solicitud || $solicitud['estado'] === 'finalizado' || $solicitud['estado'] === 'cancelado') {
+                $conexion->rollBack();
+                return false;
+            }
+            
+            $productosSolicitados = json_decode($solicitud['productos_solicitados'], true);
+            if (!is_array($productosSolicitados) || empty($productosSolicitados)) {
+                $conexion->rollBack();
+                return false;
+            }
+            
+            $stmt = $conexion->prepare("
+                SELECT productos_despacho FROM despachos 
+                WHERE id_solicitud_origen = ? AND estado IN ('en_transito', 'entregado')
+            ");
+            $stmt->execute([$idSolicitud]);
+            $despachos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $cantidadDespachadaPorProducto = [];
+            foreach ($despachos as $d) {
+                $productos = json_decode($d['productos_despacho'], true);
+                if (is_array($productos)) {
+                    foreach ($productos as $p) {
+                        $cod = $p['codigo'] ?? $p['codigo_producto'] ?? '';
+                        if ($cod) {
+                            $cantidadDespachadaPorProducto[$cod] = ($cantidadDespachadaPorProducto[$cod] ?? 0) + (int)($p['cantidad'] ?? 0);
+                        }
+                    }
+                }
+            }
+            
+            $completa = true;
+            foreach ($productosSolicitados as $producto) {
+                $cod = $producto['codigo'] ?? $producto['codigo_producto'] ?? '';
+                $cantSolicitada = (int)($producto['cantidad'] ?? 0);
+                $cantDespachada = $cantidadDespachadaPorProducto[$cod] ?? 0;
+                if ($cantDespachada < $cantSolicitada) {
+                    $completa = false;
+                    break;
+                }
+            }
+            
+            if ($completa) {
+                $stmt = $conexion->prepare("UPDATE solicitudes_stock SET estado = 'finalizado', fecha_actualizacion = NOW() WHERE id = ?");
+                $stmt->execute([$idSolicitud]);
+            }
+            
+            $conexion->commit();
+            return $completa;
+        } catch (Exception $e) {
+            if (isset($conexion) && $conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
+            error_log("Error mdlVerificarYFinalizarSolicitud: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /*=============================================
     ELIMINAR SOLICITUD - DE BASE CENTRAL
     =============================================*/
     static public function mdlEliminarSolicitud($tabla, $datos) {
