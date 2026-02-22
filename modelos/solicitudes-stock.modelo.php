@@ -222,8 +222,8 @@ static public function mdlCrearSolicitud($tabla, $datos) {
                 $productos = json_decode($d['productos_despacho'] ?? '[]', true);
                 if (is_array($productos)) {
                     foreach ($productos as $p) {
-                        $cod = $p['codigo'] ?? $p['codigo_producto'] ?? '';
-                        if ($cod) {
+                        $cod = trim((string)($p['codigo'] ?? $p['codigo_producto'] ?? $p['codigoProducto'] ?? ''));
+                        if ($cod !== '') {
                             $cantidadDespachadaPorProducto[$cod] = ($cantidadDespachadaPorProducto[$cod] ?? 0) + (int)($p['cantidad'] ?? 0);
                         }
                     }
@@ -232,11 +232,12 @@ static public function mdlCrearSolicitud($tabla, $datos) {
             
             $completa = true;
             foreach ($productosSolicitados as $producto) {
-                $cod = $producto['codigo'] ?? $producto['codigo_producto'] ?? '';
+                $cod = trim((string)($producto['codigo'] ?? $producto['codigo_producto'] ?? $producto['codigoProducto'] ?? ''));
                 $cantSolicitada = (int)($producto['cantidad'] ?? 0);
                 $cantDespachada = $cantidadDespachadaPorProducto[$cod] ?? 0;
                 if ($cantDespachada < $cantSolicitada) {
                     $completa = false;
+                    error_log("mdlVerificarYFinalizarSolicitud: Solicitud $idSolicitud NO completa. Producto cod=$cod: solicitado=$cantSolicitada, despachado=$cantDespachada. Despachados=" . json_encode($cantidadDespachadaPorProducto));
                     break;
                 }
             }
