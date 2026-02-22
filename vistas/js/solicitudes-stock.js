@@ -1275,6 +1275,9 @@ swal({
                 case 'aprobado':
                     $estadoIcon.addClass('bg-green').find('i').removeClass().addClass('fa fa-check');
                     break;
+                case 'finalizado':
+                    $estadoIcon.addClass('bg-gray').find('i').removeClass().addClass('fa fa-flag-checkered');
+                    break;
                 case 'cancelado':
                     $estadoIcon.addClass('bg-red').find('i').removeClass().addClass('fa fa-times');
                     break;

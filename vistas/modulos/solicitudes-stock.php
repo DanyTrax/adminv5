@@ -436,6 +436,11 @@
     color: white;
 }
 
+.estado-finalizado {
+    background-color: #95a5a6 !important;
+    color: white;
+}
+
 .bg-primary {
     background-color: #3c8dbc !important;
 }
