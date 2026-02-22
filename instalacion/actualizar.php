@@ -131,9 +131,12 @@ if (isset($_POST['accion'])) {
                 
                 $sql = file_get_contents($rutaCompleta);
                 $sentencias = array_filter(
-                    array_map('trim', explode(';', $sql)),
+                    array_map(function($s) {
+                        $s = trim($s);
+                        $s = preg_replace('/^(\s*--[^\n]*\n?)+/', '', $s); // quitar líneas de comentario al inicio
+                        return trim($s);
+                    }, explode(';', $sql)),
                     function($s) { 
-                        $s = trim($s); 
                         return strlen($s) > 10 && !preg_match('/^--/', $s) && 
                                !preg_match('/^(DESCRIBE|SELECT \*)/i', $s);
                     }

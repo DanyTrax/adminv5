@@ -28,6 +28,18 @@ $resultados = [];
 try {
     $conexion = ConexionCentral::conectar();
     
+    // 0. despachos: id_solicitud_origen (requerido para aceptar despachos)
+    try {
+        $conexion->exec("ALTER TABLE despachos ADD COLUMN id_solicitud_origen INT NULL DEFAULT NULL");
+        $resultados[] = "OK: despachos.id_solicitud_origen agregada";
+    } catch (PDOException $e) {
+        if (strpos($e->getMessage(), 'Duplicate column') !== false) {
+            $resultados[] = "YA EXISTE: despachos.id_solicitud_origen";
+        } else {
+            throw $e;
+        }
+    }
+    
     // 1. stock_transito: id_solicitud_origen
     try {
         $conexion->exec("ALTER TABLE stock_transito ADD COLUMN id_solicitud_origen INT NULL AFTER id_despacho_origen");
