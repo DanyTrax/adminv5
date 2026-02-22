@@ -17,16 +17,21 @@ if (!isset($_SESSION['instalacion_tiempo']) || (time() - $_SESSION['instalacion_
 // Actualizar tiempo de actividad
 $_SESSION['instalacion_tiempo'] = time();
 
-// Botón de logout
+// Botones de navegación
 echo '
 <style>
-.logout-btn {
-    position: fixed; top: 20px; right: 20px; background: #dc3545; color: white;
-    padding: 8px 15px; border: none; border-radius: 5px; text-decoration: none;
-    font-size: 12px; z-index: 1000; cursor: pointer;
+.logout-btn, .actualizar-btn {
+    position: fixed; top: 20px; padding: 8px 15px; border: none; border-radius: 5px;
+    text-decoration: none; font-size: 12px; z-index: 1000; cursor: pointer;
 }
+.logout-btn { right: 20px; background: #dc3545; color: white; }
 .logout-btn:hover { background: #c82333; color: white; }
+.actualizar-btn { right: 140px; background: #28a745; color: white; }
+.actualizar-btn:hover { background: #218838; color: white; }
 </style>
+<a href="actualizar.php" class="actualizar-btn">
+    🔄 Actualizar (SQL y conexiones)
+</a>
 <a href="logout.php" class="logout-btn" onclick="return confirm(\'¿Cerrar sesión?\')">
     🔓 Cerrar Sesión
 </a>';

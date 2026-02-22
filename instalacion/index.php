@@ -31,7 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['password_instalacion'
         $_SESSION['instalacion_tiempo'] = time();
         $_SESSION['intentos'] = 0;
         
-        header('Location: instalador-nuevo.php');
+        $destino = $_POST['destino'] ?? 'instalador';
+        header('Location: ' . ($destino === 'actualizar' ? 'actualizar.php' : 'instalador-nuevo.php'));
         exit;
     } else {
         // Password incorrecto
@@ -131,8 +132,12 @@ if (isset($_SESSION['instalacion_logueado']) && $_SESSION['instalacion_logueado'
                    autocomplete="new-password">
         </div>
         
-        <button type="submit" class="btn">
+        <input type="hidden" name="destino" id="destino" value="instalador">
+        <button type="submit" class="btn" onclick="document.getElementById('destino').value='instalador'">
             🚀 Acceder al Instalador
+        </button>
+        <button type="submit" class="btn" style="background: #28a745; margin-top: 10px;" onclick="document.getElementById('destino').value='actualizar'">
+            🔄 Ir a Actualizar (SQL y conexiones)
         </button>
     </form>
     
