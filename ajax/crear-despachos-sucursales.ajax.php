@@ -1,5 +1,6 @@
 <?php
 
+session_start();
 require_once "../controladores/despachos.controlador.php";
 require_once "../modelos/despachos.modelo.php";
 require_once "../controladores/sucursales.controlador.php";
@@ -13,6 +14,11 @@ class AjaxCrearDespachosSucursales {
     public $despachos_data;
 
     public function ajaxCrearDespachosSucursales() {
+        
+        if(!isset($_SESSION['perfil']) || ($_SESSION['perfil'] != 'Especial' && $_SESSION['perfil'] != 'Administrador')) {
+            echo json_encode(['success' => false, 'message' => 'No tiene permisos para crear despachos']);
+            return;
+        }
         
         try {
             $despachosData = json_decode($this->despachos_data, true);

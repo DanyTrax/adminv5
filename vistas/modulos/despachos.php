@@ -80,7 +80,7 @@
                 
                 <div class="row">
                     <div class="col-md-6">
-                        <?php if($_SESSION["perfil"] != "Transportador" && $_SESSION["perfil"] != "Limitado"): ?>
+                        <?php if($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial"): ?>
                         <a href="crear-despacho" class="btn btn-primary">
                             <i class="fa fa-plus"></i>
                             Crear Nuevo Despacho

@@ -177,7 +177,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
     /*=============================================
     VERIFICAR Y FINALIZAR SOLICITUD - cuando todos los productos ya fueron despachados
     =============================================*/
-    static public function mdlVerificarYFinalizarSolicitud($idSolicitud) {
+    static public function mdlVerificarYFinalizarSolicitud($idSolicitud, $idDespachoRecienAceptado = null) {
         try {
             $conexion = ConexionCentral::conectar();
             $conexion->beginTransaction();
@@ -196,11 +196,21 @@ static public function mdlCrearSolicitud($tabla, $datos) {
                 return false;
             }
             
-            $stmt = $conexion->prepare("
-                SELECT productos_despacho FROM despachos 
-                WHERE id_solicitud_origen = ? AND estado IN ('en_transito', 'entregado')
-            ");
-            $stmt->execute([$idSolicitud]);
+            // Incluir despachos en_transito, entregado, Y el despacho recién aceptado (por si aún no se ve el UPDATE)
+            if ($idDespachoRecienAceptado) {
+                $stmt = $conexion->prepare("
+                    SELECT productos_despacho FROM despachos 
+                    WHERE id_solicitud_origen = ? 
+                    AND (estado IN ('en_transito', 'entregado') OR id = ?)
+                ");
+                $stmt->execute([$idSolicitud, $idDespachoRecienAceptado]);
+            } else {
+                $stmt = $conexion->prepare("
+                    SELECT productos_despacho FROM despachos 
+                    WHERE id_solicitud_origen = ? AND estado IN ('en_transito', 'entregado')
+                ");
+                $stmt->execute([$idSolicitud]);
+            }
             $despachos = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             $cantidadDespachadaPorProducto = [];

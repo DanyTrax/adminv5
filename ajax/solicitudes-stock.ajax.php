@@ -61,9 +61,14 @@ class AjaxSolicitudesStock {
     }
 
     /*=============================================
-    APROBAR SOLICITUD - BASE CENTRAL
+    APROBAR SOLICITUD - BASE CENTRAL (Solo Transportador y Administrador)
     =============================================*/
     public function ajaxAprobarSolicitud(){
+        
+        if($_SESSION['perfil'] != 'Transportador' && $_SESSION['perfil'] != 'Administrador') {
+            echo json_encode(['success' => false, 'message' => 'No tiene permisos para aprobar solicitudes']);
+            return;
+        }
         
         try {
             $stmt = ConexionCentral::conectar()->prepare("
@@ -105,6 +110,11 @@ class AjaxSolicitudesStock {
     public $motivoCancelacion;
 
     public function ajaxCancelarSolicitud(){
+        
+        if($_SESSION['perfil'] != 'Transportador' && $_SESSION['perfil'] != 'Administrador') {
+            echo json_encode(['success' => false, 'message' => 'No tiene permisos para cancelar solicitudes']);
+            return;
+        }
         
         try {
             $stmt = ConexionCentral::conectar()->prepare("

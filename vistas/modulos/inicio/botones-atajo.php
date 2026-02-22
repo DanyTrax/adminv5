@@ -158,7 +158,7 @@ $modulos_disponibles = [
         "titulo" => "Crear Despacho",
         "descripcion" => "Crear nuevo despacho",
         "color" => "bg-green",
-        "perfiles" => ["Administrador", "Vendedor", "Contador"]
+        "perfiles" => ["Administrador", "Especial"]
     ],
     "stock-transito" => [
         "icono" => "fa-exchange",
