@@ -85,11 +85,11 @@ $SQL_LOCAL = [
                             <label>Sucursales:</label>
                             <div class="well" style="max-height: 200px; overflow-y: auto;">
                                 <?php foreach ($sucursales as $s): 
-                                    $urlApi = rtrim($s['url_api'] ?? '', '/');
-                                    if (empty($urlApi)) continue;
+                                    $urlBase = !empty($s['url_base']) ? rtrim($s['url_base'], '/') : preg_replace('#/api-transferencias/?$#', '', rtrim($s['url_api'] ?? '', '/'));
+                                    if (empty($urlBase)) continue;
                                 ?>
                                 <div class="checkbox">
-                                    <label><input type="checkbox" class="git-pull-sucursal" value="<?= htmlspecialchars($urlApi) ?>"> <?= htmlspecialchars($s['nombre']) ?> <small class="text-muted">(<?= htmlspecialchars($urlApi) ?>)</small></label>
+                                    <label><input type="checkbox" class="git-pull-sucursal" value="<?= htmlspecialchars($urlBase) ?>"> <?= htmlspecialchars($s['nombre']) ?> <small class="text-muted">(<?= htmlspecialchars($urlBase) ?>)</small></label>
                                 </div>
                                 <?php endforeach; ?>
                                 <?php 

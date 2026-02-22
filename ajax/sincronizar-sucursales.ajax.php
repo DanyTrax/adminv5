@@ -117,8 +117,10 @@ if ($accion === 'git_pull') {
     $resultados = [];
 
     foreach ($urls as $urlBase) {
-        $url = rtrim($urlBase, '/') . '/ajax/git-pull-remoto.ajax.php';
-        $nombreSucursal = parse_url($urlBase, PHP_URL_HOST) ?: $urlBase;
+        // urlBase puede ser url_base (raíz del sitio) o url_api (.../api-transferencias)
+        $base = preg_replace('#/api-transferencias/?$#', '', rtrim($urlBase, '/'));
+        $url = rtrim($base, '/') . '/ajax/git-pull-remoto.ajax.php';
+        $nombreSucursal = parse_url($url, PHP_URL_HOST) ?: $base;
 
         $ch = curl_init($url);
         curl_setopt_array($ch, [
@@ -141,7 +143,13 @@ if ($accion === 'git_pull') {
         if ($data && isset($data['success']) && $data['success']) {
             $resultados[] = ['sucursal' => $nombreSucursal, 'estado' => 'ok', 'mensaje' => $data['message'] ?? 'Git pull ejecutado'];
         } else {
-            $resultados[] = ['sucursal' => $nombreSucursal, 'estado' => 'error', 'mensaje' => $data['error'] ?? ($resp ?: "HTTP $code")];
+            $msg = $data['error'] ?? null;
+            if (!$msg && (strpos($resp, 'Ingresar al sistema') !== false || strpos($resp, 'login') !== false || strpos($resp, '<form') !== false)) {
+                $msg = 'La URL devolvió página de login. Verifica que ajax/git-pull-remoto.ajax.php exista en la sucursal y que la URL sea correcta.';
+            } elseif (!$msg) {
+                $msg = substr(strip_tags($resp), 0, 150) ?: "HTTP $code";
+            }
+            $resultados[] = ['sucursal' => $nombreSucursal, 'estado' => 'error', 'mensaje' => $msg];
         }
     }
 
