@@ -45,7 +45,12 @@ static public function mdlCrearDespacho($tabla, $datos) {
         ");
 
         $stmt->bindParam(":numero_despacho", $datos["numero_despacho"], PDO::PARAM_STR);
-        $stmt->bindParam(":id_solicitud_origen", $datos["id_solicitud_origen"], PDO::PARAM_INT);
+        $idSol = $datos["id_solicitud_origen"];
+        if ($idSol === null || $idSol === '') {
+            $stmt->bindValue(":id_solicitud_origen", null, PDO::PARAM_NULL);
+        } else {
+            $stmt->bindValue(":id_solicitud_origen", (int)$idSol, PDO::PARAM_INT);
+        }
         $stmt->bindParam(":sucursal_origen", $datos["nombre_sucursal_origen"], PDO::PARAM_STR);
         $stmt->bindParam(":sucursal_creador", $datos["nombre_sucursal_origen"], PDO::PARAM_STR); // ✅ AGREGADO
         $stmt->bindParam(":usuario_creador", $datos["id_usuario_creador"], PDO::PARAM_INT);

@@ -253,7 +253,7 @@ if(isset($_GET["editar"]) && is_numeric($_GET["editar"])) {
                         <input type="hidden" name="productosDespacho" id="productosDespachoHidden">
                         <input type="hidden" name="totalProductos" id="totalProductosHidden">
                         <input type="hidden" name="totalCantidad" id="totalCantidadHidden">
-                        <input type="hidden" name="idSolicitudOrigen" id="idSolicitudOrigenHidden">
+                        <input type="hidden" name="idSolicitudOrigen" id="idSolicitudOrigenHidden" value="<?php echo (isset($cargarDesdeSolicitud) && $cargarDesdeSolicitud && isset($idSolicitud)) ? (int)$idSolicitud : ''; ?>">
                         <input type="hidden" name="crearDespacho" value="1">
 
                     </form>
@@ -1045,9 +1045,10 @@ if(isset($_POST["crearDespacho"])){
         require_once "controladores/despachos.controlador.php";
         error_log("✅ Controlador cargado exitosamente");
         
-        // Preparar datos para el controlador
+        // Preparar datos para el controlador (id_solicitud_origen: null si vacío, para que al aceptar despacho la solicitud pase a finalizado)
+        $idSolOrigen = isset($_POST["idSolicitudOrigen"]) ? trim($_POST["idSolicitudOrigen"]) : '';
         $datosDespacho = array(
-            "id_solicitud_origen" => $_POST["idSolicitudOrigen"] ?? null,
+            "id_solicitud_origen" => ($idSolOrigen !== '' && is_numeric($idSolOrigen)) ? (int)$idSolOrigen : null,
             "id_usuario_creador" => isset($_SESSION["id"]) ? $_SESSION["id"] : 0,
             "nombre_usuario_creador" => isset($_SESSION["nombre"]) ? $_SESSION["nombre"] : 'Usuario',
             "productos_despacho" => $_POST["productosDespacho"],

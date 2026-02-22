@@ -80,6 +80,13 @@ confirmarAgregarProducto();
         }, 500);
     }
 
+    // Asegurar idSolicitudOrigen desde URL (para que al aceptar despacho la solicitud pase a finalizado)
+    var urlParams = new URLSearchParams(window.location.search);
+    var idSolUrl = urlParams.get('id_solicitud');
+    if(idSolUrl && $("#idSolicitudOrigenHidden").length && (!$("#idSolicitudOrigenHidden").val() || $("#idSolicitudOrigenHidden").val() === '')) {
+        $("#idSolicitudOrigenHidden").val(idSolUrl);
+    }
+
     // PRUEBA INMEDIATA DEL ELEMENTO
     setTimeout(function() {
 if($("#numeroSolicitudBuscar").length > 0) {
