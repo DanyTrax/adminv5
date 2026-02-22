@@ -18,12 +18,13 @@ if (!isset($_SESSION['instalacion_tiempo']) || (time() - $_SESSION['instalacion_
 
 $_SESSION['instalacion_tiempo'] = time();
 
-// SQL para CENTRAL (epicosie_central)
+// SQL para CENTRAL (epicosie_central) - Todas las migraciones usadas en instalación y operación
 $SQL_CENTRAL = [
-    'trazabilidad-solicitud-despacho' => 'instalacion/sql/trazabilidad-solicitud-despacho.sql'
+    'trazabilidad-solicitud-despacho' => 'instalacion/sql/trazabilidad-solicitud-despacho.sql',
+    'agregar-prefijo-categorias' => 'agregar-prefijo-categorias.sql'
 ];
 
-// SQL para LOCAL (cada sucursal)
+// SQL para LOCAL (cada sucursal) - Todas las migraciones usadas en instalación y operación
 $SQL_LOCAL = [
     'crear-abonos-historial' => 'instalacion/sql/crear-abonos-historial.sql',
     'agregar-columnas-bd' => 'instalacion/sql/agregar-columnas-bd.sql',
@@ -31,13 +32,62 @@ $SQL_LOCAL = [
 ];
 
 // Procesar solicitud AJAX
-if (isset($_POST['accion']) && isset($_POST['tipo'])) {
+if (isset($_POST['accion'])) {
     header('Content-Type: application/json; charset=utf-8');
     
-    $tipo = $_POST['tipo']; // 'central' o 'local'
-    $accion = $_POST['accion']; // 'verificar' o 'actualizar'
+    $tipo = $_POST['tipo'] ?? ''; // 'central' o 'local'
+    $accion = $_POST['accion']; // 'verificar', 'actualizar', 'verificar_archivos'
     
     try {
+        // Verificar todos los archivos SQL del proyecto
+        if ($accion === 'verificar_archivos') {
+            $archivos = [];
+            $baseDir = dirname(__DIR__);
+            foreach ($SQL_CENTRAL as $nombre => $ruta) {
+                $rutaCompleta = $baseDir . '/' . $ruta;
+                $archivos[] = [
+                    'nombre' => $nombre,
+                    'ruta' => $ruta,
+                    'tipo' => 'central',
+                    'existe' => file_exists($rutaCompleta),
+                    'tamano' => file_exists($rutaCompleta) ? filesize($rutaCompleta) : 0
+                ];
+            }
+            foreach ($SQL_LOCAL as $nombre => $ruta) {
+                $rutaCompleta = $baseDir . '/' . $ruta;
+                $archivos[] = [
+                    'nombre' => $nombre,
+                    'ruta' => $ruta,
+                    'tipo' => 'local',
+                    'existe' => file_exists($rutaCompleta),
+                    'tamano' => file_exists($rutaCompleta) ? filesize($rutaCompleta) : 0
+                ];
+            }
+            // Escanear también instalacion/sql/ por si hay más archivos
+            $sqlDir = $baseDir . '/instalacion/sql/';
+            if (is_dir($sqlDir)) {
+                foreach (glob($sqlDir . '*.sql') as $file) {
+                    $nombre = basename($file, '.sql');
+                    $rutaRel = 'instalacion/sql/' . basename($file);
+                    $yaListado = false;
+                    foreach (array_merge($SQL_CENTRAL, $SQL_LOCAL) as $r) {
+                        if (basename($r, '.sql') === $nombre || strpos($r, $nombre . '.sql') !== false) { $yaListado = true; break; }
+                    }
+                    if (!$yaListado) {
+                        $archivos[] = [
+                            'nombre' => $nombre,
+                            'ruta' => $rutaRel,
+                            'tipo' => 'instalacion',
+                            'existe' => true,
+                            'tamano' => filesize($file)
+                        ];
+                    }
+                }
+            }
+            echo json_encode(['success' => true, 'archivos' => $archivos]);
+            exit;
+        }
+        
         if ($accion === 'verificar') {
             if ($tipo === 'central') {
                 require_once __DIR__ . '/../api-transferencias/conexion-central.php';
@@ -210,27 +260,24 @@ if (isset($_POST['accion']) && isset($_POST['tipo'])) {
                 <div id="resultados-local" class="mt-3" style="display:none;"></div>
             </div>
             
-            <!-- Archivos SQL disponibles -->
-            <div class="mt-4">
-                <h6><i class="fas fa-file-code"></i> Archivos SQL disponibles</h6>
-                <div class="row">
-                    <div class="col-md-6">
-                        <strong>Central:</strong>
-                        <ul class="small">
-                            <?php foreach ($SQL_CENTRAL as $nombre => $ruta): ?>
-                            <li><?= htmlspecialchars($nombre) ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Local:</strong>
-                        <ul class="small">
-                            <?php foreach ($SQL_LOCAL as $nombre => $ruta): ?>
-                            <li><?= htmlspecialchars($nombre) ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
+            <!-- Verificar archivos SQL -->
+            <div class="mt-4 p-3 border rounded">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0"><i class="fas fa-file-code"></i> Archivos SQL (instalación y operación)</h6>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="verificarArchivos()">
+                        <i class="fas fa-search"></i> Verificar todos
+                    </button>
                 </div>
+                <div id="lista-archivos-sql" class="small">
+                    <p class="text-muted mb-0">Haz clic en "Verificar todos" para ver el estado de cada archivo SQL.</p>
+                </div>
+            </div>
+            
+            <!-- Actualizar todo -->
+            <div class="mt-4 text-center">
+                <button type="button" class="btn btn-lg btn-actualizar" onclick="actualizarTodo()">
+                    <i class="fas fa-sync-alt"></i> Actualizar Central + Local (todo)
+                </button>
             </div>
         </div>
     </div>
@@ -305,6 +352,95 @@ function actualizarBase(tipo) {
         })
         .catch(err => {
             contenedor.innerHTML = '<div class="resultado-item error">❌ Error: ' + err.message + '</div>';
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+}
+
+function verificarArchivos() {
+    const contenedor = document.getElementById('lista-archivos-sql');
+    contenedor.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm"></div> Escaneando...</div>';
+    
+    const formData = new FormData();
+    formData.append('accion', 'verificar_archivos');
+    
+    fetch('actualizar.php', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success || !data.archivos) {
+                contenedor.innerHTML = '<div class="text-danger">Error al verificar archivos</div>';
+                return;
+            }
+            let html = '<table class="table table-sm table-bordered mb-0"><thead><tr><th>Archivo</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>';
+            data.archivos.forEach(a => {
+                const icon = a.existe ? '✅' : '❌';
+                const estado = a.existe ? '<span class="text-success">OK (' + Math.round(a.tamano/1024*10)/10 + ' KB)</span>' : '<span class="text-danger">No encontrado</span>';
+                const tipoBadge = a.tipo === 'central' ? '<span class="badge bg-primary">Central</span>' : 
+                    (a.tipo === 'local' ? '<span class="badge bg-success">Local</span>' : '<span class="badge bg-secondary">Instalación</span>');
+                html += '<tr><td>' + icon + ' ' + a.nombre + '</td><td>' + tipoBadge + '</td><td>' + estado + '</td></tr>';
+            });
+            html += '</tbody></table>';
+            contenedor.innerHTML = html;
+        })
+        .catch(err => {
+            contenedor.innerHTML = '<div class="text-danger">Error: ' + err.message + '</div>';
+        });
+}
+
+function actualizarTodo() {
+    if (!confirm('¿Ejecutar TODAS las migraciones SQL en Central y Local? Esto puede modificar tablas y columnas.')) return;
+    
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Actualizando Central...';
+    
+    document.getElementById('resultados-central').style.display = 'block';
+    document.getElementById('resultados-central').innerHTML = '<div class="text-center"><div class="spinner-border text-primary"></div><p class="mt-2">Ejecutando migraciones Central...</p></div>';
+    document.getElementById('resultados-local').style.display = 'block';
+    document.getElementById('resultados-local').innerHTML = '';
+    
+    const formData = new FormData();
+    formData.append('accion', 'actualizar');
+    formData.append('tipo', 'central');
+    
+    fetch('actualizar.php', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            let html = '';
+            if (data.success && data.resultados) {
+                data.resultados.forEach(r => {
+                    const icon = r.estado === 'ok' ? '✅' : (r.estado === 'error' ? '❌' : '⚠️');
+                    html += '<div class="resultado-item ' + r.estado + '">' + icon + ' <strong>' + r.archivo + '</strong>: ' + r.mensaje + '</div>';
+                });
+            } else {
+                html = '<div class="resultado-item error">❌ ' + (data.error || 'Error') + '</div>';
+            }
+            document.getElementById('resultados-central').innerHTML = html;
+            
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Actualizando Local...';
+            const formDataLocal = new FormData();
+            formDataLocal.append('accion', 'actualizar');
+            formDataLocal.append('tipo', 'local');
+            return fetch('actualizar.php', { method: 'POST', body: formDataLocal });
+        })
+        .then(r => r.json())
+        .then(data => {
+            let html = '';
+            if (data.success && data.resultados) {
+                data.resultados.forEach(r => {
+                    const icon = r.estado === 'ok' ? '✅' : (r.estado === 'error' ? '❌' : '⚠️');
+                    html += '<div class="resultado-item ' + r.estado + '">' + icon + ' <strong>' + r.archivo + '</strong>: ' + r.mensaje + '</div>';
+                });
+            } else {
+                html = '<div class="resultado-item error">❌ ' + (data.error || 'Error') + '</div>';
+            }
+            document.getElementById('resultados-local').innerHTML = html;
+        })
+        .catch(err => {
+            document.getElementById('resultados-local').innerHTML = '<div class="resultado-item error">❌ ' + err.message + '</div>';
         })
         .finally(() => {
             btn.disabled = false;
