@@ -515,6 +515,55 @@ if(isset($_POST["eliminarDespacho"])){
         // Log de eliminación para auditoría
         error_log("🗑️ ELIMINAR DESPACHO - Usuario: " . ($_SESSION["nombre"] ?? "Desconocido") . " | Perfil: " . $perfilUsuario . " | Despacho: " . $despacho["numero_despacho"] . " | Estado: " . $despacho["estado"]);
         
+        // Si está en tránsito: devolver productos en stock_transito a la sucursal de origen (los entregados ya llegaron al destino)
+        $estado = $despacho["estado"] ?? "";
+        if ($estado === "en_transito") {
+            $productosTransito = ModeloDespachos::mdlObtenerStockTransitoPorDespacho($idDespacho);
+            if (!empty($productosTransito)) {
+                $sucursalOrigen = $despacho["sucursal_origen"] ?? "";
+                if (empty($sucursalOrigen)) {
+                    sendJsonResponse(["success" => false, "error" => "Despacho sin sucursal de origen. No se puede devolver el stock."]);
+                }
+                $conexionSucursalOrigen = null;
+                $nombreSucursalActual = defined('NOMBRE_SUCURSAL') ? NOMBRE_SUCURSAL : '';
+                if ($sucursalOrigen === $nombreSucursalActual) {
+                    $conexionSucursalOrigen = Conexion::conectar();
+                } else {
+                    $sucursalConfig = ModeloSucursales::mdlObtenerSucursalPorNombre($sucursalOrigen);
+                    if (!$sucursalConfig || empty($sucursalConfig['host_bd']) || empty($sucursalConfig['nombre_bd'])) {
+                        sendJsonResponse(["success" => false, "error" => "No se pudo conectar a la sucursal de origen ($sucursalOrigen) para devolver el stock"]);
+                    }
+                    try {
+                        $puerto = $sucursalConfig['puerto_bd'] ?? 3306;
+                        $dsn = "mysql:host={$sucursalConfig['host_bd']};dbname={$sucursalConfig['nombre_bd']};port=$puerto;charset=utf8mb4";
+                        $conexionSucursalOrigen = new PDO($dsn, $sucursalConfig['usuario_bd'], $sucursalConfig['password_bd']);
+                        $conexionSucursalOrigen->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    } catch (Exception $e) {
+                        sendJsonResponse(["success" => false, "error" => "No se pudo conectar a la sucursal $sucursalOrigen: " . $e->getMessage()]);
+                    }
+                }
+                $conexionSucursalOrigen->beginTransaction();
+                try {
+                    $devolver = ModeloDespachos::mdlDevolverStockEnSucursal($conexionSucursalOrigen, $productosTransito);
+                    if (!$devolver) {
+                        $conexionSucursalOrigen->rollBack();
+                        sendJsonResponse(["success" => false, "error" => "Error al devolver el stock a la sucursal $sucursalOrigen"]);
+                    }
+                    $conexionSucursalOrigen->commit();
+                    error_log("✅ ELIMINAR DESPACHO - Stock devuelto a $sucursalOrigen: " . count($productosTransito) . " productos");
+                    // Eliminar registros de stock_transito para este despacho
+                    $conexionCentral = ConexionCentral::conectar();
+                    $stmtDel = $conexionCentral->prepare("DELETE FROM stock_transito WHERE id_despacho_origen = ?");
+                    $stmtDel->execute([$idDespacho]);
+                } catch (Exception $e) {
+                    if ($conexionSucursalOrigen->inTransaction()) {
+                        $conexionSucursalOrigen->rollBack();
+                    }
+                    sendJsonResponse(["success" => false, "error" => "Error al devolver stock: " . $e->getMessage()]);
+                }
+            }
+        }
+        
         error_log("🗑️ ELIMINAR DESPACHO - Llamando a mdlBorrarDespacho...");
         
         $respuesta = ModeloDespachos::mdlBorrarDespacho("despachos", "id", $idDespacho);

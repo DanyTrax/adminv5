@@ -263,6 +263,54 @@ static public function mdlGenerarNumeroDespacho() {
             return false;
         }
     }
+
+    /*=============================================
+    OBTENER STOCK EN TRÁNSITO POR DESPACHO (para devolver a sucursal origen)
+    Retorna array de {codigo, cantidad} con cantidad_disponible > 0
+    =============================================*/
+    static public function mdlObtenerStockTransitoPorDespacho($idDespacho) {
+        try {
+            require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            $stmt = ConexionCentral::conectar()->prepare("
+                SELECT codigo_producto AS codigo, SUM(cantidad_disponible) AS cantidad
+                FROM stock_transito
+                WHERE id_despacho_origen = :id AND cantidad_disponible > 0
+                GROUP BY codigo_producto
+            ");
+            $stmt->bindParam(":id", $idDespacho, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch(Exception $e) {
+            error_log("mdlObtenerStockTransitoPorDespacho: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /*=============================================
+    DEVOLVER STOCK EN SUCURSAL (inverso de mdlDescontarStockEnSucursal)
+    Suma cantidad al stock de productos en la sucursal.
+    El caller debe gestionar beginTransaction/commit/rollBack
+    =============================================*/
+    static public function mdlDevolverStockEnSucursal($pdo, $productos) {
+        try {
+            foreach($productos as $producto) {
+                $stmt = $pdo->prepare("
+                    UPDATE productos 
+                    SET stock = stock + :cantidad 
+                    WHERE codigo = :codigo
+                ");
+                $stmt->bindParam(":cantidad", $producto["cantidad"], PDO::PARAM_INT);
+                $stmt->bindParam(":codigo", $producto["codigo"], PDO::PARAM_STR);
+                if(!$stmt->execute()) {
+                    return false;
+                }
+            }
+            return true;
+        } catch(Exception $e) {
+            return false;
+        }
+    }
+
 /*=============================================
 BORRAR DESPACHO
 =============================================*/
