@@ -20,6 +20,7 @@ $_SESSION['instalacion_tiempo'] = time();
 
 // SQL para CENTRAL (epicosie_central) - Todas las migraciones usadas en instalación y operación
 $SQL_CENTRAL = [
+    'stock-transito-despacho' => 'instalacion/sql/stock-transito-despacho.sql',
     'trazabilidad-solicitud-despacho' => 'instalacion/sql/trazabilidad-solicitud-despacho.sql',
     'agregar-prefijo-categorias' => 'agregar-prefijo-categorias.sql'
 ];

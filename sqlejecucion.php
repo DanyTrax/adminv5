@@ -28,6 +28,24 @@ $resultados = [];
 try {
     $conexion = ConexionCentral::conectar();
     
+    // -1. stock_transito: id_despacho_origen y numero_despacho_origen (trazabilidad por despacho)
+    try {
+        $conexion->exec("ALTER TABLE stock_transito ADD COLUMN id_despacho_origen INT NULL DEFAULT NULL");
+        $resultados[] = "OK: stock_transito.id_despacho_origen agregada";
+    } catch (PDOException $e) {
+        if (strpos($e->getMessage(), 'Duplicate column') !== false) {
+            $resultados[] = "YA EXISTE: stock_transito.id_despacho_origen";
+        } else { throw $e; }
+    }
+    try {
+        $conexion->exec("ALTER TABLE stock_transito ADD COLUMN numero_despacho_origen VARCHAR(50) NULL DEFAULT NULL");
+        $resultados[] = "OK: stock_transito.numero_despacho_origen agregada";
+    } catch (PDOException $e) {
+        if (strpos($e->getMessage(), 'Duplicate column') !== false) {
+            $resultados[] = "YA EXISTE: stock_transito.numero_despacho_origen";
+        } else { throw $e; }
+    }
+    
     // 0. despachos: id_solicitud_origen (requerido para aceptar despachos)
     try {
         $conexion->exec("ALTER TABLE despachos ADD COLUMN id_solicitud_origen INT NULL DEFAULT NULL");

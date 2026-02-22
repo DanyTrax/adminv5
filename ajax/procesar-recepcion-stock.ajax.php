@@ -92,6 +92,7 @@ try {
     
     // 4. Actualizar cantidad en stock_transito
     $nuevaCantidad = $stockTransito['cantidad_disponible'] - $cantidadRecibir;
+    $idDespachoOrigen = $stockTransito['id_despacho_origen'] ?? null;
     
     if ($nuevaCantidad <= 0) {
         // Eliminar registro si llega a cero
@@ -105,6 +106,20 @@ try {
             WHERE id = ?
         ");
         $stmt->execute([$nuevaCantidad, $idStockTransito]);
+    }
+    
+    // 4b. Si el despacho ya no tiene stock en tránsito, marcarlo como entregado
+    if ($idDespachoOrigen) {
+        $stmt = $conexion->prepare("
+            SELECT COALESCE(SUM(cantidad_disponible), 0) as total_restante
+            FROM stock_transito WHERE id_despacho_origen = ?
+        ");
+        $stmt->execute([$idDespachoOrigen]);
+        $totalRestante = (float)($stmt->fetch()['total_restante'] ?? 0);
+        if ($totalRestante == 0) {
+            $stmt = $conexion->prepare("UPDATE despachos SET estado = 'entregado', fecha_actualizacion = NOW() WHERE id = ?");
+            $stmt->execute([$idDespachoOrigen]);
+        }
     }
     
     // 5. Actualizar stock en productos (sumar al inventario local)

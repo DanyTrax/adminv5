@@ -44,8 +44,12 @@ class TablaStockTransito {
                 $botones = $this->generarBotonesAccion($value, $perfilUsuario, $idUsuario);
                 $cantidadDisponible = $this->formatearCantidadConIndicadores($value);
                 $solicitudesPendientes = $this->formatearSolicitudesPendientes($value);
-                $fechaCargue = date('d/m/Y H:i', strtotime($value["fecha_carga"]));
+                $fechaCargue = !empty($value["fecha_carga"]) ? date('d/m/Y H:i', strtotime($value["fecha_carga"])) : 
+                    (!empty($value["fecha_actualizacion"]) ? date('d/m/Y H:i', strtotime($value["fecha_actualizacion"])) : "-");
 
+                // Origen: despacho + sucursal (de donde viene)
+                $origenDisplay = ($value["numero_despacho_origen"] ?? "N/A") . " | " . ($value["sucursal_origen"] ?? "N/A");
+                
                 // CREAR FILA DE DATOS
                 $data[] = [
                     ($key + 1),
@@ -53,7 +57,7 @@ class TablaStockTransito {
                     $this->truncarTexto($value["descripcion_producto"], 40),
                     $cantidadDisponible,
                     $value["nombre_transportador"],
-                    $value["sucursal_origen"],
+                    $origenDisplay,
                     $fechaCargue,
                     $solicitudesPendientes,
                     $botones

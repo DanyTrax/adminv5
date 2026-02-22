@@ -1019,14 +1019,14 @@ class ControladorStockTransito {
             $conexionCentral = ConexionCentral::conectar();
             $conexionLocal = Conexion::conectar();
             
-            // Obtener todos los registros de stock en tránsito para este producto (orden LIFO)
+            // Obtener todos los registros de stock en tránsito para este producto (orden LIFO por id)
             $stmt = $conexionCentral->prepare("
                 SELECT st.*, d.numero_despacho, d.sucursal_origen
                 FROM stock_transito st
                 INNER JOIN despachos d ON st.id_despacho_origen = d.id
                 WHERE st.codigo_producto = ? 
                 AND st.cantidad_disponible > 0
-                ORDER BY st.orden_carga DESC
+                ORDER BY COALESCE(st.orden_carga, st.id) DESC, st.id DESC
             ");
             $stmt->execute([$codigoProducto]);
             $stocks = $stmt->fetchAll(PDO::FETCH_ASSOC);
