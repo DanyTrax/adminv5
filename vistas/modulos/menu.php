@@ -3,9 +3,6 @@
     <section class="sidebar">
 
         <ul class="sidebar-menu">
-<li style="background-color: #f39c12; color: white; font-weight: bold; padding: 10px;">
-    <?php echo "Perfil Detectado: " . $_SESSION["perfil"]; ?>
-</li>
             <?php
 
             // Inicio disponible para todos los usuarios

@@ -96,8 +96,8 @@ $(document).ready(function() {
             dataType: "json",
             success: function(respuesta) {
                 if (respuesta.success) {
-                    sucursalesDisponibles = respuesta.sucursales;
-}
+                    sucursalesDisponibles = Array.isArray(respuesta.sucursales) ? respuesta.sucursales : [];
+                }
             },
             error: function() {
 }
@@ -129,7 +129,7 @@ $(document).ready(function() {
         clientes.forEach(function(cliente, index) {
             var sucursalesAsignadas = cliente.sucursales_asignadas ? cliente.sucursales_asignadas.split(',') : [];
             var sucursalesNombres = sucursalesAsignadas.map(function(id) {
-                var sucursal = sucursalesDisponibles.find(function(s) {
+                var sucursal = (Array.isArray(sucursalesDisponibles) ? sucursalesDisponibles : []).find(function(s) {
                     return s.id == id;
                 });
                 return sucursal ? sucursal.nombre : id;
@@ -229,7 +229,7 @@ $(document).ready(function() {
         var html = "";
         var sucursalesArray = sucursalesAsignadas ? sucursalesAsignadas.split(',') : [];
 
-        sucursalesDisponibles.forEach(function(sucursal) {
+        (Array.isArray(sucursalesDisponibles) ? sucursalesDisponibles : []).forEach(function(sucursal) {
             var checked = sucursalesArray.includes(sucursal.id.toString()) ? 'checked' : '';
             html += `
                 <div class="col-md-6">

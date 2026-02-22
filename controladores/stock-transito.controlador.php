@@ -552,11 +552,11 @@ class ControladorStockTransito {
                     'cantidad' => $producto['cantidad_disponible'],
                     'orden_carga' => $producto['orden_carga'],
                     'fecha_carga' => $producto['fecha_carga'],
-                    'cronologia_carga' => json_decode($producto['cronologia_carga'], true) ?: []
+                    'cronologia_carga' => json_decode($producto['cronologia_carga'] ?? '[]', true) ?: []
                 ];
                 
                 // Agregar a cronología completa (ordenada por orden_carga DESC para LIFO)
-                $cronologia = json_decode($producto['cronologia_carga'], true) ?: [];
+                $cronologia = json_decode($producto['cronologia_carga'] ?? '[]', true) ?: [];
                 foreach($cronologia as $entrada) {
                     $transportadores[$transportadorId][$codigoProducto]['cronologia_completa'][] = $entrada;
                 }
