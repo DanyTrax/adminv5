@@ -50,6 +50,18 @@ if(isset($_POST["idDespacho"]) && !isset($_POST["cambiarEstado"])){
     $respuesta = ControladorDespachos::ctrMostrarDespachos($item, $valor);
     
     if($respuesta) {
+        // Enriquecer con numero_solicitud si viene de solicitud de stock
+        if(!empty($respuesta["id_solicitud_origen"])) {
+            try {
+                $stmt = ConexionCentral::conectar()->prepare("SELECT numero_solicitud FROM solicitudes_stock WHERE id = ?");
+                $stmt->execute([$respuesta["id_solicitud_origen"]]);
+                $respuesta["numero_solicitud"] = $stmt->fetchColumn() ?: null;
+            } catch(Exception $e) {
+                $respuesta["numero_solicitud"] = null;
+            }
+        } else {
+            $respuesta["numero_solicitud"] = null;
+        }
         sendJsonResponse([
             "success" => true,
             "data" => $respuesta,

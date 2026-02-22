@@ -72,7 +72,7 @@ try {
     
             // Datos de SOLICITUD (base central)
             $estado = $solicitud["estado"];
-            $estadoClass = $estado == 'pendiente' ? 'label-warning' : ($estado == 'aprobado' ? 'label-success' : ($estado == 'finalizado' ? 'label-default' : 'label-danger'));
+            $estadoClass = $estado == 'pendiente' ? 'label-warning' : ($estado == 'aprobado' ? 'label-success' : ($estado == 'finalizado' ? 'label-default estado-finalizado' : 'label-danger'));
             $estadoHtml = "<span class='label {$estadoClass}'>".ucfirst($estado)."</span>";
             
             // ✅ BOTONES CON CLASES Y ATRIBUTOS PARA JAVASCRIPT

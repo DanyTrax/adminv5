@@ -190,7 +190,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
                 return false;
             }
             
-            $productosSolicitados = json_decode($solicitud['productos_solicitados'], true);
+            $productosSolicitados = json_decode($solicitud['productos_solicitados'] ?? '[]', true);
             if (!is_array($productosSolicitados) || empty($productosSolicitados)) {
                 $conexion->rollBack();
                 return false;
@@ -215,7 +215,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
             
             $cantidadDespachadaPorProducto = [];
             foreach ($despachos as $d) {
-                $productos = json_decode($d['productos_despacho'], true);
+                $productos = json_decode($d['productos_despacho'] ?? '[]', true);
                 if (is_array($productos)) {
                     foreach ($productos as $p) {
                         $cod = $p['codigo'] ?? $p['codigo_producto'] ?? '';

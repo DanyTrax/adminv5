@@ -240,6 +240,17 @@ $(document).ready(function() {
             <!-- BODY CON TABS -->
             <div class="modal-body" style="padding: 0;">
                 
+                <!-- HINT: Origen desde Solicitud de Stock -->
+                <div id="hintSolicitudOrigenDespacho" class="alert alert-info" style="margin: 15px 15px 0 15px; display: none;">
+                    <i class="fa fa-link"></i> <strong>Origen:</strong> Este despacho fue creado desde la 
+                    <strong id="numeroSolicitudOrigenDespacho"></strong>
+                    <span class="pull-right">
+                        <a href="#" id="linkVerSolicitudOrigen" class="btn btn-default btn-xs" target="_blank">
+                            <i class="fa fa-external-link"></i> Ver solicitud
+                        </a>
+                    </span>
+                </div>
+                
                 <!-- TABS DE NAVEGACIÓN -->
                 <ul class="nav nav-tabs" role="tablist" style="margin: 0; background: #f4f4f4;">
                     <li role="presentation" class="active">

@@ -44,9 +44,10 @@ class AjaxCrearDespachosSucursales {
                         continue;
                     }
                     
-                    // Preparar datos del despacho
+                    // Preparar datos del despacho (id_solicitud_origen para que al aceptar la solicitud pase a finalizado)
+                    $idSol = isset($despachoData['id_solicitud_origen']) ? (int)$despachoData['id_solicitud_origen'] : null;
                     $datosDespacho = [
-                        'id_solicitud_origen' => $despachoData['id_solicitud_origen'],
+                        'id_solicitud_origen' => ($idSol > 0) ? $idSol : null,
                         'id_usuario_creador' => $_SESSION['id'],
                         'nombre_usuario_creador' => $_SESSION['nombre'],
                         'productos_despacho' => json_encode($despachoData['productos']),

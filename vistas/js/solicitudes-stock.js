@@ -20,7 +20,27 @@ $(document).ready(function() {
             "columnDefs": [
                 { "orderable": false, "targets": [0, 8] }, // Deshabilitar ordenamiento en columna # y Acciones
                 { "type": "date", "targets": 7 } // Especificar que la columna 7 es fecha
-            ]
+            ],
+            "drawCallback": function() {
+                // Si hay ?ver=ID en la URL, abrir modal de esa solicitud (ej: desde despacho)
+                if(window._solicitudVerAbierto) return;
+                var urlParams = new URLSearchParams(window.location.search);
+                var verId = urlParams.get('ver');
+                if(verId) {
+                    window._solicitudVerAbierto = true;
+                    urlParams.delete('ver');
+                    window.history.replaceState({}, '', window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : ''));
+                    $.ajax({
+                        url: 'ajax/solicitudes-stock.ajax.php',
+                        type: 'POST',
+                        data: { accion: 'ver_detalle', id_solicitud: verId },
+                        dataType: 'json',
+                        success: function(response) {
+                            if(response.success) mostrarModalDetalleSolicitud(response.data);
+                        }
+                    });
+                }
+            }
         });
     }
 

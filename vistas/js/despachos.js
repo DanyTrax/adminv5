@@ -123,6 +123,15 @@ function mostrarDetallesDespacho(despacho) {
         $("#detalleAdicionalDespachoContainer").hide();
     }
 
+    // HINT: Origen desde Solicitud de Stock
+    if(despacho.id_solicitud_origen && despacho.id_solicitud_origen > 0) {
+        $("#numeroSolicitudOrigenDespacho").text(despacho.numero_solicitud || "Solicitud #" + despacho.id_solicitud_origen);
+        $("#linkVerSolicitudOrigen").attr("href", "solicitudes-stock?ver=" + despacho.id_solicitud_origen);
+        $("#hintSolicitudOrigenDespacho").show();
+    } else {
+        $("#hintSolicitudOrigenDespacho").hide();
+    }
+
     // CARGAR PRODUCTOS
     cargarProductosDespacho(despacho.productos_despacho);
 
@@ -188,7 +197,34 @@ CARGAR TIMELINE DEL DESPACHO - VERSIÓN MEJORADA
 function cargarTimelineDespacho(despacho) {
 
     var html = '';
-// 1. CREACIÓN
+
+    // 0. ORIGEN: Solicitud de Stock (si aplica)
+    if(despacho.id_solicitud_origen && despacho.id_solicitud_origen > 0) {
+        var numSol = despacho.numero_solicitud || "Solicitud #" + despacho.id_solicitud_origen;
+        html += `
+        <div class="time-label">
+            <span class="bg-aqua">
+                <i class="fa fa-link"></i> Origen
+            </span>
+        </div>
+        <div>
+            <i class="fa fa-clipboard bg-aqua"></i>
+            <div class="timeline-item">
+                <h3 class="timeline-header">
+                    Creado desde <strong>${numSol}</strong>
+                </h3>
+                <div class="timeline-body">
+                    Este despacho proviene del botón "Crear despacho desde solicitud" en Solicitudes de Stock.
+                    <br><a href="solicitudes-stock?ver=${despacho.id_solicitud_origen}" target="_blank" class="btn btn-default btn-xs" style="margin-top: 5px;">
+                        <i class="fa fa-external-link"></i> Ver solicitud
+                    </a>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
+    // 1. CREACIÓN
     html += `
         <div class="time-label">
             <span class="bg-blue">
@@ -209,7 +245,6 @@ function cargarTimelineDespacho(despacho) {
                     <br>
                     <small class="text-muted">
                         <i class="fa fa-cubes"></i> ${despacho.total_productos} productos •
-
                         <i class="fa fa-calculator"></i> ${despacho.total_cantidad} unidades
                     </small>
                 </div>
