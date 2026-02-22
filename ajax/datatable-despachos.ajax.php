@@ -61,6 +61,7 @@ public function mostrarTablaDespachos() {
         $sql = "
             SELECT 
                 d.*,
+                s.numero_solicitud as numero_solicitud_origen,
                 CASE 
                     WHEN d.estado = 'pendiente' THEN 0
                     WHEN d.estado = 'aceptado' THEN 1
@@ -69,6 +70,7 @@ public function mostrarTablaDespachos() {
                     ELSE 4
                 END as orden_estado
             FROM despachos d 
+            LEFT JOIN solicitudes_stock s ON s.id = d.id_solicitud_origen
             $whereClause
             ORDER BY orden_estado ASC, d.fecha_creacion DESC
         ";
@@ -117,11 +119,20 @@ public function mostrarTablaDespachos() {
             $sucursalOrigen = $this->obtenerNombreSucursal($value["sucursal_origen"]);
 
             /*=============================================
+            SOLICITUD ORIGEN (si existe id_solicitud_origen)
+            =============================================*/
+            $solicitudOrigen = '';
+            if (!empty($value["id_solicitud_origen"]) && !empty($value["numero_solicitud_origen"])) {
+                $solicitudOrigen = '<a href="solicitudes-stock?ver=' . (int)$value["id_solicitud_origen"] . '" class="badge badge-info" title="Ver solicitud">' . htmlspecialchars($value["numero_solicitud_origen"]) . '</a>';
+            }
+
+            /*=============================================
             CONSTRUIR FILA JSON
             =============================================*/
             $datosJson .= '[
                 "' . ($key + 1) . '",
                 "' . htmlspecialchars($value["numero_despacho"]) . '",
+                "' . addslashes($solicitudOrigen) . '",
                 "' . htmlspecialchars($sucursalOrigen) . '",
                 "' . htmlspecialchars($value["nombre_usuario_creador"]) . '",
                 "' . $estado . '",

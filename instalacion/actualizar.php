@@ -22,6 +22,7 @@ $_SESSION['instalacion_tiempo'] = time();
 $SQL_CENTRAL = [
     'stock-transito-despacho' => 'instalacion/sql/stock-transito-despacho.sql',
     'trazabilidad-solicitud-despacho' => 'instalacion/sql/trazabilidad-solicitud-despacho.sql',
+    'historial-despachos' => 'instalacion/sql/historial-despachos.sql',
     'agregar-prefijo-categorias' => 'agregar-prefijo-categorias.sql'
 ];
 

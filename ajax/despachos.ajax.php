@@ -62,6 +62,8 @@ if(isset($_POST["idDespacho"]) && !isset($_POST["cambiarEstado"])){
         } else {
             $respuesta["numero_solicitud"] = null;
         }
+        // Obtener historial del despacho
+        $respuesta["historial"] = ModeloDespachos::mdlObtenerHistorialDespacho($respuesta["id"]);
         sendJsonResponse([
             "success" => true,
             "data" => $respuesta,
@@ -293,6 +295,13 @@ if(isset($_POST["aceptarDespacho"])){
                 $idDespacho
             ]);
             
+            // Registrar en historial
+            ModeloDespachos::mdlRegistrarHistorialDespacho(
+                $idDespacho, $despacho["numero_despacho"],
+                "aceptado", "pendiente", "en_transito",
+                "Despacho aceptado. Transportador: " . ($_SESSION["nombre"] ?? "Transportador")
+            );
+            
             Logger::info("✅ Despacho actualizado con transportador_id: " . $_SESSION["id"], "despachos.ajax.php", "aceptarDespacho");
             
             // 10. Confirmar transacciones
@@ -352,6 +361,14 @@ if(isset($_POST["cancelarDespacho"])){
             $sql = "UPDATE despachos SET estado = 'cancelado', motivo_cancelacion = ?, usuario_cancelacion = ? WHERE id = ?";
             $stmt = $conexion->prepare($sql);
             $resultado = $stmt->execute([$motivoCancelacion, $_SESSION["nombre"] ?? "Usuario", $idDespacho]);
+            
+            if($resultado && $stmt->rowCount() > 0) {
+                ModeloDespachos::mdlRegistrarHistorialDespacho(
+                    $idDespacho, $despacho["numero_despacho"],
+                    "cancelado", "pendiente", "cancelado",
+                    $motivoCancelacion
+                );
+            }
             
             error_log("🔍 CANCELAR DESPACHO - SQL ejecutado: " . $sql);
             error_log("🔍 CANCELAR DESPACHO - Resultado execute: " . ($resultado ? "true" : "false"));
@@ -446,6 +463,11 @@ if(isset($_POST["cambiarEstado"])){
         $respuesta = ModeloDespachos::mdlActualizarDespacho("despachos", $datos, "id", $idDespacho);
 
         if($respuesta == "ok") {
+            ModeloDespachos::mdlRegistrarHistorialDespacho(
+                $idDespacho, $despacho["numero_despacho"],
+                "cambio_estado", $despacho["estado"], $nuevoEstado,
+                $observaciones
+            );
             sendJsonResponse([
                 "success" => true,
                 "message" => "Estado del despacho actualizado correctamente",

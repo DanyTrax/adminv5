@@ -67,6 +67,15 @@ static public function mdlCrearDespacho($tabla, $datos) {
         if($stmt->execute()) {
             $insertId = $conexion->lastInsertId();
             error_log("✅ INSERT exitoso. ID generado: " . $insertId);
+            // Registrar en historial
+            self::mdlRegistrarHistorialDespacho(
+                $insertId,
+                $datos["numero_despacho"],
+                "creado",
+                null,
+                "pendiente",
+                "Despacho creado desde " . ($datos["nombre_sucursal_origen"] ?? "sucursal")
+            );
             return $insertId;
         } else {
             $errorInfo = $stmt->errorInfo();
@@ -372,6 +381,51 @@ static public function mdlObtenerTransportadores() {
         return [];
     }
 }
+/*=============================================
+REGISTRAR EN HISTORIAL DE DESPACHO
+=============================================*/
+static public function mdlRegistrarHistorialDespacho($idDespacho, $numeroDespacho, $evento, $estadoAnterior = null, $estadoNuevo = null, $observaciones = null) {
+    try {
+        require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+        $conexion = ConexionCentral::conectar();
+        $stmt = $conexion->prepare("
+            INSERT INTO historial_despachos 
+            (id_despacho, numero_despacho, evento, estado_anterior, estado_nuevo, usuario_id, usuario_nombre, observaciones)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        $usuarioId = $_SESSION["id"] ?? null;
+        $usuarioNombre = $_SESSION["nombre"] ?? "Sistema";
+        $stmt->execute([
+            $idDespacho, $numeroDespacho, $evento,
+            $estadoAnterior, $estadoNuevo,
+            $usuarioId, $usuarioNombre,
+            $observaciones
+        ]);
+        return true;
+    } catch (Exception $e) {
+        error_log("❌ mdlRegistrarHistorialDespacho: " . $e->getMessage());
+        return false;
+    }
+}
+
+/*=============================================
+OBTENER HISTORIAL DE DESPACHO
+=============================================*/
+static public function mdlObtenerHistorialDespacho($idDespacho) {
+    try {
+        require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+        $stmt = ConexionCentral::conectar()->prepare("
+            SELECT * FROM historial_despachos 
+            WHERE id_despacho = ? 
+            ORDER BY fecha_registro ASC
+        ");
+        $stmt->execute([$idDespacho]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        return [];
+    }
+}
+
 /*=============================================
 OBTENER NOMBRE DE SUCURSAL LOCAL
 =============================================*/

@@ -118,6 +118,33 @@ try {
         }
     }
     
+    // 6. historial_despachos: tabla para trazabilidad por evento
+    try {
+        $conexion->exec("
+            CREATE TABLE IF NOT EXISTS historial_despachos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                id_despacho INT NOT NULL,
+                numero_despacho VARCHAR(50) NOT NULL,
+                evento VARCHAR(50) NOT NULL,
+                estado_anterior VARCHAR(50) NULL,
+                estado_nuevo VARCHAR(50) NULL,
+                usuario_id INT NULL,
+                usuario_nombre VARCHAR(100) NULL,
+                observaciones TEXT NULL,
+                fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_despacho (id_despacho),
+                INDEX idx_fecha (fecha_registro)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        ");
+        $resultados[] = "OK: tabla historial_despachos creada";
+    } catch (PDOException $e) {
+        if (strpos($e->getMessage(), 'already exists') !== false) {
+            $resultados[] = "YA EXISTE: tabla historial_despachos";
+        } else {
+            throw $e;
+        }
+    }
+    
     echo "\n=== MIGRACIÓN COMPLETADA ===\n\n";
     foreach ($resultados as $r) {
         echo $r . "\n";

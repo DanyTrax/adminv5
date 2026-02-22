@@ -159,6 +159,7 @@
                         <tr>
                             <th style="width:10px">#</th>
                             <th>N° Despacho</th>
+                            <th>Solicitud</th>
                             <th>Sucursal Origen</th>
                             <th>Usuario Creador</th>
                             <th>Estado</th>

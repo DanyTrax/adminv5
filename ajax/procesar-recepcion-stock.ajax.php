@@ -2,6 +2,7 @@
 session_start();
 
 require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+require_once __DIR__ . "/../modelos/despachos.modelo.php";
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -117,8 +118,18 @@ try {
         $stmt->execute([$idDespachoOrigen]);
         $totalRestante = (float)($stmt->fetch()['total_restante'] ?? 0);
         if ($totalRestante == 0) {
+            $stmt = $conexion->prepare("SELECT numero_despacho FROM despachos WHERE id = ?");
+            $stmt->execute([$idDespachoOrigen]);
+            $desp = $stmt->fetch();
             $stmt = $conexion->prepare("UPDATE despachos SET estado = 'entregado', fecha_actualizacion = NOW() WHERE id = ?");
             $stmt->execute([$idDespachoOrigen]);
+            if ($desp) {
+                ModeloDespachos::mdlRegistrarHistorialDespacho(
+                    $idDespachoOrigen, $desp['numero_despacho'],
+                    "entregado", "en_transito", "entregado",
+                    "Todos los productos descargados en sucursal destino"
+                );
+            }
         }
     }
     

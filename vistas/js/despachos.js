@@ -192,12 +192,81 @@ productos = [];
 }
 
 /*=============================================
-CARGAR TIMELINE DEL DESPACHO - VERSIÓN MEJORADA
+RENDERIZAR TIMELINE DESDE HISTORIAL PERSISTIDO
+=============================================*/
+function renderizarTimelineDesdeHistorial(despacho) {
+    var html = '';
+    var colores = {
+        'creado': 'bg-blue',
+        'aceptado': 'bg-green',
+        'en_transito': 'bg-blue',
+        'entregado': 'bg-gray',
+        'cancelado': 'bg-red',
+        'cambio_estado': 'bg-purple'
+    };
+    var iconos = {
+        'creado': 'fa-file-o',
+        'aceptado': 'fa-truck',
+        'en_transito': 'fa-truck',
+        'entregado': 'fa-flag-checkered',
+        'cancelado': 'fa-ban',
+        'cambio_estado': 'fa-exchange'
+    };
+    // Origen desde solicitud (si aplica)
+    if(despacho.id_solicitud_origen && despacho.id_solicitud_origen > 0) {
+        var numSol = despacho.numero_solicitud || "Solicitud #" + despacho.id_solicitud_origen;
+        html += '<div class="time-label"><span class="bg-aqua"><i class="fa fa-link"></i> Origen</span></div>';
+        html += '<div><i class="fa fa-clipboard bg-aqua"></i><div class="timeline-item">';
+        html += '<h3 class="timeline-header">Creado desde <strong>' + numSol + '</strong></h3>';
+        html += '<div class="timeline-body">Este despacho proviene de Solicitudes de Stock. ';
+        html += '<a href="solicitudes-stock?ver=' + despacho.id_solicitud_origen + '" target="_blank" class="btn btn-default btn-xs"><i class="fa fa-external-link"></i> Ver solicitud</a></div></div></div>';
+    }
+    // Eventos del historial
+    despacho.historial.forEach(function(h) {
+        var fecha = h.fecha_registro || '';
+        var color = colores[h.evento] || 'bg-gray';
+        var icono = iconos[h.evento] || 'fa-circle';
+        var titulo = '';
+        if(h.evento === 'creado') titulo = 'Despacho creado por <strong>' + (h.usuario_nombre || 'Sistema') + '</strong>';
+        else if(h.evento === 'aceptado') titulo = 'Despacho aceptado por <strong>' + (h.usuario_nombre || 'Transportador') + '</strong>';
+        else if(h.evento === 'entregado') titulo = '<strong>Despacho entregado exitosamente</strong>';
+        else if(h.evento === 'cancelado') titulo = 'Despacho cancelado por <strong>' + (h.usuario_nombre || 'Sistema') + '</strong>';
+        else if(h.evento === 'cambio_estado') titulo = 'Estado cambiado: ' + (h.estado_anterior || '') + ' → <strong>' + (h.estado_nuevo || '') + '</strong> por <strong>' + (h.usuario_nombre || 'Admin') + '</strong>';
+        else titulo = h.evento + (h.estado_nuevo ? ': ' + h.estado_nuevo : '');
+        html += '<div class="time-label"><span class="' + color + '"><i class="fa ' + icono + '"></i> ' + formatearFecha(fecha) + '</span></div>';
+        html += '<div><i class="fa ' + icono + ' ' + color + '"></i><div class="timeline-item">';
+        html += '<span class="time"><i class="fa fa-clock-o"></i> ' + formatearHora(fecha) + '</span>';
+        html += '<h3 class="timeline-header">' + titulo + '</h3>';
+        if(h.observaciones) html += '<div class="timeline-body">' + h.observaciones + '</div>';
+        html += '</div></div>';
+    });
+    // Estado actual si no está finalizado
+    if(despacho.estado === 'pendiente') {
+        html += '<div class="time-label"><span class="bg-yellow"><i class="fa fa-hourglass-half"></i> Estado Actual</span></div>';
+        html += '<div><i class="fa fa-hourglass-half bg-yellow"></i><div class="timeline-item"><h3 class="timeline-header text-yellow"><strong>Pendiente de aceptación</strong></h3><div class="timeline-body">El despacho está esperando ser aceptado por un transportador.</div></div></div>';
+    } else if(despacho.estado === 'en_transito') {
+        html += '<div class="time-label"><span class="bg-blue"><i class="fa fa-truck"></i> Estado Actual</span></div>';
+        html += '<div><i class="fa fa-truck bg-blue"></i><div class="timeline-item"><h3 class="timeline-header text-blue"><strong>En tránsito</strong></h3><div class="timeline-body">Los productos están siendo transportados.' + (despacho.nombre_transportador ? ' Transportador: ' + despacho.nombre_transportador : '') + '</div></div></div>';
+    }
+    html += '<div><i class="fa fa-clock-o bg-gray"></i></div>';
+    return html;
+}
+
+/*=============================================
+CARGAR TIMELINE DEL DESPACHO - VERSIÓN MEJORADA (usa historial si existe)
 =============================================*/
 function cargarTimelineDespacho(despacho) {
 
     var html = '';
 
+    // Si hay historial persistido, usarlo (prioridad)
+    if(despacho.historial && Array.isArray(despacho.historial) && despacho.historial.length > 0) {
+        html = renderizarTimelineDesdeHistorial(despacho);
+        $("#timelineDespacho").html(html);
+        return;
+    }
+
+    // Fallback: timeline construido desde datos del despacho
     // 0. ORIGEN: Solicitud de Stock (si aplica)
     if(despacho.id_solicitud_origen && despacho.id_solicitud_origen > 0) {
         var numSol = despacho.numero_solicitud || "Solicitud #" + despacho.id_solicitud_origen;
@@ -909,9 +978,9 @@ $(document).on("click", ".btnFiltroEstado", function(){
     $(".btnFiltroEstado").removeClass("active");
     $(this).addClass("active");
 
-    // Aplicar filtro a DataTable
+    // Aplicar filtro a DataTable (columna Estado = índice 5, tras agregar columna Solicitud)
     if(estado === "" || estado === "todos") {
-        $('.tablaDespachos').DataTable().columns(4).search("").draw();
+        $('.tablaDespachos').DataTable().columns(5).search("").draw();
     } else {
         // Mapear estados a texto mostrado en tabla
         var estadoTexto = {
@@ -922,7 +991,7 @@ $(document).on("click", ".btnFiltroEstado", function(){
         };
 
         var textoBuscar = estadoTexto[estado] || estado;
-        $('.tablaDespachos').DataTable().columns(4).search(textoBuscar).draw();
+        $('.tablaDespachos').DataTable().columns(5).search(textoBuscar).draw();
     }
 });
 
