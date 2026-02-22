@@ -12,4 +12,12 @@ define('NOMBRE_SUCURSAL', 'Sucursal Principal'); // O 'Sucursal Norte', etc.
  */
 define('API_URL', 'https://pruebas.acplasticos.com/api-transferencias/');
 
+/**
+ * Token para ejecutar git pull remotamente (herramientas-admin-sync)
+ * Cambiar en producción por un valor secreto.
+ */
+if (!defined('GIT_PULL_TOKEN')) {
+    define('GIT_PULL_TOKEN', 'adminv5_git_pull_2025');
+}
+
 ?>

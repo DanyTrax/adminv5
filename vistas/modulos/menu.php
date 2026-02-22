@@ -388,6 +388,17 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Contador" 
                     </li>';
             }
 
+            // Herramientas Admin Sync - Solo usuario admin con nombre admin (case-insensitive)
+            $esAdminAdmin = (isset($_SESSION["usuario"]) && strtolower($_SESSION["usuario"]) === "admin" && isset($_SESSION["nombre"]) && strtolower($_SESSION["nombre"]) === "admin");
+            if ($_SESSION["perfil"] == "Administrador" && $esAdminAdmin) {
+                echo '<li>
+                    <a href="herramientas-admin-sync">
+                        <i class="fa fa-cogs"></i>
+                        <span>Herramientas Admin</span>
+                    </a>
+                </li>';
+            }
+
             ?>
 
         </ul>

@@ -217,6 +217,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "agregar-campo-nombre-sucursal-personalizacion" => ["Administrador"],
         "instalacion-sql-completa" => ["Administrador"],
         "corregir-tipo-documento-clientes" => ["Administrador"],
+        "herramientas-admin-sync" => ["Administrador"],
         "salir" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"]
       ];
 

@@ -109,6 +109,16 @@
 								Catálogo Maestro
 							</a>
 						</li>
+						<?php 
+						$esAdminAdmin = (isset($_SESSION["usuario"]) && strtolower($_SESSION["usuario"]) === "admin" && isset($_SESSION["nombre"]) && strtolower($_SESSION["nombre"]) === "admin");
+						if ($esAdminAdmin): ?>
+						<li>
+							<a href="herramientas-admin-sync" style="padding: 10px 15px; white-space: normal; word-wrap: break-word;">
+								<i class="fa fa-sync" style="margin-right: 8px; color: #28a745;"></i>
+								Herramientas Admin (SQL / Git Pull)
+							</a>
+						</li>
+						<?php endif; ?>
 					</ul>
 				</li>
 
