@@ -306,10 +306,7 @@ if(isset($_POST["aceptarDespacho"])){
             
             // 11. Verificar si la solicitud debe pasar a finalizado (DESPUÉS del commit para ver datos actualizados)
             if ($idSolicitudOrigen) {
-                Logger::info("Verificando finalizar solicitud $idSolicitudOrigen (despacho $idDespacho)", "despachos.ajax.php", "aceptarDespacho");
                 ModeloSolicitudesStock::mdlVerificarYFinalizarSolicitud($idSolicitudOrigen, $idDespacho, null);
-            } else {
-                Logger::info("Despacho sin id_solicitud_origen - no se verifica finalizar", "despachos.ajax.php", "aceptarDespacho");
             }
             
             Logger::info("Despacho aceptado exitosamente: ID $idDespacho", "despachos.ajax.php", "aceptarDespacho");
@@ -471,6 +468,9 @@ if(isset($_POST["cambiarEstado"])){
                 "cambio_estado", $despacho["estado"], $nuevoEstado,
                 $observaciones
             );
+            if (!empty($despacho["id_solicitud_origen"]) && in_array($nuevoEstado, ["en_transito", "entregado"])) {
+                ModeloSolicitudesStock::mdlVerificarYFinalizarSolicitud($despacho["id_solicitud_origen"], $idDespacho, null);
+            }
             sendJsonResponse([
                 "success" => true,
                 "message" => "Estado del despacho actualizado correctamente",

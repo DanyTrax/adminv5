@@ -3,6 +3,7 @@ session_start();
 
 require_once __DIR__ . "/../api-transferencias/conexion-central.php";
 require_once __DIR__ . "/../modelos/despachos.modelo.php";
+require_once __DIR__ . "/../modelos/solicitudes-stock.modelo.php";
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -118,7 +119,7 @@ try {
         $stmt->execute([$idDespachoOrigen]);
         $totalRestante = (float)($stmt->fetch()['total_restante'] ?? 0);
         if ($totalRestante == 0) {
-            $stmt = $conexion->prepare("SELECT numero_despacho FROM despachos WHERE id = ?");
+            $stmt = $conexion->prepare("SELECT numero_despacho, id_solicitud_origen FROM despachos WHERE id = ?");
             $stmt->execute([$idDespachoOrigen]);
             $desp = $stmt->fetch();
             $stmt = $conexion->prepare("UPDATE despachos SET estado = 'entregado', fecha_actualizacion = NOW() WHERE id = ?");
@@ -129,6 +130,9 @@ try {
                     "entregado", "en_transito", "entregado",
                     "Todos los productos descargados en sucursal destino"
                 );
+                if (!empty($desp['id_solicitud_origen'])) {
+                    ModeloSolicitudesStock::mdlVerificarYFinalizarSolicitud($desp['id_solicitud_origen'], $idDespachoOrigen, null);
+                }
             }
         }
     }
