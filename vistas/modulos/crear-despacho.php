@@ -37,19 +37,29 @@ if(isset($_GET["desde_solicitud"]) && $_GET["desde_solicitud"] == "1" && isset($
     try {
         require_once "api-transferencias/conexion-central.php";
         
-        $stmt = ConexionCentral::conectar()->prepare("
-            SELECT * FROM solicitudes_stock 
-            WHERE id = :id AND estado = 'aprobado'
-        ");
+        $stmt = ConexionCentral::conectar()->prepare("SELECT * FROM solicitudes_stock WHERE id = :id");
         $stmt->bindParam(":id", $idSolicitud);
         $stmt->execute();
         $solicitudOrigen = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if($solicitudOrigen) {
-            $productosDesdeSolicitud = json_decode($solicitudOrigen['productos_solicitados'] ?? '[]', true);
-            error_log("✅ Solicitud encontrada: " . $solicitudOrigen['numero_solicitud'] . " con " . count($productosDesdeSolicitud) . " productos");
+            if($solicitudOrigen['estado'] === 'finalizado') {
+                error_log("❌ Solicitud finalizada - no se puede crear despacho");
+                echo '<script>
+                    swal({ title: "Solicitud finalizada", text: "Esta solicitud ya fue completada. No se puede crear otro despacho.", type: "warning", confirmButtonText: "Cerrar" })
+                    .then(function() { window.location = "solicitudes-stock"; });
+                </script>';
+                exit;
+            }
+            if($solicitudOrigen['estado'] !== 'aprobado') {
+                $solicitudOrigen = null;
+                error_log("❌ Solicitud no está aprobada");
+            } else {
+                $productosDesdeSolicitud = json_decode($solicitudOrigen['productos_solicitados'] ?? '[]', true);
+                error_log("✅ Solicitud encontrada: " . $solicitudOrigen['numero_solicitud'] . " con " . count($productosDesdeSolicitud) . " productos");
+            }
         } else {
-            error_log("❌ Solicitud no encontrada o no está aprobada");
+            error_log("❌ Solicitud no encontrada");
         }
         
     } catch(Exception $e) {

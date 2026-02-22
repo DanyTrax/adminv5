@@ -517,18 +517,21 @@ $(document).on('click', '.btnCrearDespachoDesdeSolicitud', function() {
         dataType: 'json',
         success: function(response) {
             if(response.success) {
-                // Redirigir a crear despacho con los datos de la solicitud
                 var solicitud = response.data;
+                if(solicitud.estado === 'finalizado') {
+                    swal({
+                        title: 'Solicitud finalizada',
+                        text: 'Esta solicitud ya fue completada. No se puede crear otro despacho.',
+                        type: 'warning',
+                        confirmButtonText: 'Cerrar'
+                    });
+                    return;
+                }
                 var productos = JSON.parse(solicitud.productos_solicitados || '[]');
-
-                // Crear URL con parámetros
                 var url = 'crear-despacho?desde_solicitud=1&id_solicitud=' + idSolicitud + '&numero_solicitud=' + encodeURIComponent(numeroSolicitud);
-
-// Mostrar modal de selección de productos
-try {
+                try {
                     mostrarModalSeleccionProductos(solicitud, productos, url);
-} catch(error) {
-}
+                } catch(error) {}
 
             } else {
                 swal({

@@ -278,7 +278,7 @@ if(isset($_POST["aceptarDespacho"])){
             
             // Verificar si la solicitud debe pasar a finalizado (todos los productos ya despachados)
             if ($idSolicitudOrigen) {
-                ModeloSolicitudesStock::mdlVerificarYFinalizarSolicitud($idSolicitudOrigen, $idDespacho);
+                ModeloSolicitudesStock::mdlVerificarYFinalizarSolicitud($idSolicitudOrigen, $idDespacho, $conexionCentral);
             }
             
             // 9. Actualizar el despacho con el transportador_id

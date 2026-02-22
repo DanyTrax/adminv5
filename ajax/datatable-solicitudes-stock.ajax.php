@@ -85,7 +85,7 @@ try {
                             <i class='fa fa-eye'></i>
                         </button>";
             
-            // ✅ BOTÓN CREAR DESPACHO - Solo Vendedor especial (Especial) y Administrador, para solicitudes aprobadas
+            // ✅ BOTÓN CREAR DESPACHO - Solo aprobadas (no pendiente, finalizado ni cancelado); Especial o Administrador
             if($estado == "aprobado" && ($usuario_actual["perfil"] == "Especial" || $usuario_actual["perfil"] == "Administrador")) {
                 $acciones .= " <button class='btn btn-primary btn-xs btnCrearDespachoDesdeSolicitud' 
                                 idSolicitud='{$solicitud["id"]}' 

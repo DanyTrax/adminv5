@@ -176,38 +176,42 @@ static public function mdlCrearSolicitud($tabla, $datos) {
 
     /*=============================================
     VERIFICAR Y FINALIZAR SOLICITUD - cuando todos los productos ya fueron despachados
+    $conexionOpcional: si se pasa (ej. desde aceptar despacho), usa esa conexión y no hace commit
     =============================================*/
-    static public function mdlVerificarYFinalizarSolicitud($idSolicitud, $idDespachoRecienAceptado = null) {
+    static public function mdlVerificarYFinalizarSolicitud($idSolicitud, $idDespachoRecienAceptado = null, $conexionOpcional = null) {
         try {
-            $conexion = ConexionCentral::conectar();
-            $conexion->beginTransaction();
+            $usarConexionExterna = ($conexionOpcional instanceof PDO);
+            $conexion = $usarConexionExterna ? $conexionOpcional : ConexionCentral::conectar();
+            if (!$usarConexionExterna) {
+                $conexion->beginTransaction();
+            }
         
             $stmt = $conexion->prepare("SELECT productos_solicitados, estado FROM solicitudes_stock WHERE id = ?");
             $stmt->execute([$idSolicitud]);
             $solicitud = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!$solicitud || $solicitud['estado'] === 'finalizado' || $solicitud['estado'] === 'cancelado') {
-                $conexion->rollBack();
+                if (!$usarConexionExterna) $conexion->rollBack();
                 return false;
             }
             
             $productosSolicitados = json_decode($solicitud['productos_solicitados'] ?? '[]', true);
             if (!is_array($productosSolicitados) || empty($productosSolicitados)) {
-                $conexion->rollBack();
+                if (!$usarConexionExterna) $conexion->rollBack();
                 return false;
             }
             
-            // Incluir despachos en_transito, entregado, Y el despacho recién aceptado (por si aún no se ve el UPDATE)
+            // Incluir despachos en_transito o entregado; y el recién aceptado por id (por si hay desfase)
             if ($idDespachoRecienAceptado) {
                 $stmt = $conexion->prepare("
                     SELECT productos_despacho FROM despachos 
                     WHERE id_solicitud_origen = ? 
-                    AND (estado IN ('en_transito', 'entregado') OR id = ?)
+                    AND (estado IN ('aceptado', 'en_transito', 'entregado') OR id = ?)
                 ");
                 $stmt->execute([$idSolicitud, $idDespachoRecienAceptado]);
             } else {
                 $stmt = $conexion->prepare("
                     SELECT productos_despacho FROM despachos 
-                    WHERE id_solicitud_origen = ? AND estado IN ('en_transito', 'entregado')
+                    WHERE id_solicitud_origen = ? AND estado IN ('aceptado', 'en_transito', 'entregado')
                 ");
                 $stmt->execute([$idSolicitud]);
             }
@@ -238,14 +242,16 @@ static public function mdlCrearSolicitud($tabla, $datos) {
             }
             
             if ($completa) {
-                $stmt = $conexion->prepare("UPDATE solicitudes_stock SET estado = 'finalizado', fecha_actualizacion = NOW() WHERE id = ?");
+                $stmt = $conexion->prepare("UPDATE solicitudes_stock SET estado = 'finalizado' WHERE id = ?");
                 $stmt->execute([$idSolicitud]);
             }
             
-            $conexion->commit();
+            if (!$usarConexionExterna) {
+                $conexion->commit();
+            }
             return $completa;
         } catch (Exception $e) {
-            if (isset($conexion) && $conexion->inTransaction()) {
+            if (!$usarConexionExterna && isset($conexion) && $conexion->inTransaction()) {
                 $conexion->rollBack();
             }
             error_log("Error mdlVerificarYFinalizarSolicitud: " . $e->getMessage());
