@@ -66,18 +66,26 @@ if ($accion === 'sync_sql') {
 
     foreach ($sucursalesNombres as $nombreSucursal) {
         $config = ModeloSucursales::mdlObtenerSucursalPorNombre($nombreSucursal);
-        if (!$config || empty($config['host_bd']) || empty($config['nombre_bd'])) {
-            $resultados[] = ['sucursal' => $nombreSucursal, 'estado' => 'error', 'mensaje' => 'No se pudo conectar'];
+        if (!$config) {
+            $resultados[] = ['sucursal' => $nombreSucursal, 'estado' => 'error', 'mensaje' => 'Sucursal no encontrada en el central'];
+            continue;
+        }
+        if (empty($config['host_bd']) || empty($config['nombre_bd'])) {
+            $resultados[] = ['sucursal' => $nombreSucursal, 'estado' => 'error', 'mensaje' => 'Faltan credenciales BD (host_bd, nombre_bd). Edite la sucursal en Gestión de Sucursales.'];
+            continue;
+        }
+        if (empty($config['usuario_bd'])) {
+            $resultados[] = ['sucursal' => $nombreSucursal, 'estado' => 'error', 'mensaje' => 'Falta usuario_bd. Edite la sucursal en Gestión de Sucursales.'];
             continue;
         }
 
         try {
             $puerto = $config['puerto_bd'] ?? 3306;
             $dsn = "mysql:host={$config['host_bd']};dbname={$config['nombre_bd']};port=$puerto;charset=utf8mb4";
-            $pdo = new PDO($dsn, $config['usuario_bd'], $config['password_bd']);
+            $pdo = new PDO($dsn, $config['usuario_bd'], $config['password_bd'] ?? '');
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (Exception $e) {
-            $resultados[] = ['sucursal' => $nombreSucursal, 'estado' => 'error', 'mensaje' => 'Conexión: ' . $e->getMessage()];
+            $resultados[] = ['sucursal' => $nombreSucursal, 'estado' => 'error', 'mensaje' => 'Conexión BD: ' . $e->getMessage()];
             continue;
         }
 
