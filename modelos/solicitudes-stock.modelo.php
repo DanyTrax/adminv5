@@ -216,6 +216,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
                 $stmt->execute([$idSolicitud]);
             }
             $despachos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("mdlVerificarYFinalizarSolicitud: id=$idSolicitud, despachos encontrados=" . count($despachos));
             
             $cantidadDespachadaPorProducto = [];
             foreach ($despachos as $d) {
@@ -236,14 +237,18 @@ static public function mdlCrearSolicitud($tabla, $datos) {
                 $cantSolicitada = (int)($producto['cantidad'] ?? 0);
                 $cantDespachada = $cantidadDespachadaPorProducto[$cod] ?? 0;
                 if ($cantDespachada < $cantSolicitada) {
+                    error_log("mdlVerificarYFinalizarSolicitud: Producto $cod - solicitado=$cantSolicitada, despachado=$cantDespachada");
                     $completa = false;
                     break;
                 }
             }
             
             if ($completa) {
+                error_log("mdlVerificarYFinalizarSolicitud: Marcando solicitud $idSolicitud como finalizado");
                 $stmt = $conexion->prepare("UPDATE solicitudes_stock SET estado = 'finalizado' WHERE id = ?");
                 $stmt->execute([$idSolicitud]);
+            } else {
+                error_log("mdlVerificarYFinalizarSolicitud: Solicitud $idSolicitud NO completa - cantDespachada insuficiente");
             }
             
             if (!$usarConexionExterna) {

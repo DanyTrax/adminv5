@@ -276,11 +276,6 @@ if(isset($_POST["aceptarDespacho"])){
                 Logger::info("✅ Stock tránsito creado - Código: {$producto['codigo']}, Despacho: {$idDespacho}", "despachos.ajax.php", "aceptarDespacho");
             }
             
-            // Verificar si la solicitud debe pasar a finalizado (todos los productos ya despachados)
-            if ($idSolicitudOrigen) {
-                ModeloSolicitudesStock::mdlVerificarYFinalizarSolicitud($idSolicitudOrigen, $idDespacho, $conexionCentral);
-            }
-            
             // 9. Actualizar el despacho con el transportador_id
             $stmtActualizarDespacho = $conexionCentral->prepare("
                 UPDATE despachos 
@@ -308,6 +303,14 @@ if(isset($_POST["aceptarDespacho"])){
             Logger::transaction("COMMIT", "despachos", [], "despachos.ajax.php", "aceptarDespacho");
             $conexionSucursalOrigen->commit();
             $conexionCentral->commit();
+            
+            // 11. Verificar si la solicitud debe pasar a finalizado (DESPUÉS del commit para ver datos actualizados)
+            if ($idSolicitudOrigen) {
+                Logger::info("Verificando finalizar solicitud $idSolicitudOrigen (despacho $idDespacho)", "despachos.ajax.php", "aceptarDespacho");
+                ModeloSolicitudesStock::mdlVerificarYFinalizarSolicitud($idSolicitudOrigen, $idDespacho, null);
+            } else {
+                Logger::info("Despacho sin id_solicitud_origen - no se verifica finalizar", "despachos.ajax.php", "aceptarDespacho");
+            }
             
             Logger::info("Despacho aceptado exitosamente: ID $idDespacho", "despachos.ajax.php", "aceptarDespacho");
             sendJsonResponse([
