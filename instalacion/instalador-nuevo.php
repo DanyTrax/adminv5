@@ -200,6 +200,14 @@ function ejecutarInstalacionCompleta() {
         $pdo = conectarBD($datos_bd);
         crearTablasBD($pdo);
         
+        // 3.1. Ejecutar todos los scripts SQL locales (compara y aplica lo que falta)
+        require_once __DIR__ . '/funciones-sql-migraciones.php';
+        $baseDir = dirname(__DIR__);
+        foreach ($GLOBALS['SQL_LOCAL'] as $nombre => $ruta) {
+            $rutaCompleta = $baseDir . '/' . $ruta;
+            ejecutarSQLConComparacion($pdo, $rutaCompleta);
+        }
+        
         // 4. Insertar datos iniciales
         insertarDatosIniciales($pdo, $datos_sucursal, $datos_usuario, $datos_bd);
         
@@ -769,6 +777,21 @@ function aplicarCambiosSQLCentral($datos_central) {
                 
                 $conexion->exec("ALTER TABLE personalizacion_cotizaciones ADD COLUMN $nombreCampo $definicion $despuesDe");
                 error_log("✅ Campo '$nombreCampo' agregado a personalizacion_cotizaciones");
+            }
+        }
+        
+        // Ejecutar todos los scripts SQL del central (despachos, stock_transito, etc.)
+        require_once __DIR__ . '/funciones-sql-migraciones.php';
+        $baseDir = dirname(__DIR__);
+        foreach ($GLOBALS['SQL_CENTRAL'] as $nombre => $ruta) {
+            $rutaCompleta = $baseDir . '/' . $ruta;
+            $res = ejecutarSQLConComparacion($conexion, $rutaCompleta);
+            if (!empty($res['errores'])) {
+                foreach ($res['errores'] as $err) {
+                    error_log("⚠️ SQL $nombre: $err");
+                }
+            } else {
+                error_log("✅ SQL central $nombre: {$res['ejecutadas']} aplicadas, {$res['omitidas']} omitidas");
             }
         }
         

@@ -25,20 +25,47 @@ try {
     }
 
     $rutaBase = dirname(__DIR__);
-    $comando = "cd " . escapeshellarg($rutaBase) . " && git pull 2>&1";
-
+    $disabled = array_map('trim', explode(',', ini_get('disable_functions') ?: ''));
     $salida = '';
     $returnCode = -1;
 
-    if (function_exists('exec') && !in_array('exec', array_map('trim', explode(',', ini_get('disable_functions') ?: '')))) {
+    $runExec = function_exists('exec') && !in_array('exec', $disabled);
+    $runShellExec = function_exists('shell_exec') && !in_array('shell_exec', $disabled);
+    $runProcOpen = function_exists('proc_open') && !in_array('proc_open', $disabled);
+    $runPopen = function_exists('popen') && !in_array('popen', $disabled);
+
+    if ($runExec) {
         $output = [];
-        @exec($comando, $output, $returnCode);
+        @exec("cd " . escapeshellarg($rutaBase) . " && git pull 2>&1", $output, $returnCode);
         $salida = implode("\n", $output);
-    } elseif (function_exists('shell_exec')) {
-        $salida = @shell_exec($comando) ?: '';
+    } elseif ($runShellExec) {
+        $salida = @shell_exec("cd " . escapeshellarg($rutaBase) . " && git pull 2>&1") ?: '';
         $returnCode = (strpos($salida, 'Already up to date') !== false || strpos($salida, 'Updating') !== false || strpos($salida, 'Fast-forward') !== false) ? 0 : (preg_match('/error|fatal|failed/i', $salida) ? 1 : 0);
+    } elseif ($runProcOpen) {
+        $descriptorspec = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $process = @proc_open('git pull 2>&1', $descriptorspec, $pipes, $rutaBase);
+        if (is_resource($process)) {
+            fclose($pipes[0]);
+            $salida = stream_get_contents($pipes[1]) . stream_get_contents($pipes[2]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            $returnCode = proc_close($process);
+        } else {
+            $salida = 'proc_open falló';
+            $returnCode = 1;
+        }
+    } elseif ($runPopen) {
+        $handle = @popen("cd " . escapeshellarg($rutaBase) . " && git pull 2>&1", 'r');
+        if ($handle) {
+            $salida = stream_get_contents($handle);
+            pclose($handle);
+            $returnCode = preg_match('/error|fatal|failed/i', $salida) ? 1 : 0;
+        } else {
+            $salida = 'popen falló';
+            $returnCode = 1;
+        }
     } else {
-        echo json_encode(['success' => false, 'error' => 'exec y shell_exec están deshabilitados en este servidor']);
+        echo json_encode(['success' => false, 'error' => 'exec, shell_exec, proc_open y popen están deshabilitados en este servidor. Contacta al hosting para habilitar al menos uno.']);
         exit;
     }
 

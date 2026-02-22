@@ -18,20 +18,9 @@ if (!isset($_SESSION['instalacion_tiempo']) || (time() - $_SESSION['instalacion_
 
 $_SESSION['instalacion_tiempo'] = time();
 
-// SQL para CENTRAL (epicosie_central) - Todas las migraciones usadas en instalación y operación
-$SQL_CENTRAL = [
-    'stock-transito-despacho' => 'instalacion/sql/stock-transito-despacho.sql',
-    'trazabilidad-solicitud-despacho' => 'instalacion/sql/trazabilidad-solicitud-despacho.sql',
-    'historial-despachos' => 'instalacion/sql/historial-despachos.sql',
-    'agregar-prefijo-categorias' => 'agregar-prefijo-categorias.sql'
-];
-
-// SQL para LOCAL (cada sucursal) - Todas las migraciones usadas en instalación y operación
-$SQL_LOCAL = [
-    'crear-abonos-historial' => 'instalacion/sql/crear-abonos-historial.sql',
-    'agregar-columnas-bd' => 'instalacion/sql/agregar-columnas-bd.sql',
-    'crear-tablas-trazabilidad' => 'instalacion/sql/crear-tablas-trazabilidad.sql'
-];
+require_once __DIR__ . '/funciones-sql-migraciones.php';
+$SQL_CENTRAL = $GLOBALS['SQL_CENTRAL'];
+$SQL_LOCAL = $GLOBALS['SQL_LOCAL'];
 
 // Procesar solicitud AJAX
 if (isset($_POST['accion'])) {
@@ -124,53 +113,16 @@ if (isset($_POST['accion'])) {
                 $conexion = Conexion::conectar();
             }
             
+            $baseDir = dirname(__DIR__);
             foreach ($archivos as $nombre => $ruta) {
-                $rutaCompleta = __DIR__ . '/../' . $ruta;
-                if (!file_exists($rutaCompleta)) {
-                    $resultados[] = ['archivo' => $nombre, 'estado' => 'omitido', 'mensaje' => 'Archivo no encontrado'];
-                    continue;
-                }
-                
-                $sql = file_get_contents($rutaCompleta);
-                $sentencias = array_filter(
-                    array_map(function($s) {
-                        $s = trim($s);
-                        $s = preg_replace('/^(\s*--[^\n]*\n?)+/', '', $s); // quitar líneas de comentario al inicio
-                        return trim($s);
-                    }, explode(';', $sql)),
-                    function($s) { 
-                        return strlen($s) > 10 && !preg_match('/^--/', $s) && 
-                               !preg_match('/^(DESCRIBE|SELECT \*)/i', $s);
-                    }
-                );
-                
-                $ejecutadas = 0;
-                $errores = [];
-                
-                foreach ($sentencias as $sentencia) {
-                    $sentencia = trim($sentencia);
-                    if (empty($sentencia) || substr($sentencia, 0, 2) === '--') continue;
-                    if (preg_match('/^(DESCRIBE|SELECT \*)/i', $sentencia)) continue;
-                    
-                    try {
-                        $conexion->exec($sentencia);
-                        $ejecutadas++;
-                    } catch (PDOException $e) {
-                        $msg = $e->getMessage();
-                        if (strpos($msg, 'Duplicate column') !== false || 
-                            strpos($msg, 'already exists') !== false ||
-                            strpos($msg, 'Duplicate key') !== false) {
-                            $ejecutadas++;
-                        } else {
-                            $errores[] = substr($msg, 0, 150);
-                        }
-                    }
-                }
-                
-                if (empty($errores)) {
-                    $resultados[] = ['archivo' => $nombre, 'estado' => 'ok', 'mensaje' => "$ejecutadas sentencias ejecutadas"];
+                $rutaCompleta = $baseDir . '/' . $ruta;
+                $res = ejecutarSQLConComparacion($conexion, $rutaCompleta);
+                $msg = $res['ejecutadas'] > 0 ? "{$res['ejecutadas']} aplicadas" : "";
+                if ($res['omitidas'] > 0) $msg .= ($msg ? ", " : "") . "{$res['omitidas']} omitidas (ya existían)";
+                if (empty($res['errores'])) {
+                    $resultados[] = ['archivo' => $nombre, 'estado' => 'ok', 'mensaje' => $msg ?: 'Sin cambios necesarios'];
                 } else {
-                    $resultados[] = ['archivo' => $nombre, 'estado' => 'error', 'mensaje' => implode('; ', array_slice($errores, 0, 3))];
+                    $resultados[] = ['archivo' => $nombre, 'estado' => 'error', 'mensaje' => implode('; ', array_slice($res['errores'], 0, 3))];
                 }
             }
             

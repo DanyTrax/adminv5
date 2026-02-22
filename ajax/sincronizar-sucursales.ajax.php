@@ -16,31 +16,58 @@ if (!$esAdminAdmin) {
 
 require_once __DIR__ . "/../modelos/sucursales.modelo.php";
 require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+require_once __DIR__ . "/../instalacion/funciones-sql-migraciones.php";
 
 $accion = $_POST['accion'] ?? '';
 
+if ($accion === 'sync_sql_central') {
+    // Sincronizar SQL en la BD CENTRAL (despachos, stock_transito, etc.)
+    try {
+        $conexion = ConexionCentral::conectar();
+        $baseDir = dirname(__DIR__);
+        $resultados = [];
+        foreach ($GLOBALS['SQL_CENTRAL'] as $nombre => $ruta) {
+            $rutaCompleta = $baseDir . '/' . $ruta;
+            $res = ejecutarSQLConComparacion($conexion, $rutaCompleta);
+            $msg = $res['ejecutadas'] > 0 ? "{$res['ejecutadas']} aplicadas" : "";
+            if ($res['omitidas'] > 0) $msg .= ($msg ? ", " : "") . "{$res['omitidas']} omitidas (ya existían)";
+            if (!empty($res['errores'])) {
+                $resultados[] = ['script' => $nombre, 'estado' => 'error', 'mensaje' => implode('; ', array_slice($res['errores'], 0, 2))];
+            } else {
+                $resultados[] = ['script' => $nombre, 'estado' => 'ok', 'mensaje' => $msg ?: 'Sin cambios necesarios'];
+            }
+        }
+        echo json_encode(['success' => true, 'resultados' => $resultados]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
 if ($accion === 'sync_sql') {
     $sucursalesNombres = json_decode($_POST['sucursales'] ?? '[]', true);
-    $scripts = json_decode($_POST['scripts'] ?? '[]', true);
+    $modo = $_POST['modo'] ?? 'seleccionados'; // 'seleccionados' o 'todos'
 
-    if (!is_array($sucursalesNombres) || !is_array($scripts) || empty($sucursalesNombres) || empty($scripts)) {
-        echo json_encode(['success' => false, 'error' => 'Datos inválidos']);
+    if (!is_array($sucursalesNombres) || empty($sucursalesNombres)) {
+        echo json_encode(['success' => false, 'error' => 'Selecciona al menos una sucursal']);
         exit;
     }
 
-    $SQL_LOCAL = [
-        'crear-abonos-historial' => 'instalacion/sql/crear-abonos-historial.sql',
-        'agregar-columnas-bd' => 'instalacion/sql/agregar-columnas-bd.sql',
-        'crear-tablas-trazabilidad' => 'instalacion/sql/crear-tablas-trazabilidad.sql'
-    ];
-
     $baseDir = dirname(__DIR__);
+    $SQL_TODOS = $GLOBALS['SQL_LOCAL'];
+
+    $scripts = ($modo === 'todos') ? array_keys($SQL_TODOS) : (json_decode($_POST['scripts'] ?? '[]', true) ?: []);
+    if ($modo !== 'todos' && empty($scripts)) {
+        echo json_encode(['success' => false, 'error' => 'Selecciona al menos un script o usa "Sincronizar todo"']);
+        exit;
+    }
+
     $resultados = [];
 
     foreach ($sucursalesNombres as $nombreSucursal) {
         $config = ModeloSucursales::mdlObtenerSucursalPorNombre($nombreSucursal);
         if (!$config || empty($config['host_bd']) || empty($config['nombre_bd'])) {
-            $resultados[] = ['sucursal' => $nombreSucursal, 'estado' => 'error', 'mensaje' => 'No se pudo conectar a la sucursal'];
+            $resultados[] = ['sucursal' => $nombreSucursal, 'estado' => 'error', 'mensaje' => 'No se pudo conectar'];
             continue;
         }
 
@@ -54,49 +81,30 @@ if ($accion === 'sync_sql') {
             continue;
         }
 
-        $erroresSucursal = [];
         $ejecutadas = 0;
+        $omitidas = 0;
+        $erroresSucursal = [];
 
         foreach ($scripts as $nombreScript) {
-            if (!isset($SQL_LOCAL[$nombreScript])) continue;
-            $ruta = $baseDir . '/' . $SQL_LOCAL[$nombreScript];
+            if (!isset($SQL_TODOS[$nombreScript])) continue;
+            $ruta = $baseDir . '/' . $SQL_TODOS[$nombreScript];
             if (!file_exists($ruta)) {
-                $erroresSucursal[] = "$nombreScript: archivo no encontrado";
+                $erroresSucursal[] = "$nombreScript: no encontrado";
                 continue;
             }
 
-            $sql = file_get_contents($ruta);
-            $sentencias = array_filter(
-                array_map(function($s) {
-                    $s = trim($s);
-                    $s = preg_replace('/^(\s*--[^\n]*\n?)+/', '', $s);
-                    return trim($s);
-                }, explode(';', $sql)),
-                function($s) { 
-                    return strlen($s) > 10 && !preg_match('/^--/', $s) && !preg_match('/^(DESCRIBE|SELECT \*)/i', $s);
-                }
-            );
-
-            foreach ($sentencias as $sentencia) {
-                $sentencia = trim($sentencia);
-                if (empty($sentencia) || substr($sentencia, 0, 2) === '--') continue;
-                if (preg_match('/^(DESCRIBE|SELECT \*)/i', $sentencia)) continue;
-                try {
-                    $pdo->exec($sentencia);
-                    $ejecutadas++;
-                } catch (PDOException $e) {
-                    $msg = $e->getMessage();
-                    if (strpos($msg, 'Duplicate column') !== false || strpos($msg, 'already exists') !== false || strpos($msg, 'Duplicate key') !== false) {
-                        $ejecutadas++;
-                    } else {
-                        $erroresSucursal[] = substr($msg, 0, 100);
-                    }
-                }
+            $res = ejecutarSQLConComparacion($pdo, $ruta);
+            $ejecutadas += $res['ejecutadas'];
+            $omitidas += $res['omitidas'];
+            if (!empty($res['errores'])) {
+                $erroresSucursal = array_merge($erroresSucursal, $res['errores']);
             }
         }
 
+        $msg = $ejecutadas > 0 ? "$ejecutadas aplicadas" : "";
+        if ($omitidas > 0) $msg .= ($msg ? ", " : "") . "$omitidas omitidas (ya existían)";
         if (empty($erroresSucursal)) {
-            $resultados[] = ['sucursal' => $nombreSucursal, 'estado' => 'ok', 'mensaje' => "$ejecutadas sentencias ejecutadas"];
+            $resultados[] = ['sucursal' => $nombreSucursal, 'estado' => 'ok', 'mensaje' => $msg ?: 'Sin cambios necesarios'];
         } else {
             $resultados[] = ['sucursal' => $nombreSucursal, 'estado' => 'error', 'mensaje' => implode('; ', array_slice($erroresSucursal, 0, 3))];
         }
