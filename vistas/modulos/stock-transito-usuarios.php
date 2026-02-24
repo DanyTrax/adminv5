@@ -24,6 +24,12 @@ foreach($transportadores as $productos) {
     </section>
 
     <section class="content">
+        <?php if($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial"): ?>
+        <div class="alert alert-info" style="margin-bottom: 15px;">
+            <i class="fa fa-truck"></i> <strong>Crear despacho:</strong> Las solicitudes aprobadas por el transportador pueden convertirse en despachos desde 
+            <a href="solicitudes-stock" class="alert-link"><i class="fa fa-clipboard"></i> Solicitudes de Stock</a> (botón <i class="fa fa-truck"></i> en cada solicitud aprobada).
+        </div>
+        <?php endif; ?>
         <div class="row">
             <div class="col-md-12">
                 <!-- Filtros -->
