@@ -140,8 +140,8 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" 
     echo '    </a>
           </li>';
     
-    // OPCIÓN "CREAR DESPACHO" - Solo para Vendedor especial (Especial) y Administrador
-    if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial") {
+    // OPCIÓN "CREAR DESPACHO" - Administrador, Especial y Vendedor
+    if (in_array($_SESSION["perfil"], ["Administrador", "Especial", "Vendedor"])) {
         echo '<li>
                 <a href="crear-despacho">
                   <i class="fa fa-plus-circle"></i>

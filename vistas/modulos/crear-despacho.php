@@ -13,8 +13,8 @@ error_log("🔗 URL: " . $_SERVER['REQUEST_URI']);
 if ($_POST) {
     error_log("📥 POST recibido en crear-despacho: " . print_r($_POST, true));
 
-// Solo Vendedor especial (Especial) y Administrador pueden crear despachos
-if($_SESSION["perfil"] != "Especial" && $_SESSION["perfil"] != "Administrador"){
+// Administrador, Especial y Vendedor pueden crear despachos
+if(!in_array($_SESSION["perfil"], ["Administrador", "Especial", "Vendedor"])){
     echo '<script>
         window.location = "inicio";
     </script>';
