@@ -15,7 +15,7 @@ class AjaxCrearDespachosSucursales {
 
     public function ajaxCrearDespachosSucursales() {
         
-        if(!isset($_SESSION['perfil']) || ($_SESSION['perfil'] != 'Especial' && $_SESSION['perfil'] != 'Administrador')) {
+        if(!isset($_SESSION['perfil']) || !in_array($_SESSION['perfil'], ['Vendedor', 'Especial', 'Administrador'])) {
             echo json_encode(['success' => false, 'message' => 'No tiene permisos para crear despachos']);
             return;
         }

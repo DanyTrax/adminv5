@@ -85,8 +85,8 @@ try {
                             <i class='fa fa-eye'></i>
                         </button>";
             
-            // ✅ BOTÓN CREAR DESPACHO - Solo aprobadas (no pendiente, finalizado ni cancelado); Especial o Administrador
-            if($estado == "aprobado" && ($usuario_actual["perfil"] == "Especial" || $usuario_actual["perfil"] == "Administrador")) {
+            // ✅ BOTÓN CREAR DESPACHO - Solo aprobadas; Vendedor, Especial o Administrador
+            if($estado == "aprobado" && in_array($usuario_actual["perfil"], ["Vendedor", "Especial", "Administrador"])) {
                 $acciones .= " <button class='btn btn-primary btn-xs btnCrearDespachoDesdeSolicitud' 
                                 idSolicitud='{$solicitud["id"]}' 
                                 numeroSolicitud='{$solicitud["numero_solicitud"]}'
