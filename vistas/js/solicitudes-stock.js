@@ -527,7 +527,9 @@ $(document).on('click', '.btnCrearDespachoDesdeSolicitud', function() {
                     });
                     return;
                 }
-                var productos = JSON.parse(solicitud.productos_solicitados || '[]');
+                var productos = (solicitud.productos_pendientes && solicitud.productos_pendientes.length > 0)
+                    ? solicitud.productos_pendientes
+                    : JSON.parse(solicitud.productos_solicitados || '[]');
                 var url = 'crear-despacho?desde_solicitud=1&id_solicitud=' + idSolicitud + '&numero_solicitud=' + encodeURIComponent(numeroSolicitud);
                 try {
                     mostrarModalSeleccionProductos(solicitud, productos, url);

@@ -40,9 +40,15 @@ class AjaxSolicitudesStock {
             $solicitud = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if($solicitud) {
+                $data = $solicitud;
+                if (in_array($solicitud['estado'] ?? '', ['aprobado', 'parcial'])) {
+                    $data['productos_pendientes'] = ModeloSolicitudesStock::mdlObtenerProductosPendientes((int)$this->idSolicitud);
+                } else {
+                    $data['productos_pendientes'] = [];
+                }
                 echo json_encode([
                     'success' => true,
-                    'data' => $solicitud,
+                    'data' => $data,
                     'message' => 'Detalles obtenidos correctamente'
                 ]);
             } else {

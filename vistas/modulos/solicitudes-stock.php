@@ -422,6 +422,11 @@
     color: white;
 }
 
+.estado-parcial {
+    background-color: #5bc0de !important;
+    color: white;
+}
+
 .estado-finalizado {
     background-color: #95a5a6 !important;
     color: white;

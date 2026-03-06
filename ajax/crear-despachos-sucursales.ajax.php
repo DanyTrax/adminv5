@@ -67,6 +67,10 @@ class AjaxCrearDespachosSucursales {
                             'productos' => count($despachoData['productos']),
                             'cantidad_total' => $datosDespacho['total_cantidad']
                         ];
+                        if ($idSol > 0) {
+                            require_once __DIR__ . "/../modelos/solicitudes-stock.modelo.php";
+                            ModeloSolicitudesStock::mdlActualizarEstadoSolicitudPorDespachos($idSol);
+                        }
                     } else {
                         $errores[] = "Error creando despacho para {$sucursal['nombre']}: {$respuesta}";
                     }

@@ -68,7 +68,7 @@ public function ajaxBuscarSolicitudes() {
                     fecha_solicitud,
                     productos_solicitados
                 FROM solicitudes_stock 
-                WHERE estado IN ('aprobado', 'pendiente')
+                WHERE estado IN ('aprobado', 'parcial', 'pendiente')
                 AND (numero_solicitud LIKE :termino 
                      OR nombre_usuario_solicitante LIKE :termino
                      OR nombre_sucursal_solicitante LIKE :termino)

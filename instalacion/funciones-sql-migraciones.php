@@ -17,6 +17,7 @@ $GLOBALS['SQL_CENTRAL'] = [
     'stock-transito-despacho' => 'instalacion/sql/stock-transito-despacho.sql',
     'trazabilidad-solicitud-despacho' => 'instalacion/sql/trazabilidad-solicitud-despacho.sql',
     'historial-despachos' => 'instalacion/sql/historial-despachos.sql',
+    'agregar-estado-parcial-solicitudes' => 'instalacion/sql/agregar-estado-parcial-solicitudes.sql',
     'agregar-prefijo-categorias' => 'agregar-prefijo-categorias.sql'
 ];
 

@@ -261,6 +261,115 @@ static public function mdlCrearSolicitud($tabla, $datos) {
     }
 
     /*=============================================
+    OBTENER PRODUCTOS PENDIENTES - cantidad solicitada menos ya despachada
+    Incluye todos los despachos (pendiente, aceptado, en_transito, entregado)
+    =============================================*/
+    static public function mdlObtenerProductosPendientes($idSolicitud) {
+        try {
+            $conexion = ConexionCentral::conectar();
+            $stmt = $conexion->prepare("SELECT productos_solicitados FROM solicitudes_stock WHERE id = ? AND estado IN ('aprobado', 'parcial')");
+            $stmt->execute([$idSolicitud]);
+            $solicitud = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$solicitud) return [];
+
+            $productosSolicitados = json_decode($solicitud['productos_solicitados'] ?? '[]', true);
+            if (!is_array($productosSolicitados) || empty($productosSolicitados)) return [];
+
+            $stmt = $conexion->prepare("SELECT productos_despacho FROM despachos WHERE id_solicitud_origen = ?");
+            $stmt->execute([$idSolicitud]);
+            $despachos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $cantidadDespachadaPorProducto = [];
+            foreach ($despachos as $d) {
+                $productos = json_decode($d['productos_despacho'] ?? '[]', true);
+                if (is_array($productos)) {
+                    foreach ($productos as $p) {
+                        $cod = trim((string)($p['codigo'] ?? $p['codigo_producto'] ?? $p['codigoProducto'] ?? ''));
+                        if ($cod !== '') {
+                            $cantidadDespachadaPorProducto[$cod] = ($cantidadDespachadaPorProducto[$cod] ?? 0) + (int)($p['cantidad'] ?? 0);
+                        }
+                    }
+                }
+            }
+
+            $pendientes = [];
+            foreach ($productosSolicitados as $p) {
+                $cod = trim((string)($p['codigo'] ?? $p['codigo_producto'] ?? $p['codigoProducto'] ?? ''));
+                $cantSolicitada = (int)($p['cantidad'] ?? 0);
+                $cantDespachada = $cantidadDespachadaPorProducto[$cod] ?? 0;
+                $cantPendiente = max(0, $cantSolicitada - $cantDespachada);
+                if ($cantPendiente > 0) {
+                    $pendientes[] = [
+                        'codigo' => $cod,
+                        'descripcion' => $p['descripcion'] ?? '',
+                        'cantidad' => $cantPendiente,
+                        'cantidad_solicitada' => $cantSolicitada,
+                        'cantidad_despachada' => $cantDespachada,
+                        'observacion' => $p['observacion'] ?? ''
+                    ];
+                }
+            }
+            return $pendientes;
+        } catch (Exception $e) {
+            error_log("Error mdlObtenerProductosPendientes: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /*=============================================
+    ACTUALIZAR ESTADO SOLICITUD - parcial o finalizado según despachos creados
+    Incluye todos los despachos (pendiente, aceptado, en_transito, entregado)
+    =============================================*/
+    static public function mdlActualizarEstadoSolicitudPorDespachos($idSolicitud) {
+        try {
+            $conexion = ConexionCentral::conectar();
+            $stmt = $conexion->prepare("SELECT productos_solicitados, estado FROM solicitudes_stock WHERE id = ?");
+            $stmt->execute([$idSolicitud]);
+            $solicitud = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$solicitud || $solicitud['estado'] === 'finalizado' || $solicitud['estado'] === 'cancelado') return false;
+
+            $productosSolicitados = json_decode($solicitud['productos_solicitados'] ?? '[]', true);
+            if (!is_array($productosSolicitados) || empty($productosSolicitados)) return false;
+
+            $stmt = $conexion->prepare("SELECT productos_despacho FROM despachos WHERE id_solicitud_origen = ?");
+            $stmt->execute([$idSolicitud]);
+            $despachos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $cantidadDespachadaPorProducto = [];
+            foreach ($despachos as $d) {
+                $productos = json_decode($d['productos_despacho'] ?? '[]', true);
+                if (is_array($productos)) {
+                    foreach ($productos as $p) {
+                        $cod = trim((string)($p['codigo'] ?? $p['codigo_producto'] ?? $p['codigoProducto'] ?? ''));
+                        if ($cod !== '') {
+                            $cantidadDespachadaPorProducto[$cod] = ($cantidadDespachadaPorProducto[$cod] ?? 0) + (int)($p['cantidad'] ?? 0);
+                        }
+                    }
+                }
+            }
+
+            $completa = true;
+            foreach ($productosSolicitados as $producto) {
+                $cod = trim((string)($producto['codigo'] ?? $producto['codigo_producto'] ?? $producto['codigoProducto'] ?? ''));
+                $cantSolicitada = (int)($producto['cantidad'] ?? 0);
+                $cantDespachada = $cantidadDespachadaPorProducto[$cod] ?? 0;
+                if ($cantDespachada < $cantSolicitada) {
+                    $completa = false;
+                    break;
+                }
+            }
+
+            $nuevoEstado = $completa ? 'finalizado' : 'parcial';
+            $stmt = $conexion->prepare("UPDATE solicitudes_stock SET estado = ? WHERE id = ?");
+            $stmt->execute([$nuevoEstado, $idSolicitud]);
+            return true;
+        } catch (Exception $e) {
+            error_log("Error mdlActualizarEstadoSolicitudPorDespachos: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /*=============================================
     ELIMINAR SOLICITUD - DE BASE CENTRAL
     =============================================*/
     static public function mdlEliminarSolicitud($tabla, $datos) {
@@ -436,6 +545,7 @@ static public function mdlCrearSolicitud($tabla, $datos) {
             COUNT(*) as total_solicitudes,
             SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END) as pendientes,
             SUM(CASE WHEN estado = 'aprobado' THEN 1 ELSE 0 END) as aprobadas,
+            SUM(CASE WHEN estado = 'parcial' THEN 1 ELSE 0 END) as parciales,
             SUM(CASE WHEN estado = 'cancelado' THEN 1 ELSE 0 END) as canceladas,
             SUM(total_productos) as total_productos_solicitados,
             SUM(total_cantidad) as total_cantidad_solicitada

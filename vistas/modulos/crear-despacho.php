@@ -51,12 +51,21 @@ if(isset($_GET["desde_solicitud"]) && $_GET["desde_solicitud"] == "1" && isset($
                 </script>';
                 exit;
             }
-            if($solicitudOrigen['estado'] !== 'aprobado') {
+            if(!in_array($solicitudOrigen['estado'] ?? '', ['aprobado', 'parcial'])) {
                 $solicitudOrigen = null;
-                error_log("❌ Solicitud no está aprobada");
+                error_log("❌ Solicitud no está aprobada ni parcial");
             } else {
-                $productosDesdeSolicitud = json_decode($solicitudOrigen['productos_solicitados'] ?? '[]', true);
-                error_log("✅ Solicitud encontrada: " . $solicitudOrigen['numero_solicitud'] . " con " . count($productosDesdeSolicitud) . " productos");
+                require_once __DIR__ . "/../../modelos/solicitudes-stock.modelo.php";
+                $productosDesdeSolicitud = ModeloSolicitudesStock::mdlObtenerProductosPendientes((int)$idSolicitud);
+                if (empty($productosDesdeSolicitud)) {
+                    error_log("❌ No hay productos pendientes - solicitud ya completada");
+                    echo '<script>
+                        swal({ title: "Sin productos pendientes", text: "Todos los productos ya fueron despachados.", type: "info", confirmButtonText: "Cerrar" })
+                        .then(function() { window.location = "solicitudes-stock"; });
+                    </script>';
+                    exit;
+                }
+                error_log("✅ Solicitud encontrada: " . $solicitudOrigen['numero_solicitud'] . " con " . count($productosDesdeSolicitud) . " productos pendientes");
             }
         } else {
             error_log("❌ Solicitud no encontrada");
@@ -1075,6 +1084,10 @@ if(isset($_POST["crearDespacho"])){
         
         if($resultado == "ok") {
             error_log("✅ Despacho creado exitosamente");
+            if ($idSolOrigen !== '' && is_numeric($idSolOrigen)) {
+                require_once __DIR__ . "/../../modelos/solicitudes-stock.modelo.php";
+                ModeloSolicitudesStock::mdlActualizarEstadoSolicitudPorDespachos((int)$idSolOrigen);
+            }
             echo '<script>
                 swal({
                     title: "¡Despacho creado!",

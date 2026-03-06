@@ -72,7 +72,7 @@ try {
     
             // Datos de SOLICITUD (base central)
             $estado = $solicitud["estado"];
-            $estadoClass = $estado == 'pendiente' ? 'label-warning' : ($estado == 'aprobado' ? 'label-success' : ($estado == 'finalizado' ? 'label-default estado-finalizado' : 'label-danger'));
+            $estadoClass = $estado == 'pendiente' ? 'label-warning' : ($estado == 'aprobado' ? 'label-success' : ($estado == 'parcial' ? 'label-info estado-parcial' : ($estado == 'finalizado' ? 'label-default estado-finalizado' : 'label-danger')));
             $estadoHtml = "<span class='label {$estadoClass}'>".ucfirst($estado)."</span>";
             
             // ✅ BOTONES CON CLASES Y ATRIBUTOS PARA JAVASCRIPT
@@ -85,8 +85,8 @@ try {
                             <i class='fa fa-eye'></i>
                         </button>";
             
-            // ✅ BOTÓN CREAR DESPACHO - Solo aprobadas; Vendedor, Especial o Administrador
-            if($estado == "aprobado" && in_array($usuario_actual["perfil"], ["Vendedor", "Especial", "Administrador"])) {
+            // ✅ BOTÓN CREAR DESPACHO - Aprobadas o parciales; Vendedor, Especial o Administrador
+            if(($estado == "aprobado" || $estado == "parcial") && in_array($usuario_actual["perfil"], ["Vendedor", "Especial", "Administrador"])) {
                 $acciones .= " <button class='btn btn-primary btn-xs btnCrearDespachoDesdeSolicitud' 
                                 idSolicitud='{$solicitud["id"]}' 
                                 numeroSolicitud='{$solicitud["numero_solicitud"]}'
