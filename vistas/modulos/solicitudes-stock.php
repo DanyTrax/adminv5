@@ -390,8 +390,8 @@
 
       <!-- FOOTER CON BOTONES -->
       <div class="modal-footer">
-        
-        <button type="button" class="btn btn-success btnExportarPDFSolicitud" id="btnExportarPDF" idSolicitud="" title="Exportar a PDF">
+        <input type="hidden" id="solicitudIdParaExportar" value="">
+        <button type="button" class="btn btn-success btnExportarPDFSolicitud" id="btnExportarPDF" title="Exportar a PDF">
           <i class="fa fa-file-pdf-o"></i> Exportar a PDF
         </button>
 

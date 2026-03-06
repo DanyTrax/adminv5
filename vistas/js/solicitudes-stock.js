@@ -1255,6 +1255,10 @@ swal({
 
     try {
 
+        // ✅ CONFIGURAR ID PARA EXPORTAR PRIMERO (antes de cualquier otra operación)
+        var idParaExportar = idSolicitudParam || (solicitud && (solicitud.id || solicitud.ID));
+        configurarBotonesExportacion(idParaExportar);
+
         // ✅ INFORMACIÓN GENERAL - con verificaciones
         if($('#numeroSolicitudModal').length) {
             $('#numeroSolicitudModal').text(solicitud.numero_solicitud || 'N/A');
@@ -1334,10 +1338,6 @@ swal({
 
         // ✅ CARGAR STOCK SUCURSALES
         cargarStockSucursalesEnModal(solicitud.productos_solicitados);
-
-        // ✅ CONFIGURAR BOTONES DE EXPORTACIÓN (id desde parámetro o desde objeto)
-        var idParaExportar = idSolicitudParam || (solicitud && (solicitud.id || solicitud.ID));
-        configurarBotonesExportacion(idParaExportar);
 
         // ✅ MOSTRAR MODAL
         $('#modalVerSolicitud').modal('show');
@@ -1516,6 +1516,7 @@ CONFIGURAR BOTONES DE EXPORTACIÓN - FUNCIONAL
 =============================================*/
 function configurarBotonesExportacion(idSolicitud) {
     idSolicitud = idSolicitud || '';
+    $('#solicitudIdParaExportar').val(idSolicitud);
     $('#btnExportarPDF').attr('idSolicitud', idSolicitud);
     $('#modalVerSolicitud').data('idSolicitud', idSolicitud);
 }
@@ -1524,7 +1525,7 @@ function configurarBotonesExportacion(idSolicitud) {
 EXPORTAR SOLICITUD A PDF - Igual que despachos (AJAX + descarga)
 =============================================*/
 $(document).on('click', '.btnExportarPDFSolicitud', function() {
-    var idSolicitud = $(this).attr('idSolicitud') || $('#modalVerSolicitud').data('idSolicitud');
+    var idSolicitud = $('#solicitudIdParaExportar').val() || $(this).attr('idSolicitud') || $('#modalVerSolicitud').data('idSolicitud');
     if (!idSolicitud) {
         swal({ title: 'Error', text: 'No se pudo identificar la solicitud', type: 'error' });
         return;
