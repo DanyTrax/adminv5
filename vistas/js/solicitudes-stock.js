@@ -1526,7 +1526,8 @@ EXPORTAR SOLICITUD A PDF - Igual que despachos (AJAX + descarga)
 =============================================*/
 $(document).on('click', '.btnExportarPDFSolicitud', function() {
     var idSolicitud = $('#solicitudIdParaExportar').val() || $(this).attr('idSolicitud') || $('#modalVerSolicitud').data('idSolicitud');
-    if (!idSolicitud) {
+    var numeroSolicitud = $('#numeroSolicitudModal').text().trim();
+    if (!idSolicitud && !numeroSolicitud) {
         swal({ title: 'Error', text: 'No se pudo identificar la solicitud', type: 'error' });
         return;
     }
@@ -1539,7 +1540,8 @@ $(document).on('click', '.btnExportarPDFSolicitud', function() {
     });
     var datos = new FormData();
     datos.append('accion', 'exportar_pdf');
-    datos.append('idSolicitud', idSolicitud);
+    datos.append('idSolicitud', idSolicitud || '');
+    datos.append('numeroSolicitud', numeroSolicitud || '');
     $.ajax({
         url: 'ajax/exportar-solicitud-stock.ajax.php',
         method: 'POST',
