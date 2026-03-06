@@ -1514,70 +1514,71 @@ return '--:--';
 CONFIGURAR BOTONES DE EXPORTACIÓN - FUNCIONAL
 =============================================*/
 function configurarBotonesExportacion(solicitud) {
-    $('#btnExportarPDF').off('click').on('click', function(e) {
-        e.preventDefault();
-        exportarSolicitudPDF(solicitud);
-    });
+    $('#btnExportarPDF').attr('idSolicitud', solicitud ? solicitud.id : '');
 }
 
 /*=============================================
-EXPORTAR SOLICITUD A PDF - FUNCIONAL
+EXPORTAR SOLICITUD A PDF - Igual que despachos (AJAX + descarga)
 =============================================*/
-function exportarSolicitudPDF(solicitud) {
-try {
-        if(!solicitud || !solicitud.id) {
-            swal({ title: 'Error', text: 'No se pudo obtener el ID de la solicitud', type: 'error' });
-            return;
-        }
-        // ✅ CONSTRUIR URL ABSOLUTA PARA EL PDF (usa BASE_URL para subdirectorios)
-        var base = (typeof BASE_URL !== 'undefined' && BASE_URL) ? BASE_URL : (window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/'));
-        var urlPDF = base + 'extensiones/tcpdf/pdf/solicitud-stock.php?id=' + solicitud.id;
-
-        // ✅ ABRIR EN NUEVA VENTANA
-        var ventana = window.open(urlPDF, '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes');
-
-        if(!ventana || ventana.closed || typeof ventana.closed == 'undefined') {
-            // Si la ventana no se abre (popup bloqueado)
-            swal({
-                title: 'Popup bloqueado',
-                text: 'Permita ventanas emergentes para visualizar el PDF o haga clic en "Descargar" para descarga directa',
-                type: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Descargar PDF',
-                cancelButtonText: 'Cerrar',
-                confirmButtonColor: '#d33'
-            }).then((result) => {
-                if (result.value) {
-                    // ✅ DESCARGAR DIRECTAMENTE
-                    var link = document.createElement('a');
-                    link.href = urlPDF;
-                    link.download = 'Solicitud_' + solicitud.numero_solicitud + '.pdf';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }
-            });
-        } else {
-            // ✅ PDF abierto exitosamente
-// Mostrar notificación de éxito
-            swal({
-                title: '¡PDF Generado!',
-                text: 'El reporte se ha abierto en una nueva ventana',
-                type: 'success',
-                timer: 2000,
-                showConfirmButton: false
-            });
-        }
-
-    } catch(error) {
-swal({
-            title: 'Error',
-            text: 'Error al generar el PDF: ' + error.message,
-            type: 'error',
-            confirmButtonText: 'Cerrar'
-        });
+$(document).on('click', '.btnExportarPDFSolicitud', function() {
+    var idSolicitud = $(this).attr('idSolicitud');
+    if (!idSolicitud) {
+        swal({ title: 'Error', text: 'No se pudo identificar la solicitud', type: 'error' });
+        return;
     }
-}
+    swal({
+        title: 'Generando PDF...',
+        text: 'Por favor espere mientras se genera el documento',
+        type: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false
+    });
+    var datos = new FormData();
+    datos.append('accion', 'exportar_pdf');
+    datos.append('idSolicitud', idSolicitud);
+    $.ajax({
+        url: 'ajax/exportar-solicitud-stock.ajax.php',
+        method: 'POST',
+        data: datos,
+        cache: false,
+        contentType: false,
+        processData: false,
+        dataType: 'json',
+        success: function(respuesta) {
+            swal.close();
+            if (respuesta.success) {
+                var link = document.createElement('a');
+                link.href = respuesta.url;
+                link.download = respuesta.nombreArchivo;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                swal({
+                    title: '¡PDF Generado!',
+                    text: 'El documento se ha descargado correctamente',
+                    type: 'success',
+                    confirmButtonText: 'Cerrar'
+                });
+            } else {
+                swal({
+                    title: 'Error',
+                    text: respuesta.error || 'No se pudo generar el PDF',
+                    type: 'error',
+                    confirmButtonText: 'Cerrar'
+                });
+            }
+        },
+        error: function() {
+            swal.close();
+            swal({
+                title: 'Error de conexión',
+                text: 'No se pudo conectar con el servidor',
+                type: 'error',
+                confirmButtonText: 'Cerrar'
+            });
+        }
+    });
+});
 
 /*=============================================
 EXPORTAR SOLICITUD A EXCEL - FUNCIONAL CON SHEETJS
