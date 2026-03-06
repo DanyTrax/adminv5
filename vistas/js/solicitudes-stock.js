@@ -1525,8 +1525,13 @@ EXPORTAR SOLICITUD A PDF - FUNCIONAL
 =============================================*/
 function exportarSolicitudPDF(solicitud) {
 try {
-        // ✅ CONSTRUIR URL PARA EL PDF
-        var urlPDF = 'extensiones/tcpdf/pdf/solicitud-stock.php?id=' + solicitud.id;
+        if(!solicitud || !solicitud.id) {
+            swal({ title: 'Error', text: 'No se pudo obtener el ID de la solicitud', type: 'error' });
+            return;
+        }
+        // ✅ CONSTRUIR URL ABSOLUTA PARA EL PDF (usa BASE_URL para subdirectorios)
+        var base = (typeof BASE_URL !== 'undefined' && BASE_URL) ? BASE_URL : (window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/'));
+        var urlPDF = base + 'extensiones/tcpdf/pdf/solicitud-stock.php?id=' + solicitud.id;
 
         // ✅ ABRIR EN NUEVA VENTANA
         var ventana = window.open(urlPDF, '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes');
