@@ -391,23 +391,9 @@
       <!-- FOOTER CON BOTONES -->
       <div class="modal-footer">
         
-        <div class="btn-group dropup">
-          <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
-            <i class="fa fa-download"></i> Exportar <span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu">
-            <li>
-              <a href="#" id="btnExportarPDF">
-                <i class="fa fa-file-pdf-o text-red"></i> Exportar a PDF
-              </a>
-            </li>
-            <li>
-              <a href="#" id="btnExportarExcel">
-                <i class="fa fa-file-excel-o text-green"></i> Exportar a Excel
-              </a>
-            </li>
-          </ul>
-        </div>
+        <button type="button" class="btn btn-success" id="btnExportarPDF">
+          <i class="fa fa-file-pdf-o"></i> Exportar a PDF
+        </button>
 
         <button type="button" class="btn btn-default" data-dismiss="modal">
           <i class="fa fa-times"></i> Cerrar

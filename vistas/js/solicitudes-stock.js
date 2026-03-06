@@ -1514,16 +1514,9 @@ return '--:--';
 CONFIGURAR BOTONES DE EXPORTACIÓN - FUNCIONAL
 =============================================*/
 function configurarBotonesExportacion(solicitud) {
-// ✅ BOTÓN PDF - Ahora funcional
     $('#btnExportarPDF').off('click').on('click', function(e) {
         e.preventDefault();
         exportarSolicitudPDF(solicitud);
-    });
-
-    // ✅ BOTÓN EXCEL - Ahora funcional
-    $('#btnExportarExcel').off('click').on('click', function(e) {
-        e.preventDefault();
-        exportarSolicitudExcel(solicitud);
     });
 }
 
