@@ -1514,14 +1514,16 @@ return '--:--';
 CONFIGURAR BOTONES DE EXPORTACIÓN - FUNCIONAL
 =============================================*/
 function configurarBotonesExportacion(solicitud) {
-    $('#btnExportarPDF').attr('idSolicitud', solicitud ? solicitud.id : '');
+    var idSolicitud = solicitud ? (solicitud.id || solicitud.ID) : '';
+    $('#btnExportarPDF').attr('idSolicitud', idSolicitud);
+    $('#modalVerSolicitud').data('idSolicitud', idSolicitud);
 }
 
 /*=============================================
 EXPORTAR SOLICITUD A PDF - Igual que despachos (AJAX + descarga)
 =============================================*/
 $(document).on('click', '.btnExportarPDFSolicitud', function() {
-    var idSolicitud = $(this).attr('idSolicitud');
+    var idSolicitud = $(this).attr('idSolicitud') || $('#modalVerSolicitud').data('idSolicitud');
     if (!idSolicitud) {
         swal({ title: 'Error', text: 'No se pudo identificar la solicitud', type: 'error' });
         return;

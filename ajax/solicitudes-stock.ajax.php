@@ -37,7 +37,7 @@ class AjaxSolicitudesStock {
             $stmt->bindParam(":id", $this->idSolicitud, PDO::PARAM_INT);
             $stmt->execute();
             
-            $solicitud = $stmt->fetch();
+            $solicitud = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if($solicitud) {
                 echo json_encode([
