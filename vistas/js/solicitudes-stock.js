@@ -36,7 +36,7 @@ $(document).ready(function() {
                         data: { accion: 'ver_detalle', id_solicitud: verId },
                         dataType: 'json',
                         success: function(response) {
-                            if(response.success) mostrarModalDetalleSolicitud(response.data);
+                            if(response.success) mostrarModalDetalleSolicitud(response.data, verId);
                         }
                     });
                 }
@@ -1004,7 +1004,7 @@ $(document).on('click', '.btnVerSolicitud', function() {
         dataType: 'json',
         success: function(response) {
             if(response.success) {
-                mostrarModalDetalleSolicitud(response.data);
+                mostrarModalDetalleSolicitud(response.data, idSolicitud);
             } else {
                 swal({
                     title: 'Error',
@@ -1240,7 +1240,7 @@ function eliminarSolicitud(idSolicitud) {
 /*=============================================
 MOSTRAR MODAL CON DETALLES DE SOLICITUD - VERSIÓN CORREGIDA
 =============================================*/
-function mostrarModalDetalleSolicitud(solicitud) {
+function mostrarModalDetalleSolicitud(solicitud, idSolicitudParam) {
 
 // ✅ VERIFICAR QUE EXISTAN LOS ELEMENTOS DEL MODAL
     if($('#modalVerSolicitud').length === 0) {
@@ -1335,8 +1335,9 @@ swal({
         // ✅ CARGAR STOCK SUCURSALES
         cargarStockSucursalesEnModal(solicitud.productos_solicitados);
 
-        // ✅ CONFIGURAR BOTONES DE EXPORTACIÓN
-        configurarBotonesExportacion(solicitud);
+        // ✅ CONFIGURAR BOTONES DE EXPORTACIÓN (id desde parámetro o desde objeto)
+        var idParaExportar = idSolicitudParam || (solicitud && (solicitud.id || solicitud.ID));
+        configurarBotonesExportacion(idParaExportar);
 
         // ✅ MOSTRAR MODAL
         $('#modalVerSolicitud').modal('show');
@@ -1513,8 +1514,8 @@ return '--:--';
 /*=============================================
 CONFIGURAR BOTONES DE EXPORTACIÓN - FUNCIONAL
 =============================================*/
-function configurarBotonesExportacion(solicitud) {
-    var idSolicitud = solicitud ? (solicitud.id || solicitud.ID) : '';
+function configurarBotonesExportacion(idSolicitud) {
+    idSolicitud = idSolicitud || '';
     $('#btnExportarPDF').attr('idSolicitud', idSolicitud);
     $('#modalVerSolicitud').data('idSolicitud', idSolicitud);
 }
