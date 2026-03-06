@@ -506,13 +506,9 @@ if(!cantidadDescargar || cantidadDescargar <= 0) {
                     text: respuesta.message,
                     showConfirmButton: true,
                     confirmButtonText: "Cerrar"
-                }).then(function(result) {
-                    if(result.value) {
-                        $("#modalDescargaDirecta").modal("hide");
-                        // Recargar la página o actualizar la tabla
-                        location.reload();
-
-                    }
+                }).then(function() {
+                    $("#modalDescargaDirecta").modal("hide");
+                    location.reload();
                 });
             } else {
                 swal({
