@@ -116,7 +116,7 @@ function cargarSolicitudes() {
                 var mins = s.minutos_desde != null ? (s.minutos_desde < 60 ? s.minutos_desde + ' min' : Math.floor(s.minutos_desde/60) + ' h') : '';
                 html += '<div class="card-movil">';
                 html += '<div class="card-title">' + (s.numero_solicitud || 'SOL-'+s.id) + '</div>';
-                html += '<div class="card-meta">Solicitó: ' + (s.nombre_usuario_solicitante || 'N/A') + '<br>Para: ' + (s.nombre_sucursal_solicitante || '') + ' · ' + (s.total_productos||0) + ' productos · ' + mins + '</div>';
+                html += '<div class="card-meta card-meta-lineas">Solicitó: ' + (s.nombre_usuario_solicitante || 'N/A') + '<br>Para: <strong>' + (s.nombre_sucursal_solicitante || '') + '</strong><br><span class="text-muted">' + (s.total_productos||0) + ' productos · ' + mins + '</span></div>';
                 html += '<button class="btn btn-info btn-movil btn-movil-block btnVerDetalleSolicitudMovil" data-id="'+s.id+'" data-numero="'+(s.numero_solicitud||'')+'" data-sucursal="'+(s.nombre_sucursal_solicitante||'')+'"><i class="fa fa-eye"></i> Ver detalle (productos a despachar)</button>';
                 html += '<div class="btn-group btn-group-justified">';
                 html += '<div class="btn-group"><button class="btn btn-success btn-movil btnAprobarSolicitudMovil" data-id="'+s.id+'"><i class="fa fa-check"></i> Aprobar</button></div>';
@@ -304,7 +304,7 @@ function cargarDespachos() {
             pendientes.forEach(function(p) {
                 html += '<div class="card-movil">';
                 html += '<div class="card-title">' + (p.numero_despacho || '') + '</div>';
-                html += '<div class="card-meta">Despachó: ' + (p.nombre_usuario_creador || 'N/A') + '<br>De: ' + (p.sucursal_origen || '') + ' · ' + (p.total_productos||0) + ' productos · ' + (p.total_cantidad||0) + ' uds</div>';
+                html += '<div class="card-meta card-meta-lineas">Despachó: ' + (p.nombre_usuario_creador || 'N/A') + '<br>De: <strong>' + (p.sucursal_origen || '') + '</strong>' + (p.detalle_adicional ? '<br>Detalle adicional: ' + (p.detalle_adicional + '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : '') + '<br><span class="text-muted">' + (p.total_productos||0) + ' productos · ' + (p.total_cantidad||0) + ' uds</span></div>';
                 html += '<button class="btn btn-info btn-movil btn-movil-block btnVerDetalleDespachoMovil" data-numero="'+(p.numero_despacho||'')+'" data-sucursal="'+(p.sucursal_origen||'')+'" data-estado="pendiente"><i class="fa fa-eye"></i> Ver detalle del despacho</button>';
                 html += '<div class="btn-group btn-group-justified">';
                 html += '<div class="btn-group"><button class="btn btn-success btn-movil btnAceptarDespachoMovil" data-id="'+p.id+'"><i class="fa fa-check"></i> Aceptar</button></div>';
@@ -319,7 +319,7 @@ function cargarDespachos() {
             enTransito.forEach(function(p) {
                 html += '<div class="card-movil">';
                 html += '<div class="card-title">' + (p.numero_despacho || '') + '</div>';
-                html += '<div class="card-meta">Despachó: ' + (p.nombre_usuario_creador || 'N/A') + '<br>Origen: ' + (p.sucursal_origen || '') + ' · ' + (p.total_productos||0) + ' productos</div>';
+                html += '<div class="card-meta card-meta-lineas">Despachó: ' + (p.nombre_usuario_creador || 'N/A') + '<br>De: <strong>' + (p.sucursal_origen || '') + '</strong>' + (p.detalle_adicional ? '<br>Detalle adicional: ' + (p.detalle_adicional + '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : '') + '<br><span class="text-muted">' + (p.total_productos||0) + ' productos</span></div>';
                 html += '<button class="btn btn-info btn-movil btn-movil-block btnVerDetalleDespachoMovil" data-numero="'+(p.numero_despacho||'')+'" data-sucursal="'+(p.sucursal_origen||'')+'" data-estado="en_transito"><i class="fa fa-eye"></i> Ver detalle del despacho</button>';
                 html += '<a href="stock-transito" class="btn btn-default btn-movil btn-movil-block"><i class="fa fa-cubes"></i> Ver stock en tránsito</a>';
                 html += '</div>';

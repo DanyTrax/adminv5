@@ -229,6 +229,8 @@ if ($_SESSION["perfil"] != "Transportador") {
 }
 .card-movil .card-title { font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #333; }
 .card-movil .card-meta { font-size: 12px; color: #777; margin-bottom: 10px; }
+.card-movil .card-meta-lineas { font-size: 13px; line-height: 1.4; }
+.card-movil .card-meta-lineas .text-muted { font-size: 12px; }
 .btn-movil { min-height: 44px; padding: 10px 16px; font-size: 14px; }
 .btn-movil-block { width: 100%; margin-bottom: 8px; }
 
