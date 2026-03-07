@@ -176,7 +176,17 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" 
     
     echo '</ul>
         </li>';
-}            
+}
+    
+    // VISTA MÓVIL - Solo para Transportador
+    if ($_SESSION["perfil"] == "Transportador") {
+        echo '<li>
+                <a href="transportador-movil">
+                  <i class="fa fa-mobile"></i>
+                  <span>Vista Móvil</span>
+                </a>
+              </li>';
+    }
 
             if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Vendedor" || $_SESSION["perfil"] == "Contador") {
 

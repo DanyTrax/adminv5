@@ -209,6 +209,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "editar-despacho" => ["Administrador", "Vendedor", "Contador"],
         "eliminar-despacho" => ["Administrador", "Vendedor", "Contador"],
         "stock-transito" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"],
+        "transportador-movil" => ["Transportador"],
         "registro-descargas-funcional" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"],
         "personalizacion-colores-simplificado" => ["Administrador"],
         "personalizacion-cotizaciones" => ["Administrador"],
@@ -281,6 +282,9 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
   <?php endif; ?>
   <script src="<?php echo $url; ?>vistas/js/despachos.js"></script>
   <script src="<?php echo $url; ?>vistas/js/crear-despacho.js"></script>
+  <?php if(isset($_GET["ruta"]) && $_GET["ruta"] == "transportador-movil"): ?>
+  <script src="<?php echo $url; ?>vistas/js/transportador-movil.js"></script>
+  <?php endif; ?>
   <!-- <script src="<?php echo $url; ?>vistas/js/stock-transito.js"></script> --> <!-- Comentado: se usa stock-transito-unificado.js -->
 </html>
 </body>
