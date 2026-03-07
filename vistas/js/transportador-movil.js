@@ -44,6 +44,12 @@ $(document).ready(function() {
         abrirDetalleDespachoMovil(numero, sucursal, estado);
     });
 
+    // Delegación para cancelar despacho
+    $(document).on('click', '.btnCancelarDespachoMovil', function() {
+        var id = $(this).data('id');
+        cancelarDespachoMovil(id);
+    });
+
     // Delegación para aceptar despacho
     $(document).on('click', '.btnAceptarDespachoMovil', function() {
         var id = $(this).data('id');
@@ -300,7 +306,10 @@ function cargarDespachos() {
                 html += '<div class="card-title">' + (p.numero_despacho || '') + '</div>';
                 html += '<div class="card-meta">Despachó: ' + (p.nombre_usuario_creador || 'N/A') + '<br>De: ' + (p.sucursal_origen || '') + ' · ' + (p.total_productos||0) + ' productos · ' + (p.total_cantidad||0) + ' uds</div>';
                 html += '<button class="btn btn-info btn-movil btn-movil-block btnVerDetalleDespachoMovil" data-numero="'+(p.numero_despacho||'')+'" data-sucursal="'+(p.sucursal_origen||'')+'" data-estado="pendiente"><i class="fa fa-eye"></i> Ver detalle del despacho</button>';
-                html += '<button class="btn btn-success btn-movil btn-movil-block btnAceptarDespachoMovil" data-id="'+p.id+'"><i class="fa fa-check"></i> Aceptar despacho</button>';
+                html += '<div class="btn-group btn-group-justified">';
+                html += '<div class="btn-group"><button class="btn btn-success btn-movil btnAceptarDespachoMovil" data-id="'+p.id+'"><i class="fa fa-check"></i> Aceptar</button></div>';
+                html += '<div class="btn-group"><button class="btn btn-warning btn-movil btnCancelarDespachoMovil" data-id="'+p.id+'"><i class="fa fa-times"></i> Cancelar</button></div>';
+                html += '</div>';
                 html += '</div>';
             });
         }
@@ -343,25 +352,85 @@ function abrirDetalleDespachoMovil(numero, sucursal, estado) {
             var meta = 'De: ' + sucursal + (estado ? ' · Estado: ' + estado : '');
             if (r.despacho && r.despacho.nombre_usuario_creador) meta = 'Despachó: ' + r.despacho.nombre_usuario_creador + '<br>' + meta;
             $('#modalDespachoMeta').html(meta);
+
+            var detalleAdicional = (r.despacho && r.despacho.detalle_adicional) ? (r.despacho.detalle_adicional + '').trim() : '';
+            if (detalleAdicional) {
+                $('#modalDespachoDetalleAdicionalTexto').text(detalleAdicional);
+                $('#modalDespachoDetalleAdicional').show();
+            } else {
+                $('#modalDespachoDetalleAdicional').hide();
+            }
+
             var productos = r.productos;
             var html = '';
             if (productos.length === 0) {
-                html = '<tr><td colspan="3" class="text-center text-muted">Sin productos</td></tr>';
+                html = '<tr><td colspan="4" class="text-center text-muted">Sin productos</td></tr>';
             } else {
                 productos.forEach(function(p) {
                     var cod = p.codigo || p.codigo_producto || p.codigoProducto || '';
                     var desc = p.descripcion || p.descripcion_producto || '';
                     var cant = p.cantidad || p.cantidad_solicitada || 0;
-                    html += '<tr><td><strong>'+cod+'</strong></td><td>'+desc+'</td><td class="text-center">'+cant+'</td></tr>';
+                    var obs = p.observacion || '';
+                    html += '<tr><td><strong>'+cod+'</strong></td><td>'+desc+'</td><td class="text-center">'+cant+'</td><td><small class="text-muted">'+obs+'</small></td></tr>';
                 });
             }
             $('#modalDespachoProductosBody').html(html);
         } else {
-            $('#modalDespachoProductosBody').html('<tr><td colspan="3" class="text-center text-danger">' + (r.error || 'Error al cargar') + '</td></tr>');
+            $('#modalDespachoDetalleAdicional').hide();
+            $('#modalDespachoProductosBody').html('<tr><td colspan="4" class="text-center text-danger">' + (r.error || 'Error al cargar') + '</td></tr>');
         }
     }).fail(function() {
-        $('#modalDespachoProductosBody').html('<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>');
+        $('#modalDespachoDetalleAdicional').hide();
+        $('#modalDespachoProductosBody').html('<tr><td colspan="4" class="text-center text-danger">Error de conexión</td></tr>');
     });
+}
+
+function cancelarDespachoMovil(id) {
+    if (typeof swal !== 'undefined') {
+        swal({
+            title: '¿Cancelar despacho?',
+            text: 'Ingrese el motivo de la cancelación:',
+            type: 'warning',
+            input: 'textarea',
+            inputPlaceholder: 'Motivo de la cancelación...',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3c8dbc',
+            confirmButtonText: 'Sí, cancelar',
+            cancelButtonText: 'No cancelar',
+            inputValidator: function(value) { return value ? null : 'Debe ingresar un motivo de cancelación'; }
+        }).then(function(result) {
+            if (result.value) ejecutarCancelarDespachoMovil(id, result.value);
+        });
+    } else {
+        var motivo = prompt('Motivo de la cancelación:');
+        if (motivo && motivo.trim()) ejecutarCancelarDespachoMovil(id, motivo.trim());
+        else if (motivo !== null) alert('Debe ingresar un motivo.');
+    }
+}
+
+function ejecutarCancelarDespachoMovil(id, motivo) {
+    var fd = new FormData();
+    fd.append('cancelarDespacho', id);
+    fd.append('motivoCancelacion', motivo);
+    $.ajax({
+        url: 'ajax/despachos.ajax.php',
+        type: 'POST',
+        data: fd,
+        processData: false,
+        contentType: false,
+        dataType: 'json'
+    }).done(function(r) {
+        if (r && r.success) {
+            if (typeof swal !== 'undefined') swal('Cancelado', r.message, 'info');
+            else alert('Despacho cancelado.');
+            $('#contenidoDespachos').data('loaded', false);
+            cargarDespachos();
+            cargarResumen();
+        } else {
+            alert((r && (r.error || r.message)) || 'Error al cancelar');
+        }
+    }).fail(function() { alert('Error de conexión'); });
 }
 
 function ejecutarAceptarDespacho(id) {

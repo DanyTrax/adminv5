@@ -103,7 +103,7 @@ if ($_SESSION["perfil"] != "Transportador") {
 
 <!-- Modal Detalle Despacho - Productos del despacho -->
 <div class="modal fade" id="modalDetalleDespachoMovil" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -111,9 +111,13 @@ if ($_SESSION["perfil"] != "Transportador") {
             </div>
             <div class="modal-body">
                 <p id="modalDespachoMeta" class="text-muted" style="margin-bottom:15px;"></p>
-                <div id="modalDespachoProductos">
+                <div id="modalDespachoDetalleAdicional" style="display:none; margin-bottom:15px;">
+                    <strong><i class="fa fa-comment"></i> Detalle Adicional:</strong>
+                    <p id="modalDespachoDetalleAdicionalTexto" class="text-muted" style="margin:5px 0 0 0; padding:8px; background:#f8f9fa; border-radius:4px;"></p>
+                </div>
+                <div id="modalDespachoProductos" class="table-responsive">
                     <table class="table table-bordered table-condensed">
-                        <thead><tr><th>Código</th><th>Descripción</th><th class="text-center">Cant.</th></tr></thead>
+                        <thead><tr><th>Código</th><th>Descripción</th><th class="text-center">Cant.</th><th>Observación</th></tr></thead>
                         <tbody id="modalDespachoProductosBody"></tbody>
                     </table>
                 </div>
