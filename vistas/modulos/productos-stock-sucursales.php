@@ -49,10 +49,6 @@ $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
             <i class="fa fa-refresh"></i> Actualizar
           </button>
         </div>
-        <div class="alert alert-info">
-          <i class="fa fa-info-circle"></i>
-          <strong>Información:</strong> Misma consulta que en Detalles de la Solicitud (Stock Sucursales): se listan <strong>todos los productos de esta sucursal</strong>, una columna por cada sucursal activa con las cantidades y al final el <strong>Total</strong> por producto. Solo consulta.
-        </div>
         <div class="table-responsive">
           <table class="table table-bordered table-striped" id="tablaStockPorSucursales" width="100%">
             <thead>
