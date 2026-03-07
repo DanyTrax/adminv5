@@ -35,8 +35,12 @@ $categorias = ControladorCategorias::ctrMostrarCategorias($item, $valor);
             <label for="filtroCategoriaStockSuc" class="control-label" style="margin-right: 8px;"><i class="fa fa-th"></i> Categoría</label>
             <select class="form-control" id="filtroCategoriaStockSuc" name="filtroCategoriaStockSuc" style="max-width: 280px;">
               <option value="">Todas las categorías</option>
-              <?php foreach ($categorias as $cat): ?>
-                <option value="<?php echo (int)$cat['id']; ?>"><?php echo htmlspecialchars($cat['categoria']); ?></option>
+              <?php
+              $filtroCategoriaActual = isset($_GET["filtroCategoria"]) ? (int)$_GET["filtroCategoria"] : null;
+              foreach ($categorias as $cat):
+                $selected = ($filtroCategoriaActual !== null && $filtroCategoriaActual == (int)$cat['id']) ? ' selected' : '';
+              ?>
+                <option value="<?php echo (int)$cat['id']; ?>"<?php echo $selected; ?>><?php echo htmlspecialchars($cat['categoria']); ?></option>
               <?php endforeach; ?>
             </select>
           </div>

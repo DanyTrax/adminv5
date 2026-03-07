@@ -15,13 +15,22 @@ $(function () {
     cargarStockPorSucursales();
   });
   $('#filtroCategoriaStockSuc').on('change', function () {
-    cargarStockPorSucursales();
+    var categoriaSeleccionada = $(this).val();
+    var url = 'index.php?ruta=productos-stock-sucursales';
+    if (categoriaSeleccionada) {
+      url += '&filtroCategoria=' + categoriaSeleccionada;
+    }
+    window.location = url;
   });
 
   function cargarStockPorSucursales() {
     var $btn = $('#btnActualizarStockSucursales');
     var $estado = $('#estadoCargaStockSuc');
     var idCategoria = $('#filtroCategoriaStockSuc').val() || '';
+    var urlParams = new URLSearchParams(window.location.search);
+    if (!idCategoria && urlParams.get('filtroCategoria')) {
+      idCategoria = urlParams.get('filtroCategoria');
+    }
 
     if ($btn.length) $btn.prop('disabled', true);
     $estado.text('Cargando...').removeClass('text-danger text-success').addClass('text-muted');
