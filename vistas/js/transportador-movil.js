@@ -82,7 +82,9 @@ function cargarResumen() {
             html += '<h5 style="margin-bottom:10px;"><i class="fa fa-download"></i> Últimas descargas (hoy)</h5>';
             d.ultimas_descargas.forEach(function(u) {
                 html += '<div class="card-movil">';
-                html += '<strong>' + u.codigo_producto + '</strong> · ' + u.cantidad_descargada + ' uds · ' + (u.sucursal_nombre || '') + ' · ' + (u.hora || '') + '<br>';
+                html += '<strong>' + u.codigo_producto + '</strong>';
+                if (u.descripcion_producto) html += ' · ' + (u.descripcion_producto + '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                html += '<br><span class="text-muted">' + u.cantidad_descargada + ' uds · ' + (u.sucursal_nombre || '') + ' · ' + (u.hora || '') + '</span><br>';
                 html += '<small class="text-muted">Descargó: ' + (u.usuario_nombre || '') + '</small>';
                 if (u.detalle_adicional) {
                     html += '<div class="card-meta-lineas" style="margin-top:8px; padding:8px; background:#f8f9fa; border-radius:4px;"><strong>Detalle adicional:</strong> ' + (u.detalle_adicional + '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') + '</div>';
@@ -498,7 +500,9 @@ function cargarDescargas() {
         } else {
             list.forEach(function(u) {
                 html += '<div class="card-movil">';
-                html += '<strong>' + (u.codigo_producto||'') + '</strong> · ' + (u.cantidad_descargada||0) + ' uds<br>';
+                html += '<strong>' + (u.codigo_producto||'') + '</strong>';
+                if (u.descripcion_producto) html += ' · ' + (u.descripcion_producto + '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                html += '<br><span class="text-muted">' + (u.cantidad_descargada||0) + ' uds</span><br>';
                 html += '<small class="text-muted">Descargó: ' + (u.usuario_nombre||'') + ' · ' + (u.sucursal_nombre||'') + ' · ' + (u.fecha_hora||'') + '</small>';
                 if (u.detalle_adicional) {
                     html += '<div class="card-meta-lineas" style="margin-top:8px; padding:8px; background:#f8f9fa; border-radius:4px;"><strong>Detalle adicional:</strong> ' + (u.detalle_adicional + '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') + '</div>';
