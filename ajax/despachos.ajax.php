@@ -627,6 +627,7 @@ if(isset($_POST["accion"]) && $_POST["accion"] == "obtener_productos_despacho"){
             "despacho" => [
                 "numero_despacho" => $despacho["numero_despacho"],
                 "sucursal_origen" => $despacho["sucursal_origen"],
+                "nombre_usuario_creador" => $despacho["nombre_usuario_creador"] ?? "",
                 "fecha_creacion" => $despacho["fecha_creacion"],
                 "estado" => $despacho["estado"]
             ]

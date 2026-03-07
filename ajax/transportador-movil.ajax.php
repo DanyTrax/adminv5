@@ -107,6 +107,7 @@ try {
                     "id" => $d["id"],
                     "numero_despacho" => $d["numero_despacho"],
                     "sucursal_origen" => $d["sucursal_origen"] ?? "",
+                    "nombre_usuario_creador" => $d["nombre_usuario_creador"] ?? "",
                     "total_productos" => (int) ($d["total_productos"] ?? 0),
                     "total_cantidad" => (int) ($d["total_cantidad"] ?? 0),
                     "estado" => $d["estado"],

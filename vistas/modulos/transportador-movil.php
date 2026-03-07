@@ -125,9 +125,9 @@ if ($_SESSION["perfil"] != "Transportador") {
     </div>
 </div>
 
-<!-- Modal Detalle Solicitud - Productos a despachar -->
+<!-- Modal Detalle Solicitud - Productos y Stock Sucursales -->
 <div class="modal fade" id="modalDetalleSolicitudMovil" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
@@ -135,11 +135,34 @@ if ($_SESSION["perfil"] != "Transportador") {
             </div>
             <div class="modal-body">
                 <p id="modalSolicitudMeta" class="text-muted" style="margin-bottom:15px;"></p>
-                <div id="modalSolicitudProductos">
-                    <table class="table table-bordered table-condensed">
-                        <thead><tr><th>Código</th><th>Descripción</th><th class="text-center">Cant.</th></tr></thead>
-                        <tbody id="modalSolicitudProductosBody"></tbody>
-                    </table>
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                        <a href="#tabProductosSolicitudMovil" role="tab" data-toggle="tab"><i class="fa fa-cubes"></i> Productos</a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#tabStockSucursalesMovil" role="tab" data-toggle="tab"><i class="fa fa-warehouse"></i> Stock Sucursales</a>
+                    </li>
+                </ul>
+                <div class="tab-content" style="padding-top:15px;">
+                    <div role="tabpanel" class="tab-pane active" id="tabProductosSolicitudMovil">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-condensed">
+                                <thead><tr><th>Código</th><th>Descripción</th><th class="text-center">Cant.</th></tr></thead>
+                                <tbody id="modalSolicitudProductosBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane" id="tabStockSucursalesMovil">
+                        <p class="text-info"><i class="fa fa-info-circle"></i> Stock disponible de los productos solicitados en cada sucursal (para saber si hay y de dónde sacarla).</p>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped table-condensed" id="tablaStockSucursalesMovil">
+                                <thead><tr id="theadStockSucursalesMovil"><th>#</th><th>Código</th><th>Descripción</th><th>Cant. Sol.</th><th id="sucursalesHeaderMovil">Sucursales</th></tr></thead>
+                                <tbody id="tbodyStockSucursalesMovil">
+                                    <tr><td colspan="5" class="text-center text-muted">Seleccione la pestaña después de cargar los productos</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -157,7 +180,19 @@ if ($_SESSION["perfil"] != "Transportador") {
     border-bottom: 2px solid #ddd;
     margin-bottom: 15px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+    padding: 0;
+    list-style: none;
+    margin-left: 0;
 }
+.transportador-movil-tabs li {
+    border-right: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    margin: 0;
+}
+.transportador-movil-tabs li:nth-child(2n) { border-right: none; }
 .transportador-movil-tabs li a {
     position: relative;
     padding: 10px 5px !important;
@@ -170,8 +205,14 @@ if ($_SESSION["perfil"] != "Transportador") {
     justify-content: center;
 }
 .transportador-movil-tabs li a i { font-size: 18px; margin-bottom: 4px; }
-.transportador-movil-tabs li.active a { color: #3c8dbc; font-weight: bold; border-bottom: 2px solid #3c8dbc; }
+.transportador-movil-tabs li.active a { color: #3c8dbc; font-weight: bold; background: #f8f9fa; }
+.transportador-movil-tabs li.active { border-bottom: 2px solid #3c8dbc; }
 .transportador-movil-tabs .badge { position: absolute; top: 2px; right: 2px; font-size: 10px; min-width: 18px; }
+@media (min-width: 768px) {
+    .transportador-movil-tabs { grid-template-columns: repeat(5, 1fr); }
+    .transportador-movil-tabs li:nth-child(2n) { border-right: 1px solid #eee; }
+    .transportador-movil-tabs li:last-child { border-right: none; }
+}
 
 /* Tarjetas móviles */
 .card-movil {

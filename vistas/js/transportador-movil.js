@@ -110,7 +110,7 @@ function cargarSolicitudes() {
                 var mins = s.minutos_desde != null ? (s.minutos_desde < 60 ? s.minutos_desde + ' min' : Math.floor(s.minutos_desde/60) + ' h') : '';
                 html += '<div class="card-movil">';
                 html += '<div class="card-title">' + (s.numero_solicitud || 'SOL-'+s.id) + '</div>';
-                html += '<div class="card-meta">Para: ' + (s.nombre_sucursal_solicitante || '') + ' · ' + (s.total_productos||0) + ' productos · ' + mins + '</div>';
+                html += '<div class="card-meta">Solicitó: ' + (s.nombre_usuario_solicitante || 'N/A') + '<br>Para: ' + (s.nombre_sucursal_solicitante || '') + ' · ' + (s.total_productos||0) + ' productos · ' + mins + '</div>';
                 html += '<button class="btn btn-info btn-movil btn-movil-block btnVerDetalleSolicitudMovil" data-id="'+s.id+'" data-numero="'+(s.numero_solicitud||'')+'" data-sucursal="'+(s.nombre_sucursal_solicitante||'')+'"><i class="fa fa-eye"></i> Ver detalle (productos a despachar)</button>';
                 html += '<div class="btn-group btn-group-justified">';
                 html += '<div class="btn-group"><button class="btn btn-success btn-movil btnAprobarSolicitudMovil" data-id="'+s.id+'"><i class="fa fa-check"></i> Aprobar</button></div>';
@@ -128,6 +128,7 @@ function abrirDetalleSolicitudMovil(id, numero, sucursal) {
     $('#modalSolicitudTitulo').text(numero || 'Solicitud');
     $('#modalSolicitudMeta').text('Para: ' + sucursal);
     $('#modalSolicitudProductosBody').html('<tr><td colspan="3" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando...</td></tr>');
+    $('#tbodyStockSucursalesMovil').html('<tr><td colspan="5" class="text-center text-muted"><i class="fa fa-spinner fa-spin"></i> Cargando...</td></tr>');
     $('#modalDetalleSolicitudMovil').modal('show');
 
     $.ajax({
@@ -137,6 +138,9 @@ function abrirDetalleSolicitudMovil(id, numero, sucursal) {
         dataType: 'json'
     }).done(function(r) {
         if (r.success && r.data) {
+            var meta = 'Para: ' + sucursal;
+            if (r.data.nombre_usuario_solicitante) meta = 'Solicitó: ' + r.data.nombre_usuario_solicitante + '<br>' + meta;
+            $('#modalSolicitudMeta').html(meta);
             var productos = [];
             if (r.data.productos_solicitados) {
                 try {
@@ -156,12 +160,90 @@ function abrirDetalleSolicitudMovil(id, numero, sucursal) {
                 });
             }
             $('#modalSolicitudProductosBody').html(html);
+            cargarStockSucursalesMovil(productos);
         } else {
             $('#modalSolicitudProductosBody').html('<tr><td colspan="3" class="text-center text-danger">Error al cargar</td></tr>');
+            $('#tbodyStockSucursalesMovil').html('<tr><td colspan="5" class="text-center text-danger">Error al cargar</td></tr>');
         }
     }).fail(function() {
         $('#modalSolicitudProductosBody').html('<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>');
+        $('#tbodyStockSucursalesMovil').html('<tr><td colspan="5" class="text-center text-danger">Error de conexión</td></tr>');
     });
+}
+
+function cargarStockSucursalesMovil(productos) {
+    if (!productos || productos.length === 0) {
+        $('#tbodyStockSucursalesMovil').html('<tr><td colspan="5" class="text-center text-muted">No hay productos para consultar</td></tr>');
+        return;
+    }
+    var productosParaApi = productos.map(function(p) {
+        return { codigo: p.codigo || p.codigo_producto || p.codigoProducto || '', descripcion: p.descripcion || p.descripcion_producto || '', cantidad: parseInt(p.cantidad || p.cantidad_solicitada || 0, 10) };
+    }).filter(function(p) { return p.codigo; });
+
+    if (productosParaApi.length === 0) {
+        $('#tbodyStockSucursalesMovil').html('<tr><td colspan="5" class="text-center text-muted">No hay productos válidos</td></tr>');
+        return;
+    }
+
+    $.ajax({
+        url: 'ajax/stock-disponible-sucursales.ajax.php',
+        type: 'POST',
+        data: { accion: 'consultar_stock_sucursales', productos: JSON.stringify(productosParaApi) },
+        dataType: 'json'
+    }).done(function(response) {
+        if (response.success && response.data) {
+            mostrarStockSucursalesMovil(response.data);
+        } else {
+            $('#tbodyStockSucursalesMovil').html('<tr><td colspan="5" class="text-center text-danger">' + (response.message || 'Error') + '</td></tr>');
+        }
+    }).fail(function() {
+        $('#tbodyStockSucursalesMovil').html('<tr><td colspan="5" class="text-center text-danger">Error de conexión</td></tr>');
+    });
+}
+
+function mostrarStockSucursalesMovil(stockData) {
+    if (!stockData || !Array.isArray(stockData) || stockData.length === 0) {
+        $('#tbodyStockSucursalesMovil').html('<tr><td colspan="5" class="text-center text-muted">No hay datos de stock</td></tr>');
+        return;
+    }
+    var sucursalesUnicas = [];
+    var sucursalesMap = {};
+    stockData.forEach(function(producto) {
+        if (producto.sucursales && Array.isArray(producto.sucursales)) {
+            producto.sucursales.forEach(function(sucursal) {
+                if (!sucursalesMap[sucursal.id]) {
+                    sucursalesMap[sucursal.id] = sucursal;
+                    sucursalesUnicas.push(sucursal);
+                }
+            });
+        }
+    });
+    sucursalesUnicas.sort(function(a, b) { return (a.nombre || '').localeCompare(b.nombre || ''); });
+
+    var headerHtml = '<th style="width:30px">#</th><th>Código</th><th>Descripción</th><th class="text-center">Cant.</th>';
+    sucursalesUnicas.forEach(function(sucursal) {
+        headerHtml += '<th class="text-center" style="min-width:60px">' + (sucursal.nombre || '') + '</th>';
+    });
+    $('#theadStockSucursalesMovil').html(headerHtml);
+
+    var tbodyHtml = '';
+    stockData.forEach(function(producto, index) {
+        tbodyHtml += '<tr><td class="text-center">' + (index + 1) + '</td>';
+        tbodyHtml += '<td><code>' + (producto.codigo || '') + '</code></td>';
+        tbodyHtml += '<td>' + (producto.descripcion || '') + '</td>';
+        tbodyHtml += '<td class="text-center"><span class="label label-primary">' + (producto.cantidad_solicitada || 0) + '</span></td>';
+        sucursalesUnicas.forEach(function(sucursal) {
+            var stockSucursal = 0;
+            if (producto.sucursales && Array.isArray(producto.sucursales)) {
+                var s = producto.sucursales.find(function(x) { return x.id === sucursal.id; });
+                if (s) stockSucursal = s.stock_disponible || 0;
+            }
+            var cls = stockSucursal >= (producto.cantidad_solicitada || 0) ? 'success' : (stockSucursal > 0 ? 'warning' : 'danger');
+            tbodyHtml += '<td class="text-center text-' + cls + '"><strong>' + stockSucursal + '</strong></td>';
+        });
+        tbodyHtml += '</tr>';
+    });
+    $('#tbodyStockSucursalesMovil').html(tbodyHtml);
 }
 
 function ejecutarAprobarSolicitud(id) {
@@ -216,7 +298,7 @@ function cargarDespachos() {
             pendientes.forEach(function(p) {
                 html += '<div class="card-movil">';
                 html += '<div class="card-title">' + (p.numero_despacho || '') + '</div>';
-                html += '<div class="card-meta">De: ' + (p.sucursal_origen || '') + ' · ' + (p.total_productos||0) + ' productos · ' + (p.total_cantidad||0) + ' uds</div>';
+                html += '<div class="card-meta">Despachó: ' + (p.nombre_usuario_creador || 'N/A') + '<br>De: ' + (p.sucursal_origen || '') + ' · ' + (p.total_productos||0) + ' productos · ' + (p.total_cantidad||0) + ' uds</div>';
                 html += '<button class="btn btn-info btn-movil btn-movil-block btnVerDetalleDespachoMovil" data-numero="'+(p.numero_despacho||'')+'" data-sucursal="'+(p.sucursal_origen||'')+'" data-estado="pendiente"><i class="fa fa-eye"></i> Ver detalle del despacho</button>';
                 html += '<button class="btn btn-success btn-movil btn-movil-block btnAceptarDespachoMovil" data-id="'+p.id+'"><i class="fa fa-check"></i> Aceptar despacho</button>';
                 html += '</div>';
@@ -228,7 +310,7 @@ function cargarDespachos() {
             enTransito.forEach(function(p) {
                 html += '<div class="card-movil">';
                 html += '<div class="card-title">' + (p.numero_despacho || '') + '</div>';
-                html += '<div class="card-meta">Origen: ' + (p.sucursal_origen || '') + ' · ' + (p.total_productos||0) + ' productos</div>';
+                html += '<div class="card-meta">Despachó: ' + (p.nombre_usuario_creador || 'N/A') + '<br>Origen: ' + (p.sucursal_origen || '') + ' · ' + (p.total_productos||0) + ' productos</div>';
                 html += '<button class="btn btn-info btn-movil btn-movil-block btnVerDetalleDespachoMovil" data-numero="'+(p.numero_despacho||'')+'" data-sucursal="'+(p.sucursal_origen||'')+'" data-estado="en_transito"><i class="fa fa-eye"></i> Ver detalle del despacho</button>';
                 html += '<a href="stock-transito" class="btn btn-default btn-movil btn-movil-block"><i class="fa fa-cubes"></i> Ver stock en tránsito</a>';
                 html += '</div>';
@@ -258,6 +340,9 @@ function abrirDetalleDespachoMovil(numero, sucursal, estado) {
         dataType: 'json'
     }).done(function(r) {
         if (r.success && r.productos) {
+            var meta = 'De: ' + sucursal + (estado ? ' · Estado: ' + estado : '');
+            if (r.despacho && r.despacho.nombre_usuario_creador) meta = 'Despachó: ' + r.despacho.nombre_usuario_creador + '<br>' + meta;
+            $('#modalDespachoMeta').html(meta);
             var productos = r.productos;
             var html = '';
             if (productos.length === 0) {
