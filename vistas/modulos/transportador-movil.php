@@ -101,6 +101,54 @@ if ($_SESSION["perfil"] != "Transportador") {
     </section>
 </div>
 
+<!-- Modal Detalle Despacho - Productos del despacho -->
+<div class="modal fade" id="modalDetalleDespachoMovil" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><i class="fa fa-truck"></i> <span id="modalDespachoTitulo">Detalle del Despacho</span></h4>
+            </div>
+            <div class="modal-body">
+                <p id="modalDespachoMeta" class="text-muted" style="margin-bottom:15px;"></p>
+                <div id="modalDespachoProductos">
+                    <table class="table table-bordered table-condensed">
+                        <thead><tr><th>Código</th><th>Descripción</th><th class="text-center">Cant.</th></tr></thead>
+                        <tbody id="modalDespachoProductosBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalle Solicitud - Productos a despachar -->
+<div class="modal fade" id="modalDetalleSolicitudMovil" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><i class="fa fa-list"></i> <span id="modalSolicitudTitulo">Detalle de Solicitud</span></h4>
+            </div>
+            <div class="modal-body">
+                <p id="modalSolicitudMeta" class="text-muted" style="margin-bottom:15px;"></p>
+                <div id="modalSolicitudProductos">
+                    <table class="table table-bordered table-condensed">
+                        <thead><tr><th>Código</th><th>Descripción</th><th class="text-center">Cant.</th></tr></thead>
+                        <tbody id="modalSolicitudProductosBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 /* Transportador móvil - responsive */
 .transportador-movil-wrapper { max-width: 100%; }

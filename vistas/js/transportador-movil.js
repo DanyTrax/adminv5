@@ -16,6 +16,14 @@ $(document).ready(function() {
         if (target === '#tabDescargas') cargarDescargas();
     });
 
+    // Delegación para ver detalle de solicitud
+    $(document).on('click', '.btnVerDetalleSolicitudMovil', function() {
+        var id = $(this).data('id');
+        var numero = $(this).data('numero') || 'SOL-'+id;
+        var sucursal = $(this).data('sucursal') || '';
+        abrirDetalleSolicitudMovil(id, numero, sucursal);
+    });
+
     // Delegación para aprobar/cancelar solicitud
     $(document).on('click', '.btnAprobarSolicitudMovil', function() {
         var id = $(this).data('id');
@@ -26,6 +34,14 @@ $(document).ready(function() {
         var motivo = prompt('Motivo de cancelación (mínimo 5 caracteres):');
         if (motivo && motivo.trim().length >= 5) ejecutarCancelarSolicitud(id, motivo.trim());
         else if (motivo !== null) alert('El motivo debe tener al menos 5 caracteres.');
+    });
+
+    // Delegación para ver detalle de despacho
+    $(document).on('click', '.btnVerDetalleDespachoMovil', function() {
+        var numero = $(this).data('numero');
+        var sucursal = $(this).data('sucursal') || '';
+        var estado = $(this).data('estado') || '';
+        abrirDetalleDespachoMovil(numero, sucursal, estado);
     });
 
     // Delegación para aceptar despacho
@@ -95,6 +111,7 @@ function cargarSolicitudes() {
                 html += '<div class="card-movil">';
                 html += '<div class="card-title">' + (s.numero_solicitud || 'SOL-'+s.id) + '</div>';
                 html += '<div class="card-meta">Para: ' + (s.nombre_sucursal_solicitante || '') + ' · ' + (s.total_productos||0) + ' productos · ' + mins + '</div>';
+                html += '<button class="btn btn-info btn-movil btn-movil-block btnVerDetalleSolicitudMovil" data-id="'+s.id+'" data-numero="'+(s.numero_solicitud||'')+'" data-sucursal="'+(s.nombre_sucursal_solicitante||'')+'"><i class="fa fa-eye"></i> Ver detalle (productos a despachar)</button>';
                 html += '<div class="btn-group btn-group-justified">';
                 html += '<div class="btn-group"><button class="btn btn-success btn-movil btnAprobarSolicitudMovil" data-id="'+s.id+'"><i class="fa fa-check"></i> Aprobar</button></div>';
                 html += '<div class="btn-group"><button class="btn btn-warning btn-movil btnCancelarSolicitudMovil" data-id="'+s.id+'"><i class="fa fa-times"></i> Cancelar</button></div>';
@@ -104,6 +121,46 @@ function cargarSolicitudes() {
         $('#contenidoSolicitudes').html(html).data('loaded', true);
     }).fail(function() {
         $('#contenidoSolicitudes').html('<div class="alert alert-danger">Error de conexión.</div>');
+    });
+}
+
+function abrirDetalleSolicitudMovil(id, numero, sucursal) {
+    $('#modalSolicitudTitulo').text(numero || 'Solicitud');
+    $('#modalSolicitudMeta').text('Para: ' + sucursal);
+    $('#modalSolicitudProductosBody').html('<tr><td colspan="3" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando...</td></tr>');
+    $('#modalDetalleSolicitudMovil').modal('show');
+
+    $.ajax({
+        url: 'ajax/solicitudes-stock.ajax.php',
+        type: 'POST',
+        data: { accion: 'ver_detalle', id_solicitud: id },
+        dataType: 'json'
+    }).done(function(r) {
+        if (r.success && r.data) {
+            var productos = [];
+            if (r.data.productos_solicitados) {
+                try {
+                    productos = typeof r.data.productos_solicitados === 'string' 
+                        ? JSON.parse(r.data.productos_solicitados) : r.data.productos_solicitados;
+                } catch(e) { productos = []; }
+            }
+            var html = '';
+            if (productos.length === 0) {
+                html = '<tr><td colspan="3" class="text-center text-muted">Sin productos</td></tr>';
+            } else {
+                productos.forEach(function(p) {
+                    var cod = p.codigo || p.codigo_producto || p.codigoProducto || '';
+                    var desc = p.descripcion || p.descripcion_producto || '';
+                    var cant = p.cantidad || p.cantidad_solicitada || 0;
+                    html += '<tr><td><strong>'+cod+'</strong></td><td>'+desc+'</td><td class="text-center">'+cant+'</td></tr>';
+                });
+            }
+            $('#modalSolicitudProductosBody').html(html);
+        } else {
+            $('#modalSolicitudProductosBody').html('<tr><td colspan="3" class="text-center text-danger">Error al cargar</td></tr>');
+        }
+    }).fail(function() {
+        $('#modalSolicitudProductosBody').html('<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>');
     });
 }
 
@@ -160,6 +217,7 @@ function cargarDespachos() {
                 html += '<div class="card-movil">';
                 html += '<div class="card-title">' + (p.numero_despacho || '') + '</div>';
                 html += '<div class="card-meta">De: ' + (p.sucursal_origen || '') + ' · ' + (p.total_productos||0) + ' productos · ' + (p.total_cantidad||0) + ' uds</div>';
+                html += '<button class="btn btn-info btn-movil btn-movil-block btnVerDetalleDespachoMovil" data-numero="'+(p.numero_despacho||'')+'" data-sucursal="'+(p.sucursal_origen||'')+'" data-estado="pendiente"><i class="fa fa-eye"></i> Ver detalle del despacho</button>';
                 html += '<button class="btn btn-success btn-movil btn-movil-block btnAceptarDespachoMovil" data-id="'+p.id+'"><i class="fa fa-check"></i> Aceptar despacho</button>';
                 html += '</div>';
             });
@@ -171,7 +229,8 @@ function cargarDespachos() {
                 html += '<div class="card-movil">';
                 html += '<div class="card-title">' + (p.numero_despacho || '') + '</div>';
                 html += '<div class="card-meta">Origen: ' + (p.sucursal_origen || '') + ' · ' + (p.total_productos||0) + ' productos</div>';
-                html += '<a href="stock-transito" class="btn btn-info btn-movil btn-movil-block"><i class="fa fa-eye"></i> Ver detalle</a>';
+                html += '<button class="btn btn-info btn-movil btn-movil-block btnVerDetalleDespachoMovil" data-numero="'+(p.numero_despacho||'')+'" data-sucursal="'+(p.sucursal_origen||'')+'" data-estado="en_transito"><i class="fa fa-eye"></i> Ver detalle del despacho</button>';
+                html += '<a href="stock-transito" class="btn btn-default btn-movil btn-movil-block"><i class="fa fa-cubes"></i> Ver stock en tránsito</a>';
                 html += '</div>';
             });
         }
@@ -182,6 +241,41 @@ function cargarDespachos() {
         $('#contenidoDespachos').html(html).data('loaded', true);
     }).fail(function() {
         $('#contenidoDespachos').html('<div class="alert alert-danger">Error de conexión.</div>');
+    });
+}
+
+function abrirDetalleDespachoMovil(numero, sucursal, estado) {
+    if (!numero) { alert('Número de despacho no disponible'); return; }
+    $('#modalDespachoTitulo').text(numero);
+    $('#modalDespachoMeta').text('De: ' + sucursal + (estado ? ' · Estado: ' + estado : ''));
+    $('#modalDespachoProductosBody').html('<tr><td colspan="3" class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando...</td></tr>');
+    $('#modalDetalleDespachoMovil').modal('show');
+
+    $.ajax({
+        url: 'ajax/despachos.ajax.php',
+        type: 'POST',
+        data: { accion: 'obtener_productos_despacho', numero_despacho: numero },
+        dataType: 'json'
+    }).done(function(r) {
+        if (r.success && r.productos) {
+            var productos = r.productos;
+            var html = '';
+            if (productos.length === 0) {
+                html = '<tr><td colspan="3" class="text-center text-muted">Sin productos</td></tr>';
+            } else {
+                productos.forEach(function(p) {
+                    var cod = p.codigo || p.codigo_producto || p.codigoProducto || '';
+                    var desc = p.descripcion || p.descripcion_producto || '';
+                    var cant = p.cantidad || p.cantidad_solicitada || 0;
+                    html += '<tr><td><strong>'+cod+'</strong></td><td>'+desc+'</td><td class="text-center">'+cant+'</td></tr>';
+                });
+            }
+            $('#modalDespachoProductosBody').html(html);
+        } else {
+            $('#modalDespachoProductosBody').html('<tr><td colspan="3" class="text-center text-danger">' + (r.error || 'Error al cargar') + '</td></tr>');
+        }
+    }).fail(function() {
+        $('#modalDespachoProductosBody').html('<tr><td colspan="3" class="text-center text-danger">Error de conexión</td></tr>');
     });
 }
 
