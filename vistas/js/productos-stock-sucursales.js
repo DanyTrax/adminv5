@@ -30,6 +30,7 @@ $(function () {
     $.ajax({
       url: urlAjax,
       method: 'POST',
+      cache: false,
       data: {
         accion: 'obtener_stock_todas_sucursales',
         id_categoria: idCategoria
@@ -93,7 +94,8 @@ $(function () {
     var sucursales = datos.sucursales;
     var productos = datos.productos;
 
-    var headerHtml = '<th style="width: 10px;">#</th><th>Código</th><th>Descripción</th><th>Categoría</th>';
+    // Columna oculta id_categoria para ordenar según el orden del selector de categorías
+    var headerHtml = '<th style="width: 1px; padding: 0; font-size: 0;"></th><th style="width: 10px;">#</th><th>Código</th><th>Descripción</th><th>Categoría</th>';
     sucursales.forEach(function (s) {
       headerHtml += '<th class="text-center" style="min-width: 80px;">' + escapeHtml(s.nombre) + '</th>';
     });
@@ -104,11 +106,12 @@ $(function () {
     $tbody.empty();
 
     if (productos.length === 0) {
-      var cols = 4 + sucursales.length + 1;
+      var cols = 5 + sucursales.length + 1;
       $tbody.append('<tr><td colspan="' + cols + '" class="text-center text-muted">No hay productos para mostrar.</td></tr>');
     } else {
       productos.forEach(function (p, index) {
         var fila = '<tr>';
+        fila += '<td style="padding: 0; width: 1px; font-size: 0; line-height: 0; overflow: hidden;">' + (p.id_categoria || 0) + '</td>';
         fila += '<td class="text-center"><strong>' + (index + 1) + '</strong></td>';
         fila += '<td><code>' + escapeHtml(p.codigo) + '</code></td>';
         fila += '<td>' + escapeHtml(p.descripcion) + '</td>';
@@ -143,9 +146,10 @@ $(function () {
         paginate: { first: 'Primera', last: 'Última', next: 'Siguiente', previous: 'Anterior' }
       },
       pageLength: 25,
-      order: [[3, 'asc'], [1, 'asc']],
+      order: [[0, 'asc'], [2, 'asc']],
       columnDefs: [
-        { orderable: true, targets: '_all' }
+        { orderable: true, targets: 0 },
+        { orderable: false, targets: 1 }
       ]
     });
   }
