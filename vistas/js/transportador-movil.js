@@ -84,6 +84,9 @@ function cargarResumen() {
                 html += '<div class="card-movil">';
                 html += '<strong>' + u.codigo_producto + '</strong> · ' + u.cantidad_descargada + ' uds · ' + (u.sucursal_nombre || '') + ' · ' + (u.hora || '') + '<br>';
                 html += '<small class="text-muted">Descargó: ' + (u.usuario_nombre || '') + '</small>';
+                if (u.detalle_adicional) {
+                    html += '<div class="card-meta-lineas" style="margin-top:8px; padding:8px; background:#f8f9fa; border-radius:4px;"><strong>Detalle adicional:</strong> ' + (u.detalle_adicional + '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') + '</div>';
+                }
                 html += '</div>';
             });
         } else {
@@ -497,6 +500,9 @@ function cargarDescargas() {
                 html += '<div class="card-movil">';
                 html += '<strong>' + (u.codigo_producto||'') + '</strong> · ' + (u.cantidad_descargada||0) + ' uds<br>';
                 html += '<small class="text-muted">Descargó: ' + (u.usuario_nombre||'') + ' · ' + (u.sucursal_nombre||'') + ' · ' + (u.fecha_hora||'') + '</small>';
+                if (u.detalle_adicional) {
+                    html += '<div class="card-meta-lineas" style="margin-top:8px; padding:8px; background:#f8f9fa; border-radius:4px;"><strong>Detalle adicional:</strong> ' + (u.detalle_adicional + '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') + '</div>';
+                }
                 html += '</div>';
             });
         }

@@ -55,13 +55,15 @@ try {
                 $totalProductosCamion += count($productos);
             }
 
-            // Últimas descargas (hoy) del transportador
+            // Últimas descargas (hoy) del transportador (con detalle adicional del despacho)
             $stmt = $conexionCentral->prepare("
-                SELECT codigo_producto, descripcion_producto, cantidad_descargada, usuario_nombre, sucursal_nombre, 
-                       DATE_FORMAT(fecha_descarga, '%H:%i') as hora
-                FROM registro_descargas_stock_transito 
-                WHERE transportador_id = ? AND DATE(fecha_descarga) = CURDATE()
-                ORDER BY fecha_descarga DESC LIMIT 5
+                SELECT r.codigo_producto, r.descripcion_producto, r.cantidad_descargada, r.usuario_nombre, r.sucursal_nombre, 
+                       r.numero_despacho, DATE_FORMAT(r.fecha_descarga, '%H:%i') as hora,
+                       TRIM(d.detalle_adicional) as detalle_adicional
+                FROM registro_descargas_stock_transito r
+                LEFT JOIN despachos d ON d.numero_despacho = r.numero_despacho
+                WHERE r.transportador_id = ? AND DATE(r.fecha_descarga) = CURDATE()
+                ORDER BY r.fecha_descarga DESC LIMIT 5
             ");
             $stmt->execute([$transportadorId]);
             $ultimasDescargas = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -158,13 +160,14 @@ try {
         case "descargas":
             $dias = (int) ($_POST["dias"] ?? $_GET["dias"] ?? 7);
             $stmt = ConexionCentral::conectar()->prepare("
-                SELECT codigo_producto, descripcion_producto, cantidad_descargada, 
-                       usuario_nombre, sucursal_nombre, numero_despacho,
-                       DATE_FORMAT(fecha_descarga, '%d/%m/%Y %H:%i') as fecha_hora,
-                       fecha_descarga
-                FROM registro_descargas_stock_transito 
-                WHERE transportador_id = ? AND fecha_descarga >= DATE_SUB(NOW(), INTERVAL ? DAY)
-                ORDER BY fecha_descarga DESC
+                SELECT r.codigo_producto, r.descripcion_producto, r.cantidad_descargada, 
+                       r.usuario_nombre, r.sucursal_nombre, r.numero_despacho,
+                       DATE_FORMAT(r.fecha_descarga, '%d/%m/%Y %H:%i') as fecha_hora,
+                       r.fecha_descarga, TRIM(d.detalle_adicional) as detalle_adicional
+                FROM registro_descargas_stock_transito r
+                LEFT JOIN despachos d ON d.numero_despacho = r.numero_despacho
+                WHERE r.transportador_id = ? AND r.fecha_descarga >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                ORDER BY r.fecha_descarga DESC
             ");
             $stmt->execute([$transportadorId, $dias]);
             $descargas = $stmt->fetchAll(PDO::FETCH_ASSOC);
