@@ -101,6 +101,11 @@ if ($_SESSION["perfil"] != "Transportador") {
     </section>
 </div>
 
+<!-- Botón flotante recargar -->
+<a href="transportador-movil" class="btn-flotante-recargar" title="Recargar página">
+    <i class="fa fa-refresh"></i>
+</a>
+
 <!-- Modal Detalle Despacho - Productos del despacho -->
 <div class="modal fade" id="modalDetalleDespachoMovil" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
@@ -247,4 +252,38 @@ if ($_SESSION["perfil"] != "Transportador") {
 }
 .resumen-item .num { font-size: 24px; font-weight: bold; color: #3c8dbc; }
 .resumen-item .label { font-size: 11px; color: #666; }
+
+/* Botón flotante recargar */
+.btn-flotante-recargar {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #3c8dbc;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 10px rgba(60, 141, 188, 0.5);
+    z-index: 1050;
+    font-size: 20px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.btn-flotante-recargar:hover,
+.btn-flotante-recargar:focus {
+    color: #fff;
+    background: #307095;
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(60, 141, 188, 0.6);
+}
+.btn-flotante-recargar:active .fa-refresh {
+    animation: spin 0.5s ease;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
 </style>
