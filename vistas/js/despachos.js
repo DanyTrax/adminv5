@@ -240,6 +240,20 @@ function renderizarTimelineDesdeHistorial(despacho) {
         if(h.observaciones) html += '<div class="timeline-body">' + h.observaciones + '</div>';
         html += '</div></div>';
     });
+    // Descargas de stock en tránsito (dónde y quién descargó)
+    if(despacho.descargas && Array.isArray(despacho.descargas) && despacho.descargas.length > 0) {
+        html += '<div class="time-label"><span class="bg-teal"><i class="fa fa-download"></i> Descargas</span></div>';
+        despacho.descargas.forEach(function(d) {
+            var fecha = d.fecha_descarga || d.created_at || '';
+            html += '<div><i class="fa fa-download bg-teal"></i><div class="timeline-item">';
+            html += '<span class="time"><i class="fa fa-clock-o"></i> ' + formatearHora(fecha) + '</span>';
+            html += '<h3 class="timeline-header">Descargado en <strong>' + (d.sucursal_nombre || 'Sucursal') + '</strong> por <strong>' + (d.usuario_nombre || 'Usuario') + '</strong></h3>';
+            html += '<div class="timeline-body">';
+            html += '<strong>' + (d.codigo_producto || '') + '</strong> ' + (d.descripcion_producto || '') + ' - <span class="badge">' + (d.cantidad_descargada || 0) + ' unidades</span>';
+            if(d.observaciones && d.observaciones !== 'Descarga registrada') html += '<br><small class="text-muted">' + d.observaciones + '</small>';
+            html += '</div></div></div>';
+        });
+    }
     // Estado actual si no está finalizado
     if(despacho.estado === 'pendiente') {
         html += '<div class="time-label"><span class="bg-yellow"><i class="fa fa-hourglass-half"></i> Estado Actual</span></div>';
@@ -379,6 +393,21 @@ function cargarTimelineDespacho(despacho) {
                 </div>
             </div>
         `;
+    }
+
+    // 3b. DESCARGAS DE STOCK EN TRÁNSITO (dónde y quién descargó)
+    if(despacho.descargas && Array.isArray(despacho.descargas) && despacho.descargas.length > 0) {
+        html += '<div class="time-label"><span class="bg-teal"><i class="fa fa-download"></i> Descargas</span></div>';
+        despacho.descargas.forEach(function(d) {
+            var fecha = d.fecha_descarga || d.created_at || '';
+            html += '<div><i class="fa fa-download bg-teal"></i><div class="timeline-item">';
+            html += '<span class="time"><i class="fa fa-clock-o"></i> ' + formatearHora(fecha) + '</span>';
+            html += '<h3 class="timeline-header">Descargado en <strong>' + (d.sucursal_nombre || 'Sucursal') + '</strong> por <strong>' + (d.usuario_nombre || 'Usuario') + '</strong></h3>';
+            html += '<div class="timeline-body">';
+            html += '<strong>' + (d.codigo_producto || '') + '</strong> ' + (d.descripcion_producto || '') + ' - <span class="badge">' + (d.cantidad_descargada || 0) + ' unidades</span>';
+            if(d.observaciones && d.observaciones !== 'Descarga registrada') html += '<br><small class="text-muted">' + d.observaciones + '</small>';
+            html += '</div></div></div>';
+        });
     }
 
     // 4. CANCELACIÓN

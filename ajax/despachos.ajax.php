@@ -64,6 +64,8 @@ if(isset($_POST["idDespacho"]) && !isset($_POST["cambiarEstado"])){
         }
         // Obtener historial del despacho
         $respuesta["historial"] = ModeloDespachos::mdlObtenerHistorialDespacho($respuesta["id"]);
+        // Obtener descargas de stock en tránsito (dónde y quién descargó)
+        $respuesta["descargas"] = ModeloDespachos::mdlObtenerDescargasPorDespacho($respuesta["numero_despacho"]);
         sendJsonResponse([
             "success" => true,
             "data" => $respuesta,

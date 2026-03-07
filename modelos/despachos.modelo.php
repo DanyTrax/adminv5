@@ -475,6 +475,41 @@ static public function mdlObtenerHistorialDespacho($idDespacho) {
 }
 
 /*=============================================
+OBTENER DESCARGAS DE STOCK EN TRÁNSITO POR DESPACHO
+Registros de dónde y quién descargó productos de este despacho
+=============================================*/
+static public function mdlObtenerDescargasPorDespacho($numeroDespacho) {
+    try {
+        require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+        $conexion = ConexionCentral::conectar();
+        // Verificar que la tabla existe
+        $stmtCheck = $conexion->prepare("SHOW TABLES LIKE 'registro_descargas_stock_transito'");
+        $stmtCheck->execute();
+        if (!$stmtCheck->fetch()) {
+            return [];
+        }
+        // Buscar por numero_despacho: exacto, al inicio (DESP-001 (Suc: 3)), o en medio/fin (..., DESP-001 (...))
+        $stmt = $conexion->prepare("
+            SELECT 
+                id, codigo_producto, descripcion_producto, cantidad_descargada,
+                usuario_nombre, sucursal_nombre, numero_despacho,
+                fecha_descarga, observaciones, created_at
+            FROM registro_descargas_stock_transito 
+            WHERE numero_despacho = ?
+               OR numero_despacho LIKE CONCAT(?, ' (%')
+               OR numero_despacho LIKE CONCAT('%, ', ?, ' (%')
+               OR numero_despacho LIKE CONCAT('%, ', ?, ')')
+            ORDER BY fecha_descarga ASC
+        ");
+        $stmt->execute([$numeroDespacho, $numeroDespacho, $numeroDespacho, $numeroDespacho]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log("mdlObtenerDescargasPorDespacho: " . $e->getMessage());
+        return [];
+    }
+}
+
+/*=============================================
 OBTENER NOMBRE DE SUCURSAL LOCAL
 =============================================*/
 static public function mdlObtenerSucursalLocal() {
