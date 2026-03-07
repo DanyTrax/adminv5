@@ -187,6 +187,13 @@ $modulos_disponibles = [
         "descripcion" => "Registro de descargas",
         "color" => "bg-teal",
         "perfiles" => ["Administrador", "Vendedor", "Contador", "Transportador"]
+    ],
+    "transportador-movil" => [
+        "icono" => "fa-mobile",
+        "titulo" => "Vista Móvil",
+        "descripcion" => "Vista móvil para transportador",
+        "color" => "bg-aqua",
+        "perfiles" => ["Transportador"]
     ]
 ];
 
@@ -211,7 +218,8 @@ $categorias = [
         2 => "despachos",
         3 => "crear-despacho",
         4 => "stock-transito",
-        5 => "registro-descargas-funcional"
+        5 => "registro-descargas-funcional",
+        6 => "transportador-movil"
     ],
     "Administración" => ["usuarios", "sucursales", "usuarios-central", "clientes-central", "categorias-central", "personalizacion-colores-simplificado"],
     "Contabilidad" => ["entradas", "crear-entradas", "gastos", "crear-gastos", "reportes", "reporte-detallado", "medios-pago", "contabilidad"]
@@ -249,7 +257,7 @@ $categorias = [
                             <?php 
                             // Para Logística, mantener el orden específico
                             if ($nombre_categoria == "Logística") {
-                                $orden_logistica = ["solicitudes-stock", "crear-solicitud-stock", "despachos", "crear-despacho", "stock-transito", "registro-descargas-funcional"];
+                                $orden_logistica = ["solicitudes-stock", "crear-solicitud-stock", "despachos", "crear-despacho", "stock-transito", "registro-descargas-funcional", "transportador-movil"];
                                 foreach ($orden_logistica as $ruta) {
                                     if (isset($modulos_categoria_disponibles[$ruta])) {
                                         $modulo = $modulos_categoria_disponibles[$ruta];
@@ -365,4 +373,5 @@ $categorias = [
 .badge.bg-teal { background-color: #39cccc !important; }
 .badge.bg-navy { background-color: #001f3f !important; }
 .badge.bg-orange { background-color: #ff851b !important; }
+.badge.bg-aqua { background-color: #00c0ef !important; }
 </style>
