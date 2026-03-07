@@ -5,6 +5,7 @@ session_start();
 require_once __DIR__ . "/../controladores/sucursales.controlador.php";
 require_once __DIR__ . "/../modelos/sucursales.modelo.php";
 require_once __DIR__ . "/../modelos/productos.modelo.php";
+require_once __DIR__ . "/../modelos/categorias.modelo.php";
 
 // Limpiar cualquier salida previa si existe buffer
 if (ob_get_level()) {
@@ -89,6 +90,16 @@ switch ($accion) {
                 $productos = [];
             }
 
+            // Mapa id_categoria -> nombre para orden y visualización (igual que tabla productos)
+            $mapaCategorias = [];
+            $todasCategorias = ModeloCategorias::mdlMostrarCategorias("categorias", null, null);
+            if (!is_array($todasCategorias)) {
+                $todasCategorias = [];
+            }
+            foreach ($todasCategorias as $cat) {
+                $mapaCategorias[(int)$cat['id']] = isset($cat['categoria']) ? $cat['categoria'] : '';
+            }
+
             $codigos = array_values(array_unique(array_filter(array_map(function ($p) {
                 return isset($p['codigo']) ? trim($p['codigo']) : '';
             }, $productos))));
@@ -103,6 +114,8 @@ switch ($accion) {
             foreach ($productos as $prod) {
                 $codigo = isset($prod['codigo']) ? $prod['codigo'] : '';
                 $descripcion = isset($prod['descripcion']) ? $prod['descripcion'] : '';
+                $idCategoriaProd = isset($prod['id_categoria']) ? (int)$prod['id_categoria'] : 0;
+                $nombreCategoria = isset($mapaCategorias[$idCategoriaProd]) ? $mapaCategorias[$idCategoriaProd] : '';
                 $stocks = [];
                 $total = 0;
                 foreach ($sucursalesConectadas as $suc) {
@@ -114,6 +127,8 @@ switch ($accion) {
                 $resultadoProductos[] = [
                     'codigo' => $codigo,
                     'descripcion' => $descripcion,
+                    'id_categoria' => $idCategoriaProd,
+                    'categoria' => $nombreCategoria,
                     'stocks' => $stocks,
                     'total' => $total
                 ];

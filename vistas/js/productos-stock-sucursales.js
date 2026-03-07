@@ -93,7 +93,7 @@ $(function () {
     var sucursales = datos.sucursales;
     var productos = datos.productos;
 
-    var headerHtml = '<th style="width: 10px;">#</th><th>Código</th><th>Descripción</th>';
+    var headerHtml = '<th style="width: 10px;">#</th><th>Código</th><th>Descripción</th><th>Categoría</th>';
     sucursales.forEach(function (s) {
       headerHtml += '<th class="text-center" style="min-width: 80px;">' + escapeHtml(s.nombre) + '</th>';
     });
@@ -104,7 +104,7 @@ $(function () {
     $tbody.empty();
 
     if (productos.length === 0) {
-      var cols = 3 + sucursales.length + 1;
+      var cols = 4 + sucursales.length + 1;
       $tbody.append('<tr><td colspan="' + cols + '" class="text-center text-muted">No hay productos para mostrar.</td></tr>');
     } else {
       productos.forEach(function (p, index) {
@@ -112,6 +112,7 @@ $(function () {
         fila += '<td class="text-center"><strong>' + (index + 1) + '</strong></td>';
         fila += '<td><code>' + escapeHtml(p.codigo) + '</code></td>';
         fila += '<td>' + escapeHtml(p.descripcion) + '</td>';
+        fila += '<td>' + escapeHtml(p.categoria || '') + '</td>';
         sucursales.forEach(function (s) {
           var q = (p.stocks && p.stocks[s.id] !== undefined) ? parseInt(p.stocks[s.id], 10) : 0;
           var o = iconoStock(q);
@@ -142,7 +143,7 @@ $(function () {
         paginate: { first: 'Primera', last: 'Última', next: 'Siguiente', previous: 'Anterior' }
       },
       pageLength: 25,
-      order: [[1, 'asc']],
+      order: [[3, 'asc'], [1, 'asc']],
       columnDefs: [
         { orderable: true, targets: '_all' }
       ]
