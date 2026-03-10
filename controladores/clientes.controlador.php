@@ -23,8 +23,8 @@ class ControladorClientes
 			error_log("nuevaDireccion: " . $_POST["nuevaDireccion"]);
 
 			// Validaciones individuales con debug
-			// Nombre: requerido, permite letras, números, espacios y caracteres comunes
-			$validacionNombre = !empty($_POST["nuevoCliente"]) && preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)]+$/', $_POST["nuevoCliente"]);
+			// Nombre: requerido, permite letras (cualquier idioma), números, espacios y caracteres especiales (Unicode)
+			$validacionNombre = !empty(trim($_POST["nuevoCliente"])) && preg_match('/^[\p{L}\p{N}\p{P}\p{S}\p{Z}]+$/u', $_POST["nuevoCliente"]);
 			
 			// Documento: requerido, solo números, 1-11 dígitos
 			$validacionDocumento = !empty($_POST["nuevoDocumentoId"]) && preg_match('/^[0-9]{1,11}$/', $_POST["nuevoDocumentoId"]);
@@ -176,7 +176,7 @@ class ControladorClientes
 
 					swal({
 						  type: "error",
-						  title: "¡El cliente no puede ir vacío o llevar caracteres especiales!",
+						  title: "¡Revise que todos los campos del cliente sean válidos!",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
 						}).then(function(result){
@@ -220,8 +220,8 @@ class ControladorClientes
 			error_log("editarDireccion: " . $_POST["editarDireccion"]);
 
 			// Validaciones individuales con debug (iguales a crear cliente)
-			// Nombre: requerido, permite letras, números, espacios y caracteres comunes
-			$validacionNombre = !empty($_POST["editarCliente"]) && preg_match('/^[a-zA-Z0-9ñÑáéíóúÁÉÍÓÚüÜçÇ\s\.\,\-\'\"\(\)]+$/', $_POST["editarCliente"]);
+			// Nombre: requerido, permite letras (cualquier idioma), números, espacios y caracteres especiales (Unicode)
+			$validacionNombre = !empty(trim($_POST["editarCliente"])) && preg_match('/^[\p{L}\p{N}\p{P}\p{S}\p{Z}]+$/u', $_POST["editarCliente"]);
 			
 			// Documento: requerido, solo números, 1-11 dígitos
 			$validacionDocumento = !empty($_POST["editarDocumentoId"]) && preg_match('/^[0-9]{1,11}$/', $_POST["editarDocumentoId"]);
@@ -337,7 +337,7 @@ class ControladorClientes
 
 					swal({
 						  type: "error",
-						  title: "¡El cliente no puede ir vacío o llevar caracteres especiales!",
+						  title: "¡Revise que todos los campos del cliente sean válidos!",
 						  showConfirmButton: true,
 						  confirmButtonText: "Cerrar"
 						  }).then(function(result){
