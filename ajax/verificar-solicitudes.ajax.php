@@ -6,8 +6,8 @@
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
-if (!isset($_SESSION['perfil']) || !in_array($_SESSION['perfil'], ['Administrador', 'Transportador'])) {
-    echo json_encode(['success' => false, 'error' => 'Sin permisos']);
+if (!isset($_SESSION['perfil']) || $_SESSION['perfil'] !== 'Administrador') {
+    echo json_encode(['success' => false, 'error' => 'Solo Administrador puede verificar']);
     exit;
 }
 
