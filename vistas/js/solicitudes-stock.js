@@ -19,10 +19,10 @@ $(document).ready(function() {
             "retrieve": true,
             "processing": true,
             "language": configuracionIdioma,
-            "order": [[ 0, "desc" ]], // Ordenar por ID descendente (más recientes primero)
+            "order": [[ 1, "desc" ]], // Ordenar por N° Solicitud descendente (SOL000095 primero)
             "columnDefs": [
-                { "orderable": false, "targets": [8, 9] }, // Deshabilitar ordenamiento en Aprobado por y Acciones
-                { "type": "num", "targets": 0 } // Columna # (id) para orden numérico correcto
+                { "orderable": false, "targets": [0, 8, 9] }, // Deshabilitar orden en #, Aprobado por, Acciones
+                { "type": "string", "targets": 1 } // N° Solicitud para orden correcto
             ],
             "drawCallback": function() {
                 // Si hay ?ver=ID en la URL, abrir modal de esa solicitud (ej: desde despacho)

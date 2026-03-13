@@ -261,7 +261,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
   <script src="<?php echo $url; ?>vistas/js/salidas-inventario.js"></script>
   <script src="<?php echo $url; ?>vistas/js/filtros-fechas.js"></script>
   <script src="<?php echo $url; ?>vistas/js/sucursales.js"></script> 
-  <script src="<?php echo $url; ?>vistas/js/solicitudes-stock.js"></script>
+  <script src="<?php echo $url; ?>vistas/js/solicitudes-stock.js?v=<?php echo file_exists(__DIR__.'/js/solicitudes-stock.js') ? filemtime(__DIR__.'/js/solicitudes-stock.js') : ''; ?>"></script>
   <script src="<?php echo $url; ?>vistas/js/crear-solicitud-stock.js"></script>  
   <script src="<?php echo $url; ?>vistas/js/catalogo-maestro.js"></script>
   <script src="<?php echo $url; ?>vistas/js/clientes-central.js"></script>
