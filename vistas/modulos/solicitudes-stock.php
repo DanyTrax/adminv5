@@ -39,6 +39,9 @@
           <button type="button" class="btn btn-default" id="btnActualizarListaSolicitudes" title="Actualizar lista">
             <i class="fa fa-refresh"></i> Actualizar
           </button>
+          <button type="button" class="btn btn-info" id="btnVerificarSolicitudes" title="Verificar datos de lista vs notificaciones">
+            <i class="fa fa-search"></i> Verificar
+          </button>
           </div>
           
           <div class="col-md-4 text-right">

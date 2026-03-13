@@ -64,6 +64,55 @@ $(document).ready(function() {
         }
     });
 
+    // Botón Verificar (diagnóstico lista vs notificaciones)
+    $(document).on('click', '#btnVerificarSolicitudes', function() {
+        var $btn = $(this);
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Verificando...');
+        $.ajax({
+            url: 'ajax/verificar-solicitudes.ajax.php',
+            type: 'POST',
+            data: { accion: 'verificar' },
+            dataType: 'json',
+            success: function(r) {
+                $btn.prop('disabled', false).html('<i class="fa fa-search"></i> Verificar');
+                if (!r.success) {
+                    swal({ title: 'Error', text: r.error || 'Sin permisos', type: 'error' });
+                    return;
+                }
+                var html = '<div class="text-left">';
+                html += '<p><strong>Lista (datatable):</strong> Total ' + r.lista.total + ' | Max ID: ' + r.lista.max_id + ' | Último número: ' + r.lista.max_numero + '</p>';
+                html += '<p><strong>Notificaciones (pendientes):</strong> ' + r.notificaciones.pendientes + '</p>';
+                html += '<p class="text-muted small">' + r.mensaje + '</p>';
+                html += '<hr><strong>Últimas 15 solicitudes en BD:</strong>';
+                html += '<table class="table table-condensed table-bordered" style="margin-top:8px;"><thead><tr><th>ID</th><th>N° Solicitud</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>';
+                (r.lista.ultimas_15 || []).forEach(function(s) {
+                    html += '<tr><td>' + s.id + '</td><td>' + (s.numero_solicitud || '-') + '</td><td>' + (s.estado || '-') + '</td><td>' + (s.fecha_solicitud || '-') + '</td></tr>';
+                });
+                html += '</tbody></table>';
+                if ((r.notificaciones.lista_pendientes || []).length > 0) {
+                    html += '<hr><strong>Pendientes (notificaciones):</strong>';
+                    html += '<ul class="list-unstyled">';
+                    r.notificaciones.lista_pendientes.forEach(function(s) {
+                        html += '<li>' + (s.numero_solicitud || '-') + ' - ' + (s.nombre_sucursal_solicitante || '-') + '</li>';
+                    });
+                    html += '</ul>';
+                }
+                html += '</div>';
+                swal({
+                    title: 'Verificación de Solicitudes',
+                    html: html,
+                    width: '600px',
+                    confirmButtonText: 'Cerrar',
+                    confirmButtonColor: '#3c8dbc'
+                });
+            },
+            error: function() {
+                $btn.prop('disabled', false).html('<i class="fa fa-search"></i> Verificar');
+                swal({ title: 'Error', text: 'No se pudo conectar con el servidor', type: 'error' });
+            }
+        });
+    });
+
     // Inicializar DataTable de catálogo de productos
     if($('.tablaProductosCatalogo').length > 0) {
         $('.tablaProductosCatalogo').DataTable({
