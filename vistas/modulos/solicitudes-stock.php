@@ -36,6 +36,9 @@
             <?php 
             endif; 
             ?>
+          <button type="button" class="btn btn-default" id="btnActualizarListaSolicitudes" title="Actualizar lista">
+            <i class="fa fa-refresh"></i> Actualizar
+          </button>
           </div>
           
           <div class="col-md-4 text-right">

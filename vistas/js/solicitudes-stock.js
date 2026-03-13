@@ -11,7 +11,10 @@ $(document).ready(function() {
     // Inicializar DataTable principal
     if($('.tablaSolicitudesStock').length > 0) {
         $('.tablaSolicitudesStock').DataTable({
-            "ajax": "ajax/datatable-solicitudes-stock.ajax.php",
+            "ajax": {
+                "url": "ajax/datatable-solicitudes-stock.ajax.php",
+                "cache": false
+            },
             "deferRender": true,
             "retrieve": true,
             "processing": true,
@@ -42,7 +45,24 @@ $(document).ready(function() {
                 }
             }
         });
+
+        // Actualizar tabla cada 45 segundos para mostrar solicitudes nuevas (mismas que en notificaciones)
+        setInterval(function() {
+            try {
+                var dt = $('.tablaSolicitudesStock').DataTable();
+                if (dt && dt.ajax) dt.ajax.reload(null, false);
+            } catch (e) {}
+        }, 30000);
     }
+
+    // Botón Actualizar lista
+    $(document).on('click', '#btnActualizarListaSolicitudes', function() {
+        if ($('.tablaSolicitudesStock').length > 0) {
+            try {
+                $('.tablaSolicitudesStock').DataTable().ajax.reload();
+            } catch (e) {}
+        }
+    });
 
     // Inicializar DataTable de catálogo de productos
     if($('.tablaProductosCatalogo').length > 0) {
