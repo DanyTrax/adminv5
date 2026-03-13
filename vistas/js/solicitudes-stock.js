@@ -12,17 +12,17 @@ $(document).ready(function() {
     if($('.tablaSolicitudesStock').length > 0) {
         $('.tablaSolicitudesStock').DataTable({
             "ajax": {
-                "url": "ajax/datatable-solicitudes-stock.ajax.php",
+                "url": (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + "ajax/datatable-solicitudes-stock.ajax.php",
                 "cache": false
             },
             "deferRender": true,
             "retrieve": true,
             "processing": true,
             "language": configuracionIdioma,
-            "order": [[ 7, "desc" ]], // Ordenar por fecha (columna 7) descendente
+            "order": [[ 0, "desc" ]], // Ordenar por ID descendente (más recientes primero)
             "columnDefs": [
-                { "orderable": false, "targets": [0, 8] }, // Deshabilitar ordenamiento en columna # y Acciones
-                { "type": "date", "targets": 7 } // Especificar que la columna 7 es fecha
+                { "orderable": false, "targets": [8, 9] }, // Deshabilitar ordenamiento en Aprobado por y Acciones
+                { "type": "num", "targets": 0 } // Columna # (id) para orden numérico correcto
             ],
             "drawCallback": function() {
                 // Si hay ?ver=ID en la URL, abrir modal de esa solicitud (ej: desde despacho)
@@ -57,10 +57,19 @@ $(document).ready(function() {
 
     // Botón Actualizar lista
     $(document).on('click', '#btnActualizarListaSolicitudes', function() {
+        var $btn = $(this);
+        var origHtml = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
         if ($('.tablaSolicitudesStock').length > 0) {
             try {
-                $('.tablaSolicitudesStock').DataTable().ajax.reload();
-            } catch (e) {}
+                $('.tablaSolicitudesStock').DataTable().ajax.reload(function() {
+                    $btn.prop('disabled', false).html(origHtml);
+                });
+            } catch (e) {
+                $btn.prop('disabled', false).html(origHtml);
+            }
+        } else {
+            $btn.prop('disabled', false).html(origHtml);
         }
     });
 
@@ -69,7 +78,7 @@ $(document).ready(function() {
         var $btn = $(this);
         $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Verificando...');
         $.ajax({
-            url: 'ajax/verificar-solicitudes.ajax.php',
+            url: (typeof BASE_URL !== 'undefined' ? BASE_URL : '') + 'ajax/verificar-solicitudes.ajax.php',
             type: 'POST',
             data: { accion: 'verificar' },
             dataType: 'json',
