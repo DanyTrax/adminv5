@@ -109,6 +109,12 @@
 								Catálogo Maestro
 							</a>
 						</li>
+						<li>
+							<a href="medios-pago-central" style="padding: 10px 15px; white-space: normal; word-wrap: break-word;">
+								<i class="fa fa-credit-card" style="margin-right: 8px; color: #00a65a;"></i>
+								Medios de Pago Centrales
+							</a>
+						</li>
 						<?php 
 						$esAdminAdmin = (isset($_SESSION["usuario"]) && strtolower($_SESSION["usuario"]) === "admin" && isset($_SESSION["nombre"]) && strtolower($_SESSION["nombre"]) === "admin");
 						if ($esAdminAdmin): ?>

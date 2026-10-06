@@ -1,63 +1,50 @@
-# Archivos de configuración local
+# Credenciales y config local (NUNCA versionar)
 config.php
+config.database.php
 php.ini
 
-# Logs y archivos temporales
+# Graphify: cache y artefactos pesados (sí versionar *.md de informe)
+graphify-out/.graphify_*.json
+graphify-out/.graphify_*
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+graphify-out/graph.json
+graphify-out/graph.html
+graphify-out/.graphify_analysis.json
+graphify-out/.graphify_labels.json
+graphify-out/.graphify_extract.json
+graphify-out/.graphify_ast.json
+graphify-out/.graphify_semantic.json
+graphify-out/.graphify_detect.json
+
+# Playwright CLI artifacts
+.playwright-cli/
+
+# Logs y temporales
 error_log
 *.log
 logs/
+log_de_entradas.txt
 
-# Archivos de prueba y desarrollo
-adminv5/
-test-*
-debug-*
-probar-*
-diagnosticar-*
-verificar-*
-corregir-*
-actualizar-*
-crear-*
-generar-*
-migrar-*
-sincronizar-*
-integrar-*
-modificar-*
-restaurar-*
-recrear-*
-limpiar-*
-ejecutar-*
-buscar-*
-mostrar-*
-leer-*
-examinar-*
-listar-*
-obtener-*
-consultar-*
-usar-*
-simplificar-*
-solucion-*
-sync-*
-
-# Archivos de respaldo
+# Backups
 *.bak
 *.backup
 *.old
+*.phpold
+*.phpand
 
-# Archivos del sistema
+# Sistema / IDE
 .DS_Store
 Thumbs.db
-
-# Archivos de IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Archivos de dependencias
-vendor/
-node_modules/
+# Dependencias empaquetadas si se regeneran
+# vendor/  # el proyecto incluye vendor en extensiones; no ignorar todo
 
-# Archivos de cache
+# Cache
 cache/
 tmp/
 temp/

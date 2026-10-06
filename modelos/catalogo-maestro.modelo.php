@@ -8,18 +8,10 @@ class ModeloCatalogoMaestro {
     =============================================*/
     static private function conectarCentral() {
         try {
-            $servidor = "localhost";
-            $nombreBD = "epicosie_central";
-            $usuario = "epicosie_central";
-            $password = "=Nf?M#6A'QU&.6c";
-            
-            $link = new PDO(
-                "mysql:host=$servidor;dbname=$nombreBD;charset=utf8mb4",
-                $usuario,
-                $password
-            );
-            $link->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            return $link;
+            if (!class_exists('ConexionCentral')) {
+                require_once __DIR__ . "/../api-transferencias/conexion-central.php";
+            }
+            return ConexionCentral::conectar();
         } catch (PDOException $e) {
             die("Error de conexión central: " . $e->getMessage());
         }

@@ -40,33 +40,46 @@ class ControladorContabilidad
     }
 
     public static function crearEntrada() {
-    if (isset($_POST["valor"])) {
+        if (isset($_POST["nuevoEntrada"]) || (isset($_POST["valor"]) && isset($_POST["descripcion"]))) {
+            date_default_timezone_set('America/Bogota');
+            $fechaBase = !empty($_POST["fecha"]) ? $_POST["fecha"] : date('Y-m-d');
+            $fechaCompleta = $fechaBase . ' ' . date('H:i:s');
+            $valorLimpio = str_replace([",", "."], "", (string) $_POST["valor"]);
 
-        // --- INICIO DE LA PRUEBA FINAL ---
+            $datos = [
+                "id_vendedor" => $_POST["idVendedor"] ?? ($_SESSION["id"] ?? 0),
+                "fecha" => $fechaCompleta,
+                "detalle" => $_POST["descripcion"] ?? ($_POST["detalle"] ?? ""),
+                "valor" => $valorLimpio,
+                "medio_pago" => $_POST["nuevoMedioPago"] ?? "",
+                "tipo" => "Entrada",
+            ];
 
-        // Capturamos la hora, el dato original y el dato después de la limpieza
-        date_default_timezone_set('America/Bogota');
-        $hora = date("Y-m-d H:i:s");
-        $datoOriginal = $_POST["valor"];
-        $valorLimpio = str_replace(",", "", $_POST["valor"]); // Usamos el método de Ventas
+            $respuesta = ModeloContabilidad::save($datos);
 
-        // Creamos una línea de texto para guardar
-        $lineaDeLog = "Hora: " . $hora . " | Valor Original Recibido: " . $datoOriginal . " | Valor Procesado: " . $valorLimpio . "\n";
-
-        // Escribimos esa línea en un nuevo archivo de texto en tu servidor
-        file_put_contents("log_de_entradas.txt", $lineaDeLog, FILE_APPEND);
-
-        // Mostramos una alerta para saber que la prueba se ejecutó y no guardamos nada en la base de datos
-        echo '<script>
-            alert("Prueba realizada. Por favor, revisa el archivo log_de_entradas.txt en tu servidor.");
-            window.history.back();
-        </script>';
-
-        return; // Detenemos la ejecución para que no intente guardar
-
-        // --- FIN DE LA PRUEBA ---
+            if ($respuesta == "ok") {
+                echo '<script>
+                    swal({
+                        type: "success",
+                        title: "¡La entrada ha sido guardada correctamente!",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    }).then(function(result){
+                        if (result.value) { window.location = "entradas"; }
+                    });
+                </script>';
+            } else {
+                echo '<script>
+                    swal({
+                        type: "error",
+                        title: "Error al guardar la entrada",
+                        showConfirmButton: true,
+                        confirmButtonText: "Cerrar"
+                    });
+                </script>';
+            }
+        }
     }
-}
 
     /*=============================================
     FILTRAR MOVIMIENTOS DE CONTABILIDAD

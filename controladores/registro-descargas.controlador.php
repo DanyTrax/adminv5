@@ -9,46 +9,23 @@ class ControladorRegistroDescargas {
     =============================================*/
     static public function ctrBorrarTodosRegistrosDescargas() {
         if (isset($_POST["borrarTodosRegistrosDescargas"])) {
-            // Verificar que el usuario sea "admin"
+            header('Content-Type: application/json; charset=utf-8');
             if (!isset($_SESSION["usuario"]) || $_SESSION["usuario"] != "admin") {
-                echo '<script>
-                    swal({
-                        type: "error",
-                        title: "Sin permisos",
-                        text: "Solo el usuario admin puede realizar esta acción",
-                        showConfirmButton: true,
-                        confirmButtonText: "Cerrar"
-                    });
-                </script>';
+                echo json_encode(["success" => false, "title" => "Sin permisos", "error" => "Solo el usuario admin puede realizar esta acción"]);
                 return;
             }
 
             $respuesta = ModeloRegistroDescargas::mdlBorrarTodosRegistrosDescargas();
             
             if ($respuesta == "ok") {
-                echo '<script>
-                    swal({
-                        type: "success",
-                        title: "Registros eliminados",
-                        text: "Todos los registros de descargas han sido eliminados",
-                        showConfirmButton: true,
-                        confirmButtonText: "Cerrar"
-                    }).then(function(result){
-                        if (result.value) {
-                            window.location = "registro-descargas-funcional";
-                        }
-                    });
-                </script>';
+                echo json_encode([
+                    "success" => true,
+                    "title" => "Registros eliminados",
+                    "message" => "Todos los registros de descargas han sido eliminados",
+                    "redirect" => "registro-descargas-funcional"
+                ]);
             } else {
-                echo '<script>
-                    swal({
-                        type: "error",
-                        title: "Error",
-                        text: "No se pudieron eliminar los registros: ' . $respuesta . '",
-                        showConfirmButton: true,
-                        confirmButtonText: "Cerrar"
-                    });
-                </script>';
+                echo json_encode(["success" => false, "title" => "Error", "error" => "No se pudieron eliminar los registros: " . $respuesta]);
             }
         }
     }

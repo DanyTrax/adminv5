@@ -11,16 +11,23 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
 });
 
 try {
-    $tokenRecibido = $_POST['token'] ?? $_GET['token'] ?? '';
-    $tokenEsperado = 'adminv5_git_pull_2025';
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        http_response_code(405);
+        echo json_encode(['success' => false, 'error' => 'Solo POST permitido']);
+        exit;
+    }
+
+    $tokenRecibido = $_POST['token'] ?? '';
+    $tokenEsperado = '';
     $configPath = dirname(__DIR__) . '/config.php';
     if (file_exists($configPath)) {
         require_once $configPath;
-        $tokenEsperado = defined('GIT_PULL_TOKEN') ? GIT_PULL_TOKEN : $tokenEsperado;
+        $tokenEsperado = defined('GIT_PULL_TOKEN') ? (string) GIT_PULL_TOKEN : '';
     }
 
-    if ($tokenRecibido !== $tokenEsperado || empty($tokenRecibido)) {
-        echo json_encode(['success' => false, 'error' => 'Token inválido']);
+    if ($tokenEsperado === '' || $tokenEsperado === 'adminv5_git_pull_2025' || !hash_equals($tokenEsperado, (string) $tokenRecibido)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Token inválido o no configurado. Defina GIT_PULL_TOKEN fuerte en config.php']);
         exit;
     }
 

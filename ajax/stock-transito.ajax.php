@@ -1,6 +1,7 @@
 <?php
 
-session_start();
+require_once __DIR__ . "/../src/AjaxAuth.php";
+AjaxAuth::requireProfiles(["Administrador", "Especial", "Vendedor", "Contador", "Transportador"]);
 
 require_once "../controladores/stock-transito.controlador.php";
 require_once "../modelos/stock-transito.modelo.php";

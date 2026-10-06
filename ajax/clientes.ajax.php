@@ -1,5 +1,8 @@
 <?php
 
+require_once __DIR__ . "/../src/AjaxAuth.php";
+AjaxAuth::requireSession();
+
 require_once "../controladores/clientes.controlador.php";
 require_once "../modelos/clientes.modelo.php";
 

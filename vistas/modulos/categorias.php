@@ -391,7 +391,7 @@ $(document).ready(function() {
                     processData: false,
                     success: function(respuesta) {
                         // La respuesta viene del controlador con el swal incluido
-                        eval(respuesta);
+                        ejecutarRespuestaAjaxSegura(respuesta, "categorias");
                     }
                 });
             }
@@ -425,7 +425,7 @@ $(document).ready(function() {
                     processData: false,
                     success: function(respuesta) {
                         // La respuesta viene del controlador con el swal incluido
-                        eval(respuesta);
+                        ejecutarRespuestaAjaxSegura(respuesta, "categorias");
                     }
                 });
             }

@@ -4,11 +4,9 @@ $perfilUsuario = $_SESSION["perfil"];
 $idUsuario = $_SESSION["id"];
 
 // Redirigir según el perfil del usuario
-if($perfilUsuario == "Transportador") {
-    // Mostrar vista específica para transportadores
-    include "vistas/modulos/stock-transito-transportador.php";
-                } else {
-    // Mostrar vista para usuarios (Administrador, Vendedor, etc.)
-    include "vistas/modulos/stock-transito-usuarios.php";
+if ($perfilUsuario == "Transportador") {
+    include __DIR__ . "/stock-transito-transportador.php";
+} else {
+    include __DIR__ . "/stock-transito-usuarios.php";
 }
 ?>

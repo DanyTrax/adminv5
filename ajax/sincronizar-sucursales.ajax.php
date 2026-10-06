@@ -129,7 +129,11 @@ if ($accion === 'git_pull') {
         exit;
     }
 
-    $token = defined('GIT_PULL_TOKEN') ? GIT_PULL_TOKEN : (getenv('GIT_PULL_TOKEN') ?: 'adminv5_git_pull_2025');
+    $token = defined('GIT_PULL_TOKEN') ? (string) GIT_PULL_TOKEN : (string) (getenv('GIT_PULL_TOKEN') ?: '');
+    if ($token === '' || $token === 'adminv5_git_pull_2025') {
+        echo json_encode(['success' => false, 'error' => 'GIT_PULL_TOKEN no configurado o es el valor débil por defecto']);
+        exit;
+    }
     $resultados = [];
 
     foreach ($urls as $urlBase) {

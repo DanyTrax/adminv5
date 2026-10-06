@@ -22,7 +22,7 @@ class TablaContabilidadServerSide {
         $recordsFiltered = ModeloContabilidad::mdlContarVentasContabilidad($busqueda, $fechaInicial, $fechaFinal, $medioPago, $formaPago);
 
         if(empty($registros)){
-            echo json_encode(['draw' => intval($_POST['draw']), 'recordsTotal' => $recordsTotal, 'recordsFiltered' => 0, 'data' => []]);
+            echo json_encode(['draw' => intval($_POST['draw'] ?? 0), 'recordsTotal' => $recordsTotal, 'recordsFiltered' => 0, 'data' => []]);
             return;
         }
 
@@ -46,7 +46,7 @@ class TablaContabilidadServerSide {
             ];
         }
 
-        echo json_encode(["draw" => intval($_POST["draw"]), "recordsTotal" => intval($recordsTotal), "recordsFiltered" => intval($recordsFiltered), "data" => $datosJson]);
+        echo json_encode(["draw" => intval($_POST["draw"] ?? 0), "recordsTotal" => intval($recordsTotal), "recordsFiltered" => intval($recordsFiltered), "data" => $datosJson]);
     }
 }
 

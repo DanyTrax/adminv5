@@ -14,17 +14,24 @@ class ModeloCotizaciones
 
 	public static function save($datos)
 	{
-		$columns = '';
-		$values = '';
-		foreach ($datos as $key => $value) {
-			$columns .= $key . ',';
-			$values .= "'" . $value . "',";
+		if (!is_array($datos) || empty($datos)) {
+			return "error";
 		}
-		$columns = substr($columns, 0, -1);
-		$values = substr($values, 0, -1);
-		$sql = "INSERT INTO " . self::TABLA . " ($columns) VALUES ($values)";
+		$cols = [];
+		$placeholders = [];
+		foreach (array_keys($datos) as $key) {
+			if (!preg_match('/^[a-zA-Z0-9_]+$/', $key)) {
+				return "error";
+			}
+			$cols[] = "`$key`";
+			$placeholders[] = ":$key";
+		}
+		$sql = "INSERT INTO " . self::TABLA . " (" . implode(", ", $cols) . ") VALUES (" . implode(", ", $placeholders) . ")";
 
 		$stmt = Conexion::conectar()->prepare($sql);
+		foreach ($datos as $key => $value) {
+			$stmt->bindValue(":$key", $value);
+		}
 
 		if ($stmt->execute()) {
 			return "ok";
@@ -35,15 +42,23 @@ class ModeloCotizaciones
 
 	public static function update($id, $datos)
 	{
-		$columns = '';
-		foreach ($datos as $key => $value) {
-			$columns .= $key . "='" . $value . "',";
+		if (!is_array($datos) || empty($datos)) {
+			return "error";
 		}
-		$columns = substr($columns, 0, -1);
-		$sql = "UPDATE " . self::TABLA . " SET $columns WHERE id = :id";
+		$sets = [];
+		foreach (array_keys($datos) as $key) {
+			if (!preg_match('/^[a-zA-Z0-9_]+$/', $key)) {
+				return "error";
+			}
+			$sets[] = "`$key` = :$key";
+		}
+		$sql = "UPDATE " . self::TABLA . " SET " . implode(", ", $sets) . " WHERE id = :id";
 
 		$stmt = Conexion::conectar()->prepare($sql);
-		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
+		foreach ($datos as $key => $value) {
+			$stmt->bindValue(":$key", $value);
+		}
+		$stmt->bindValue(":id", $id, PDO::PARAM_INT);
 
 		if ($stmt->execute()) {
 			return "ok";
