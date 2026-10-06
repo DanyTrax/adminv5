@@ -439,8 +439,7 @@ $(document).on("click", ".btnBorrarTodosProductos", function() {
                 contentType: false,
                 processData: false,
                 success: function(respuesta) {
-                    // La respuesta viene del controlador con el swal incluido
-                    eval(respuesta);
+                    ejecutarRespuestaAjaxSegura(respuesta, "productos");
                 }
             });
         }
@@ -473,8 +472,7 @@ $(document).on("click", ".btnSincronizarProductos", function() {
                 contentType: false,
                 processData: false,
                 success: function(respuesta) {
-                    // La respuesta viene del controlador con el swal incluido
-                    eval(respuesta);
+                    ejecutarRespuestaAjaxSegura(respuesta, "productos");
                 }
             });
         }

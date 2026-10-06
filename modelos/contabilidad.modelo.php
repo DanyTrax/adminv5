@@ -73,23 +73,32 @@ class ModeloContabilidad
     
         public static function findById($id)
         {
-            $sql = "SELECT * FROM " . self::TABLA . " WHERE id = '$id'";
+            $sql = "SELECT * FROM " . self::TABLA . " WHERE id = :id";
             $stmt = Conexion::conectar()->prepare($sql);
+            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetch();
         }
     
         public static function update($id, $datos)
         {
-            $columns = '';
-            foreach ($datos as $key => $value) {
-                $columns .= $key . "='" . $value . "',";
+            if (!is_array($datos) || empty($datos)) {
+                return "error";
             }
-            $columns = substr($columns, 0, -1);
-            $sql = "UPDATE " . self::TABLA . " SET $columns WHERE id = :id";
+            $sets = [];
+            foreach (array_keys($datos) as $key) {
+                if (!preg_match('/^[a-zA-Z0-9_]+$/', $key)) {
+                    return "error";
+                }
+                $sets[] = "`$key` = :$key";
+            }
+            $sql = "UPDATE " . self::TABLA . " SET " . implode(", ", $sets) . " WHERE id = :id";
     
             $stmt = Conexion::conectar()->prepare($sql);
-            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+            foreach ($datos as $key => $value) {
+                $stmt->bindValue(":$key", $value);
+            }
+            $stmt->bindValue(":id", $id, PDO::PARAM_INT);
     
             if ($stmt->execute()) {
                 return "ok";

@@ -1,0 +1,18 @@
+<?php
+/**
+ * Copiar a config.database.php (NO versionar) y completar credenciales.
+ * Usado por modelos/conexion.php y api-transferencias/conexion-central.php
+ */
+if (!defined('DB_LOCAL_HOST')) {
+    define('DB_LOCAL_HOST', 'localhost');
+    define('DB_LOCAL_NAME', 'tu_bd_local');
+    define('DB_LOCAL_USER', 'tu_usuario_local');
+    define('DB_LOCAL_PASS', 'tu_password_local');
+}
+
+if (!defined('DB_CENTRAL_HOST')) {
+    define('DB_CENTRAL_HOST', 'localhost');
+    define('DB_CENTRAL_NAME', 'tu_bd_central');
+    define('DB_CENTRAL_USER', 'tu_usuario_central');
+    define('DB_CENTRAL_PASS', 'tu_password_central');
+}

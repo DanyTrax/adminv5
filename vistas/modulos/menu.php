@@ -273,7 +273,7 @@ if ($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Contador" 
             <ul class="treeview-menu">';
 
     // El enlace a "Contabilidad" y "Entradas" solo lo ven Administrador y Contador.
-    if($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Control"){
+    if($_SESSION["perfil"] == "Administrador" || $_SESSION["perfil"] == "Especial" || $_SESSION["perfil"] == "Contador"){
         echo '
          <li>
                 <a href="reportes">

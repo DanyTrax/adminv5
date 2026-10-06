@@ -203,7 +203,7 @@ $(document).ready(function() {
                     processData: false,
                     success: function(respuesta) {
                         // La respuesta viene del controlador con el swal incluido
-                        eval(respuesta);
+                        ejecutarRespuestaAjaxSegura(respuesta, "registro-descargas-funcional");
                     }
                 });
             }

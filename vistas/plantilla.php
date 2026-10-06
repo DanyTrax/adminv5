@@ -148,7 +148,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
     const nombreUsuario = '<?php echo $nombreUsuario; ?>';
     const nombreSucursal = '<?php echo $nombreSucursal; ?>';
     const perfilUsuario = '<?php echo $perfilUsuario; ?>';
-    const apiUrl = "https://pruebas2.acplasticos.com/api-transferencias/";
+    const apiUrl = <?php echo json_encode(defined('API_URL') ? API_URL : 'https://pruebas.acplasticos.com/api-transferencias/'); ?>;
     const sesionActiva = <?php echo (isset($_SESSION["iniciarSesion"]) && $_SESSION["iniciarSesion"] == "ok") ? 'true' : 'false'; ?>;
     
     // ✅ LOG SOLO SI HAY PROBLEMAS
@@ -158,7 +158,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
 </script>
 
 </head>
-</head> <body class="hold-transition skin-blue sidebar-collapse sidebar-mini login-page <?php if(isset($_GET['ruta'])){ echo $_GET['ruta']; } ?>">
+<body class="hold-transition skin-blue sidebar-collapse sidebar-mini login-page <?php if(isset($_GET['ruta'])){ echo htmlspecialchars($_GET['ruta'] ?? '', ENT_QUOTES, 'UTF-8'); } ?>">
 
   <?php
 
@@ -182,8 +182,8 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "ventas" => ["Administrador", "Vendedor", "Contador"],
         "crear-venta" => ["Administrador", "Vendedor", "Contador"],
         "editar-venta" => ["Administrador", "Vendedor", "Contador"],
-        "reportes" => ["Administrador", "Especial", "Control"],
-        "reporte-detallado" => ["Administrador", "Especial", "Control"],
+        "reportes" => ["Administrador", "Especial", "Contador"],
+        "reporte-detallado" => ["Administrador", "Especial", "Contador"],
         "contabilidad" => ["Administrador", "Especial"],
         "gastos" => ["Administrador", "Contador", "Vendedor"],
         "crear-gastos" => ["Administrador", "Contador", "Vendedor"],
@@ -191,13 +191,13 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "entradas" => ["Administrador", "Contador"],
         "crear-entradas" => ["Administrador", "Contador"],
         "editar-entrada" => ["Administrador"],
-        "borrar-entrada" => ["Administrador"],
         "cotizacion" => ["Administrador", "Vendedor", "Contador"],
         "crear-cotizacion" => ["Administrador", "Vendedor", "Contador"],
         "solicitudes-stock" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"],
         "crear-solicitud-stock" => ["Administrador", "Especial", "Vendedor", "Contador"],
         "editar-cotizacion" => ["Administrador", "Vendedor", "Contador"],
         "medios-pago" => ["Administrador", "Especial"],
+        "medios-pago-central" => ["Administrador"],
         "salidas-inventario" => ["Administrador", "Especial", "Vendedor"],
         "sucursales" => ["Administrador"], 
         "usuarios-central" => ["Administrador"],
@@ -206,18 +206,18 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
         "consultar-usuarios-sucursales" => ["Administrador"],
         "despachos" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"],
         "crear-despacho" => ["Administrador", "Especial", "Vendedor"],
-        "editar-despacho" => ["Administrador", "Vendedor", "Contador"],
-        "eliminar-despacho" => ["Administrador", "Vendedor", "Contador"],
         "stock-transito" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"],
         "transportador-movil" => ["Transportador"],
         "registro-descargas-funcional" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"],
+        "trazabilidad-mercancia" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"],
+        "historial-recepciones" => ["Administrador", "Especial", "Vendedor", "Contador"],
+        "recepciones" => ["Administrador", "Especial", "Vendedor", "Contador"],
         "personalizacion-colores-simplificado" => ["Administrador"],
         "personalizacion-cotizaciones" => ["Administrador"],
         "crear-tabla-personalizacion-cotizaciones" => ["Administrador"],
         "agregar-campos-logo-texto-cotizaciones" => ["Administrador"],
         "agregar-campo-nombre-sucursal-personalizacion" => ["Administrador"],
         "instalacion-sql-completa" => ["Administrador"],
-        "corregir-tipo-documento-clientes" => ["Administrador"],
         "herramientas-admin-sync" => ["Administrador"],
         "salir" => ["Administrador", "Especial", "Vendedor", "Contador", "Transportador"]
       ];
@@ -247,25 +247,49 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
 
   ?>
 
-  <script src="<?php echo $url; ?>vistas/js/reportes.js"></script>
+  <script src="<?php echo $url; ?>vistas/js/ajax-safe.js"></script>
   <script src="<?php echo $url; ?>vistas/js/plantilla.js"></script>
-  <script src="<?php echo $url; ?>vistas/js/usuarios.js"></script>
-  <script src="<?php echo $url; ?>vistas/js/categorias.js"></script>
-  <script src="<?php echo $url; ?>vistas/js/productos.js?v=<?php echo time(); ?>"></script>
-  <script src="<?php echo $url; ?>vistas/js/productos-stock-sucursales.js"></script> 
-  <script src="<?php echo $url; ?>vistas/js/clientes.js"></script>
-  <script src="<?php echo $url; ?>vistas/js/ventas.js"></script>
-  <script src="<?php echo $url; ?>vistas/js/contabilidad.js"></script>
-  <script src="<?php echo $url; ?>vistas/js/medios-pago.js"></script>
   <script src="<?php echo $url; ?>vistas/js/timezone-bogota.js"></script>
-  <script src="<?php echo $url; ?>vistas/js/salidas-inventario.js"></script>
   <script src="<?php echo $url; ?>vistas/js/filtros-fechas.js"></script>
-  <script src="<?php echo $url; ?>vistas/js/sucursales.js"></script> 
-  <script src="<?php echo $url; ?>vistas/js/solicitudes-stock.js?v=<?php echo file_exists(__DIR__.'/js/solicitudes-stock.js') ? filemtime(__DIR__.'/js/solicitudes-stock.js') : ''; ?>"></script>
-  <script src="<?php echo $url; ?>vistas/js/crear-solicitud-stock.js"></script>  
-  <script src="<?php echo $url; ?>vistas/js/catalogo-maestro.js"></script>
-  <script src="<?php echo $url; ?>vistas/js/clientes-central.js"></script>
-  <?php if(isset($_GET["ruta"]) && $_GET["ruta"] == "despachos"): ?>
+  <?php
+  $rutaJs = $_GET["ruta"] ?? "inicio";
+  $jsPorRuta = [
+    "usuarios" => ["usuarios.js"],
+    "categorias" => ["categorias.js"],
+    "productos" => ["productos.js"],
+    "productos-stock-sucursales" => ["productos-stock-sucursales.js"],
+    "clientes" => ["clientes.js"],
+    "ventas" => ["ventas.js"],
+    "crear-venta" => ["ventas.js"],
+    "editar-venta" => ["ventas.js"],
+    "reportes" => ["reportes.js", "contabilidad.js"],
+    "reporte-detallado" => ["reportes.js"],
+    "contabilidad" => ["contabilidad.js"],
+    "gastos" => ["contabilidad.js"],
+    "crear-gastos" => ["contabilidad.js"],
+    "entradas" => ["contabilidad.js"],
+    "medios-pago" => ["medios-pago.js"],
+    "medios-pago-central" => ["medios-pago-central.js"],
+    "salidas-inventario" => ["salidas-inventario.js"],
+    "sucursales" => ["sucursales.js"],
+    "solicitudes-stock" => ["solicitudes-stock.js"],
+    "crear-solicitud-stock" => ["solicitudes-stock.js", "crear-solicitud-stock.js"],
+    "catalogo-maestro" => ["catalogo-maestro.js"],
+    "clientes-central" => ["clientes-central.js"],
+    "usuarios-central" => ["usuarios-central.js"],
+    "categorias-central" => ["categorias-central.js"],
+    "despachos" => ["despachos.js"],
+    "crear-despacho" => ["crear-despacho.js"],
+    "transportador-movil" => ["transportador-movil.js"],
+    "trazabilidad-mercancia" => ["trazabilidad-mercancia.js"],
+  ];
+  $scripts = $jsPorRuta[$rutaJs] ?? [];
+  foreach ($scripts as $jsFile) {
+    $ver = file_exists(__DIR__ . "/js/" . $jsFile) ? filemtime(__DIR__ . "/js/" . $jsFile) : time();
+    echo '<script src="' . $url . 'vistas/js/' . htmlspecialchars($jsFile, ENT_QUOTES, "UTF-8") . '?v=' . $ver . '"></script>' . "\n";
+  }
+  if ($rutaJs === "despachos") {
+  ?>
   <script>
   window.abrirModalCambiarEstado = function(idDespacho, numeroDespacho, estadoActual) {
     if (typeof jQuery !== 'undefined') {
@@ -279,14 +303,7 @@ $perfilUsuario = str_replace(["\n", "\r", "\t", "'", '"'], ['', '', '', "\'", '\
     }
   };
   </script>
-  <?php endif; ?>
-  <script src="<?php echo $url; ?>vistas/js/despachos.js"></script>
-  <script src="<?php echo $url; ?>vistas/js/crear-despacho.js"></script>
-  <?php if(isset($_GET["ruta"]) && $_GET["ruta"] == "transportador-movil"): ?>
-  <script src="<?php echo $url; ?>vistas/js/transportador-movil.js"></script>
-  <?php endif; ?>
-  <!-- <script src="<?php echo $url; ?>vistas/js/stock-transito.js"></script> --> <!-- Comentado: se usa stock-transito-unificado.js -->
-</html>
+  <?php } ?>
+  <!-- stock-transito-unificado.js se carga desde la vista stock-transito-usuarios.php -->
 </body>
-
 </html>

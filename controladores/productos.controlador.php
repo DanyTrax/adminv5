@@ -212,33 +212,23 @@ BORRAR TODOS LOS PRODUCTOS DE LA SUCURSAL
 =============================================*/
 static public function ctrBorrarTodosProductos() {
     if (isset($_POST["borrarTodosProductos"])) {
+        header('Content-Type: application/json; charset=utf-8');
         $tabla = "productos";
         $respuesta = ModeloProductos::mdlBorrarTodosProductos($tabla);
         
         if ($respuesta == "ok") {
-            echo '<script>
-                swal({
-                    type: "success",
-                    title: "Productos eliminados",
-                    text: "Todos los productos han sido eliminados de esta sucursal",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                }).then(function(result){
-                    if (result.value) {
-                        window.location = "productos";
-                    }
-                });
-            </script>';
+            echo json_encode([
+                "success" => true,
+                "title" => "Productos eliminados",
+                "message" => "Todos los productos han sido eliminados de esta sucursal",
+                "redirect" => "productos"
+            ]);
         } else {
-            echo '<script>
-                swal({
-                    type: "error",
-                    title: "Error",
-                    text: "No se pudieron eliminar los productos",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                });
-            </script>';
+            echo json_encode([
+                "success" => false,
+                "title" => "Error",
+                "error" => "No se pudieron eliminar los productos"
+            ]);
         }
     }
 }
@@ -248,53 +238,23 @@ SINCRONIZAR PRODUCTOS DESDE CATÁLOGO MAESTRO
 =============================================*/
 static public function ctrSincronizarProductos() {
     if (isset($_POST["sincronizarProductos"])) {
+        header('Content-Type: application/json; charset=utf-8');
         $tabla = "productos";
         $respuesta = ModeloProductos::mdlSincronizarDesdeCatalogoMaestro($tabla);
         
         if ($respuesta == "ok") {
-            echo '<script>
-                swal({
-                    type: "success",
-                    title: "Sincronización completada",
-                    text: "Los productos han sido sincronizados desde el catálogo maestro",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                }).then(function(result){
-                    if (result.value) {
-                        window.location = "productos";
-                    }
-                });
-            </script>';
+            echo json_encode([
+                "success" => true,
+                "title" => "Sincronización completada",
+                "message" => "Los productos han sido sincronizados desde el catálogo maestro",
+                "redirect" => "productos"
+            ]);
         } else if ($respuesta == "error_borrar") {
-            echo '<script>
-                swal({
-                    type: "error",
-                    title: "Error al borrar",
-                    text: "No se pudieron eliminar los productos existentes",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                });
-            </script>';
+            echo json_encode(["success" => false, "title" => "Error al borrar", "error" => "No se pudieron eliminar los productos existentes"]);
         } else if ($respuesta == "error_sincronizar") {
-            echo '<script>
-                swal({
-                    type: "error",
-                    title: "Error al sincronizar",
-                    text: "No se pudieron sincronizar los productos desde el catálogo maestro",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                });
-            </script>';
+            echo json_encode(["success" => false, "title" => "Error al sincronizar", "error" => "No se pudieron sincronizar los productos desde el catálogo maestro"]);
         } else {
-            echo '<script>
-                swal({
-                    type: "error",
-                    title: "Error",
-                    text: "Ocurrió un error durante la sincronización",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                });
-            </script>';
+            echo json_encode(["success" => false, "title" => "Error", "error" => "Ocurrió un error durante la sincronización"]);
         }
     }
 }

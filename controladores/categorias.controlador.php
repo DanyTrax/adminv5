@@ -136,33 +136,19 @@ BORRAR TODAS LAS CATEGORÍAS DE LA SUCURSAL
 =============================================*/
 static public function ctrBorrarTodasCategorias() {
     if (isset($_POST["borrarTodasCategorias"])) {
+        header('Content-Type: application/json; charset=utf-8');
         $tabla = "categorias";
         $respuesta = ModeloCategorias::mdlBorrarTodasCategorias($tabla);
         
         if ($respuesta == "ok") {
-            echo '<script>
-                swal({
-                    type: "success",
-                    title: "Categorías eliminadas",
-                    text: "Todas las categorías han sido eliminadas de esta sucursal",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                }).then(function(result){
-                    if (result.value) {
-                        window.location = "categorias";
-                    }
-                });
-            </script>';
+            echo json_encode([
+                "success" => true,
+                "title" => "Categorías eliminadas",
+                "message" => "Todas las categorías han sido eliminadas de esta sucursal",
+                "redirect" => "categorias"
+            ]);
         } else {
-            echo '<script>
-                swal({
-                    type: "error",
-                    title: "Error",
-                    text: "No se pudieron eliminar las categorías",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                });
-            </script>';
+            echo json_encode(["success" => false, "title" => "Error", "error" => "No se pudieron eliminar las categorías"]);
         }
     }
 }
@@ -172,53 +158,23 @@ SINCRONIZAR CATEGORÍAS DESDE CENTRAL
 =============================================*/
 static public function ctrSincronizarCategorias() {
     if (isset($_POST["sincronizarCategorias"])) {
+        header('Content-Type: application/json; charset=utf-8');
         $tabla = "categorias";
         $respuesta = ModeloCategorias::mdlSincronizarCategoriasDesdeCentral($tabla);
         
         if ($respuesta == "ok") {
-            echo '<script>
-                swal({
-                    type: "success",
-                    title: "Sincronización completada",
-                    text: "Las categorías han sido sincronizadas desde las categorías centrales",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                }).then(function(result){
-                    if (result.value) {
-                        window.location = "categorias";
-                    }
-                });
-            </script>';
+            echo json_encode([
+                "success" => true,
+                "title" => "Sincronización completada",
+                "message" => "Las categorías han sido sincronizadas desde las categorías centrales",
+                "redirect" => "categorias"
+            ]);
         } else if ($respuesta == "error_borrar") {
-            echo '<script>
-                swal({
-                    type: "error",
-                    title: "Error al borrar",
-                    text: "No se pudieron eliminar las categorías existentes",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                });
-            </script>';
+            echo json_encode(["success" => false, "title" => "Error al borrar", "error" => "No se pudieron eliminar las categorías existentes"]);
         } else if ($respuesta == "error_sincronizar") {
-            echo '<script>
-                swal({
-                    type: "error",
-                    title: "Error al sincronizar",
-                    text: "No se pudieron sincronizar las categorías desde central",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                });
-            </script>';
+            echo json_encode(["success" => false, "title" => "Error al sincronizar", "error" => "No se pudieron sincronizar las categorías desde central"]);
         } else {
-            echo '<script>
-                swal({
-                    type: "error",
-                    title: "Error",
-                    text: "Ocurrió un error durante la sincronización",
-                    showConfirmButton: true,
-                    confirmButtonText: "Cerrar"
-                });
-            </script>';
+            echo json_encode(["success" => false, "title" => "Error", "error" => "Ocurrió un error durante la sincronización"]);
         }
     }
 }

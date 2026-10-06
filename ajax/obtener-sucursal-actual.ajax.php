@@ -3,13 +3,15 @@
 OBTENER DATOS DE SUCURSAL ACTUAL
 =============================================*/
 
-// Incluir conexión local
+require_once __DIR__ . "/../src/AjaxAuth.php";
+AjaxAuth::requireSession();
+
 require_once "../modelos/conexion.php";
 
 // Verificar que se especificó una acción
 if(isset($_GET["accion"]) && $_GET["accion"] == "obtener_sucursal_actual") {
     try {
-        // Obtener datos de la sucursal actual desde BD local
+        // No exponer password_bd ni credenciales de BD al cliente
         $stmt = Conexion::conectar()->prepare("
             SELECT 
                 id,
@@ -18,8 +20,6 @@ if(isset($_GET["accion"]) && $_GET["accion"] == "obtener_sucursal_actual") {
                 direccion,
                 telefono,
                 email,
-                usuario_bd,
-                password_bd,
                 nombre_bd,
                 host_bd,
                 puerto_bd,
@@ -43,8 +43,6 @@ if(isset($_GET["accion"]) && $_GET["accion"] == "obtener_sucursal_actual") {
                     'direccion' => $sucursal['direccion'],
                     'telefono' => $sucursal['telefono'],
                     'email' => $sucursal['email'],
-                    'usuario_bd' => $sucursal['usuario_bd'],
-                    'password_bd' => $sucursal['password_bd'],
                     'nombre_bd' => $sucursal['nombre_bd'],
                     'host_bd' => $sucursal['host_bd'],
                     'puerto_bd' => $sucursal['puerto_bd'],

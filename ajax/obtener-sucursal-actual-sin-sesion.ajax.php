@@ -1,16 +1,16 @@
 <?php
 /*=============================================
-OBTENER SUCURSAL ACTUAL SIN SESIÓN
+OBTENER SUCURSAL ACTUAL (datos públicos, sin credenciales BD)
 =============================================*/
 
-// Incluir conexión
 require_once "../modelos/conexion.php";
-require_once "../modelos/sucursales.modelo.php";
 
-// Función para obtener configuración local
-function obtenerConfiguracionLocal() {
+function obtenerConfiguracionLocalPublica() {
     try {
-        $stmt = Conexion::conectar()->prepare("SELECT * FROM sucursal_local WHERE id = 1");
+        $stmt = Conexion::conectar()->prepare("
+            SELECT id, codigo_sucursal, nombre, direccion, telefono, email, url_base, url_api, es_principal, activo
+            FROM sucursal_local WHERE id = 1
+        ");
         $stmt->execute();
         $sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
         
@@ -19,29 +19,26 @@ function obtenerConfiguracionLocal() {
                 'success' => true,
                 'sucursal' => $sucursal
             ];
-        } else {
-            return [
-                'success' => false,
-                'error' => 'No se encontró configuración de sucursal'
-            ];
         }
+        return [
+            'success' => false,
+            'error' => 'No se encontró configuración de sucursal'
+        ];
     } catch (Exception $e) {
         return [
             'success' => false,
-            'error' => 'Error obteniendo configuración: ' . $e->getMessage()
+            'error' => 'Error obteniendo configuración'
         ];
     }
 }
 
-// Verificar acción
 if (isset($_GET["accion"]) && $_GET["accion"] == "obtener_sucursal_actual") {
-    $resultado = obtenerConfiguracionLocal();
-    echo json_encode($resultado);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(obtenerConfiguracionLocalPublica());
 } else {
+    header('Content-Type: application/json; charset=utf-8');
     echo json_encode([
         'success' => false,
         'error' => 'Acción no válida'
     ]);
 }
-
-?>

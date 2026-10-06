@@ -3,27 +3,30 @@
 class ConexionCentral {
     static public function conectar(){
 
-        // Base de datos CENTRAL para despachos y transferencias
-        $servidor = "localhost";
-        $nombreBD = "epicosie_central";
-        $usuario = "epicosie_central";
-        $password = "=Nf?M#6A'QU&.6c";
+        $configPath = dirname(__DIR__) . "/config.database.php";
+        if (file_exists($configPath)) {
+            require_once $configPath;
+        } else {
+            throw new RuntimeException("Falta config.database.php. Copie config.database.php.example y complete las credenciales.");
+        }
+
+        $servidor = DB_CENTRAL_HOST;
+        $nombreBD = DB_CENTRAL_NAME;
+        $usuario = DB_CENTRAL_USER;
+        $password = DB_CENTRAL_PASS;
 
         try {
-            // CORRECCIÓN: Añadimos charset=utf8mb4 directamente a la línea de conexión.
             $link = new PDO(
                 "mysql:host=$servidor;dbname=$nombreBD;charset=utf8mb4",
                 $usuario,
                 $password
             );
 
-            // Habilitamos los errores de PDO para ver problemas
             $link->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
             return $link;
 
         } catch (PDOException $e) {
-            // Lanzar para que el llamador pueda devolver JSON en lugar de HTML (evita romper peticiones AJAX)
             throw $e;
         }
     }
